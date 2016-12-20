@@ -15,7 +15,8 @@ BOX_URL           = 'https://opscode-vm-bento.s3.amazonaws.com/vagrant/virtualbo
 
     web01.vm.network :private_network, ip: "192.168.56.101"
     web01.vm.network :forwarded_port, guest: 22, host: 10122, id: "ssh"
-    web01.vm.network(:forwarded_port, {:guest=>9090, :host=>8181})     
+    web01.vm.network(:forwarded_port, {:guest=>9090, :host=>9090})     
+    web01.vm.network(:forwarded_port, {:guest=>8080, :host=>8080})     
 
 
     web01.vm.provision "file", source: "cluster.yml", destination: "cluster.yml"
@@ -24,7 +25,7 @@ BOX_URL           = 'https://opscode-vm-bento.s3.amazonaws.com/vagrant/virtualbo
     
     web01.vm.provider :virtualbox do |v|
       v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
-      v.customize ["modifyvm", :id, "--memory", 512]
+      v.customize ["modifyvm", :id, "--memory", 14048]
       v.customize ["modifyvm", :id, "--name", "web01"]      
     end
 
@@ -51,12 +52,12 @@ BOX_URL           = 'https://opscode-vm-bento.s3.amazonaws.com/vagrant/virtualbo
     web02.vm.box_url = 'https://opscode-vm-bento.s3.amazonaws.com/vagrant/virtualbox/opscode_ubuntu-14.04_chef-provisionerless.box'
 
     web02.vm.network :private_network, ip: "192.168.56.103"
-    web02.vm.network :forwarded_port, guest: 22, host: 10122, id: "ssh"
+    web02.vm.network :forwarded_port, guest: 22, host: 10222, id: "ssh"
 
 
     web02.vm.provider :virtualbox do |v|
       v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
-      v.customize ["modifyvm", :id, "--memory", 512]
+      v.customize ["modifyvm", :id, "--memory", 2048]
       v.customize ["modifyvm", :id, "--name", "web02"]
     end
   end
@@ -66,11 +67,11 @@ BOX_URL           = 'https://opscode-vm-bento.s3.amazonaws.com/vagrant/virtualbo
     db.vm.hostname = 'db'
     db.vm.box_url = 'https://opscode-vm-bento.s3.amazonaws.com/vagrant/virtualbox/opscode_ubuntu-14.04_chef-provisionerless.box'
     db.vm.network :private_network, ip: "192.168.56.102"
-    db.vm.network :forwarded_port, guest: 22, host: 10222, id: "ssh"
+    db.vm.network :forwarded_port, guest: 22, host: 10322, id: "ssh"
 
     db.vm.provider :virtualbox do |v|
       v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
-      v.customize ["modifyvm", :id, "--memory", 512]
+      v.customize ["modifyvm", :id, "--memory", 2048]
       v.customize ["modifyvm", :id, "--name", "db"]
     end
   end

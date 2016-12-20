@@ -26,9 +26,18 @@ mkdir .karamel
 chown vagrant .karamel
 tar -xzf #{kf}
 chown -R vagrant karamel*
-
 EOF
   not_if { ::File.exists?( "/home/vagrant/karamel-0.3/bin/karamel" ) }
+end
+
+bash "public_key" do
+    user "vagrant"
+    code <<-EOF
+cd /home/vagrant/.ssh
+cp authorized_keys id_rsa.pub
+
+EOF
+  not_if { ::File.exists?( "/home/vagrant/.ssh/id_rsa.pub" ) }
 end
 
 

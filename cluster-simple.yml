@@ -1,0 +1,33 @@
+name: ApacheHadoopVagrant
+baremetal:
+    username: vagrant
+
+cookbooks:                                                                      
+  apache_hadoop: 
+    github: "hopshadoop/apache-hadoop-chef"
+    branch: "master"
+
+attrs:
+  kagent:
+      enabled: "false"
+    
+groups:
+  namenodes:
+    size: 1 
+    baremetal:
+      ip: 192.168.56.101
+    size: 1
+    recipes: 
+      - apache_hadoop::nn
+      - apache_hadoop::rm
+  datanodes:
+    size: 2
+    baremetal:
+      ip: 192.168.56.102
+      ip: 192.168.56.103
+    recipes: 
+      - apache_hadoop::dn
+      - apache_hadoop::nm
+
+
+
