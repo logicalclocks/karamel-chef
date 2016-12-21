@@ -14,6 +14,8 @@ end
 
 depends 'java'
 
+depends 'hostsfile'
+
 recipe  "karamel::install", "Installs Karamel"
 
 recipe  "karamel::default", "Configures and starts karamel."

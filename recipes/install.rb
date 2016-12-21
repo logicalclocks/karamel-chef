@@ -48,3 +48,12 @@ template "/home/vagrant/.karamel/conf" do
   group "vagrant"
   mode 0751
 end
+
+
+node[:karamel][:default][:private_ips].each_with_index do |ip, index| 
+   hostsfile_entry "#{ip}" do
+     hostname  "dn#{index}"
+     action    :create
+     unique    true
+   end
+end
