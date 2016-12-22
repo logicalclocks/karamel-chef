@@ -26,7 +26,6 @@ attrs:
     user: glassfish
   zeppelin:
     user: glassfish
-  vagrant: "true"
 
 groups: 
   namenodes:
