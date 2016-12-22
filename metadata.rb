@@ -20,6 +20,7 @@ recipe  "karamel::install", "Installs Karamel"
 
 recipe  "karamel::default", "Configures and starts karamel."
 
+recipe  "karamel::run", "Runs karamel."
 
 #attribute "karamel/port",
 #          :description => "Port that webserver will listen on",

@@ -37,11 +37,8 @@ BOX_URL           = 'https://opscode-vm-bento.s3.amazonaws.com/vagrant/virtualbo
               "private_ips" => ["192.168.56.101","192.168.56.102","192.168.56.103"]
 	    },
           },
-          "vagrant" => "true"
         }
-
-        chef.add_recipe "karamel::install"
-#        chef.add_recipe "karamel::default"     
+        chef.add_recipe "karamel::default"     
       end
     
   end
@@ -81,14 +78,13 @@ BOX_URL           = 'https://opscode-vm-bento.s3.amazonaws.com/vagrant/virtualbo
   config.vm.provision :chef_solo do |chef|
       chef.cookbooks_path = "cookbooks"
       chef.json = {
-        "kagent" => {
-           "default" =>      { 
+          "karamel" => {
+	    "default" =>      { 
               "private_ips" => ["192.168.56.101","192.168.56.102","192.168.56.103"]
 	    },
           },
-          "vagrant" => "true"
         }
-#      chef.add_recipe "kagent::install"
+      chef.add_recipe "karamel::install"
   end
 
 
