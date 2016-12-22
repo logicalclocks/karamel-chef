@@ -46,7 +46,7 @@ BOX_URL           = 'https://opscode-vm-bento.s3.amazonaws.com/vagrant/virtualbo
   #  config.vm.define "dn1", autostart: false do |dn1|
   config.vm.define "dn1" do |dn1|
     dn1.vm.box = "opscode-ubuntu-14.04"
-    dn1.vm.hostname = 'slave01' 
+    dn1.vm.hostname = 'dn1' 
     dn1.vm.box_url = 'https://opscode-vm-bento.s3.amazonaws.com/vagrant/virtualbox/opscode_ubuntu-14.04_chef-provisionerless.box'
 
     dn1.vm.network :private_network, ip: "192.168.56.103"
