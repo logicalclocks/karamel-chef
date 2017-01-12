@@ -22,6 +22,8 @@ recipe  "karamel::default", "Configures and starts karamel."
 
 recipe  "karamel::run", "Runs karamel."
 
+recipe  "karamel::dela", "Adds IP latencies for all IP network traffic."
+
 #attribute "karamel/port",
 #          :description => "Port that webserver will listen on",
 #          :type => 'string'
