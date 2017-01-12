@@ -96,7 +96,6 @@ BOX_URL           = 'https://opscode-vm-bento.s3.amazonaws.com/vagrant/virtualbo
         chef.add_recipe "karamel::install"
         chef.add_recipe "karamel::default"     
         chef.add_recipe "karamel::run"     
-        chef.add_recipe "karamel::dela"     
       end
     
   end
