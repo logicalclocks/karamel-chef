@@ -12,6 +12,8 @@ attrs:
     user: glassfish
     group: glassfish    
     dir: /srv/hops
+    network:
+        interface: REPLACE_NET_IF
   hops:
     dir: /srv/hops
   apache_hadoop:

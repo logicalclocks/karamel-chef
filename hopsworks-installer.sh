@@ -2,10 +2,6 @@
 
 yml=8GB.yml
 
-
-echo -n "Enter your sudo password: "
-read -s password
-
 pushd .
 # 1. setup ssh to localhost to sudo account
 
@@ -127,8 +123,11 @@ fi
 
 IP_ADDR="127.0.0.1"
 
+net_if = "lo"
+
 sed -i.bak s/REPLACE_USERNAME/${USER}/g ./${yml}
 sed -i.bak s/REPLACE_IP_ADDR/${IP_ADDR}/g ./${yml} 
+sed -i.bak s/REPLACE_NET_IF/${net_if}/g ./${yml}
 
 cd karamel-0.3
 
