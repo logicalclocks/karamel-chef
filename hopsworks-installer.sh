@@ -135,6 +135,10 @@ cd karamel-0.3
 # 5. Launch the cluster
 ./bin/karamel -headless -launch ../8GB.yml -server conf/dropwizard.yml
 
+if [ $? -ne 0 ] ; then
+    echo "Problem installing with Karamel. Try re-running the installer script."
+    exit 10
+fi    
 #2>&1 > ../hopsworks-installer.log
 
 popd

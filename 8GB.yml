@@ -12,7 +12,7 @@ attrs:
     user: glassfish
     group: glassfish    
     dir: /srv/hops
-  hops_hadoop:
+  hops:
     dir: /srv/hops
   apache_hadoop:
     group: glassfish
