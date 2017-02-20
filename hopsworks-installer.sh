@@ -1,5 +1,7 @@
 #!/bin/bash
 
+yml=8GB.yml
+
 pushd .
 # 1. setup ssh to localhost to sudo account
 
@@ -106,11 +108,16 @@ if [ $? -ne 0 ] ; then
 	exit 7
     fi
 fi
-wget http://snurran.sics.se/hops/installer/8GB.yml .
+wget http://snurran.sics.se/hops/installer/${yml}
 if [ $? -ne 0 ] ; then
-  echo "Could not download hopsworks cluster definition file 8GB.yml. Exiting..."
+  echo "Could not download hopsworks cluster definition file ${yml}. Exiting..."
   exit 9
 fi
+
+IP_ADDR="127.0.0.1"
+
+sed -i.bak "/REPLACE_USERNAME/${USER}" ./${yml}
+sed -i.bak "/REPLACE_IP_ADDR/${IP_ADDR}" ./${yml} 
 
 cd karamel-0.3
 

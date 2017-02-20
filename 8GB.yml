@@ -1,0 +1,98 @@
+name: HopsworksOnLocalhost
+baremetal:
+    username: REPLACE_USERNAME
+
+cookbooks:       
+  hopsworks:                                                                     
+    github: "hopshadoop/hopsworks-chef"
+    branch: "master"  
+
+attrs:
+  kagent:
+    user: glassfish
+    dir: /srv/hops
+  apache_hadoop:
+    dir: /srv/hops
+    hdfs:
+        user: glassfish
+    yarn: 
+        user: glassfish
+    mr: 
+        user: glassfish
+  hadoop_spark:
+    user: glassfish
+    dir: /srv/hops
+  drelephant:
+    user: glassfish
+    dir: /srv/hops
+  ntp:
+    install: "true"
+  flink:
+    user: glassfish
+    dir: /srv/hops
+  zeppelin:
+    user: glassfish
+    dir: /srv/hops
+  elastic:
+    user: glassfish
+    dir: /srv/hops
+  kkafka:
+    user: glassfish
+    dir: /srv/hops
+  kzookeeper:
+    user: glassfish
+    dir: /srv/hops
+  livy:
+    user: glassfish
+    dir: /srv/hops
+  ndb:
+    user: glassfish
+    dir: /srv/hops
+  hopsmonitor:
+    user: glassfish
+    dir: /srv/hops
+  hopslog:
+    user: glassfish
+    dir: /srv/hops
+  tensorflow:
+    user: glassfish
+    dir: /srv/hops
+  hopslog:
+    user: glassfish
+    dir: /srv/hops
+  hopsmonitor:
+    user: glassfish
+    dir: /srv/hops
+
+groups: 
+  theone:
+    size: 1 
+    baremetal:
+      ip: REPLACE_IP_ADDR
+    size: 1
+    recipes: 
+      - kagent:all
+      - ndb::mgmd
+      - ndb::ndbd
+      - ndb::mysqld                                                 
+      - hops::ndb
+      - hops::rm
+      - hops::nn
+      - hops::dn
+      - hops::nm
+      - hops::jhs
+      - hadoop_spark::yarn
+      - hadoop_spark::historyserver
+      - flink::yarn
+      - elastic
+      - livy
+      - zeppelin
+      - kzookeeper
+      - kkafka
+      - drelephant
+      - epipe
+      - hopsworks
+      - tensorflow
+      - hopslog
+      - hopsmonitor      
+
