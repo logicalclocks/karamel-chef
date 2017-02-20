@@ -10,8 +10,12 @@ cookbooks:
 attrs:
   kagent:
     user: glassfish
+    group: glassfish    
+    dir: /srv/hops
+  hops_hadoop:
     dir: /srv/hops
   apache_hadoop:
+    group: glassfish
     dir: /srv/hops
     hdfs:
         user: glassfish
@@ -21,47 +25,71 @@ attrs:
         user: glassfish
   hadoop_spark:
     user: glassfish
+    group: glassfish
     dir: /srv/hops
   drelephant:
     user: glassfish
+    group: glassfish
     dir: /srv/hops
   ntp:
     install: "true"
   flink:
     user: glassfish
+    group: glassfish
     dir: /srv/hops
   zeppelin:
     user: glassfish
+    group: glassfish
     dir: /srv/hops
   elastic:
     user: glassfish
+    group: glassfish
     dir: /srv/hops
   kkafka:
     user: glassfish
+    group: glassfish
     dir: /srv/hops
   kzookeeper:
     user: glassfish
+    group: glassfish
     dir: /srv/hops
   livy:
     user: glassfish
+    group: glassfish
     dir: /srv/hops
   ndb:
     user: glassfish
+    group: glassfish
+    dir: /srv/hops
+  mysql:
     dir: /srv/hops
   hopsmonitor:
     user: glassfish
+    group: glassfish
     dir: /srv/hops
   hopslog:
     user: glassfish
+    group: glassfish
     dir: /srv/hops
   tensorflow:
     user: glassfish
+    group: glassfish
     dir: /srv/hops
   hopslog:
     user: glassfish
+    group: glassfish
     dir: /srv/hops
   hopsmonitor:
     user: glassfish
+    group: glassfish
+    dir: /srv/hops
+  hopsworks:
+    user: glassfish
+    group: glassfish
+    dir: /srv/hops
+  epipe:
+    user: glassfish
+    group: glassfish
     dir: /srv/hops
 
 groups: 
@@ -71,7 +99,7 @@ groups:
       ip: REPLACE_IP_ADDR
     size: 1
     recipes: 
-      - kagent:all
+      - kagent
       - ndb::mgmd
       - ndb::ndbd
       - ndb::mysqld                                                 
