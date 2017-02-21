@@ -70,16 +70,16 @@ splash_screen()
   echo "" 
   echo "Hopsworks Installer, Copyright(C) 2017 Logical Clocks AB. All rights reserved."
   echo ""
-  echo "This program installs the Hopsworks and Hops platforms."
+  echo "This program installs the Hopsworks platform."
+  echo ""
+  echo "~4.5GB will be downloaded - make sure you have the bandwidth for this."  
   echo "" 
   if [ $ROOTUSER -eq 1 ] ; then
     echo "You are running the Installer as a root user." 
-  else
-    echo "You are running the Installer as a non-root user." 
-    echo "This will install MySQL and NDB by default to: ~/.mysql/" 
-    echo "To install cluster in /var/lib/ndb/, re-run this installer as 'root'." 
   fi
   echo "Hopsworks will install by default to: /srv/hops/"
+  echo "To install to a different directory, pass in the -d option"
+  echo "e.g., ./hopsinstaller.sh -d /opt/hops"
   echo ""  
   echo "To cancel installation at any time, press CONTROL-C"  
   
