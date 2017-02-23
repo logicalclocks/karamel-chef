@@ -64,6 +64,7 @@ groups:
       - hops::nn
       - hops::dn
       - hops::nm
+      - hadoop_spark::yarn
   datanode2:
     size: 1
     baremetal:
@@ -72,3 +73,4 @@ groups:
       - kagent
       - hops::dn
       - hops::nm
+      - hadoop_spark::yarn

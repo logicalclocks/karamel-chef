@@ -12,6 +12,7 @@ attrs:
     user: glassfish
     group: glassfish    
     dir: /srv/hops
+    allow_ssh_access: "true"
     network:
         interface: REPLACE_NET_IF
   hops:
