@@ -26,6 +26,9 @@ attrs:
     user: glassfish
   zeppelin:
     user: glassfish
+  kagent:
+    network:
+      interface: enp0s8
 
 groups: 
   namenodes:
@@ -53,6 +56,8 @@ groups:
       - drelephant
       - epipe
       - hopsworks
+      - hopsmonitor
+      - hopslog
   datanode1:
     size: 1
     baremetal:

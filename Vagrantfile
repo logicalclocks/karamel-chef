@@ -83,7 +83,7 @@ Vagrant.configure("2") do |config|
     
     dn0.vm.provider :virtualbox do |v|
       v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
-      v.customize ["modifyvm", :id, "--memory", 12048]
+      v.customize ["modifyvm", :id, "--memory", 16048]
       v.customize ["modifyvm", :id, "--name", "dn0"]      
     end
 
