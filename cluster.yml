@@ -9,7 +9,9 @@ cookbooks:
 
 
 attrs:
-  apache_hadoop:
+  install:
+    dir: /opt
+  hops:
     hdfs:
         user: glassfish
     yarn: 
