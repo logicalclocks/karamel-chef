@@ -3,8 +3,8 @@ baremetal:
     username: vagrant
 
 cookbooks:                                                                      
-  apache_hadoop: 
-    github: "hopshadoop/apache-hadoop-chef"
+  hops: 
+    github: "hopshadoop/hops-hadoop-chef"
     branch: "master"
 
 attrs:
@@ -18,16 +18,20 @@ groups:
       ip: 192.168.56.101
     size: 1
     recipes: 
-      - apache_hadoop::nn
-      - apache_hadoop::rm
+      - ndb::mgmd
+      - ndb::mysql
+      - hops::ndb
+      - hops::nn
+      - hops::rm
   datanodes:
     size: 2
     baremetal:
       ip: 192.168.56.102
       ip: 192.168.56.103
     recipes: 
-      - apache_hadoop::dn
-      - apache_hadoop::nm
+      - ndb::ndbd
+      - hops::dn
+      - hops::nm
 
 
 
