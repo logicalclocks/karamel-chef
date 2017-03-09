@@ -8,6 +8,8 @@ cookbooks:
     branch: "master"
 
 attrs:
+  ntp:
+      enabled: "true"
   kagent:
       enabled: "false"
     

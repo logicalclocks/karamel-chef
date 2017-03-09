@@ -10,28 +10,11 @@ cookbooks:
 
 attrs:
   install:
-    dir: /opt
-  hops:
-    hdfs:
-        user: glassfish
-    yarn: 
-        user: glassfish
-    mr: 
-        user: glassfish
-  hadoop_spark:
-    user: glassfish
-  drelephant:
-    user: glassfish
-  ntp:
-    install: "true"
-  flink:
-    user: glassfish
-  zeppelin:
+    dir: /srv/hops
     user: glassfish
   kagent:
     network:
       interface: enp0s8
-    enabled: "true"
 
 groups: 
   namenodes:
