@@ -28,6 +28,7 @@ groups:
       - ndb::ndbd
       - ndb::mysqld                                                       
       - hops::ndb
+      - hops::nn
       - hops::rm
       - hops::jhs
       - hadoop_spark::yarn

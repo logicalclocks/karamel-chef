@@ -28,8 +28,8 @@ groups:
       - ndb::ndbd
       - ndb::mysqld                                                       
       - hops::ndb
-      - hops::nn
       - hops::rm
+      - hops::nn
       - hops::jhs
       - hadoop_spark::yarn
       - hadoop_spark::historyserver
@@ -50,9 +50,6 @@ groups:
       ip: 192.168.56.102
     recipes: 
       - kagent
-      - ndb::mysqld                                                       
-      - hops::ndb
-      - hops::nn
       - hops::dn
       - hops::nm
       - hadoop_spark::yarn
