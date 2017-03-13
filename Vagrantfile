@@ -73,6 +73,8 @@ Vagrant.configure("2") do |config|
     dn0.vm.network :forwarded_port, guest: 22, host: 10122, id: "ssh"
     dn0.vm.network(:forwarded_port, {:guest=>9090, :host=>9090})     
     dn0.vm.network(:forwarded_port, {:guest=>8080, :host=>8080})     
+    dn0.vm.network(:forwarded_port, {:guest=>2222, :host=>2222})     
+    dn0.vm.network(:forwarded_port, {:guest=>4848, :host=>4848})     
 
 
     dn0.vm.provision "file", source: "cluster.yml", destination: "cluster.yml"
