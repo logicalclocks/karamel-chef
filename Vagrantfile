@@ -4,8 +4,10 @@ Vagrant.configure("2") do |config|
    config.ssh.insert_key = false
  
   config.vm.define "dn2" do |dn2|
-    dn2.vm.box = "bento/centos-7.2"
+    #dn2.vm.box = "opscode-ubuntu-14.04"
+    dn2.vm.box = "bento/ubuntu-16.04"
     dn2.vm.hostname = 'dn2' 
+    #dn2.vm.box_url = 'https://opscode-vm-bento.s3.amazonaws.com/vagrant/virtualbox/opscode_ubuntu-14.04_chef-provisionerless.box'
 
     dn2.vm.network :private_network, ip: "192.168.56.103"
     dn2.vm.network :forwarded_port, guest: 22, host: 10222, id: "ssh"
@@ -34,7 +36,7 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.define "dn1" do |dn1|
-    dn1.vm.box = "bento/centos-7.2"
+    dn1.vm.box = "bento/ubuntu-16.04"
     dn1.vm.hostname = 'dn1'
     dn1.vm.network :private_network, ip: "192.168.56.102"
     dn1.vm.network :forwarded_port, guest: 22, host: 10322, id: "ssh"
@@ -64,14 +66,13 @@ Vagrant.configure("2") do |config|
 
 
   config.vm.define "dn0", primary: true do |dn0|
-    dn0.vm.box = "bento/centos-7.2"
+    dn0.vm.box = "bento/ubuntu-16.04"
     dn0.vm.hostname = 'dn0'
 
     dn0.vm.network :private_network, ip: "192.168.56.101"
     dn0.vm.network :forwarded_port, guest: 22, host: 10122, id: "ssh"
     dn0.vm.network(:forwarded_port, {:guest=>9090, :host=>9090})     
     dn0.vm.network(:forwarded_port, {:guest=>8080, :host=>8080})     
-    dn0.vm.network(:forwarded_port, {:guest=>4848, :host=>4848})     
 
 
     dn0.vm.provision "file", source: "cluster.yml", destination: "cluster.yml"
