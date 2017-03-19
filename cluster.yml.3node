@@ -30,6 +30,9 @@ groups:
       - hops::ndb
       - hops::rm
       - hops::nn
+      - hops::dn
+      - hops::nm
+      - hadoop_spark::yarn
       - hops::jhs
       - hadoop_spark::yarn
       - hadoop_spark::historyserver
