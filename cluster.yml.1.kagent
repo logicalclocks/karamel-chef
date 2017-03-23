@@ -1,0 +1,24 @@
+name: KagentVagrant
+baremetal:
+    username: vagrant
+
+cookbooks:                                                                      
+  hops: 
+    github: "karamelchef/kagent-chef"
+    branch: "master"
+
+attrs:
+  kagent:
+      enabled: "false"
+    
+groups:
+  mygroup:
+    size: 1 
+    baremetal:
+      ip: 192.168.56.101
+    size: 1
+    recipes: 
+      - kagent
+
+
+
