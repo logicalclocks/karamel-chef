@@ -13,7 +13,7 @@ if [ ! -f Vagrantfile.$1.$2 ] ; then
  exit 1
 fi
 if [ ! -f cluster.yml.$2.$3 ] ; then
- echo "Couldn't find the Vagrantfile.$1.$2 for your cluster"
+ echo "Couldn't find the cluster.yml.$1.$2 for your cluster"
  exit 1
 fi
  

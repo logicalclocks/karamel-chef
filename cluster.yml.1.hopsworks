@@ -1,0 +1,48 @@
+name: HopsworksVagrantMultiNode
+baremetal:
+    username: vagrant
+
+cookbooks:       
+  hopsworks:                                                                     
+    github: "hopshadoop/hopsworks-chef"
+    branch: "master"  
+
+
+attrs:
+  install:
+    dir: /srv/hops
+    user: glassfish
+  kagent:
+    network:
+      interface: enp0s8
+
+groups: 
+  namenodes:
+    size: 1 
+    baremetal:
+      ip: 192.168.56.101
+    size: 1
+    recipes: 
+      - kagent
+      - ndb::mgmd
+      - ndb::ndbd
+      - ndb::mysqld                                                       
+      - hops::ndb
+      - hops::rm
+      - hops::nn
+      - hops::jhs
+      - hadoop_spark::yarn
+      - hadoop_spark::historyserver
+      - flink::yarn
+      - elastic
+      - livy
+      - zeppelin
+      - kzookeeper
+      - kkafka
+      - drelephant
+      - epipe
+      - hopsworks
+      - hopsmonitor
+      - hopslog
+      - hops::dn
+      - hops::nm
