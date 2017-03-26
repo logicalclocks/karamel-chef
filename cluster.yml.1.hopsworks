@@ -21,7 +21,6 @@ groups:
     size: 1 
     baremetal:
       ip: 192.168.56.101
-    size: 1
     recipes: 
       - kagent
       - ndb::mgmd

@@ -4,13 +4,17 @@ baremetal:
 
 cookbooks:       
   hopsworks:                                                                     
-    github: "hopshadoop/ndb-chef"
+    github: "hopshadoop/hopsworks-chef"
     branch: "master"  
+
 
 attrs:
   install:
     dir: /srv/hops
-    user: vagrant
+    user: glassfish
+  kagent:
+    network:
+      interface: enp0s8
 
 groups: 
   namenodes:
@@ -19,18 +23,26 @@ groups:
       ip: 192.168.56.101
     size: 1
     recipes: 
-      - kagent::install
+      - kagent
       - ndb::mgmd
-      - ndb::mysqld                                                       
-      - ndb::_test
-  datanode1:
-    size: 2
-    baremetal:
-      ip: 192.168.56.102
-      ip: 192.168.56.103
-    recipes: 
-      - kagent::install
       - ndb::ndbd
       - ndb::mysqld                                                       
-
-
+      - hops::ndb
+      - hops::rm
+      - hops::nn
+      - hops::jhs
+      - hadoop_spark::yarn
+      - hadoop_spark::historyserver
+      - flink::yarn
+      - elastic
+      - livy
+      - zeppelin
+      - kzookeeper
+      - kkafka
+      - drelephant
+      - epipe
+      - hopsworks
+      - hopsmonitor
+      - hopslog
+      - hops::dn
+      - hops::nm
