@@ -38,10 +38,12 @@ groups:
       - zeppelin
       - kzookeeper
       - kkafka
-      - drelephant
       - epipe
       - hopsworks
       - hopsmonitor
       - hopslog
       - hops::dn
       - hops::nm
+      - tensorflow
+      - hopsmonitor::telegraf
+      

@@ -11,6 +11,8 @@ attrs:
   install:
     dir: /srv/hops
     user: vagrant
+  kagent:
+    enabled: false
 
 groups: 
   namenodes:

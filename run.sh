@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ $# -ne 3 ] ; then
-  echo "Usage: ./run.sh [centos|ubuntu] [1|3] [ndb|hopsworks|hopsworks-ha]"
+  echo "Usage: ./run.sh [centos|ubuntu] [1|3] [ndb|hopsworks]"
   echo ""
   exit 1
 fi
