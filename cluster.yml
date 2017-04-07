@@ -11,7 +11,7 @@ cookbooks:
 attrs:
   install:
     dir: /srv/hops
-    user: vagrant
+    user: glassfish
   kagent:
     network:
       interface: enp0s8
@@ -33,38 +33,17 @@ groups:
       - hadoop_spark::yarn
       - hadoop_spark::historyserver
       - flink::yarn
+      - elastic
+      - livy
       - zeppelin
+      - kzookeeper
+      - kkafka
+      - epipe
       - hopsworks
       - hopsmonitor
-      - tensorflow
       - hopslog
+      - hops::dn
+      - hops::nm
+      - tensorflow
       - hopsmonitor::telegraf
-      - kzookeeper      
-  datanode1:
-    size: 1
-    baremetal:
-      ip: 192.168.56.102
-    recipes: 
-      - kagent
-      - ndb::mysqld                                                       
-      - hops::dn
-      - hops::nm
-      - kzookeeper
-      - elastic
-      - epipe
-      - hadoop_spark
-      - hopsmonitor::telegraf      
-  datanode2:
-    size: 1
-    baremetal:
-      ip: 192.168.56.103
-    recipes: 
-      - kagent
-      - livy
-      - kzookeeper
-      - hops::dn
-      - hops::nm
-      - kkafka      
-      - hadoop_spark
-      - hopsmonitor::telegraf 
-
+      
