@@ -9,6 +9,8 @@ Vagrant.configure("2") do |config|
 
     dn0.vm.network :private_network, ip: "192.168.56.101"
     dn0.vm.network :forwarded_port, guest: 22, host: 10122, id: "ssh"
+    # MySQL Server
+    dn0.vm.network(:forwarded_port, {:guest=>3306, :host=>3306})
     # karamel http
     dn0.vm.network(:forwarded_port, {:guest=>9090, :host=>9090})     
     # Hopsworks http
@@ -23,8 +25,14 @@ Vagrant.configure("2") do |config|
     dn0.vm.network(:forwarded_port, {:guest=>5601, :host=>5601})
     # Grafana Webserver
     dn0.vm.network(:forwarded_port, {:guest=>3000, :host=>3000})
-    # Influx DB htp
+    # Nodemanager
     dn0.vm.network(:forwarded_port, {:guest=>8083, :host=>8083})
+    # Influx DB admin (because of clash with nodemanager)
+    dn0.vm.network(:forwarded_port, {:guest=>8084, :host=>8084})
+    # Influx DB REST API
+    dn0.vm.network(:forwarded_port, {:guest=>8086, :host=>8086})
+    # Graphite Endpoint
+    dn0.vm.network(:forwarded_port, {:guest=>2003, :host=>2003})
 
   
     dn0.vm.provision "file", source: "cluster.yml", destination: "cluster.yml"

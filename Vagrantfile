@@ -9,11 +9,30 @@ Vagrant.configure("2") do |config|
 
     dn0.vm.network :private_network, ip: "192.168.56.101"
     dn0.vm.network :forwarded_port, guest: 22, host: 10122, id: "ssh"
+    # karamel http
     dn0.vm.network(:forwarded_port, {:guest=>9090, :host=>9090})     
+    # Hopsworks http
     dn0.vm.network(:forwarded_port, {:guest=>8080, :host=>8080})     
+    # Glassfish debug port
     dn0.vm.network(:forwarded_port, {:guest=>9009, :host=>9191})
+    # Glassfish admin UI
     dn0.vm.network(:forwarded_port, {:guest=>4848, :host=>4848})         
+    # Yarn RM 
+    dn0.vm.network(:forwarded_port, {:guest=>8088, :host=>8088})
+    # Kibana
+    dn0.vm.network(:forwarded_port, {:guest=>5601, :host=>5601})
+    # Grafana Webserver
+    dn0.vm.network(:forwarded_port, {:guest=>3000, :host=>3000})
+    # Nodemanager
+    dn0.vm.network(:forwarded_port, {:guest=>8083, :host=>8083})
+    # Influx DB admin (because of clash with nodemanager)
+    dn0.vm.network(:forwarded_port, {:guest=>8084, :host=>8084})
+    # Influx DB REST API
+    dn0.vm.network(:forwarded_port, {:guest=>8086, :host=>8086})
+    # Graphite Endpoint
+    dn0.vm.network(:forwarded_port, {:guest=>2003, :host=>2003})
 
+  
     dn0.vm.provision "file", source: "cluster.yml", destination: "cluster.yml"
     dn0.vm.provision "file", source: "~/.vagrant.d/insecure_private_key", destination: "~/.ssh/id_rsa"    
     dn0.vm.provision "shell", inline: "cp /home/vagrant/.ssh/authorized_keys /home/vagrant/.ssh/id_rsa.pub && sudo chown vagrant:vagrant /home/vagrant/.ssh/id_rsa.pub"
