@@ -4,7 +4,7 @@ Vagrant.configure("2") do |config|
    config.ssh.insert_key = false
  
   config.vm.define "dn0", primary: true do |dn0|
-    dn0.vm.box = "bento/centos-7.2"
+    dn0.vm.box = "bento/ubuntu-16.04"
     dn0.vm.hostname = 'dn0'
 
     dn0.vm.network :private_network, ip: "192.168.56.101"
@@ -34,7 +34,7 @@ Vagrant.configure("2") do |config|
     # Graphite Endpoint
     dn0.vm.network(:forwarded_port, {:guest=>2003, :host=>2003})
 
-  
+
     dn0.vm.provision "file", source: "cluster.yml", destination: "cluster.yml"
     dn0.vm.provision "file", source: "~/.vagrant.d/insecure_private_key", destination: "~/.ssh/id_rsa"    
     dn0.vm.provision "shell", inline: "cp /home/vagrant/.ssh/authorized_keys /home/vagrant/.ssh/id_rsa.pub && sudo chown vagrant:vagrant /home/vagrant/.ssh/id_rsa.pub"
