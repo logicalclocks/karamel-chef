@@ -8,15 +8,15 @@ Vagrant.configure("2") do |config|
     dn0.vm.hostname = 'dn0'
 
     dn0.vm.network :private_network, ip: "192.168.56.101"
-    dn0.vm.network :forwarded_port, guest: 22, host: 10122, id: "ssh"
+    dn0.vm.network :forwarded_port, guest: 22, host: 22, id: "ssh"
     # MySQL Server
-    dn0.vm.network(:forwarded_port, {:guest=>3306, :host=>8181})
+    dn0.vm.network(:forwarded_port, {:guest=>3306, :host=>3306})
     # karamel http
     dn0.vm.network(:forwarded_port, {:guest=>9090, :host=>9090})     
     # Hopsworks http
     dn0.vm.network(:forwarded_port, {:guest=>8080, :host=>8080})     
     # Glassfish debug port
-    dn0.vm.network(:forwarded_port, {:guest=>9009, :host=>9191})
+    dn0.vm.network(:forwarded_port, {:guest=>9009, :host=>9009})
     # Glassfish admin UI
     dn0.vm.network(:forwarded_port, {:guest=>4848, :host=>4848})         
     # Yarn RM 

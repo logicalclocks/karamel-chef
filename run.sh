@@ -1,10 +1,10 @@
 #!/bin/bash
 
 function help() {
-  echo "Usage: ./run.sh [centos|ubuntu] [1|3] [ndb|hopsworks|hops] [random-ports]"
+  echo "Usage: ./run.sh [centos|ubuntu] [1|3] [ndb|hopsworks|hops] [no-random-ports]"
   echo ""
   echo "For example, for a 3-node hopsworks cluster on centos with random ports, run:"
-  echo "./run.sh centos 3 hopsworks random-ports"
+  echo "./run.sh centos 3 hopsworks"
   exit 1
 }
 
@@ -29,10 +29,10 @@ function replace_port() {
 	fi
     done
     
-    perl -pi -e "s/$port/$p/g" Vagrantfile
-    perl -pi -e "s/$p/$port/" Vagrantfile    
-    echo "$forwarded_port -> $p" >> .forwarded_ports
-    echo "$forwarded_port -> $p"
+    perl -pi -e "s/$forwarded_port/$p/g" Vagrantfile
+    perl -pi -e "s/$p/$forwarded_port/" Vagrantfile
+    echo "$port -> $p" >> .forwarded_ports
+    echo "$port -> $p"
 }    
 
 if [ $# -lt 3 ] ; then
@@ -42,7 +42,7 @@ fi
 PORTS=0
 
 if [ $# -eq 4 ] ; then
-    if [ $4 != "random-ports" ] ; then
+    if [ $4 != "no-random-ports" ] ; then
        help	   
     fi
     PORTS=1	 
