@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function help() {
-  echo "Usage: ./run.sh [centos|ubuntu] [1|3] [ndb|hopsworks] [random-ports]"
+  echo "Usage: ./run.sh [centos|ubuntu] [1|3] [ndb|hopsworks|hops] [random-ports]"
   echo ""
   echo "For example, for a 3-node hopsworks cluster on centos with random ports, run:"
   echo "./run.sh centos 3 hopsworks random-ports"
