@@ -28,11 +28,19 @@ function replace_port() {
 	    res=1
 	fi
     done
-    
-    perl -pi -e "s/$forwarded_port/$p/g" Vagrantfile
-    perl -pi -e "s/$p/$forwarded_port/" Vagrantfile
-    echo "$port -> $p" >> .forwarded_ports
-    echo "$port -> $p"
+
+    if [ "$forwarded_port" != "22" ] ; then
+      perl -pi -e "s/$forwarded_port/$p/g" Vagrantfile
+      perl -pi -e "s/$p/$forwarded_port/" Vagrantfile
+      echo "$port -> $p" >> .forwarded_ports
+      echo "$port -> $p"
+    else 
+       echo "New port is: $p"
+       sed "0,/RE/s/10022/$p/" Vagrantfile > Vagrantfile.new
+       sed "0,/RE/s/10023/$(expr $p + 1)/" Vagrantfile.new > Vagrantfile
+       sed "0,/RE/s/10024/$(expr $p + 2)/" Vagrantfile > Vagrantfile.new
+       mv Vagrantfile.new Vagrantfile
+    fi
 }    
 
 if [ $# -lt 3 ] ; then
