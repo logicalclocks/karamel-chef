@@ -12,27 +12,27 @@ Vagrant.configure("2") do |config|
     # MySQL Server
     dn0.vm.network(:forwarded_port, {:guest=>3306, :host=>8181})
     # karamel http
-    dn0.vm.network(:forwarded_port, {:guest=>9090, :host=>9090})     
+    dn0.vm.network(:forwarded_port, {:guest=>9090, :host=>46535})     
     # Hopsworks http
-    dn0.vm.network(:forwarded_port, {:guest=>8080, :host=>8080})     
+    dn0.vm.network(:forwarded_port, {:guest=>8080, :host=>60247})     
     # Glassfish debug port
     dn0.vm.network(:forwarded_port, {:guest=>9009, :host=>9191})
     # Glassfish admin UI
-    dn0.vm.network(:forwarded_port, {:guest=>4848, :host=>4848})         
+    dn0.vm.network(:forwarded_port, {:guest=>4848, :host=>25189})         
     # Yarn RM 
-    dn0.vm.network(:forwarded_port, {:guest=>8088, :host=>8088})
+    dn0.vm.network(:forwarded_port, {:guest=>8088, :host=>52618})
     # Kibana
-    dn0.vm.network(:forwarded_port, {:guest=>5601, :host=>5601})
+    dn0.vm.network(:forwarded_port, {:guest=>5601, :host=>27726})
     # Grafana Webserver
-    dn0.vm.network(:forwarded_port, {:guest=>3000, :host=>3000})
+    dn0.vm.network(:forwarded_port, {:guest=>3000, :host=>22259})
     # Nodemanager
-    dn0.vm.network(:forwarded_port, {:guest=>8083, :host=>8083})
+    dn0.vm.network(:forwarded_port, {:guest=>8083, :host=>20482})
     # Influx DB admin (because of clash with nodemanager)
-    dn0.vm.network(:forwarded_port, {:guest=>8084, :host=>8084})
+    dn0.vm.network(:forwarded_port, {:guest=>8084, :host=>37033})
     # Influx DB REST API
-    dn0.vm.network(:forwarded_port, {:guest=>8086, :host=>8086})
+    dn0.vm.network(:forwarded_port, {:guest=>8086, :host=>60122})
     # Graphite Endpoint
-    dn0.vm.network(:forwarded_port, {:guest=>2003, :host=>2003})
+    dn0.vm.network(:forwarded_port, {:guest=>2003, :host=>56968})
 
 
     dn0.vm.provision "file", source: "cluster.yml", destination: "cluster.yml"

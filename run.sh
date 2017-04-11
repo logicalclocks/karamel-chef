@@ -13,20 +13,26 @@ forwarded_port=
 echo "Forwarded ports" > .forwarded_ports
 
 function replace_port() {
-    p=`shuf -i 2000-65000 -n 1`
-    # If the port is already in the file, try again
-    grep $p Vagrantfile
-    r1=$?
-    $(netstat -lptn | grep $p 2>&1 > /dev/null)
-    r2=$?
-    if [ $r1 -eq 0 ] || [ $r2 -eq 0 ] ; then
-       p=`shuf -i 2000-65000 -n 1`	
-    fi
+    res=0
+    p=
+    while [ $res -eq 0 ] ; do 
+	p=`shuf -i 20000-65000 -n 1`
+	# If the port is already in the file, try again
+	grep $p Vagrantfile
+	r1=$?
+	$(netstat -lptn | grep $p 2>&1 > /dev/null)
+	r2=$?
+	if [ $r1 -eq 0 ] || [ $r2 -eq 0 ] ; then
+	    p=`shuf -i 2000-65000 -n 1`
+	else
+	    res=1
+	fi
+    done
     
     perl -pi -e "s/$port/$p/g" Vagrantfile
     perl -pi -e "s/$p/$port/" Vagrantfile    
-#   perl -pi -e "s/(($port).*?){2}\2/\1\1$p" Vagrantfile
     echo "$forwarded_port -> $p" >> .forwarded_ports
+    echo "$forwarded_port -> $p"
 }    
 
 if [ $# -lt 3 ] ; then
@@ -79,7 +85,6 @@ if [ $PORTS -eq 1 ] ; then
 	fi
 	count=$(($count + 1))
     done
-    exit 1
 fi    
 
 echo "Removing old vendored cookbooks"
