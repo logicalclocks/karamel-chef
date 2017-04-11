@@ -11,3 +11,5 @@ bin/*
 Berksfile.lock
 nohup.out
 .forwarded_ports
+Vagrantfile
+cluster.yml
