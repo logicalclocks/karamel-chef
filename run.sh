@@ -39,13 +39,13 @@ if [ $# -lt 3 ] ; then
     help
 fi
 
-PORTS=0
+PORTS=1
 
 if [ $# -eq 4 ] ; then
     if [ $4 != "no-random-ports" ] ; then
        help	   
     fi
-    PORTS=1	 
+    PORTS=0	 
 fi    
 
 #set -e
