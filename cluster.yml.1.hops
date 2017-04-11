@@ -13,6 +13,7 @@ cookbooks:
 attrs:
   install:
     dir: /srv/hops
+    user: vagrant
 
 groups: 
   master:
@@ -27,3 +28,5 @@ groups:
       - hops::ndb
       - hops::nn
       - hops::dn
+      - hops::rm
+      - hops::nm
