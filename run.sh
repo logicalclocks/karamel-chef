@@ -1,10 +1,12 @@
 #!/bin/bash
 
 function help() {
-  echo "Usage: ./run.sh [centos|ubuntu|ports] [1|3] [ndb|hopsworks|hops] [no-random-ports]"
+  echo "Usage: ./run.sh [centos|ubuntu|ports] [1|3] [ndb|hopsworks|hops|jim|antonios|theofilos|etc] [no-random-ports]"
   echo ""
-  echo "For example, for a 3-node hopsworks cluster on centos with random ports, run:"
-  echo "./run.sh centos 3 hopsworks"
+  echo "Create your own cluster definition from an existing one:"
+  echo "cp cluster.1.hopsworks cluster.1.jim"
+  echo "For example, for a 1-node hopsworks cluster on ubuntu for development with random ports, run:"
+  echo "./run.sh ubuntu 1 jim"
   echo "To find out the currently mapped ports, run:"
   echo "./run.sh ports"
   exit 1
@@ -125,6 +127,6 @@ berks vendor cookbooks
 echo "Running the Vagrantfile using 'vagrant up'"
 nohup vagrant up &
 
-cat .forwarded_ports
+parse_ports
 
 exit 0
