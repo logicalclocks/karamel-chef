@@ -1,16 +1,18 @@
 #!/bin/bash
 
 function help() {
-  echo "Usage: ./run.sh [centos|ubuntu] [1|3] [ndb|hopsworks|hops] [no-random-ports]"
+  echo "Usage: ./run.sh [centos|ubuntu|ports] [1|3] [ndb|hopsworks|hops] [no-random-ports]"
   echo ""
   echo "For example, for a 3-node hopsworks cluster on centos with random ports, run:"
   echo "./run.sh centos 3 hopsworks"
+  echo "To find out the currently mapped ports, run:"
+  echo "./run.sh ports"
   exit 1
 }
 
 port=
 forwarded_port=
-echo "Forwarded ports" > .forwarded_ports
+ports=
 
 function replace_port() {
     res=0
@@ -32,7 +34,6 @@ function replace_port() {
     if [ "$forwarded_port" != "22" ] ; then
       perl -pi -e "s/$forwarded_port/$p/g" Vagrantfile
       perl -pi -e "s/$p/$forwarded_port/" Vagrantfile
-      echo "$port -> $p" >> .forwarded_ports
       echo "$port -> $p"
     else 
        echo "New port is: $p"
@@ -42,6 +43,33 @@ function replace_port() {
        mv Vagrantfile.new Vagrantfile
     fi
 }    
+
+function parse_ports() {
+    SAVEIFS=$IFS
+    # Change IFS to new line.
+    IFS=$'\n'
+    ports=$(grep forward Vagrantfile | grep -Eo '[0-9]{2,5}'|xargs)
+    count=0
+    echo "Found forwarded Ports:"
+    ports=($ports)
+    # Restore IFS
+    IFS=$SAVEIFS
+    for i in $ports ; do
+	odd=$(($count % 2))
+	if [ $odd -eq 1 ] ; then
+           echo "$i"
+	else
+           echo -n "$i -> "
+	fi
+	count=$(($count + 1))
+    done
+}
+
+
+if [ $1 == "ports" ] ; then
+ parse_ports
+ exit 0
+fi
 
 if [ $# -lt 3 ] ; then
     help
@@ -73,14 +101,7 @@ cp cluster.yml.$2.$3 cluster.yml
 
 if [ $PORTS -eq 1 ] ; then
 
-    SAVEIFS=$IFS
-    # Change IFS to new line.
-    IFS=$'\n'
-    ports=$(grep forward Vagrantfile | grep -Eo '[0-9]{2,5}'|xargs)
-    ports=($ports)
-    echo "Found forwarded Ports: $ports"
-    # Restore IFS
-    IFS=$SAVEIFS
+    parse_ports
     count=0
 
     for i in $ports ; do
