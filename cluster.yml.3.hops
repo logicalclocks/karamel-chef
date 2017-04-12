@@ -14,7 +14,7 @@ attrs:
     user: vagrant
   kagent:
     network:
-      interface: eth0
+      interface: enp0s3
 
 groups: 
   namenodes:

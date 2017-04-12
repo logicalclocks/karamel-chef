@@ -14,7 +14,7 @@ attrs:
   install:
     dir: /srv/hops
     user: vagrant
-
+     
 groups: 
   master:
     size: 1 

@@ -14,7 +14,7 @@ attrs:
     user: vagrant
   kagent:
     network:
-      interface: eth0
+      interface: enp0s3
   hopsworks:
     ear_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ear.ear
     war_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks.war
