@@ -68,7 +68,7 @@ function parse_ports() {
 }
 
 
-if [ $1 == "ports" ] ; then
+if [ "$1" == "ports" ] ; then
  parse_ports
  exit 0
 fi
