@@ -88,7 +88,7 @@ Vagrant.configure("2") do |config|
       v.customize ["modifyvm", :id, "--name", "dn0"]      
       v.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
       v.customize ["modifyvm", :id, "--nictype1", "virtio"]
-      v.customize ["modifyvm", :id, "--cpus", "4"]
+      v.customize ["modifyvm", :id, "--cpus", "2"]
     end
 
     dn0.vm.provision :chef_solo do |chef|
