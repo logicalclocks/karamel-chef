@@ -29,6 +29,7 @@ groups:
       - ndb::mgmd
       - ndb::ndbd
       - ndb::mysqld                                                       
+      - hops::ndb
       - hopsworks
       - hopsworks::dev
       

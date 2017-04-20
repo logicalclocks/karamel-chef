@@ -6,3 +6,5 @@ sleep 5
 pkill VBoxSVC
 
 vagrant destroy -f
+
+sleep 5
