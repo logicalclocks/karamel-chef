@@ -34,6 +34,7 @@ groups:
       - flink::yarn
       - zeppelin
       - hopsworks
+      - livy
       - hopsmonitor
       - tensorflow
       - hopslog
@@ -60,7 +61,6 @@ groups:
     recipes: 
       - kagent
       - ndb::ndbd
-      - livy
       - kzookeeper
       - hops::dn
       - hops::nm
