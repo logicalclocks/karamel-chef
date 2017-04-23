@@ -5,7 +5,7 @@ baremetal:
 cookbooks:       
   hopsworks:                                                                     
     github: "hopshadoop/hopsworks-chef"
-    branch: "master"  
+    branch: "ssl"  
 
 
 attrs:
@@ -18,6 +18,7 @@ attrs:
   hopsworks:
     ear_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ear-jim.ear
     war_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-jim.war
+    ca_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ca-jim.war
 groups: 
   namenodes:
     size: 1 
