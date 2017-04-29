@@ -33,6 +33,8 @@ Vagrant.configure("2") do |config|
     dn0.vm.network(:forwarded_port, {:guest=>8086, :host=>8086})
     # Graphite Endpoint
     dn0.vm.network(:forwarded_port, {:guest=>2003, :host=>2003})
+    # Jupyter
+    dn0.vm.network(:forwarded_port, {:guest=>8888, :host=>8888})
 
   
     dn0.vm.provision "file", source: "cluster.yml", destination: "cluster.yml"
