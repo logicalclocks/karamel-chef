@@ -7,7 +7,6 @@ cookbooks:
     github: "hopshadoop/hopsworks-chef"
     branch: "ssl"  
 
-
 attrs:
   install:
     dir: /srv/hops

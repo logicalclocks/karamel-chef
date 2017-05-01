@@ -71,8 +71,30 @@ Vagrant.configure("2") do |config|
 
     dn0.vm.network :private_network, ip: "192.168.56.101"
     dn0.vm.network :forwarded_port, guest: 22, host: 10024, id: "ssh"
+    # MySQL
+    dn0.vm.network(:forwarded_port, {:guest=>3306, :host=>3307})
+    # karamel http
     dn0.vm.network(:forwarded_port, {:guest=>9090, :host=>9090})     
+    # Hopsworks http
     dn0.vm.network(:forwarded_port, {:guest=>8080, :host=>8080})     
+    # Glassfish debug port
+    dn0.vm.network(:forwarded_port, {:guest=>9009, :host=>9009})
+    # Glassfish admin UI
+    dn0.vm.network(:forwarded_port, {:guest=>4848, :host=>4848})         
+    # Yarn RM 
+    dn0.vm.network(:forwarded_port, {:guest=>8088, :host=>8088})
+    # Kibana
+    dn0.vm.network(:forwarded_port, {:guest=>5601, :host=>5601})
+    # Grafana Webserver
+    dn0.vm.network(:forwarded_port, {:guest=>3000, :host=>3000})
+    # Nodemanager
+    dn0.vm.network(:forwarded_port, {:guest=>8083, :host=>8083})
+    # Influx DB admin (because of clash with nodemanager)
+    dn0.vm.network(:forwarded_port, {:guest=>8084, :host=>8084})
+    # Influx DB REST API
+    dn0.vm.network(:forwarded_port, {:guest=>8086, :host=>8086})
+    # Graphite Endpoint
+    dn0.vm.network(:forwarded_port, {:guest=>2003, :host=>2003})
     # Jupyter
     dn0.vm.network(:forwarded_port, {:guest=>8888, :host=>8888})
 
@@ -86,7 +108,7 @@ Vagrant.configure("2") do |config|
     
     dn0.vm.provider :virtualbox do |v|
       v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
-      v.customize ["modifyvm", :id, "--memory", 16048]
+      v.customize ["modifyvm", :id, "--memory", 15048]
       v.customize ["modifyvm", :id, "--name", "dn0"]      
       v.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
       v.customize ["modifyvm", :id, "--nictype1", "virtio"]
