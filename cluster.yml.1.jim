@@ -6,6 +6,9 @@ cookbooks:
   hopsworks:                                                                     
     github: "hopshadoop/hopsworks-chef"
     branch: "master"  
+  hive2:                                                                     
+    github: "hopshadoop/hive-chef"
+    branch: "master"  
 
 attrs:
   install:
@@ -49,4 +52,5 @@ groups:
       - hops::nm
       - tensorflow
       - hopsmonitor::telegraf
+      - hive2
       
