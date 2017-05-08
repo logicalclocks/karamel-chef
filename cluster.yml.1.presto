@@ -3,9 +3,6 @@ baremetal:
     username: vagrant
 
 cookbooks:       
-  hopsworks:                                                                     
-    github: "hopshadoop/hopsworks-chef"
-    branch: "master"  
   presto:                                                                     
     github: "hopshadoop/presto-chef"
     branch: "master"  
