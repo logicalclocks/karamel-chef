@@ -53,5 +53,4 @@ groups:
       - tensorflow
       - hopsmonitor::telegraf
       - hive2::metastore
-      - presto::coordinator
-      - presto::worker      
+      - presto::localhost
