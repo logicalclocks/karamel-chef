@@ -6,7 +6,9 @@ cookbooks:
   hopsworks:                                                                     
     github: "hopshadoop/hopsworks-chef"
     branch: "master"  
-
+  hive2:                                                                     
+    github: "hopshadoop/hive-chef"
+    branch: "master"  
 
 attrs:
   install:
@@ -39,6 +41,7 @@ groups:
       - hopsmonitor::telegraf
       - kzookeeper
       - livy      
+      - hive2
   datanode1:
     size: 1
     baremetal:
