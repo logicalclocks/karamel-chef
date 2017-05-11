@@ -5,10 +5,7 @@ baremetal:
 cookbooks:       
   hopsworks:                                                                     
     github: "hopshadoop/hopsworks-chef"
-    branch: "master"  
-  hive2:                                                                     
-    github: "hopshadoop/hive-chef"
-    branch: "master"  
+    branch: "jupyter_user"  
 
 attrs:
   install:
@@ -52,5 +49,4 @@ groups:
       - hops::nm
       - tensorflow
       - hopsmonitor::telegraf
-      - hive2
       

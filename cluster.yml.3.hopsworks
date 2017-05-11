@@ -38,7 +38,8 @@ groups:
       - tensorflow
       - hopslog
       - hopsmonitor::telegraf
-      - kzookeeper      
+      - kzookeeper
+      - livy      
   datanode1:
     size: 1
     baremetal:
@@ -60,7 +61,6 @@ groups:
     recipes: 
       - kagent
       - ndb::ndbd
-      - livy
       - kzookeeper
       - hops::dn
       - hops::nm
