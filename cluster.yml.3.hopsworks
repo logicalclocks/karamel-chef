@@ -11,7 +11,6 @@ cookbooks:
 attrs:
   install:
     dir: /srv/hops
-    user: vagrant
   kagent:
     network:
       interface: enp0s8
@@ -47,10 +46,12 @@ groups:
     recipes: 
       - kagent
       - ndb::ndbd
+      - ndb::mysqld                                                       
+      - hops::ndb
+      - hops::nn
       - hops::dn
       - hops::nm
       - kzookeeper
-      - elastic
       - epipe
       - hadoop_spark
       - hopsmonitor::telegraf      
@@ -62,6 +63,7 @@ groups:
       - kagent
       - ndb::ndbd
       - kzookeeper
+      - elastic
       - hops::dn
       - hops::nm
       - kkafka      
