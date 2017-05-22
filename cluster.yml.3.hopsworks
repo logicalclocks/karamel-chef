@@ -35,6 +35,7 @@ groups:
       - flink::yarn
       - zeppelin
       - hopsworks
+      - livy
       - hopsmonitor
       - tensorflow
       - hopslog
