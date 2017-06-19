@@ -7,7 +7,7 @@ Vagrant.configure("2") do |config|
 
     config.vm.network :forwarded_port, guest: 22, host: 10022, id: "ssh"
     # MySQL Server
-    config.vm.network(:forwarded_port, {:guest=>3306, :host=>3306})
+    config.vm.network(:forwarded_port, {:guest=>3306, :host=>3307})
     # karamel http
     config.vm.network(:forwarded_port, {:guest=>9090, :host=>9090})     
     # Hopsworks http
@@ -40,7 +40,7 @@ Vagrant.configure("2") do |config|
     
     config.vm.provider :virtualbox do |v|
       v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
-      v.customize ["modifyvm", :id, "--memory", 15048]
+      v.customize ["modifyvm", :id, "--memory", 15548]
       v.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
       v.customize ["modifyvm", :id, "--nictype1", "virtio"]
       v.customize ["modifyvm", :id, "--name", "dn0"]
