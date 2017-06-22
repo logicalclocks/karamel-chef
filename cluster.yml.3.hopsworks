@@ -42,6 +42,7 @@ groups:
       - kzookeeper
       - livy      
       - hive2
+      - kagent::dev
   datanode1:
     size: 1
     baremetal:

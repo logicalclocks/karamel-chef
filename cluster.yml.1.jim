@@ -5,15 +5,25 @@ baremetal:
 cookbooks:       
   hopsworks:                                                                     
     github: "hopshadoop/hopsworks-chef"
-    branch: "master"  
+    branch: "tf-1.2"  
 
 attrs:
   install:
     dir: /srv/hops
     user: vagrant
+  tensorflow:
+    install: "src"
+    infiniband: "true"
+  cuda:
+    accept_nvidia_download_terms: "false"
+    skip_test: "true"
   kagent:
     network:
       interface: enp0s3
+  hops:
+    yarn:
+      memory_mbs: 11000
+      vcores: 8
   hopsworks:
     ear_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ear-jim.ear
     war_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-jim.war
@@ -43,6 +53,7 @@ groups:
       - epipe
       - hopsworks
       - hopsworks::dev
+      - hopsworks::image
       - hopsmonitor
       - hopslog
       - hops::dn

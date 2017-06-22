@@ -5,12 +5,16 @@ baremetal:
 cookbooks:       
   hopsworks:                                                                     
     github: "hopshadoop/hopsworks-chef"
-    branch: "master"  
+    branch: "tf-1.2"  
 
 attrs:
   install:
     dir: /srv/hops
     user: vagrant
+  tensorflow:
+    install: "src"
+  cuda:
+    accept_nvidia_download_terms: "true"
   kagent:
     network:
       interface: enp0s3
