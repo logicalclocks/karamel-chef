@@ -12,7 +12,8 @@ attrs:
     dir: /srv/hops
     user: vagrant
   tensorflow:
-    install: "dist"
+    install: "src"
+    infiniband: "true"
   cuda:
     accept_nvidia_download_terms: "false"
     skip_test: "true"
@@ -52,6 +53,7 @@ groups:
       - epipe
       - hopsworks
       - hopsworks::dev
+      - hopsworks::image
       - hopsmonitor
       - hopslog
       - hops::dn
