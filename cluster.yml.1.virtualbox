@@ -5,7 +5,7 @@ baremetal:
 cookbooks:       
   hopsworks:                                                                     
     github: "hopshadoop/hopsworks-chef"
-    branch: "tf-1.2"  
+    branch: "master"  
 
 attrs:
   install:
