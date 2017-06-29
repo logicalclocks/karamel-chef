@@ -14,7 +14,7 @@ attrs:
   tensorflow:
     install: "src"
   cuda:
-    accept_nvidia_download_terms: "true"
+    accept_nvidia_download_terms: "false"
   kagent:
     network:
       interface: enp0s3
