@@ -13,6 +13,7 @@ attrs:
     user: vagrant
   tensorflow:
     install: "src"
+    mkl: "true"
   cuda:
     accept_nvidia_download_terms: "false"
   kagent:
