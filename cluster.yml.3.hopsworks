@@ -13,6 +13,12 @@ cookbooks:
 attrs:
   install:
     dir: /srv/hops
+    user: vagrant
+  tensorflow:
+    install: "src"
+    mkl: "true"
+  cuda:
+    accept_nvidia_download_terms: "false"
   kagent:
     network:
       interface: enp0s8
@@ -42,6 +48,7 @@ groups:
       - kzookeeper
       - livy      
       - hive2
+      - kagent::dev
   datanode1:
     size: 1
     baremetal:
