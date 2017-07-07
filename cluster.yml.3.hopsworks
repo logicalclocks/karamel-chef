@@ -22,6 +22,8 @@ attrs:
   kagent:
     network:
       interface: enp0s8
+  hops:
+     num_replicas: 2
 
 groups: 
   namenodes:
