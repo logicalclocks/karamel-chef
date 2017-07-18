@@ -16,6 +16,10 @@ port=
 forwarded_port=
 ports=
 
+VBOX_MANAGE=/usr/bin/VBoxManage
+OCTETS="192.168."
+ORIGINAL_OCTETS=${OCTETS}"56"
+
 function replace_port() {
     res=0
     p=
@@ -67,6 +71,20 @@ function parse_ports() {
     done
 }
 
+function change_subnet() {
+    priv_subnets=($($VBOX_MANAGE list hostonlyifs | grep "IPAddress:" | awk -F' ' '{print $2}' | awk -F'.' '{print $3}'))
+    
+    if [ ${#priv_subnets[@]} -gt 0 ]; then
+	SAVEIFS=$IFS
+	IFS=$'\n'
+	sorted=($(sort <<<"${priv_subnets[*]}"))
+	IFS=$SAVEIFS
+	new_subnet=$((${sorted[-1]} + 1))
+	new_octets=${OCTETS}${new_subnet}
+	sed -i "s/${ORIGINAL_OCTETS}/${new_octets}/g" Vagrantfile
+	sed -i "s/${ORIGINAL_OCTETS}/${new_octets}/g" cluster.yml
+    fi
+}
 
 if [ "$1" == "ports" ] ; then
  parse_ports
@@ -117,6 +135,11 @@ if [ $PORTS -eq 1 ] ; then
 	count=$(($count + 1))
     done
 fi    
+
+if [ $2 -gt 1 ]; then
+    echo "Changing VMs subnet"
+    change_subnet
+fi
 
 echo "Removing old vendored cookbooks"
 rm -rf cookbooks > /dev/null 2>&1
