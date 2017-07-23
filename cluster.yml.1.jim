@@ -4,8 +4,8 @@ baremetal:
 
 cookbooks:       
   hopsworks:                                                                     
-    github: "hopshadoop/hopsworks-chef"
-    branch: "master"  
+    github: hopshadoop/hopsworks-chef
+    branch: unzipper  
 
 attrs:
   install:
