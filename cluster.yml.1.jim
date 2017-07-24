@@ -15,6 +15,7 @@ attrs:
     network:
       interface: enp0s3
   hops:
+    util_version: "0.1.1"
     yarn:
       memory_mbs: 11000
       vcores: 8
