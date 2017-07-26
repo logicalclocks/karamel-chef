@@ -78,7 +78,7 @@ Vagrant.configure("2") do |config|
     hopsworks0.vm.network :private_network, ip: "192.168.56.101"
     hopsworks0.vm.network :forwarded_port, guest: 22, host: 10024, id: "ssh"
     # MySQL
-    hopsworks0.vm.network(:forwarded_port, {:guest=>3306, :host=>3306})
+    hopsworks0.vm.network(:forwarded_port, {:guest=>3306, :host=>3307})
     # karamel http
     hopsworks0.vm.network(:forwarded_port, {:guest=>9090, :host=>9090})     
     # Hopsworks http
