@@ -19,6 +19,7 @@ attrs:
     mkl: "true"
   cuda:
     accept_nvidia_download_terms: "false"
+    skip_test: "true"
   kagent:
     network:
       interface: enp0s8

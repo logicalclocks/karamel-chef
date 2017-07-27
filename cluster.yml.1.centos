@@ -15,7 +15,8 @@ attrs:
     install: "src"
     mkl: "true"
   cuda:
-    accept_nvidia_download_terms: "false"
+    accept_nvidia_download_terms: "true"
+    skip_test: "true"
   kagent:
     network:
       interface: eth0
