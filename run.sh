@@ -15,6 +15,7 @@ function help() {
 port=
 forwarded_port=
 ports=
+http_port=8080
 
 VBOX_MANAGE=/usr/bin/VBoxManage
 OCTETS="192.168."
@@ -44,6 +45,7 @@ function replace_port() {
       if [ "$forwarded_port" == "8080" ] ; then
          perl -pi -e "s/$forwarded_port/$p/" cluster.yml
          perl -pi -e "s/$forwarded_port/$p/g" Vagrantfile
+	 http_port=$p
       fi
     else 
        echo "New port is: $p"
@@ -156,4 +158,7 @@ nohup vagrant up &
 
 parse_ports
 
+echo ""
+echo "Connect your browser to: http://$(hostname):${http_port}/hopsworks"
+echo ""
 exit 0
