@@ -41,6 +41,9 @@ function replace_port() {
       perl -pi -e "s/$forwarded_port/$p/g" Vagrantfile
       perl -pi -e "s/$p/$forwarded_port/" Vagrantfile
       echo "$port -> $p"
+      if [ "$forwarded_port" == "8080" ] ; then
+         perl -pi -e "s/$forwarded_port/$p/" cluster.yml
+      fi
     else 
        echo "New port is: $p"
        sed "0,/RE/s/10022/$p/" Vagrantfile > Vagrantfile.new
