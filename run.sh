@@ -116,8 +116,8 @@ if [ ! -f vagrantfiles/Vagrantfile.$1.$2 ] ; then
  echo "Couldn't find the Vagrantfile.$1.$2 for your cluster in the vagrantfiles directory"
  exit 1
 fi
-if [ ! -f cluster-defns/cluster.yml.$2.$3 ] ; then
- echo "Couldn't find the cluster.yml.$1.$2 for your cluster in the cluster-defns directory"
+if [ ! -f cluster-defns/$2.$3 ] ; then
+ echo "Couldn't find the $1.$2 for your cluster in the cluster-defns directory"
  exit 1
 fi
  
