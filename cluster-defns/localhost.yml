@@ -9,74 +9,9 @@ cookbooks:
 
 
 attrs:
-  ndb:
+  install:
     user: jdowling
-    group: jdowling    
     dir: /srv/hops
-  mysql:
-    dir: /srv/hops
-  apache_hadoop:
-    group: jdowling  
-    hdfs:
-        user: jdowling
-    yarn: 
-        user: jdowling
-    mr: 
-        user: jdowling
-  hops:
-    dir: /srv/hops  
-  hadoop_spark:
-    user: jdowling
-    group: jdowling    
-    dir: /srv/hops    
-  drelephant:
-    user: jdowling
-    group: jdowling    
-    dir: /srv/hops    
-  ntp:
-    install: "true"
-  flink:
-    user: jdowling
-    group: jdowling    
-    dir: /srv/hops    
-  zeppelin:
-    user: jdowling
-    group: jdowling    
-    dir: /srv/hops
-  livy:
-    user: jdowling
-    group: jdowling    
-    dir: /srv/hops
-  epipe:
-    user: jdowling
-    group: jdowling    
-    dir: /srv/hops
-  kkafka:
-    user: jdowling
-    group: jdowling    
-    dir: /srv/hops
-  adam:
-    user: jdowling
-    group: jdowling    
-    dir: /srv/hops
-  kzookeeper:
-    user: jdowling
-    group: jdowling    
-    dir: /srv/hops
-  elastic:
-    user: jdowling
-    group: jdowling    
-    dir: /srv/hops
-  hopsworks:
-    user: jdowling
-    group: jdowling
-    dir: /srv/hops
-    domains_dir: /srv/hops
-  kagent:
-    user: jdowling
-    group: jdowling    
-    dir: /srv/hops
-    enabled: "true"
 
 groups: 
   namenodes:

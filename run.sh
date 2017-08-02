@@ -122,7 +122,7 @@ if [ ! -f cluster-defns/cluster.yml.$2.$3 ] ; then
 fi
  
 cp vagrantfiles/Vagrantfile.$1.$2 Vagrantfile
-cp cluster-defns/cluster.yml.$2.$3 cluster.yml
+cp cluster-defns/$2.$3 cluster.yml
 
 
 if [ $PORTS -eq 1 ] ; then
