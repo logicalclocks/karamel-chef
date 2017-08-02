@@ -5,15 +5,14 @@ baremetal:
 cookbooks:       
   hopsworks:                                                                     
     github: "hopshadoop/hopsworks-chef"
-    branch: "centos_cuda"  
+    branch: "master"  
 
 attrs:
   install:
     dir: /srv/hops
     user: vagrant
   tensorflow:
-    install: "src"
-    mkl: "true"
+    install: "dist"
   cuda:
     accept_nvidia_download_terms: "true"
     skip_test: "true"
