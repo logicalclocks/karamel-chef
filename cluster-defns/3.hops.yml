@@ -1,0 +1,53 @@
+name: HopsworksVagrantMultiNode
+baremetal:
+    username: vagrant
+
+cookbooks:       
+  hops:                                                                     
+    github: "hopshadoop/hops-hadoop-chef"
+    branch: "master"  
+
+
+attrs:
+  install:
+    dir: /srv/hops
+    user: vagrant
+  kagent:
+    network:
+      interface: enp0s8
+  hops:
+    num_replicas: 2
+
+groups: 
+  namenodes:
+    size: 1 
+    baremetal:
+      ip: 192.168.56.101
+    recipes: 
+      - kagent
+      - ndb::mgmd
+      - ndb::mysqld                                                       
+      - hops::ndb
+      - hops::rm
+      - hops::nn
+      - hops::jhs
+  datanode1:
+    size: 1
+    baremetal:
+      ip: 192.168.56.102
+    recipes: 
+      - kagent
+      - ndb::ndbd
+      - hops::dn
+      - hops::nm
+  datanode2:
+    size: 1
+    baremetal:
+      ip: 192.168.56.103
+    recipes: 
+      - kagent
+      - ndb::ndbd
+      - hops::dn
+      - hops::nm
+
+
