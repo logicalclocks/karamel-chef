@@ -112,17 +112,17 @@ fi
 
 #set -e
 
-if [ ! -f Vagrantfile.$1.$2 ] ; then
- echo "Couldn't find the Vagrantfile.$1.$2 for your cluster"
+if [ ! -f vagrantfiles/Vagrantfile.$1.$2 ] ; then
+ echo "Couldn't find the Vagrantfile.$1.$2 for your cluster in the vagrantfiles directory"
  exit 1
 fi
-if [ ! -f cluster.yml.$2.$3 ] ; then
- echo "Couldn't find the cluster.yml.$1.$2 for your cluster"
+if [ ! -f cluster-defns/cluster.yml.$2.$3 ] ; then
+ echo "Couldn't find the cluster.yml.$1.$2 for your cluster in the cluster-defns directory"
  exit 1
 fi
  
-cp Vagrantfile.$1.$2 Vagrantfile
-cp cluster.yml.$2.$3 cluster.yml
+cp vagrantfiles/Vagrantfile.$1.$2 Vagrantfile
+cp cluster-defns/cluster.yml.$2.$3 cluster.yml
 
 
 if [ $PORTS -eq 1 ] ; then
