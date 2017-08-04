@@ -15,7 +15,7 @@ function help() {
 port=
 forwarded_port=
 ports=
-http_port=8080
+#http_port=8080
 
 VBOX_MANAGE=/usr/bin/VBoxManage
 OCTETS="192.168."
@@ -39,14 +39,15 @@ function replace_port() {
     done
 
     if [ "$forwarded_port" != "22" ] ; then
-      perl -pi -e "s/$forwarded_port/$p/g" Vagrantfile
-      perl -pi -e "s/$p/$forwarded_port/" Vagrantfile
-      echo "$port -> $p"
-      if [ "$forwarded_port" == "8080" ] ; then
-         perl -pi -e "s/$forwarded_port/$p/" cluster.yml
-         perl -pi -e "s/$forwarded_port/$p/g" Vagrantfile
-	 http_port=$p
-      fi
+         perl -pi -e "s/$forwarded_port/$p/g" Vagrantfile	
+#      if [ "$forwarded_port" == "8080" ] ; then
+#         perl -pi -e "s/$forwarded_port/$p/" cluster.yml
+#      	 http_port=$p
+#         echo "http_port -> $p"
+#      else
+         perl -pi -e "s/$p/$forwarded_port/" Vagrantfile
+         echo "$port -> $p"
+#      fi
     else 
        echo "New port is: $p"
        sed "0,/RE/s/10022/$p/" Vagrantfile > Vagrantfile.new
@@ -117,7 +118,7 @@ if [ ! -f vagrantfiles/Vagrantfile.$1.$2 ] ; then
  exit 1
 fi
 if [ ! -f cluster-defns/$2.$3.yml ] ; then
- echo "Couldn't find the $1.$2.yml for your cluster in the cluster-defns directory"
+ echo "Couldn't find the $2.$3.yml for your cluster in the cluster-defns directory"
  exit 1
 fi
  

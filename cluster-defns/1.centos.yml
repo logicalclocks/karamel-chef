@@ -5,24 +5,26 @@ baremetal:
 cookbooks:       
   hopsworks:                                                                     
     github: "hopshadoop/hopsworks-chef"
-    branch: "yarn_shuffle_jar"
+    branch: "master"  
 
 attrs:
   install:
     dir: /srv/hops
     user: vagrant
+  tensorflow:
+    install: "dist"
+  cuda:
+    accept_nvidia_download_terms: "true"
+    skip_test: "true"
   kagent:
     network:
-      interface: enp0s3
+      interface: eth0
   hopsworks:
-    port: 11123
+    port: 11112
+    staging_dir: /srv/hops/staging
     ear_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ear.ear
     war_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks.war
     ca_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ca.war
-  hops:
-    yarn:
-      max_gpus: 8
-      gpu_enabled: true
 groups: 
   namenodes:
     size: 1 
