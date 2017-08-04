@@ -23,6 +23,7 @@ attrs:
     yarn:
       max_gpus: 8
       gpu_enabled: true
+      gpus: '*'
 groups: 
   namenodes:
     size: 1 
