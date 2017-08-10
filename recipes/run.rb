@@ -4,23 +4,15 @@ bash "run_karamel" do
     code <<-EOF
     set -e
     cd /home/vagrant/karamel-0.3
-    ./bin/karamel -headless -launch /home/vagrant/cluster.yml 
+    ./bin/karamel -headless -launch /home/vagrant/cluster.yml
 EOF
 end
 
+package ['git', 'maven']
 
-package "git"
-
-package "maven"
-
-bash "hopsworks_tests" do
-    user "root"
-    timeout 36000
-    code <<-EOF
-    set -e
-    cd /home/vagrant
-    git clone git@github.com:hopshadoop/hopsworks.git
-        
-
-EOF
+git '/home/vagrant/hopsworks' do
+   repository 'https://github.com/hopshadoop/hopsworks.git'
+   revision 'master'
+   action :sync
+   user 'root'
 end
