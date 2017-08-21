@@ -1,0 +1,44 @@
+name: HopsworksLocalhost
+baremetal:
+    username: jdowling
+
+cookbooks:       
+  hopsworks:                                                                     
+    github: "hopshadoop/hopsworks-chef"
+    branch: "master"  
+
+
+attrs:
+  install:
+    user: jdowling
+    dir: /srv/hops
+
+groups: 
+  namenodes:
+    size: 1 
+    baremetal:
+      ip: 127.0.0.1
+    size: 1
+    recipes: 
+      - kagent
+      - ndb::mgmd
+      - ndb::ndbd
+      - ndb::mysqld                                                       
+      - hops::ndb
+      - hops::rm
+      - hops::nn
+      - hops::dn
+      - hops::nm
+      - hops::jhs
+      - hadoop_spark::yarn
+      - hadoop_spark::historyserver
+      - flink::yarn
+      - elastic
+      - livy
+      - zeppelin
+      - kzookeeper
+      - kkafka
+      - drelephant
+      - epipe
+      - hopsworks
+

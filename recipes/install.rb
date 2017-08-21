@@ -18,12 +18,20 @@ when 'debian', 'ubuntu'
 
 when 'redhat', 'centos', 'fedora'
 
-  template "/etc/hosts" do
-    source "hosts.erb"
-    owner "root"
-    group "root"
-    mode 0644
+  node[:karamel][:default][:private_ips].each_with_index do |ip, index|
+    hostsfile_entry "#{ip}" do
+      hostname  "hopsworks#{index}"
+      action    :create
+      unique    true
+    end
   end
+
+#  template "/etc/hosts" do
+#    source "hosts.erb"
+#    owner "root"
+#    group "root"
+#    mode 0644
+#  end
 
 # Fix bug: https://github.com/mitchellh/vagrant/issues/8115    
 bash "restart_network" do

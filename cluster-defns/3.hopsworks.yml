@@ -5,7 +5,10 @@ baremetal:
 cookbooks:       
   hopsworks:                                                                     
     github: "hopshadoop/hopsworks-chef"
-    branch: "ssl"  
+    branch: "master"  
+  hive2:                                                                     
+    github: "hopshadoop/hive-chef"
+    branch: "master"  
 
 attrs:
   install:
@@ -14,13 +17,9 @@ attrs:
   kagent:
     network:
       interface: enp0s8
-  hopsworks:
-    ear_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ear-jim.ear
-    war_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-jim.war
-    ca_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ca-jim.war
   hops:
-    num_replicas: 2
-    
+     num_replicas: 2
+
 groups: 
   namenodes:
     size: 1 
@@ -38,13 +37,15 @@ groups:
       - hadoop_spark::historyserver
       - flink::yarn
       - zeppelin
-      - livy      
       - hopsworks
       - hopsmonitor
       - tensorflow
       - hopslog
       - hopsmonitor::telegraf
-      - kzookeeper      
+      - kzookeeper
+      - livy      
+      - hive2
+      - kagent::dev
   datanode1:
     size: 1
     baremetal:
@@ -52,15 +53,14 @@ groups:
     recipes: 
       - kagent
       - ndb::ndbd
+      - ndb::mysqld                                                       
       - hops::ndb
+      - hops::nn
       - hops::dn
       - hops::nm
-      - ndb::mysqld                                                             
-      - hops::nn      
       - kzookeeper
-      - elastic
       - epipe
-      - hadoop_spark
+      - hadoop_spark::yarn
       - hopsmonitor::telegraf      
   datanode2:
     size: 1
@@ -70,9 +70,10 @@ groups:
       - kagent
       - ndb::ndbd
       - kzookeeper
+      - elastic
       - hops::dn
       - hops::nm
       - kkafka      
-      - hadoop_spark
+      - hadoop_spark::yarn
       - hopsmonitor::telegraf 
 

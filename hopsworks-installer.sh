@@ -29,12 +29,14 @@
 ###################################################################################################
 
 
-yml=8GB.yml
+yml=1.8GB.yml
 NON_INTERACT=0
 HOPSWORKS_INSTALLER_VERSION="Hopsworks Localhost Installer Version 0.1 \n\nCopyright (c) Logical Clocks, 2017."
 PARAM_INSTALL_DIR=0
 PARAM_CLEAN_INSTALL_DIR=0
 SCRIPTNAME=`basename $0`
+SSH_PORT=22
+KARAMEL_VERSION=0.3
 
 ###################################################################################################
 # SCREEN CLEAR FUNCTIONS
@@ -58,6 +60,19 @@ clear_screen_no_skipline()
  fi 
  clear
 }
+
+public_key=""
+
+function finish {
+  echo "Cleaning up ssh keys in authorized keys before exiting..."
+  grep $public_key ${HOME}/.ssh/authorized_keys
+  if [ $? -eq 0 ] ; then
+    grep -v $public_key $HOME/.ssh/authorized_keys > $HOME/.ssh/tmp
+    mv $HOME/.ssh/tmp $HOME/.ssh/authorized_keys
+  fi    
+}
+trap finish EXIT
+
 
 
 #######################################################################
@@ -107,9 +122,9 @@ oracle_download()
 {
   clear
   echo ""    
-  echo "You will also need to download a database.."
+  echo "You will also need to download a database driver and database for Hops."
   echo ""      
-  echo "MySQL Server and NDB Storage Engine (MySQL Cluster), Copyright(C) Oracle, GPL v2 licensed."
+  echo "Hops currently suppports MySQL Server and NDB Storage Engine (MySQL Cluster), Copyright(C) Oracle, GPL v2 licensed."
   echo "By clicking enter, you indicated that you want to download GPL v2 licensed MySQL Cluster."
   clear_screen
 }
@@ -233,7 +248,8 @@ pushd .
 # 1. setup ssh to localhost to sudo account
 
 if [ ! -f ${HOME}/.ssh/id_rsa.pub ] ; then
-   echo "No ssh key found, generating one with ssh-keygen"
+    echo "No ssh keypair found. "
+    echo "Generating a ssh keypair with ssh-keygen at ${HOME}/.ssh/id_rsa(.pub)"
    ssh-keygen -b 2048 -f ${HOME}/.ssh/id_rsa -t rsa -q -N ''
 fi
 
@@ -241,33 +257,37 @@ public_key=`cat ${HOME}/.ssh/id_rsa.pub`
 
 grep $public_key ${HOME}/.ssh/authorized_keys
 keychange=$?
-
 if [ $keychange -ne 0 ] ; then
     echo "Enabling ssh into localhost (needed by Karamel)"
-    echo "Adding public key to ${HOME}/.ssh/authorized_keys"
+    echo "Adding ${USER} public key to ${HOME}/.ssh/authorized_keys"
     cat ${HOME}/.ssh/id_rsa.pub >> ${HOME}/.ssh/authorized_keys
 fi
 
 # 2. check if openssh server installed
 
-ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${USER}localhost "echo 'hello'"
+echo "Check if openssh server installed and that ${USER} can ssh without a password into ${USER}@localhost"
+
+ssh -p $SSH_PORT -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${USER}localhost "echo 'ssh connected'"
 
 if [ $? -ne 0 ] ; then
     echo "Ssh server needs to be running on localhost. Starting one..."
-    sudo service ssh start
+    sudo service ssh restart
     if [ $? -ne 0 ] ; then
 	echo "Installing ssh server."
 	sudo apt-get install openssh-server -y
 	sleep 2
         sudo service ssh status
         if [ $? -ne 0 ] ; then
-	    echo "Could not install/start a ssh server. Install openssh-server (or some other ssh server) and re-run installer."
+	    echo "Error: could not install/start a ssh server. Install an openssh-server (or some other ssh server) and re-run this install script."
+	    echo "Exiting..."
 	    exit 2
 	fi
     fi
-    ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${USER}@localhost "echo 'hello'"
+    ssh -p $SSH_PORT -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${USER}@localhost "echo 'hello'"
     if [ $? -ne 0 ] ; then    
-      echo "Could not install/start a ssh server. Install openssh-server (or some other ssh server) and re-run installer."
+      echo "Error: could not ssh to $USER@localhost"
+      echo "You need to setup you machine so that $USER can ssh to localhost"
+      echo "Exiting..."
       exit 3
     fi
 fi    
@@ -279,7 +299,7 @@ if [ $? -ne 0 ] ; then
 fi
 
 # 3. Download chefdk, karamel, and cluster.xml
-mkdir karamel
+mkdir -p ./karamel
 cd karamel
 echo "Downloading and installing Karamel"
 
@@ -320,29 +340,31 @@ echo "Downloading and installing Karamel"
 #     fi
 # fi
 
-if [ ! -f karamel-0.3.tgz ] ; then
-    wget http://www.karamel.io/sites/default/files/downloads/karamel-0.3.tgz
+if [ ! -f karamel-${KARAMEL_VERSION}.tgz ] ; then
+    wget http://www.karamel.io/sites/default/files/downloads/karamel-${KARAMEL_VERSION}.tgz
     if [ $? -ne 0 ] ; then
         echo "Could not download karamel. Exiting..."
         exit 4
     fi
 fi    
-tar zxf karamel-0.3.tgz
+tar zxf karamel-${KARAMEL_VERSION}.tgz
 if [ $? -ne 0 ] ; then
-    rm -f karamel-0.3.tgz
-    wget http://www.karamel.io/sites/default/files/downloads/karamel-0.3.tgz
+    sleep 2
+    echo "Problem unzipping karamel. Retrying..."
+    rm -f karamel-${KARAMEL_VERSION}.tgz
+    wget http://www.karamel.io/sites/default/files/downloads/karamel-${KARAMEL_VERSION}.tgz
     if [ $? -ne 0 ] ; then
         echo "Could not download karamel. Exiting..."
         exit 4
     fi
-    tar zxf karamel-0.3.tgz    
+    tar zxf karamel-${KARAMEL_VERSION}.tgz    
     if [ $? -ne 0 ] ; then
 	echo "Couldn't extract karamel. Exiting..."
 	exit 7
     fi
 fi
 rm -f $yml
-wget http://snurran.sics.se/hops/${yml}
+wget https://github.com/hopshadoop/karamel-chef/tree/master/cluster-defns/${yml}
 if [ $? -ne 0 ] ; then
   echo "Could not download hopsworks cluster definition file ${yml}. Exiting..."
   exit 9
@@ -350,31 +372,25 @@ fi
 
 IP_ADDR="127.0.0.1"
 
-net_if="lo"
+net_if="enp0s3"
 
 sed -i.bak s/REPLACE_USERNAME/${USER}/g ./${yml}
 sed -i.bak s/REPLACE_IP_ADDR/${IP_ADDR}/g ./${yml} 
 sed -i.bak s/REPLACE_NET_IF/${net_if}/g ./${yml}
 
-cd karamel-0.3
+cd karamel-${KARAMEL_VERSION}
 
 # 5. Launch the cluster
-./bin/karamel -headless -launch ../8GB.yml -server conf/dropwizard.yml
+./bin/karamel -headless -launch ../${yml} -server conf/dropwizard.yml
 
 if [ $? -ne 0 ] ; then
     echo "Problem installing with Karamel. Try re-running the installer script."
     exit 10
 fi    
-#2>&1 > ../hopsworks-installer.log
 
 popd
 
-echo "Cleaning up ssh keys in authorized keys before exiting..."
-if [ $keychange -ne 0 ] ; then
-  if grep -v $public_key $HOME/.ssh/authorized_keys > $HOME/.ssh/tmp; then
-    mv $HOME/.ssh/tmp $HOME/.ssh/authorized_keys
-  fi
-fi    
 
-google-chrome -new-tab http://127.0.0.1:8080/hopsworks
-
+if [ $NON_INTERACT -eq 0 ] ; then
+    google-chrome -new-tab http://127.0.0.1:8080/hopsworks
+fi
