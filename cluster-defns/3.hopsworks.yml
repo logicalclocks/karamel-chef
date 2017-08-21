@@ -60,7 +60,7 @@ groups:
       - hops::nm
       - kzookeeper
       - epipe
-      - hadoop_spark
+      - hadoop_spark::yarn
       - hopsmonitor::telegraf      
   datanode2:
     size: 1
@@ -74,6 +74,6 @@ groups:
       - hops::dn
       - hops::nm
       - kkafka      
-      - hadoop_spark
+      - hadoop_spark::yarn
       - hopsmonitor::telegraf 
 
