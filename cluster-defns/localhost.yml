@@ -1,6 +1,6 @@
 name: HopsworksLocalhost
 baremetal:
-    username: jdowling
+    username: YOUR_USERNAME 
 
 cookbooks:       
   hopsworks:                                                                     
@@ -10,8 +10,13 @@ cookbooks:
 
 attrs:
   install:
-    user: jdowling
-    dir: /srv/hops
+    user: YOUR_USERNAME
+    dir: INSTALL_DIRECTORY
+  services:
+    enabled: false
+  kagent:
+    network:
+      interface: enp0s3
 
 groups: 
   namenodes:
@@ -38,7 +43,8 @@ groups:
       - zeppelin
       - kzookeeper
       - kkafka
-      - drelephant
       - epipe
       - hopsworks
-
+      - hopslog
+      - hopsmonitor
+      - hopsmonitor::telegraph
