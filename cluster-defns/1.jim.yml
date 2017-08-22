@@ -5,7 +5,7 @@ baremetal:
 cookbooks:       
   hopsworks:                                                                     
     github: "hopshadoop/hopsworks-chef"
-    branch: "jupyter_h162"  
+    branch: "master"  
 
 attrs:
   install:
