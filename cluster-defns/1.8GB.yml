@@ -1,0 +1,129 @@
+name: HopsworksOnLocalhost
+baremetal:
+    username: REPLACE_USERNAME
+
+cookbooks:       
+  hopsworks:                                                                     
+    github: "hopshadoop/hopsworks-chef"
+    branch: "master"  
+
+attrs:
+  kagent:
+    user: glassfish
+    group: glassfish    
+    dir: /srv/hops
+    allow_ssh_access: "true"
+    network:
+        interface: REPLACE_NET_IF
+  hops:
+    dir: /srv/hops
+  apache_hadoop:
+    group: glassfish
+    dir: /srv/hops
+    hdfs:
+        user: glassfish
+    yarn: 
+        user: glassfish
+    mr: 
+        user: glassfish
+  hadoop_spark:
+    user: glassfish
+    group: glassfish
+    dir: /srv/hops
+  drelephant:
+    user: glassfish
+    group: glassfish
+    dir: /srv/hops
+  ntp:
+    install: "true"
+  flink:
+    user: glassfish
+    group: glassfish
+    dir: /srv/hops
+  zeppelin:
+    user: glassfish
+    group: glassfish
+    dir: /srv/hops
+  elastic:
+    user: glassfish
+    group: glassfish
+    dir: /srv/hops
+  kkafka:
+    user: glassfish
+    group: glassfish
+    dir: /srv/hops
+  kzookeeper:
+    user: glassfish
+    group: glassfish
+    dir: /srv/hops
+  livy:
+    user: glassfish
+    group: glassfish
+    dir: /srv/hops
+  ndb:
+    user: glassfish
+    group: glassfish
+    dir: /srv/hops
+  mysql:
+    dir: /srv/hops
+  hopsmonitor:
+    user: glassfish
+    group: glassfish
+    dir: /srv/hops
+  hopslog:
+    user: glassfish
+    group: glassfish
+    dir: /srv/hops
+  tensorflow:
+    user: glassfish
+    group: glassfish
+    dir: /srv/hops
+  hopslog:
+    user: glassfish
+    group: glassfish
+    dir: /srv/hops
+  hopsmonitor:
+    user: glassfish
+    group: glassfish
+    dir: /srv/hops
+  hopsworks:
+    user: glassfish
+    group: glassfish
+    dir: /srv/hops
+  epipe:
+    user: glassfish
+    group: glassfish
+    dir: /srv/hops
+
+groups: 
+  theone:
+    size: 1 
+    baremetal:
+      ip: REPLACE_IP_ADDR
+    size: 1
+    recipes: 
+      - kagent
+      - ndb::mgmd
+      - ndb::ndbd
+      - ndb::mysqld                                                 
+      - hops::ndb
+      - hops::rm
+      - hops::nn
+      - hops::dn
+      - hops::nm
+      - hops::jhs
+      - hadoop_spark::yarn
+      - hadoop_spark::historyserver
+      - flink::yarn
+      - elastic
+      - livy
+      - zeppelin
+      - kzookeeper
+      - kkafka
+      - drelephant
+      - epipe
+      - hopsworks
+      - tensorflow
+      - hopslog
+      - hopsmonitor      
+
