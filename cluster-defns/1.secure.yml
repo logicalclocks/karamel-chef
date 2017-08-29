@@ -10,11 +10,16 @@ cookbooks:
 attrs:
   install:
     dir: /srv/hops
+  jupyter:
+      user: glassfish
+  hops:
+    hdfs:
+      user: glassfish
   kagent:
     network:
       interface: enp0s3
   jupyter:
-    python: false
+    python: true
   hopsworks:
     port: 8080
     ear_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ear-jim.ear
