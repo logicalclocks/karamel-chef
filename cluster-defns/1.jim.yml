@@ -20,9 +20,9 @@ attrs:
     war_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-jim.war
     ca_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ca-jim.war
   hops:
+    gpu: false
     yarn:
       max_gpus: 8
-      gpu_enabled: false
       gpus: '*'
 groups: 
   namenodes:

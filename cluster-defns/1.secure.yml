@@ -11,10 +11,10 @@ attrs:
   install:
     dir: /srv/hops
   jupyter:
-      user: glassfish
+      user: jupyter
   hops:
-    hdfs:
-      user: glassfish
+    rpc:
+      ssl: true
   kagent:
     network:
       interface: enp0s3
