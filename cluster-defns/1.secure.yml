@@ -11,7 +11,7 @@ attrs:
   install:
     dir: /srv/hops
   jupyter:
-      user: jupyter
+      user: glassfish
   hops:
     rpc:
       ssl: true
