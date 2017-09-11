@@ -38,6 +38,9 @@ SCRIPTNAME=`basename $0`
 SSH_PORT=22
 KARAMEL_VERSION=0.3
 
+#ECHO_OUT="2>&1 > /dev/null"
+ECHO_OUT="2>&1 > /tmp/hopsworks-installer.log"
+
 ###################################################################################################
 # SCREEN CLEAR FUNCTIONS
 ###################################################################################################
@@ -45,8 +48,8 @@ KARAMEL_VERSION=0.3
 clear_screen()
 {
  if [ $NON_INTERACT -eq 0 ] ; then
-   echo "" $ECHO_OUT
-   echo "Press ENTER to continue" $ECHO_OUT
+   echo "" 
+   echo "Press ENTER to continue"
    read cont < /dev/tty
  fi 
  clear
@@ -55,7 +58,7 @@ clear_screen()
 clear_screen_no_skipline()
 {
  if [ $NON_INTERACT -eq 0 ] ; then
-    echo "Press ENTER to continue" $ECHO_OUT
+    echo "Press ENTER to continue"
     read cont < /dev/tty
  fi 
  clear
@@ -64,10 +67,9 @@ clear_screen_no_skipline()
 public_key=""
 
 function finish {
-  echo "Cleaning up ssh keys in authorized keys before exiting..."
-  grep $public_key ${HOME}/.ssh/authorized_keys
+  grep "$public_key" ${HOME}/.ssh/authorized_keys 2>&1 > /dev/null
   if [ $? -eq 0 ] ; then
-    grep -v $public_key $HOME/.ssh/authorized_keys > $HOME/.ssh/tmp
+    grep -v "$public_key" $HOME/.ssh/authorized_keys > $HOME/.ssh/tmp 
     mv $HOME/.ssh/tmp $HOME/.ssh/authorized_keys
   fi    
 }
@@ -129,6 +131,16 @@ oracle_download()
   clear_screen
 }
 
+nvidia_download()
+{
+  clear
+  echo ""    
+  echo "You will also need to download Nvidia drivers (cuda) and libraries (cudnn)."
+  echo "By clicking enter, you indicate that you agree with Nvidia's terms and conditions, see http://nvidia.com."
+  clear_screen
+}
+
+
 display_license()
 {
   echo ""        
@@ -173,6 +185,15 @@ accept_license ()
      esac
 }
 
+SUDO_PWD=
+enter_sudo_password () 
+{
+ echo ""
+ echo "Enter the sudo password for this account (press enter, if there is no sudo password):"
+ read -s ACCEPT
+ SUDO_PWD="-passwd $ACCEPT"
+}
+  
 
 #
 # Checks if you are running the script as root or not
@@ -220,6 +241,9 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
     -ni|--non-interactive)
 	      NON_INTERACT=1
 	      ;;
+    -pwd|--password)
+	      SUDO_PWD= SUDO_PWD="-passwd $1"
+	      ;;
     -v|--version) 
 	      echo ""     
               echo -e $HOPSWORKS_INSTALLER_VERSION 
@@ -238,10 +262,39 @@ if [ $NON_INTERACT -eq 0 ] ; then
   splash_screen
   copyrights
   oracle_download
-  display_license
-  accept_license  
-  clear_screen
+  nvidia_download
+  display_license  
+  accept_license
+  #  clear_screen
+  enter_sudo_password
 fi
+
+
+
+
+sudo netstat -ltpn | grep 8080 2>&1 > /dev/null
+if [ $? -eq 0 ] ; then
+    echo "You have a service running on port 8080, needed by hopsworks. Please stop it:"
+    echo "sudo netstat -ltpn | grep 8080"
+    echo ""
+    exit 2
+fi    
+
+sudo netstat -ltpn | grep 4848 2>&1 > /dev/null
+if [ $? -eq 0 ] ; then
+    echo "You have a service running on port 4848, needed by hopsworks. Please stop it:"
+    echo "sudo netstat -ltpn | grep 4848"
+    echo ""
+    exit 2
+fi    
+
+sudo netstat -ltpn | grep 3306 2>&1 > /dev/null
+if [ $? -eq 0 ] ; then
+    echo "You have a mysql server running on port 3306, needed by hopsworks. Please stop it (or better still, uninstall it)."
+    echo "Maybe this will work to stop it: sudo systemctl stop mysqld"
+    echo "Maybe this will work to uninstall it: sudo apt-get purge mysqld"
+    exit 2
+fi    
 
 
 pushd .
@@ -253,11 +306,10 @@ if [ ! -f ${HOME}/.ssh/id_rsa.pub ] ; then
    ssh-keygen -b 2048 -f ${HOME}/.ssh/id_rsa -t rsa -q -N ''
 fi
 
-public_key=`cat ${HOME}/.ssh/id_rsa.pub`
+public_key=$(cat ${HOME}/.ssh/id_rsa.pub)
 
-grep $public_key ${HOME}/.ssh/authorized_keys
-keychange=$?
-if [ $keychange -ne 0 ] ; then
+grep "$public_key" ${HOME}/.ssh/authorized_keys
+if [ $? -ne 0 ] ; then
     echo "Enabling ssh into localhost (needed by Karamel)"
     echo "Adding ${USER} public key to ${HOME}/.ssh/authorized_keys"
     cat ${HOME}/.ssh/id_rsa.pub >> ${HOME}/.ssh/authorized_keys
@@ -267,16 +319,16 @@ fi
 
 echo "Check if openssh server installed and that ${USER} can ssh without a password into ${USER}@localhost"
 
-ssh -p $SSH_PORT -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${USER}localhost "echo 'ssh connected'"
+ssh -p $SSH_PORT -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${USER}localhost "echo 'ssh connected'" 
 
 if [ $? -ne 0 ] ; then
     echo "Ssh server needs to be running on localhost. Starting one..."
-    sudo service ssh restart
+    sudo service ssh restart 
     if [ $? -ne 0 ] ; then
 	echo "Installing ssh server."
-	sudo apt-get install openssh-server -y
+	sudo apt-get install openssh-server -y 
 	sleep 2
-        sudo service ssh status
+        sudo service ssh status 
         if [ $? -ne 0 ] ; then
 	    echo "Error: could not install/start a ssh server. Install an openssh-server (or some other ssh server) and re-run this install script."
 	    echo "Exiting..."
@@ -292,15 +344,24 @@ if [ $? -ne 0 ] ; then
     fi
 fi    
 
+#
+# Sanity Checks
+if [ -d ~/.berkshelf ] ; then
+    sudo chown -R $USER ~/.berkshelf
+fi
+
 java -version | grep '1.8'
 if [ $? -ne 0 ] ; then
     echo "No java version 8 found. Installing..."
     sudo apt-get install openjdk-8-jre -y
 fi
 
+sudo rm -rf ${HOME}/.karamel/install
+sudo rm -rf ${HOME}/.karamel/cookbooks
+
 # 3. Download chefdk, karamel, and cluster.xml
-mkdir -p ./karamel
-cd karamel
+mkdir -p ./hops 
+cd hops
 echo "Downloading and installing Karamel"
 
 # ubuntu='14.04'
@@ -315,7 +376,6 @@ echo "Downloading and installing Karamel"
 #        ubuntu='16.04'
 #     fi
 #     echo "Downloading chefdk for ubuntu version $ubuntu"    
-
 #     if [ ! -f chefdk_0.19.6-1_amd64.deb ] ; then
 # 	wget https://packages.chef.io/files/stable/chefdk/0.19.6/ubuntu/16.04/chefdk_0.19.6-1_amd64.deb
 # 	if [ $? -ne 0 ] ; then
@@ -347,7 +407,7 @@ if [ ! -f karamel-${KARAMEL_VERSION}.tgz ] ; then
         exit 4
     fi
 fi    
-tar zxf karamel-${KARAMEL_VERSION}.tgz
+tar zxf karamel-${KARAMEL_VERSION}.tgz 
 if [ $? -ne 0 ] ; then
     sleep 2
     echo "Problem unzipping karamel. Retrying..."
@@ -357,40 +417,79 @@ if [ $? -ne 0 ] ; then
         echo "Could not download karamel. Exiting..."
         exit 4
     fi
-    tar zxf karamel-${KARAMEL_VERSION}.tgz    
+    tar zxf karamel-${KARAMEL_VERSION}.tgz
     if [ $? -ne 0 ] ; then
 	echo "Couldn't extract karamel. Exiting..."
 	exit 7
     fi
 fi
-rm -f $yml
-wget https://github.com/hopshadoop/karamel-chef/tree/master/cluster-defns/${yml}
-if [ $? -ne 0 ] ; then
-  echo "Could not download hopsworks cluster definition file ${yml}. Exiting..."
-  exit 9
+
+if [ ! -f ${yml}.bak ] ; then
+    rm -f ${yml}
+    wget https://raw.githubusercontent.com/hopshadoop/karamel-chef/master/cluster-defns/${yml}
+    if [ $? -ne 0 ] ; then
+      echo "Could not download hopsworks cluster definition file ${yml}. Exiting..."
+      exit 9
+    fi
+    cp -f ${yml} ${yml}.bak 
+else
+    # If the file is already there, copy the backup over the install version (which may be in an incorrect state)
+    cp -f ${yml}.bak ${yml}
 fi
 
 IP_ADDR="127.0.0.1"
 
-net_if="enp0s3"
+# net_if is set to the first active network interface
+net_if=$(ip -o link show | awk '{print $2,$9}' | grep UP | sed 's/: UP//' | sed 's/\n.*//')
 
-sed -i.bak s/REPLACE_USERNAME/${USER}/g ./${yml}
-sed -i.bak s/REPLACE_IP_ADDR/${IP_ADDR}/g ./${yml} 
-sed -i.bak s/REPLACE_NET_IF/${net_if}/g ./${yml}
+if [ "$net_if" == "" ] ; then
+    echo "Error."
+    echo "Could not find an active network interface to install with."
+    echo "Is your network up?"
+    exit 12
+fi   
 
-cd karamel-${KARAMEL_VERSION}
+echo "Found net_if: $net_if"
+
+targetDir=$(printf "%q" $PWD)
+
+echo "Install directory is $targetDir"
+
+perl -pi -e "s/REPLACE_USERNAME/${USER}/g" ${yml}
+sleep 1
+perl -pi -e "s/REPLACE_NET_IF/${net_if}/g" ${yml}
+sleep 2
+perl -pi -e "s#REPLACE_INSTALL_DIRECTORY#${targetDir}#g" ${yml}
+
+perl -pi -e "s/REPLACE_GPU/${use_gpu}/g" ${yml}
+
+
+echo "Installing:\n $(cat ${yml})"
 
 # 5. Launch the cluster
-./bin/karamel -headless -launch ../${yml} -server conf/dropwizard.yml
+
+
+cd karamel-${KARAMEL_VERSION}
+if [ $? -ne 0 ] ; then
+    echo "Couldn't change directory to karamel-${KARAMEL_VERSION}"
+    exit 2
+fi
+
+echo "Launching Karamel to start the cluster."
+echo "You can track progress by opening your browser at: http://localhost:9090/index.html#"
+echo "Click on the 'Terminal->status' window to see the progress"
+./bin/karamel -headless -launch ../${yml} -server conf/dropwizard.yml $SUDO_PWD
 
 if [ $? -ne 0 ] ; then
     echo "Problem installing with Karamel. Try re-running the installer script."
     exit 10
 fi    
 
-popd
-
 
 if [ $NON_INTERACT -eq 0 ] ; then
     google-chrome -new-tab http://127.0.0.1:8080/hopsworks
 fi
+
+echo "To start Hopsworks, open your browser at: http://127.0.0.1:8080/hopsworks"
+
+cd ..
