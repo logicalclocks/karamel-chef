@@ -68,10 +68,10 @@ public_key=""
 
 function finish {
   grep "$public_key" ${HOME}/.ssh/authorized_keys 2>&1 > /dev/null
-  if [ $? -eq 0 ] ; then
-    grep -v "$public_key" $HOME/.ssh/authorized_keys > $HOME/.ssh/tmp 
-    mv $HOME/.ssh/tmp $HOME/.ssh/authorized_keys
-  fi    
+  # if [ $? -eq 0 ] ; then
+  #   grep -v "$public_key" $HOME/.ssh/authorized_keys > $HOME/.ssh/tmp 
+  #   mv $HOME/.ssh/tmp $HOME/.ssh/authorized_keys
+  # fi    
 }
 trap finish EXIT
 
@@ -136,7 +136,26 @@ nvidia_download()
   clear
   echo ""    
   echo "You will also need to download Nvidia drivers (cuda) and libraries (cudnn)."
-  echo "By clicking enter, you indicate that you agree with Nvidia's terms and conditions, see http://nvidia.com."
+  echo "By entering 'yes', you indicate that you agree with Nvidia's terms and conditions, see http://nvidia.com."
+  echo ""
+  echo "Please enter either 'yes' or 'no'." 
+  printf 'Do you want to install Nvidia Cuda and Cudnn libraries? [ yes or no ] '
+  use_gpu="true"
+  read ACCEPT
+  case $ACCEPT in
+    yes | Yes | YES)
+      ;;
+    no | No | NO)
+      use_gpu="false"
+      ;;
+    *)
+      echo "" 
+      echo "Please enter either 'yes' or 'no'." 
+      printf 'Do you want to install Nvidia Cuda and Cudnn libraries? [ yes or no ] '
+      nvidia_download
+    ;;
+  esac
+
   clear_screen
 }
 
@@ -189,9 +208,11 @@ SUDO_PWD=
 enter_sudo_password () 
 {
  echo ""
- echo "Enter the sudo password for this account (press enter, if there is no sudo password):"
+ echo "Enter the sudo password for user $USER (press enter, if there is no sudo password):"
  read -s ACCEPT
- SUDO_PWD="-passwd $ACCEPT"
+ if [ "$ACCEPT" != "" ] ; then
+   SUDO_PWD="-passwd $ACCEPT"
+ fi
 }
   
 
@@ -425,7 +446,7 @@ if [ $? -ne 0 ] ; then
 fi
 
 if [ ! -f ${yml}.bak ] ; then
-    rm -f ${yml}
+    rm -f ${yml} 2>&1 > /dev/null
     wget https://raw.githubusercontent.com/hopshadoop/karamel-chef/master/cluster-defns/${yml}
     if [ $? -ne 0 ] ; then
       echo "Could not download hopsworks cluster definition file ${yml}. Exiting..."
@@ -455,13 +476,37 @@ targetDir=$(printf "%q" $PWD)
 
 echo "Install directory is $targetDir"
 
-perl -pi -e "s/REPLACE_USERNAME/${USER}/g" ${yml}
-sleep 1
-perl -pi -e "s/REPLACE_NET_IF/${net_if}/g" ${yml}
-sleep 2
-perl -pi -e "s#REPLACE_INSTALL_DIRECTORY#${targetDir}#g" ${yml}
+owner=$(ls -ld . | awk '{print $3}')
 
+if [ "$owner" != "$USER" ] ; then
+    echo "You are not owner of $PWD. Change owner from $owner to $USER"
+    exit 12
+fi    
+
+perl -pi -e "s/REPLACE_USERNAME/${USER}/g" ${yml}
+if [ $? -ne 0 ] ; then
+    echo "Error. Couldn't edit the YML file to insert the username."
+    echo "Exiting..."
+    exit 1
+fi    
+perl -pi -e "s/REPLACE_NET_IF/${net_if}/g" ${yml}
+if [ $? -ne 0 ] ; then
+    echo "Error. Couldn't edit the YML file to insert the network interface."
+    echo "Exiting..."
+    exit 1
+fi    
+perl -pi -e "s#REPLACE_INSTALL_DIRECTORY#${targetDir}#g" ${yml}
+if [ $? -ne 0 ] ; then
+    echo "Error. Couldn't edit the YML file to insert the install directory."
+    echo "Exiting..."
+    exit 1
+fi    
 perl -pi -e "s/REPLACE_GPU/${use_gpu}/g" ${yml}
+if [ $? -ne 0 ] ; then
+    echo "Error. Couldn't edit the YML file to insert the use_gpu decision."
+    echo "Exiting..."
+    exit 1
+fi    
 
 
 echo "Installing:\n $(cat ${yml})"
