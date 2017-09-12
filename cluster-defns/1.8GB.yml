@@ -28,7 +28,7 @@ groups:
   theone:
     size: 1 
     baremetal:
-      ip: 127.0.0.1
+      ip: REPLACE_HOSTNAME
     recipes: 
       - kagent
       - ndb::mgmd

@@ -488,7 +488,15 @@ if [ $? -ne 0 ] ; then
     echo "Error. Couldn't edit the YML file to insert the username."
     echo "Exiting..."
     exit 1
-fi    
+fi
+
+perl -pi -e "s/REPLACE_HOSTNAME/$(hostname)/g" ${yml}
+if [ $? -ne 0 ] ; then
+    echo "Error. Couldn't edit the YML file to insert the username."
+    echo "Exiting..."
+    exit 1
+fi
+
 perl -pi -e "s/REPLACE_NET_IF/${net_if}/g" ${yml}
 if [ $? -ne 0 ] ; then
     echo "Error. Couldn't edit the YML file to insert the network interface."
