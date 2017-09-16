@@ -5,7 +5,10 @@ baremetal:
 cookbooks:       
   hopsworks:                                                                     
     github: "hopshadoop/hopsworks-chef"
-    branch: "jupyter_metrics"  
+    branch: "master"
+  adam:
+    github: "biobankcloud/adam-chef"
+    branch: "master"
 
 attrs:
   install:
@@ -60,6 +63,7 @@ groups:
       - hadoop_spark::yarn
       - hopsmonitor::telegraf      
       - tensorflow
+      - adam      
   datanode2:
     size: 1
     baremetal:
@@ -74,4 +78,4 @@ groups:
       - hadoop_spark::yarn
       - hopsmonitor::telegraf 
       - tensorflow
-
+      - adam

@@ -13,7 +13,6 @@ cookbooks:
 attrs:
   install:
     dir: /srv/hops
-    user: vagrant
   kagent:
     network:
       interface: enp0s3
