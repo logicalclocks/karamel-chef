@@ -1,0 +1,51 @@
+name: HopsworksVagrantMultiNode
+baremetal:
+    username: vagrant
+
+cookbooks:       
+  hopsworks:                                                                     
+    github: "hopshadoop/hopsworks-chef"
+    branch: "master"  
+  adam:                                                                     
+    github: "biobankcloud/adam-chef"
+    branch: "master"  
+
+attrs:
+  install:
+    dir: /srv/hops
+  kagent:
+    network:
+      interface: enp0s3
+groups: 
+  namenodes:
+    size: 1 
+    baremetal:
+      ip: 10.0.2.15
+    recipes: 
+      - kagent
+      - ndb::mgmd
+      - ndb::ndbd
+      - ndb::mysqld                                                       
+      - hops::ndb
+      - hops::rm
+      - hops::nn
+      - hops::jhs
+      - hadoop_spark::yarn
+      - hadoop_spark::historyserver
+      - flink::yarn
+      - elastic
+      - livy
+      - zeppelin
+      - kzookeeper
+      - kkafka
+      - epipe
+      - hopsworks
+      - hopsworks::dev
+      - hopsmonitor
+      - hopslog
+      - hops::dn
+      - hops::nm
+      - tensorflow
+      - hopsmonitor::telegraf
+      - adam 
+
