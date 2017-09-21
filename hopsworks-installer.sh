@@ -324,7 +324,7 @@ pushd .
 
 if [ ! -f ${HOME}/.ssh/id_rsa.pub ] ; then
     echo "No ssh keypair found. "
-    echo "Generating a ssh keypair with ssh-keygen at ${HOME}/.ssh/id_rsa(.pub)"
+    echo "Generating a passwordless ssh keypair with ssh-keygen at ${HOME}/.ssh/id_rsa(.pub)"
    ssh-keygen -b 2048 -f ${HOME}/.ssh/id_rsa -t rsa -q -N ''
 fi
 
