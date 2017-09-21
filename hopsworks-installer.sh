@@ -291,6 +291,7 @@ if [ $NON_INTERACT -eq 0 ] ; then
 fi
 
 
+sudo systemctl reset-failed
 
 
 sudo netstat -ltpn | grep 8080 2>&1 > /dev/null

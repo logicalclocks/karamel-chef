@@ -11,13 +11,6 @@ attrs:
   install:
     dir: /srv/hops
     user: vagrant
-  tensorflow:
-    install: "src"
-    infiniband: "true"
-    mkl: "true"
-  cuda:
-    accept_nvidia_download_terms: "false"
-    skip_test: "true"
   kagent:
     network:
       interface: enp0s3
@@ -27,9 +20,6 @@ attrs:
       vcores: 8
   hopsworks:
     port: 80
-    ear_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ear.ear
-    war_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks.war
-    ca_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ca.war
 groups: 
   namenodes:
     size: 1 
