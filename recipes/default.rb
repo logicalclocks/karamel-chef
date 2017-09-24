@@ -1,6 +1,6 @@
 
 
-karamel="karamel-0.3.tgz"
+karamel="karamel-0.4.tgz"
 
 kf="/home/vagrant/#{karamel}"
 
@@ -42,7 +42,4 @@ template "/home/vagrant/.karamel/conf" do
   group "vagrant"
   mode 0751
 end
-
-
-
 
