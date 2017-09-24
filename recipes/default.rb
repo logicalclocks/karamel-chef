@@ -21,7 +21,7 @@ chown vagrant .karamel
 tar -xzf #{kf}
 chown -R vagrant karamel*
 EOF
-  not_if { ::File.exists?( "/home/vagrant/karamel-0.3/bin/karamel" ) }
+  not_if { ::File.exists?( "/home/vagrant/karamel-0.4/bin/karamel" ) }
 end
 
 bash "public_key" do
