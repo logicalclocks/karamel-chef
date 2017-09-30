@@ -7,6 +7,10 @@ function help() {
   echo "cp cluster.1.hopsworks cluster.1.jim"
   echo "For example, for a 1-node hopsworks cluster on ubuntu for development with random ports, run:"
   echo "./run.sh ubuntu 1 jim"
+  echo "For centos without random ports, run:"
+  echo "./run.sh centos 1 centos no-random-ports"
+  echo "Note: centos and ubuntu have different n/w interfaces:"
+  echo "      change your cluster defn attribute kagent/network/interface: eth0 (centos) enp0s3 (ubuntu)"
   echo "To find out the currently mapped ports, run:"
   echo "./run.sh ports"
   exit 1

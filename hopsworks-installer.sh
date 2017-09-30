@@ -257,7 +257,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
     -d|--dir)
 	      shift
 	      PARAM_INSTALL_DIR=1
-	      USERNAME=$1
+#	      DIRNAE=$1
 	      ;;
     -ni|--non-interactive)
 	      NON_INTERACT=1
@@ -291,6 +291,7 @@ if [ $NON_INTERACT -eq 0 ] ; then
 fi
 
 
+sudo systemctl reset-failed
 
 
 sudo netstat -ltpn | grep 8080 2>&1 > /dev/null
@@ -323,8 +324,14 @@ pushd .
 
 if [ ! -f ${HOME}/.ssh/id_rsa.pub ] ; then
     echo "No ssh keypair found. "
-    echo "Generating a ssh keypair with ssh-keygen at ${HOME}/.ssh/id_rsa(.pub)"
-   ssh-keygen -b 2048 -f ${HOME}/.ssh/id_rsa -t rsa -q -N ''
+    echo "Generating a passwordless ssh keypair with ssh-keygen at ${HOME}/.ssh/id_rsa(.pub)"
+    ssh-keygen -b 2048 -f ${HOME}/.ssh/id_rsa -t rsa -q -N ''
+    if [ $? -ne 0 ] ; then
+	echo "Problem generating a passwordless ssh keypair with the following command:"
+	echo "ssh-keygen -b 2048 -f ${HOME}/.ssh/id_rsa -t rsa -q -N ''"
+	echo "Exiting with error."
+	exit 12
+    fi
 fi
 
 public_key=$(cat ${HOME}/.ssh/id_rsa.pub)
@@ -332,15 +339,15 @@ public_key=$(cat ${HOME}/.ssh/id_rsa.pub)
 grep "$public_key" ${HOME}/.ssh/authorized_keys
 if [ $? -ne 0 ] ; then
     echo "Enabling ssh into localhost (needed by Karamel)"
-    echo "Adding ${USER} public key to ${HOME}/.ssh/authorized_keys"
+    echo "Adding ${USERNAME} public key to ${HOME}/.ssh/authorized_keys"
     cat ${HOME}/.ssh/id_rsa.pub >> ${HOME}/.ssh/authorized_keys
 fi
 
 # 2. check if openssh server installed
 
-echo "Check if openssh server installed and that ${USER} can ssh without a password into ${USER}@localhost"
+echo "Check if openssh server installed and that ${USERNAME} can ssh without a password into ${USERNAME}@localhost"
 
-ssh -p $SSH_PORT -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${USER}localhost "echo 'ssh connected'" 
+ssh -p $SSH_PORT -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${USERNAME}@localhost "echo 'ssh connected'" 
 
 if [ $? -ne 0 ] ; then
     echo "Ssh server needs to be running on localhost. Starting one..."
@@ -356,10 +363,10 @@ if [ $? -ne 0 ] ; then
 	    exit 2
 	fi
     fi
-    ssh -p $SSH_PORT -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${USER}@localhost "echo 'hello'"
+    ssh -p $SSH_PORT -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${USERNAME}@localhost "echo 'hello'"
     if [ $? -ne 0 ] ; then    
-      echo "Error: could not ssh to $USER@localhost"
-      echo "You need to setup you machine so that $USER can ssh to localhost"
+      echo "Error: could not ssh to $USERNAME@localhost"
+      echo "You need to setup you machine so that $USERNAME can ssh to localhost"
       echo "Exiting..."
       exit 3
     fi
@@ -368,7 +375,7 @@ fi
 #
 # Sanity Checks
 if [ -d ~/.berkshelf ] ; then
-    sudo chown -R $USER ~/.berkshelf
+    sudo chown -R $USERNAME ~/.berkshelf
 fi
 
 java -version | grep '1.8'
@@ -478,12 +485,12 @@ echo "Install directory is $targetDir"
 
 owner=$(ls -ld . | awk '{print $3}')
 
-if [ "$owner" != "$USER" ] ; then
-    echo "You are not owner of $PWD. Change owner from $owner to $USER"
+if [ "$owner" != "$USERNAME" ] ; then
+    echo "You are not owner of $PWD. Change owner from $owner to $USERNAME"
     exit 12
 fi    
 
-perl -pi -e "s/REPLACE_USERNAME/${USER}/g" ${yml}
+perl -pi -e "s/REPLACE_USERNAME/${USERNAME}/g" ${yml}
 if [ $? -ne 0 ] ; then
     echo "Error. Couldn't edit the YML file to insert the username."
     echo "Exiting..."

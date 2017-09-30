@@ -55,5 +55,3 @@ groups:
       - hops::nm
       - tensorflow
       - hopsmonitor::telegraf
-      
-

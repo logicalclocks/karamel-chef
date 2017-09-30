@@ -3,7 +3,7 @@ bash "run_karamel" do
     timeout 36000
     code <<-EOF
     set -e
-    cd /home/vagrant/karamel-0.3
+    cd /home/vagrant/karamel-0.4
     ./bin/karamel -headless -launch /home/vagrant/cluster.yml
 EOF
 end
