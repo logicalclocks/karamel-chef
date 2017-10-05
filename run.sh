@@ -164,8 +164,6 @@ berks vendor cookbooks
 echo "Running the Vagrantfile using 'vagrant up'"
 nohup vagrant up &
 
-./udp_hacky_fix.sh
-
 parse_ports
 
 echo ""
