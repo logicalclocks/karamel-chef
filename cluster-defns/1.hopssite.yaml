@@ -16,10 +16,10 @@ attrs:
     network:
       interface: enp0s3
   dela:
-    port: 42101
-    stun_port1: 43101
-    stun_port2: 44101
-    http_port: 45101
+    port: 42100
+    stun_port1: 43100
+    stun_port2: 44100
+    http_port: 45100
     hops: 
       storage:
         type: "HDFS"
@@ -29,17 +29,17 @@ attrs:
     stun_servers_id: ["1","2"]
   hopsworks:
     port: 8080
-    email: "dela1@gmail.com"
+    email: "delahs@gmail.com"
     ear_url: http://snurran.sics.se/hops/dela/hopsworks-ear.ear
     war_url: http://snurran.sics.se/hops/dela/hopsworks.war
     ca_url: http://snurran.sics.se/hops/dela/hopsworks-ca.war
     cert:
       o: "company_x"
-      ou: "unit_y"
+      ou: "unit_y_hs"
     dela:
       enabled: true
-      cluster_http_port: 45101
-      public_hopsworks_port: 24101
+      cluster_http_port: 45100
+      public_hopsworks_port: 24100
     hopssite:
       domain: "bbc1.sics.se"
       port: 52100
@@ -48,7 +48,7 @@ attrs:
     url: "http://bbc1.sics.se:24100"
     retry_interval: 30
     max_retries: 5
-    manual_register: false
+    manual_register: true
 groups:
   dela:
     size: 1
