@@ -1,0 +1,83 @@
+name: Hopssite
+
+baremetal:
+  username: vagrant
+
+cookbooks:
+  hopsworks:                                                                     
+    github: "{github}"
+    branch: "{branch}"
+
+attrs:
+  install:
+    dir: /srv/hops
+    user: vagrant
+  kagent:
+    network:
+      interface: enp0s3
+  dela:
+    port: {delaport1}
+    stun_port1: {delaport2}
+    stun_port2: {delaport3}
+    http_port: {delaport4}
+    hops: 
+      storage:
+        type: "HDFS"
+      library:
+        type: "DISK"
+    stun_servers_ip: ["193.10.64.107","193.10.64.85"]
+    stun_servers_id: ["1","2"]
+  hopsworks:
+    port: 8080
+    email: "{hsemail}"
+    ear_url: {sourcecode}/hopsworks-ear.ear
+    war_url: {sourcecode}/hopsworks.war
+    ca_url: {sourcecode}/hopsworks-ca.war
+    cert:
+      o: "{hscompany}"
+      ou: "{hsunit}"
+    dela:
+      enabled: true
+      cluster_http_port: {delaport4}
+      public_hopsworks_port: {port4}
+    hopssite:
+      domain: "{hsdomain}"
+      port: {hsport2}
+      heartbeat: 600000
+  hopssite:
+    url: "http://{hsdomain}:{port4}"
+    retry_interval: 30
+    max_retries: 5
+    manual_register: true
+groups:
+  dela:
+    size: 1
+    baremetal:
+      ip: 10.0.2.15
+    recipes:
+      - kagent
+      - ndb::mgmd
+      - ndb::ndbd
+      - ndb::mysqld                                                       
+      - hops::ndb
+      - hops::rm
+      - hops::nn
+      - hops::jhs
+      - hadoop_spark::yarn
+      - hadoop_spark::historyserver
+      - flink::yarn
+      - elastic
+      - livy
+      - zeppelin
+      - kzookeeper
+      - kkafka
+      - epipe
+      - hopsworks
+      - hopsworks::dev
+      - hopsmonitor
+      - hopslog
+      - hops::dn
+      - hops::nm
+      - tensorflow
+      - hopsmonitor::telegraf
+      - dela
