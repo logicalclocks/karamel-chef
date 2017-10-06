@@ -16,3 +16,36 @@ For example,
 
 ./kill.sh 
 
+# Hopsworsk with Hopssite/Dela installation details
+# Installing the vm with hopssite:
+Set the installation parameters in
+```
+hs_env.sh
+```
+Run
+```
+run_hopssite.sh
+```
+When deployment is finished, ssh in the vm and run:
+```
+(vagrant ssh)
+/srv/hops/hopssite/hs_install.sh
+```
+Note: if you installed hopsworks with multiuser support change the user params in:
+```
+/srv/hops/hopssite/hs_env.sh
+MYSQL_USER
+GLASSFISH_USER
+```
+If you want to use the hopsworks/dela on this machine, reload hopsworks-ear from glassfish admin console
+# Installing a vm with dela enabled(slave):
+This vm is supposed to connect to a machine installed as per previous step(hopssite)
+
+Set the installation parameters in
+```
+dela_env.sh
+```
+Run 
+```
+run_dela.sh
+```
