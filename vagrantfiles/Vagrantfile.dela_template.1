@@ -7,45 +7,45 @@ Vagrant.configure("2") do |config|
   config.vm.hostname = 'hopsworks0'
   config.vm.boot_timeout =3600
   
-  config.vm.network :forwarded_port, guest: 22, host: 21101, id: "ssh"
+  config.vm.network :forwarded_port, guest: 22, host: {port1}, id: "ssh"
   # MySQL Server
-  config.vm.network(:forwarded_port, {:guest=>3306, :host=>22101})
+  config.vm.network(:forwarded_port, {:guest=>3306, :host=>{port2}})
   # karamel http
-  config.vm.network(:forwarded_port, {:guest=>9090, :host=>23101})     
+  config.vm.network(:forwarded_port, {:guest=>9090, :host=>{port3}})     
   # Hopsworks http
-  config.vm.network(:forwarded_port, {:guest=>8080, :host=>24101})     
+  config.vm.network(:forwarded_port, {:guest=>8080, :host=>{port4}})     
   # Glassfish debug port
-  config.vm.network(:forwarded_port, {:guest=>9009, :host=>25101})
+  config.vm.network(:forwarded_port, {:guest=>9009, :host=>{port5}})
   # Glassfish admin UI
-  config.vm.network(:forwarded_port, {:guest=>4848, :host=>26101})         
+  config.vm.network(:forwarded_port, {:guest=>4848, :host=>{port6}})         
   # Yarn RM 
-  config.vm.network(:forwarded_port, {:guest=>8088, :host=>27101})
+  config.vm.network(:forwarded_port, {:guest=>8088, :host=>{port7}})
   # Kibana
-  config.vm.network(:forwarded_port, {:guest=>5601, :host=>28101})
+  config.vm.network(:forwarded_port, {:guest=>5601, :host=>{port8}})
   # Grafana Webserver
-  config.vm.network(:forwarded_port, {:guest=>3000, :host=>29101})
+  config.vm.network(:forwarded_port, {:guest=>3000, :host=>{port9}})
   # Nodemanager
-  config.vm.network(:forwarded_port, {:guest=>8083, :host=>30101})
+  config.vm.network(:forwarded_port, {:guest=>8083, :host=>{port10}})
   # Influx DB admin (because of clash with nodemanager)
-  config.vm.network(:forwarded_port, {:guest=>8084, :host=>31101})
+  config.vm.network(:forwarded_port, {:guest=>8084, :host=>{port11}})
   # Influx DB REST API
-  config.vm.network(:forwarded_port, {:guest=>8086, :host=>32101})
+  config.vm.network(:forwarded_port, {:guest=>8086, :host=>{port12}})
   # Graphite Endpoint
-  config.vm.network(:forwarded_port, {:guest=>2003, :host=>33101})
+  config.vm.network(:forwarded_port, {:guest=>2003, :host=>{port13}})
   # Jupyter
-  config.vm.network(:forwarded_port, {:guest=>8888, :host=>34101})
+  config.vm.network(:forwarded_port, {:guest=>8888, :host=>{port14}})
   # membrane proxy    
-  config.vm.network(:forwarded_port, {:guest=>11112, :host=>35101})
+  config.vm.network(:forwarded_port, {:guest=>11112, :host=>{port15}})
   # Dela udp ports
-  config.vm.network(:forwarded_port, {:guest=>42101, :host=>42101, :protocol=>"udp"})
-  config.vm.network(:forwarded_port, {:guest=>43101, :host=>43101, :protocol=>"udp"})
-  config.vm.network(:forwarded_port, {:guest=>44101, :host=>44101, :protocol=>"udp"})
+  config.vm.network(:forwarded_port, {:guest=>{delaport1}, :host=>{delaport1}, :protocol=>"udp"})
+  config.vm.network(:forwarded_port, {:guest=>{delaport2}, :host=>{delaport2}, :protocol=>"udp"})
+  config.vm.network(:forwarded_port, {:guest=>{delaport3}, :host=>{delaport3}, :protocol=>"udp"})
   # Dela http port
-  config.vm.network(:forwarded_port, {:guest=>45101, :host=>45101})
+  config.vm.network(:forwarded_port, {:guest=>{delaport4}, :host=>{delaport4}})
   # Hops Site 1
-  config.vm.network(:forwarded_port, {:guest=>50048, :host=>51101})
+  config.vm.network(:forwarded_port, {:guest=>50048, :host=>{hsport1}})
   # Hops Site 2
-  config.vm.network(:forwarded_port, {:guest=>50081, :host=>52101})
+  config.vm.network(:forwarded_port, {:guest=>50081, :host=>{hsport2}})
 
   config.vm.provision "file", source: "cluster.yml", destination: "cluster.yml"
   config.vm.provision "file", source: "~/.vagrant.d/insecure_private_key", destination: "~/.ssh/id_rsa"    
