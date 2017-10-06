@@ -22,7 +22,7 @@ Set the installation parameters in
 ```
 hs_env.sh
 ```
-Run
+Run (no parameters requires)
 ```
 run_hopssite.sh
 ```
@@ -31,11 +31,11 @@ When deployment is finished, ssh in the vm and run:
 (vagrant ssh)
 /srv/hops/hopssite/hs_install.sh
 ```
-Note: if you installed hopsworks with multiuser support change the user params in:
+Note: if you installed hopsworks with multi-user support change the user params in:
 ```
 /srv/hops/hopssite/hs_env.sh
-MYSQL_USER
-GLASSFISH_USER
+(MYSQL_USER)
+(GLASSFISH_USER)
 ```
 If you want to use the hopsworks/dela on this machine, reload hopsworks-ear from glassfish admin console
 # Installing a vm with dela enabled(slave):
@@ -45,7 +45,7 @@ Set the installation parameters in
 ```
 dela_env.sh
 ```
-Run 
+Run (no parameters required)
 ```
 run_dela.sh
 ```
