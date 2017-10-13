@@ -1,12 +1,12 @@
-name: Dela
+name: Hopssite
 
 baremetal:
   username: vagrant
 
 cookbooks:
   hopsworks:                                                                     
-    github: "hopshadoop/hopsworks-chef"
-    branch: "master"
+    github: "{github}"
+    branch: "{branch}"
 
 attrs:
   install:
@@ -16,10 +16,10 @@ attrs:
     network:
       interface: enp0s3
   dela:
-    port: 42100
-    stun_port1: 43100
-    stun_port2: 44100
-    http_port: 45100
+    port: {delaport1}
+    stun_port1: {delaport2}
+    stun_port2: {delaport3}
+    http_port: {delaport4}
     hops: 
       storage:
         type: "HDFS"
@@ -29,23 +29,23 @@ attrs:
     stun_servers_id: ["1","2"]
   hopsworks:
     port: 8080
-    email: "dela1@gmail.com"
-    ear_url: http://snurran.sics.se/hops/dela/hopsworks-ear.ear
-    war_url: http://snurran.sics.se/hops/dela/hopsworks.war
-    ca_url: http://snurran.sics.se/hops/dela/hopsworks-ca.war
+    email: "{hsemail}"
+    ear_url: {sourcecode}/hopsworks-ear.ear
+    war_url: {sourcecode}/hopsworks.war
+    ca_url: {sourcecode}/hopsworks-ca.war
     cert:
-      o: "company_x"
-      ou: "unit_y"
+      o: "{hscompany}"
+      ou: "{hsunit}"
     dela:
       enabled: true
-      cluster_http_port: 45100
-      public_hopsworks_port: 24100
+      cluster_http_port: {delaport4}
+      public_hopsworks_port: {port4}
     hopssite:
-      domain: "bbc1.sics.se"
-      port: 24100
+      domain: "{hsdomain}"
+      port: {hsport2}
       heartbeat: 600000
   hopssite:
-    url: "http://bbc1.sics.se:24100"
+    url: "http://{hsdomain}:{port4}"
     retry_interval: 30
     max_retries: 5
     manual_register: true
