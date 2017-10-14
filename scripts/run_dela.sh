@@ -1,4 +1,6 @@
 #!/bin/bash
 ./dela_setup.sh
-../run.sh dela 1 dela no-random-ports
+cd ..
+./run.sh dela 1 dela no-random-ports
+cd scripts
 ./dela_udp_hacky_fix.sh
