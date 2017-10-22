@@ -10,9 +10,10 @@ cookbooks:
 attrs:
   install:
     dir: /srv/hops
+    user: vagrant
   kagent:
     network:
-      interface: enp0s3
+      interface: eth0
   hopsworks:
     port: 8080
     ear_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ear-jim.ear
