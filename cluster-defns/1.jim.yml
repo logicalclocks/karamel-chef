@@ -11,6 +11,8 @@ attrs:
   install:
     dir: /srv/hops
     user: vagrant
+  dela:
+    enable: true
   kagent:
     network:
       interface: eth0
