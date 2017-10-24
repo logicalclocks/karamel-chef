@@ -43,12 +43,12 @@ function replace_port() {
     done
 
     if [ "$forwarded_port" != "22" ] ; then
-      if [ "$forwarded_port" == "42001" ] ; then
-        echo "dela port 42001 - leave it alone"
-	    elif [ "$forwarded_port" == "42002" ] ; then
-        echo "dela port 42002 - leave it alone"
-	    elif [ "$forwarded_port" == "42003" ] ; then
-        echo "dela port 42003 - leave it alone"
+      if [ "$forwarded_port" == "42011" ] ; then
+        echo "dela port 42011 - leave it alone"
+	    elif [ "$forwarded_port" == "42012" ] ; then
+        echo "dela port 42012 - leave it alone"
+	    elif [ "$forwarded_port" == "42013" ] ; then
+        echo "dela port 42013 - leave it alone"
 #       if [ "$forwarded_port" == "9090" ] ; then
 #          echo "9090 - leave it alone"
 #      else if [ "$forwarded_port" == "8080" ] ; then
