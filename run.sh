@@ -43,6 +43,12 @@ function replace_port() {
     done
 
     if [ "$forwarded_port" != "22" ] ; then
+	if [ "$fowarded_port" == "42001" ] ; then
+	   echo "dela port 42001 - leave it alone"
+	else if [ "$fowarded_port" == "42002" ] ; then
+           echo "dela port 42002 - leave it alone"
+	else if [ "$fowarded_port" == "42003" ] ; then
+           echo "dela port 42003 - leave it alone"
 #       if [ "$forwarded_port" == "9090" ] ; then
 #          echo "9090 - leave it alone"
 #      else if [ "$forwarded_port" == "8080" ] ; then
@@ -50,11 +56,11 @@ function replace_port() {
 #         perl -pi -e "s/$forwarded_port/$p/" cluster.yml
 #      	 http_port=$p
 #         echo "http_port -> $p"
-#       else
+        else
          perl -pi -e "s/$forwarded_port/$p/g" Vagrantfile	
          perl -pi -e "s/$p/$forwarded_port/" Vagrantfile
          echo "$port -> $p"
-#      fi
+        fi
     else 
        echo "New port is: $p"
        sed "0,/RE/s/10022/$p/" Vagrantfile > Vagrantfile.new
