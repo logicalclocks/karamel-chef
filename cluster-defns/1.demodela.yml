@@ -26,8 +26,7 @@ attrs:
     dela:
       demo: true
   hopssite:
-    user: "agent@hops.io"
-    password: "admin"
+    password: "myregisterpassword"
 groups:
   dela:
     size: 1
