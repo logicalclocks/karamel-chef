@@ -24,12 +24,7 @@ attrs:
       o: "mycompany"
       ou: "unit1"
     dela:
-      enabled: true
-    hopssite:
-      domain: "bbc5.sics.se"
-      port: 42004
-  hopssite:
-    url: "http://bbc5.sics.se:8080"
+      demo: true
 groups:
   dela:
     size: 1
