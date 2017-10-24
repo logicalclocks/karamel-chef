@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function help() {
-  echo "Usage: ./run.sh [centos|ubuntu|ports|dela] [1|3] [ndb|hopsworks|hops|jim|antonios|theofilos|dela|etc] [no-random-ports]"
+  echo "Usage: ./run.sh [centos|ubuntu|ports|demodela] [1|3] [ndb|hopsworks|hops|jim|antonios|theofilos|demodela|etc] [no-random-ports]"
   echo ""
   echo "Create your own cluster definition from an existing one:"
   echo "cp cluster.1.hopsworks cluster.1.jim"
@@ -163,6 +163,10 @@ berks vendor cookbooks
 
 echo "Running the Vagrantfile using 'vagrant up'"
 nohup vagrant up &
+
+if [ "$3" == "demodela" ]; then
+    ./udp_hacky_fix.sh
+fi
 
 parse_ports
 
