@@ -25,6 +25,9 @@ attrs:
       ou: "unit1"
     dela:
       demo: true
+  hopssite:
+    user: "agent@hops.io"
+    password: "admin"
 groups:
   dela:
     size: 1
