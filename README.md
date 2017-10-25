@@ -49,3 +49,14 @@ Run (no parameters required)
 ```
 run_dela.sh
 ```
+
+# Simple demo dela install
+1. Register your demo installation with hopssite mirror: (http://bbc5.sics.se:8080/hopsworks-cluster/)
+2. Change the cluster-defns/1.demodela.yml
+  * hopsworks/email and hopssite/password have to match with the registered ones
+  * hopsworks/cert/o has to be unique (currently just choose one specific to you). Next fix will include the organization name in the registration and will check there for uniqueness
+3. Run de demodela recipies
+```
+./run.sh demodela 1 demodela
+```
+Note: Dela requires certain ports to be fixed, which means you can only run 1 instance of demodela on a machine. The default ports used by dela are 42011, 42012, 42013
