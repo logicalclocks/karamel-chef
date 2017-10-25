@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function help() {
-  echo "Usage: ./run.sh [centos|ubuntu|ports|dela] [1|3] [ndb|hopsworks|hops|jim|antonios|theofilos|dela|etc] [no-random-ports]"
+  echo "Usage: ./run.sh [centos|ubuntu|ports|demodela] [1|3] [ndb|hopsworks|hops|jim|antonios|theofilos|demodela|etc] [no-random-ports]"
   echo ""
   echo "Create your own cluster definition from an existing one:"
   echo "cp cluster.1.hopsworks cluster.1.jim"
@@ -43,6 +43,12 @@ function replace_port() {
     done
 
     if [ "$forwarded_port" != "22" ] ; then
+      if [ "$forwarded_port" == "42011" ] ; then
+        echo "dela port 42011 - leave it alone"
+	    elif [ "$forwarded_port" == "42012" ] ; then
+        echo "dela port 42012 - leave it alone"
+	    elif [ "$forwarded_port" == "42013" ] ; then
+        echo "dela port 42013 - leave it alone"
 #       if [ "$forwarded_port" == "9090" ] ; then
 #          echo "9090 - leave it alone"
 #      else if [ "$forwarded_port" == "8080" ] ; then
@@ -50,11 +56,11 @@ function replace_port() {
 #         perl -pi -e "s/$forwarded_port/$p/" cluster.yml
 #      	 http_port=$p
 #         echo "http_port -> $p"
-#       else
-         perl -pi -e "s/$forwarded_port/$p/g" Vagrantfile	
-         perl -pi -e "s/$p/$forwarded_port/" Vagrantfile
-         echo "$port -> $p"
-#      fi
+      else
+        perl -pi -e "s/$forwarded_port/$p/g" Vagrantfile	
+        perl -pi -e "s/$p/$forwarded_port/" Vagrantfile
+        echo "$port -> $p"
+      fi
     else 
        echo "New port is: $p"
        sed "0,/RE/s/10022/$p/" Vagrantfile > Vagrantfile.new
@@ -163,6 +169,10 @@ berks vendor cookbooks
 
 echo "Running the Vagrantfile using 'vagrant up'"
 nohup vagrant up &
+
+if [ "$3" == "demodela" ]; then
+    ./udp_hacky_fix.sh
+fi
 
 parse_ports
 
