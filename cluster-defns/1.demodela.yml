@@ -22,7 +22,6 @@ attrs:
     email: "mycompany@gmail.com"
     cert:
       o: "mycompany"
-      ou: "unit1"
     dela:
       demo: true
   hopssite:
