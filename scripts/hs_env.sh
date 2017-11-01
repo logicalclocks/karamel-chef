@@ -16,3 +16,5 @@ SOURCE_CODE="http:\/\/snurran.sics.se\/hops\/dela"
 #Company and Unit combination has to be unique for each cluster registered with a specific hopssite instance
 CLUSTER_COMPANY="hopsworks"
 CLUSTER_UNIT="hs"
+#password to register the hopsworks instance on the hopssite
+HOPSSITE_PASSWORD="change_me"
