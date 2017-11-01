@@ -49,6 +49,8 @@ attrs:
     retry_interval: 30
     max_retries: 5
     manual_register: false
+    password: "{hspassword}"
+
 groups:
   dela:
     size: 1

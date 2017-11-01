@@ -20,3 +20,5 @@ CLUSTER_UNIT="dela1"
 #suffix and domain for your hopssite instance
 HOPSSITE_SUFFIX=100
 HOPSSITE_DOMAIN="bbc1.sics.se"
+#password to register the hopsworks instance on the hopssite
+HOPSSITE_PASSWORD="change_me"

@@ -51,7 +51,7 @@ sed -i -e "s/{hsemail}/${CLUSTER_EMAIL}/g" ../cluster-defns/1.dela.yml
 sed -i -e "s/{sourcecode}/${SOURCE_CODE}/g" ../cluster-defns/1.dela.yml
 sed -i -e "s/{company}/${CLUSTER_COMPANY}/g" ../cluster-defns/1.dela.yml
 sed -i -e "s/{unit}/${CLUSTER_UNIT}/g" ../cluster-defns/1.dela.yml
-
+sed -i -e "s/{hspassword}/${HOPSSITE_PASSWORD}/g" ../cluster-defns/1.dela.yml
 #*******
 rm -f dela_udp_hacky_fix.sh
 cp udp_hacky_fix_template.sh dela_udp_hacky_fix.sh
