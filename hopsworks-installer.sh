@@ -257,7 +257,6 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
     -d|--dir)
 	      shift
 	      PARAM_INSTALL_DIR=1
-#	      DIRNAE=$1
 	      ;;
     -ni|--non-interactive)
 	      NON_INTERACT=1
