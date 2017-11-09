@@ -2,13 +2,10 @@ name: HopsworksVagrantMultiNode
 baremetal:
     username: vagrant
 
-cookbooks:       
-  hopsworks:                                                                     
+cookbooks:
+  hopsworks:
     github: "hopshadoop/hopsworks-chef"
-    branch: "master"  
-  hive2:                                                                     
-    github: "hopshadoop/hive-chef"
-    branch: "master"  
+    branch: "master"
 
 attrs:
   install:
@@ -20,15 +17,15 @@ attrs:
   hops:
      num_replicas: 2
 
-groups: 
+groups:
   namenodes:
-    size: 1 
+    size: 1
     baremetal:
       ip: 192.168.56.101
-    recipes: 
+    recipes:
       - kagent
       - ndb::mgmd
-      - ndb::mysqld                                                       
+      - ndb::mysqld
       - hops::ndb
       - hops::rm
       - hops::nn
@@ -43,17 +40,17 @@ groups:
       - hopslog
       - hopsmonitor::telegraf
       - kzookeeper
-      - livy      
+      - livy
       - hive2
       - kagent::dev
   datanode1:
     size: 1
     baremetal:
       ip: 192.168.56.102
-    recipes: 
+    recipes:
       - kagent
       - ndb::ndbd
-      - ndb::mysqld                                                       
+      - ndb::mysqld
       - hops::ndb
       - hops::nn
       - hops::dn
@@ -61,19 +58,19 @@ groups:
       - kzookeeper
       - epipe
       - hadoop_spark::yarn
-      - hopsmonitor::telegraf      
+      - hopsmonitor::telegraf
   datanode2:
     size: 1
     baremetal:
       ip: 192.168.56.103
-    recipes: 
+    recipes:
       - kagent
       - ndb::ndbd
       - kzookeeper
       - elastic
       - hops::dn
       - hops::nm
-      - kkafka      
+      - kkafka
       - hadoop_spark::yarn
-      - hopsmonitor::telegraf 
+      - hopsmonitor::telegraf
 

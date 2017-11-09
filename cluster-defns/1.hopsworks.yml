@@ -2,10 +2,10 @@ name: HopsworksVagrantMultiNode
 baremetal:
     username: vagrant
 
-cookbooks:       
-  hopsworks:                                                                     
+cookbooks:
+  hopsworks:
     github: "hopshadoop/hopsworks-chef"
-    branch: "master"  
+    branch: "master"
 
 attrs:
   install:
@@ -19,16 +19,16 @@ attrs:
     war_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks.war
     ca_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ca.war
     port: 8080
-groups: 
+groups:
   namenodes:
-    size: 1 
+    size: 1
     baremetal:
       ip: 10.0.2.15
-    recipes: 
+    recipes:
       - kagent
       - ndb::mgmd
       - ndb::ndbd
-      - ndb::mysqld                                                       
+      - ndb::mysqld
       - hops::ndb
       - hops::rm
       - hops::nn
@@ -50,4 +50,5 @@ groups:
       - hops::nm
       - tensorflow
       - hopsmonitor::telegraf
-      
+      - hive2
+
