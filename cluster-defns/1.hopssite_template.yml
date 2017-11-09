@@ -81,4 +81,5 @@ groups:
       - hops::nm
       - tensorflow
       - hopsmonitor::telegraf
+      - hive2
       - dela
