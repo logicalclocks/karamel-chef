@@ -13,14 +13,14 @@ source_url       "https://github.com/hopshadoop/karamel-chef"
 end
 
 depends 'java'
-
 depends 'hostsfile'
+depends 'nodejs'
 
 recipe  "karamel::install", "Installs Karamel"
-
 recipe  "karamel::default", "Configures and starts karamel."
-
 recipe  "karamel::run", "Runs karamel."
+recipe  "karamel::build", "Builds HopsWorks locally"
+recipe  "karamel::test", "Run HopsWorks tests"
 
 recipe  "karamel::dela", "Adds IP latencies for all IP network traffic."
 
