@@ -73,7 +73,8 @@ hopsworks:
     ou: "registered_ou"
   hopssite:
     version: "hops"
-    password: "registered_password"
+hopssite:
+  password: "registered_password"
 ```
 3. Change your vagrantfiles with the following parameters:
 ```
