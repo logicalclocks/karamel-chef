@@ -2,28 +2,26 @@ name: HopsworksVagrantMultiNode
 baremetal:
     username: vagrant
 
-cookbooks:       
-  hopsworks:                                                                     
+cookbooks:
+  hopsworks:
     github: "hopshadoop/ndb-chef"
-    branch: "master"  
+    branch: "master"
 
 attrs:
   install:
     dir: /srv/hops
-    user: vagrant
   kagent:
     enabled: false
 
-groups: 
+groups:
   biggie:
-    size: 1 
+    size: 1
     baremetal:
       ip: 192.168.56.101
-    recipes: 
+    recipes:
       - kagent::install
       - ndb::mgmd
       - ndb::ndbd
-      - ndb::mysqld                                                       
-      - ndb::_test
+      - ndb::mysqld
 
 

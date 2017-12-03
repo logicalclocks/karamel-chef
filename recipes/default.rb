@@ -1,45 +1,34 @@
-
-
-karamel="karamel-0.4.tgz"
-
-kf="/home/vagrant/#{karamel}"
-
-remote_file kf do
-  source "http://www.karamel.io/sites/default/files/downloads/#{karamel}"
+# Download Karamel on the machine
+remote_file node['karamel']['download_file'] do
+  source node['karamel']['download_url']
   mode 0755
   action :create
 end
 
-
-
-bash "unpack_karamel" do
-    user "root"
-    code <<-EOF
-cd /home/vagrant
-mkdir .karamel
-chown vagrant .karamel
-tar -xzf #{kf}
-chown -R vagrant karamel*
-EOF
-  not_if { ::File.exists?( "/home/vagrant/karamel-0.4/bin/karamel" ) }
+# Unpack Karamel
+bash "Unpack_Karamel" do
+  user "vagrant"
+  code <<-EOF
+    mkdir #{node['karamel']['output_dir']}
+    tar -xzf #{node['karamel']['download_file']} -C /home/vagrant
+  EOF
+  not_if { ::File.exists?( node['karamel']['bin_file'] ) }
 end
 
+# Add public key for testing machine
 bash "public_key" do
-    user "vagrant"
-    code <<-EOF
-cd /home/vagrant/.ssh
-cp authorized_keys id_rsa.pub
-
-EOF
+  user "vagrant"
+  code <<-EOF
+    cd /home/vagrant/.ssh
+    cp authorized_keys id_rsa.pub
+  EOF
   not_if { ::File.exists?( "/home/vagrant/.ssh/id_rsa.pub" ) }
 end
 
-
-
-template "/home/vagrant/.karamel/conf" do
+# Add default configuration file
+template "#{node['karamel']['output_dir']}/conf" do
   source "conf.erb"
   owner "vagrant"
   group "vagrant"
   mode 0751
 end
-
