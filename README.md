@@ -76,21 +76,21 @@ hopsworks:
 hopssite:
   password: "registered_password"
 ```
-3. Change your vagrantfiles with the following parameters:
+3. Change your vagrantfiles with the default dela ports:
 ```
 # Dela udp ports
 config.vm.network(:forwarded_port, {:guest=>42011, :host=>42011, :protocol=>"udp"})
 config.vm.network(:forwarded_port, {:guest=>42012, :host=>42012, :protocol=>"udp"})
 config.vm.network(:forwarded_port, {:guest=>42013, :host=>42013, :protocol=>"udp"})
 ```
-4. If you change the dela ports in any way in the vagrantfiles you need to add the appropriate parameters in the cluster-defs:
+4. If you change the dela default ports, in addition to the vagrantfile, you need to update your udp_hacky_fix file with the new dela ports and add the dela ports to the cluster-defs.
 ```
 dela:
   port: 42011
   stun_port1: 42012
   stun_port2: 42013
 ```
-5. update you udp_hacky_fix file with the three ports above
+Note: If you did not change the default ports you do not need to add the dela params to the cluster-def.
 6. run
 ```
 ./run.sh param1 param2 param3 no-random-ports udp-hack
