@@ -46,6 +46,7 @@ sed -i -e "s/{hsport2}/${PORT}/g" ../cluster-defns/1.hopssite.yml
 sed -i -e "s/{hsdomain}/${CLUSTER_DOMAIN}/g" ../cluster-defns/1.hopssite.yml
 sed -i -e "s/{hsemail}/${CLUSTER_EMAIL}/g" ../cluster-defns/1.hopssite.yml
 sed -i -e "s/{sourcecode}/${SOURCE_CODE}/g" ../cluster-defns/1.hopssite.yml
+sed -i -e "s/{hscn}/${CLUSTER_CN}/g" ../cluster-defns/1.hopssite.yml
 sed -i -e "s/{hscompany}/${CLUSTER_COMPANY}/g" ../cluster-defns/1.hopssite.yml
 sed -i -e "s/{hsunit}/${CLUSTER_UNIT}/g" ../cluster-defns/1.hopssite.yml
 sed -i -e "s/{hspassword}/${HOPSSITE_PASSWORD}/g" ../cluster-defns/1.hopssite.yml

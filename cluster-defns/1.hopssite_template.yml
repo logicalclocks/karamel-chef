@@ -34,6 +34,7 @@ attrs:
     war_url: {sourcecode}/hopsworks.war
     ca_url: {sourcecode}/hopsworks-ca.war
     cert:
+      cn: "{hscn}"
       o: "{hscompany}"
       ou: "{hsunit}"
     dela:

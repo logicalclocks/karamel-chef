@@ -14,6 +14,7 @@ CLUSTER_EMAIL="dela1@gmail.com"
 #source for war/ear packages
 SOURCE_CODE="http:\/\/snurran.sics.se\/hops\/dela"
 #Company and Unit combination has to be unique for each cluster registered with a specific hopssite instance
+CLUSTER_CN="hopsworks_dela1"
 CLUSTER_COMPANY="hopsworks"
 CLUSTER_UNIT="dela1"
 
