@@ -19,13 +19,15 @@ attrs:
     ear_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ear.ear
     war_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks.war
     ca_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ca.war
-    email: "mycompany@gmail.com"
+    email: "registered_email"
     cert:
-      o: "mycompany"
-    dela:
-      demo: true
+      cn: "registered_cn"
+      o: "registered_o"
+      ou: "registered_ou"
+    hopssite:
+      version: "hops"
   hopssite:
-    password: "myregisterpassword"
+    password: "registered_password"
 groups:
   dela:
     size: 1
