@@ -60,3 +60,42 @@ run_dela.sh
 ./run.sh demodela 1 demodela
 ```
 Note: Dela requires certain ports to be fixed, which means you can only run 1 instance of demodela on a machine. The default ports used by dela are 42011, 42012, 42013
+
+# Simple dela install
+1. Register your demo installation with hopssite: (http://hops.site/hopsworks-cluster/)
+2. Change your cluster-defns with the following parameters:
+```
+hopsworks:
+  email: "registered_email"
+  cert:
+    cn: "registered_cn"
+    o: "registered_o"
+    ou: "registered_ou"
+  hopssite:
+    version: "hops"
+hopssite:
+  password: "registered_password"
+```
+3. Change your vagrantfiles with the default dela ports:
+```
+# Dela udp ports
+config.vm.network(:forwarded_port, {:guest=>42011, :host=>42011, :protocol=>"udp"})
+config.vm.network(:forwarded_port, {:guest=>42012, :host=>42012, :protocol=>"udp"})
+config.vm.network(:forwarded_port, {:guest=>42013, :host=>42013, :protocol=>"udp"})
+```
+4. If you change the dela default ports, in addition to the vagrantfile, you need to update your udp_hacky_fix file with the new dela ports and add the dela ports to the cluster-defs.
+```
+dela:
+  port: 42011
+  stun_port1: 42012
+  stun_port2: 42013
+```
+Note: If you did not change the default ports you do not need to add the dela params to the cluster-def.
+6. run
+```
+./run.sh param1 param2 param3 no-random-ports udp-hack
+```
+For example you can run the demodela version which uses hops.site as:
+```
+./run.sh demodela 1 demodela no-random-ports udp-hack
+```

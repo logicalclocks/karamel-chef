@@ -34,6 +34,7 @@ attrs:
     war_url: {sourcecode}/hopsworks.war
     ca_url: {sourcecode}/hopsworks-ca.war
     cert:
+      cn: "{hscn}"
       o: "{hscompany}"
       ou: "{hsunit}"
     dela:
@@ -49,6 +50,7 @@ attrs:
     retry_interval: 30
     max_retries: 5
     manual_register: true
+    password: "{hspassword}"
 groups:
   dela:
     size: 1
@@ -80,4 +82,5 @@ groups:
       - hops::nm
       - tensorflow
       - hopsmonitor::telegraf
+      - hive2
       - dela

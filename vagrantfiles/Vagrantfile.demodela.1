@@ -40,8 +40,6 @@ Vagrant.configure("2") do |config|
   config.vm.network(:forwarded_port, {:guest=>42011, :host=>42011, :protocol=>"udp"})
   config.vm.network(:forwarded_port, {:guest=>42012, :host=>42012, :protocol=>"udp"})
   config.vm.network(:forwarded_port, {:guest=>42013, :host=>42013, :protocol=>"udp"})
-  # Dela http port
-  config.vm.network(:forwarded_port, {:guest=>42014, :host=>42014})
 
   config.vm.provision "file", source: "cluster.yml", destination: "cluster.yml"
   config.vm.provision "file", source: "~/.vagrant.d/insecure_private_key", destination: "~/.ssh/id_rsa"    

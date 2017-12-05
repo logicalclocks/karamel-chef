@@ -19,13 +19,15 @@ attrs:
     ear_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ear.ear
     war_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks.war
     ca_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ca.war
-    email: "mycompany@gmail.com"
+    email: "registered_email" #replace with registered value
     cert:
-      o: "mycompany"
-    dela:
-      demo: true
+      cn: "registered_cn" #replace with registered value
+      o: "registered_o" #replace with registered value
+      ou: "registered_ou" #replace with registered value
+    hopssite:
+      version: "hops"
   hopssite:
-    password: "myregisterpassword"
+    password: "registered_password" #replace with registered value
 groups:
   dela:
     size: 1
@@ -57,4 +59,5 @@ groups:
       - hops::nm
       - tensorflow
       - hopsmonitor::telegraf
+      - hive2
       - dela
