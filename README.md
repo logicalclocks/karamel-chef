@@ -95,3 +95,7 @@ Note: If you did not change the default ports you do not need to add the dela pa
 ```
 ./run.sh param1 param2 param3 no-random-ports udp-hack
 ```
+For example you can run the demodela version which uses hops.site as:
+```
+./run.sh demodela 1 demodela no-random-ports udp-hack
+```
