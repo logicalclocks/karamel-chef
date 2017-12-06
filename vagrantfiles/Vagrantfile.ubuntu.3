@@ -29,7 +29,8 @@ Vagrant.configure("2") do |config|
       chef.json = {
           "karamel" => {
 	    "default" =>      { 
-              "private_ips" => ["192.168.56.101","192.168.56.102","192.168.56.103"]
+              "private_ips" => ["192.168.56.101","192.168.56.102","192.168.56.103"],
+              "gateway_ips" => ["10.0.2.2"]
 	    },
           },
         }
@@ -60,7 +61,8 @@ Vagrant.configure("2") do |config|
       chef.json = {
           "karamel" => {
 	    "default" =>      { 
-              "private_ips" => ["192.168.56.101","192.168.56.102","192.168.56.103"]
+              "private_ips" => ["192.168.56.101","192.168.56.102","192.168.56.103"],
+              "gateway_ips" => ["10.0.2.2"]
 	    },
           },
         }
@@ -126,7 +128,8 @@ Vagrant.configure("2") do |config|
         chef.json = {
           "karamel" => {
 	    "default" =>      { 
-              "private_ips" => ["192.168.56.101","192.168.56.102","192.168.56.103"]
+              "private_ips" => ["192.168.56.101","192.168.56.102","192.168.56.103"],
+              "gateway_ips" => ["10.0.2.2"]
 	    },
           },
         }
