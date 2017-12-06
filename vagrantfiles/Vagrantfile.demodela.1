@@ -59,7 +59,8 @@ Vagrant.configure("2") do |config|
     chef.json = {
       "karamel" => {
         "default" => { 
-          "private_ips" => ["10.0.2.15"]
+          "private_ips" => ["10.0.2.15"],
+          "gateway_ips" => ["10.0.2.2"]
         },
       },
     }
