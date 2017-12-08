@@ -3,6 +3,7 @@
 #these variables are used together with 'sed' so please make sure to escape all / characters
 GITHUB="hopshadoop\/hopsworks-chef"
 BRANCH="master"
+NETWORK_INTERFACE="enp0s3"
 
 #CLUSTER_SUFIX will be used as the three last digits for all the vm forwarded ports.
 #Make sure that different clusters working on the same machine have different suffixes
@@ -14,7 +15,6 @@ CLUSTER_EMAIL="delahs@gmail.com"
 #source for war/ear packages
 SOURCE_CODE="http:\/\/snurran.sics.se\/hops\/dela"
 #Company and Unit combination has to be unique for each cluster registered with a specific hopssite instance
-CLUSTER_CN="hopsworks_hs"
 CLUSTER_COMPANY="hopsworks"
 CLUSTER_UNIT="hs"
 #password to register the hopsworks instance on the hopssite

@@ -1,28 +1,30 @@
 #!/bin/bash
 
 . hs_env.sh
+. hs_ports.sh
 
 rm -f ../vagrantfiles/Vagrantfile.hopssite.1
 cp ../vagrantfiles/Vagrantfile.hopssite_template.1 ../vagrantfiles/Vagrantfile.hopssite.1
 #basic hopsworks ports
-for i in {1..15}
+sed -i -e "s/{SSH_P}/${SSH_P}/g" ../vagrantfiles/Vagrantfile.hopssite.1
+sed -i -e "s/{MYSQL_P}/${MYSQL_P}/g" ../vagrantfiles/Vagrantfile.hopssite.1
+sed -i -e "s/{KARAMEL_P}/${KARAMEL_P}/g" ../vagrantfiles/Vagrantfile.hopssite.1
+sed -i -e "s/{WEB_P}/${WEB_P}/g" ../vagrantfiles/Vagrantfile.hopssite.1
+sed -i -e "s/{DEBUG_P}/${DEBUG_P}/g" ../vagrantfiles/Vagrantfile.hopssite.1
+sed -i -e "s/{GFISH_P}/${GFISH_P}/g" ../vagrantfiles/Vagrantfile.hopssite.1
+for i in {1..9}
 do 
-  PORT=$((20000 + i*1000 + ${CLUSTER_SUFFIX}))
-  sed -i -e "s/{port${i}}/${PORT}/g" ../vagrantfiles/Vagrantfile.hopssite.1
+  PORT=$((PORT${i}))
+  sed -i -e "s/{PORT${i}}/${PORT}/g" ../vagrantfiles/Vagrantfile.hopssite.1
 done
 #dela ports
-for i in {1..4}
-do 
-  PORT=$((40000 + i*1000 + ${CLUSTER_SUFFIX}))
-  sed -i -e "s/{delaport${i}}/${PORT}/g" ../vagrantfiles/Vagrantfile.hopssite.1
-done
+sed -i -e "s/{DELA1_P}/${DELA1_P}/g" ../vagrantfiles/Vagrantfile.hopssite.1
+sed -i -e "s/{DELA2_P}/${DELA2_P}/g" ../vagrantfiles/Vagrantfile.hopssite.1
+sed -i -e "s/{DELA3_P}/${DELA3_P}/g" ../vagrantfiles/Vagrantfile.hopssite.1
+sed -i -e "s/{DELA4_P}/${DELA4_P}/g" ../vagrantfiles/Vagrantfile.hopssite.1
 #hopssite ports
-for i in {1..2}
-do 
-  PORT=$((50000 + i*1000 + ${CLUSTER_SUFFIX}))
-  sed -i -e "s/{hsport${i}}/${PORT}/g" ../vagrantfiles/Vagrantfile.hopssite.1
-done
-
+sed -i -e "s/{HS_GFISH_P}/${HS_GFISH_P}/g" ../vagrantfiles/Vagrantfile.hopssite.1
+sed -i -e "s/{HS_WEB_P}/${HS_WEB_P}/g" ../vagrantfiles/Vagrantfile.hopssite.1
 #*******
 rm -f ../cluster-defns/1.hopssite.yml
 cp ../cluster-defns/1.hopssite_template.yml ../cluster-defns/1.hopssite.yml
@@ -31,22 +33,19 @@ sed -i -e "s/{github}/${GITHUB}/g" ../cluster-defns/1.hopssite.yml
 sed -i -e "s/{branch}/${BRANCH}/g" ../cluster-defns/1.hopssite.yml
 
 #basic ports
-PORT=$((24000 + ${CLUSTER_SUFFIX}))
-sed -i -e "s/{port4}/${PORT}/g" ../cluster-defns/1.hopssite.yml
+sed -i -e "s/{WEB_P}/${WEB_P}/g" ../cluster-defns/1.hopssite.yml
 #dela ports
-for i in {1..4}
-do 
-  PORT=$((40000 + i*1000 + ${CLUSTER_SUFFIX}))
-  sed -i -e "s/{delaport${i}}/${PORT}/g" ../cluster-defns/1.hopssite.yml
-done
+sed -i -e "s/{DELA1_P}/${DELA1_P}/g" ../cluster-defns/1.hopssite.yml
+sed -i -e "s/{DELA2_P}/${DELA2_P}/g" ../cluster-defns/1.hopssite.yml
+sed -i -e "s/{DELA3_P}/${DELA3_P}/g" ../cluster-defns/1.hopssite.yml
+sed -i -e "s/{DELA4_P}/${DELA4_P}/g" ../cluster-defns/1.hopssite.yml
 #hopssite ports
-PORT=$((52000 + ${CLUSTER_SUFFIX}))
-sed -i -e "s/{hsport2}/${PORT}/g" ../cluster-defns/1.hopssite.yml
+sed -i -e "s/{HS_WEB_P}/${HS_WEB_P}/g" ../cluster-defns/1.hopssite.yml
 
+sed -i -e "s/{network_interface}/${NETWORK_INTERFACE}/g" ../cluster-defns/1.hopssite.yml
 sed -i -e "s/{hsdomain}/${CLUSTER_DOMAIN}/g" ../cluster-defns/1.hopssite.yml
 sed -i -e "s/{hsemail}/${CLUSTER_EMAIL}/g" ../cluster-defns/1.hopssite.yml
 sed -i -e "s/{sourcecode}/${SOURCE_CODE}/g" ../cluster-defns/1.hopssite.yml
-sed -i -e "s/{hscn}/${CLUSTER_CN}/g" ../cluster-defns/1.hopssite.yml
 sed -i -e "s/{hscompany}/${CLUSTER_COMPANY}/g" ../cluster-defns/1.hopssite.yml
 sed -i -e "s/{hsunit}/${CLUSTER_UNIT}/g" ../cluster-defns/1.hopssite.yml
 sed -i -e "s/{hspassword}/${HOPSSITE_PASSWORD}/g" ../cluster-defns/1.hopssite.yml
@@ -57,8 +56,6 @@ chmod +x hs_udp_hacky_fix.sh
 
 sed -i -e "s/{cluster_domain}/${CLUSTER_DOMAIN}/g" hs_udp_hacky_fix.sh
 #dela ports
-for i in {1..4}
-do 
-  PORT=$((40000 + i*1000 + ${CLUSTER_SUFFIX}))
-  sed -i -e "s/{delaport${i}}/${PORT}/g" hs_udp_hacky_fix.sh
-done
+sed -i -e "s/{DELA1_P}/${DELA1_P}/g" hs_udp_hacky_fix.sh
+sed -i -e "s/{DELA2_P}/${DELA2_P}/g" hs_udp_hacky_fix.sh
+sed -i -e "s/{DELA3_P}/${DELA3_P}/g" hs_udp_hacky_fix.sh

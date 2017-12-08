@@ -1,5 +1,5 @@
 #!/bin/bash
-./hs_setup.sh
+./hs_setup.sh hs_env.sh
 cd ..
 ./run.sh hopssite 1 hopssite no-random-ports
 cd scripts

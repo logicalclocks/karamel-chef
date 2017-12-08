@@ -14,12 +14,12 @@ attrs:
     user: vagrant
   kagent:
     network:
-      interface: enp0s3
+      interface: {network_interface}
   dela:
-    port: {delaport1}
-    stun_port1: {delaport2}
-    stun_port2: {delaport3}
-    http_port: {delaport4}
+    port: {DELA1_P}
+    stun_port1: {DELA2_P}
+    stun_port2: {DELA3_P}
+    http_port: {DELA4_P}
     hops: 
       storage:
         type: "HDFS"
@@ -28,29 +28,27 @@ attrs:
     stun_servers_ip: ["193.10.64.107","193.10.64.85"]
     stun_servers_id: ["1","2"]
   hopsworks:
-    port: 8080
-    email: "{hsemail}"
     ear_url: {sourcecode}/hopsworks-ear.ear
     war_url: {sourcecode}/hopsworks.war
     ca_url: {sourcecode}/hopsworks-ca.war
-    cert:
-      cn: "{hscn}"
-      o: "{hscompany}"
-      ou: "{hsunit}"
     dela:
       enabled: true
-      cluster_http_port: {delaport4}
-      public_hopsworks_port: {port4}
+      cluster_http_port: {DELA4_P}
+      public_hopsworks_port: {WEB_P}
     hopssite:
       domain: "{hsdomain}"
-      port: {hsport2}
+      port: {HS_WEB_P}
       heartbeat: 600000
   hopssite:
-    url: "http://{hsdomain}:{port4}"
+    user: "{hsemail}"
+    password: "{hspassword}"
+    cert:
+      o: "{hscompany}"
+      ou: "{hsunit}"
+    url: "http://{hsdomain}:{WEB_P}"
     retry_interval: 30
     max_retries: 5
     manual_register: true
-    password: "{hspassword}"
 groups:
   dela:
     size: 1
