@@ -50,7 +50,7 @@ attrs:
     url: "http://{hsdomain}:{HS_WEB1_P}"
     retry_interval: 30
     max_retries: 5
-    manual_register: false
+    manual_register: {CLUSTER_MANUAL_REGISTER}
 groups:
   dela:
     size: 1

@@ -57,6 +57,8 @@ sed -i -e "s/{DELA2_P}/${DELA2_P}/g" ../cluster-defns/1.dela.yml
 sed -i -e "s/{DELA3_P}/${DELA3_P}/g" ../cluster-defns/1.dela.yml
 sed -i -e "s/{DELA4_P}/${DELA4_P}/g" ../cluster-defns/1.dela.yml
 #
+CLUSTER_MANUAL_REGISTER
+sed -i -e "s/{CLUSTER_MANUAL_REGISTER}/${CLUSTER_MANUAL_REGISTER}/g" ../cluster-defns/1.dela.yml
 sed -i -e "s/{hsdomain}/${CLUSTER_DOMAIN}/g" ../cluster-defns/1.dela.yml
 sed -i -e "s/{hsemail}/${CLUSTER_EMAIL}/g" ../cluster-defns/1.dela.yml
 sed -i -e "s/{sourcecode}/${SOURCE_CODE}/g" ../cluster-defns/1.dela.yml
