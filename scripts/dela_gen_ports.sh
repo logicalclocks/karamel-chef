@@ -1,5 +1,5 @@
 #!/bin/bash
-. hs_env.sh
+. dela_env.sh
 
 echo "#!/bin/bash" > dela_ports.sh
 PORT=$((21000 + ${CLUSTER_SUFFIX}))
@@ -16,8 +16,8 @@ PORT=$((26000 + ${CLUSTER_SUFFIX}))
 echo "GFISH_P=${PORT}" >> dela_ports.sh
 for i in {1..9}
 do 
-PORT=$((26000 + ${i} * 1000 + ${CLUSTER_SUFFIX}))
-echo "PORT${i}=${PORT}" >> dela_ports.sh
+  PORT=$((26000 + ${i} * 1000 + ${CLUSTER_SUFFIX}))
+  echo "PORT${i}=${PORT}" >> dela_ports.sh
 done
 PORT=$((41000 + ${CLUSTER_SUFFIX}))
 echo "DELA1_P=${PORT}" >> dela_ports.sh
