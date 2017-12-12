@@ -11,10 +11,10 @@ cookbooks:
 attrs:
   install:
     dir: /srv/hops
-    user: vagrant
+    {USER_SETTING}
   kagent:
     network:
-      interface: {network_interface}
+      interface: {NETWORK_INTERFACE}
   dela:
     port: {DELA1_P}
     stun_port1: {DELA2_P}
