@@ -43,8 +43,8 @@ attrs:
     user: "{hsemail}"
     password: "{hspassword}"
     cert:
-      o: "{hscompany}"
-      ou: "{hsunit}"
+      o: "{CLUSTER_ORG}"
+      ou: "{CLUSTER_UNIT}"
     url: "http://{hsdomain}:{WEB_P}"
     retry_interval: 30
     max_retries: 5

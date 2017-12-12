@@ -56,14 +56,16 @@ sed -i -e "s/{DELA1_P}/${DELA1_P}/g" ../cluster-defns/1.dela.yml
 sed -i -e "s/{DELA2_P}/${DELA2_P}/g" ../cluster-defns/1.dela.yml
 sed -i -e "s/{DELA3_P}/${DELA3_P}/g" ../cluster-defns/1.dela.yml
 sed -i -e "s/{DELA4_P}/${DELA4_P}/g" ../cluster-defns/1.dela.yml
+#hopssite ports
+sed -i -e "s/{HS_WEB1_P}/${HS_WEB1_P}/g" ../cluster-defns/1.dela.yml
+sed -i -e "s/{HS_WEB2_P}/${HS_WEB2_P}/g" ../cluster-defns/1.dela.yml
 #
 sed -i -e "s/{CLUSTER_MANUAL_REGISTER}/${CLUSTER_MANUAL_REGISTER}/g" ../cluster-defns/1.dela.yml
 sed -i -e "s/{hsdomain}/${CLUSTER_DOMAIN}/g" ../cluster-defns/1.dela.yml
 sed -i -e "s/{hsemail}/${CLUSTER_EMAIL}/g" ../cluster-defns/1.dela.yml
 sed -i -e "s/{sourcecode}/${SOURCE_CODE}/g" ../cluster-defns/1.dela.yml
-sed -i -e "s/{cn}/${CLUSTER_CN}/g" ../cluster-defns/1.dela.yml
-sed -i -e "s/{company}/${CLUSTER_COMPANY}/g" ../cluster-defns/1.dela.yml
-sed -i -e "s/{unit}/${CLUSTER_UNIT}/g" ../cluster-defns/1.dela.yml
+sed -i -e "s/{CLUSTER_ORG}/${CLUSTER_ORG}/g" ../cluster-defns/1.dela.yml
+sed -i -e "s/{CLUSTER_UNIT}/${CLUSTER_UNIT}/g" ../cluster-defns/1.dela.yml
 sed -i -e "s/{hspassword}/${HOPSSITE_PASSWORD}/g" ../cluster-defns/1.dela.yml
 #*******
 rm -f dela_udp_hacky_fix.sh
