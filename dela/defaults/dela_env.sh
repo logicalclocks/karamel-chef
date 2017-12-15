@@ -13,6 +13,8 @@ CLUSTER_SUFFIX=101
 CLUSTER_DOMAIN="bbc1.sics.se"
 #email used to register with hopssite
 CLUSTER_EMAIL="dela1@gmail.com"
+#password to register the hopsworks instance on the hopssite
+CLUSTER_PASSWORD="change_me"
 #source for war/ear packages
 SOURCE_CODE="http:\/\/snurran.sics.se\/hops\/dela"
 #Company and Unit combination has to be unique for each cluster registered with a specific hopssite instance
@@ -23,5 +25,3 @@ CLUSTER_MANUAL_REGISTER="false"
 #suffix and domain for your hopssite instance
 HOPSSITE_SUFFIX=100
 HOPSSITE_DOMAIN="bbc1.sics.se"
-#password to register the hopsworks instance on the hopssite
-HOPSSITE_PASSWORD="change_me"
