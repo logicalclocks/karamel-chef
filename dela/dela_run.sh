@@ -1,10 +1,10 @@
 #!/bin/bash
 set -e
-if [ ! -d "scripts" ]; then
+if [ ! -d "dela" ]; then
   echo "Run the script from the karamel-chef dir"
   exit 1
 fi
 KCHEF_DIR=${PWD}
-${KCHEF_DIR}/scripts/dela_setup.sh
+${KCHEF_DIR}/dela/dela_setup.sh
 ${KCHEF_DIR}/run.sh dela 1 dela no-random-ports
-${KCHEF_DIR}/scripts/running/udp_hacky_fix.sh
+${KCHEF_DIR}/dela/running/udp_hacky_fix.sh
