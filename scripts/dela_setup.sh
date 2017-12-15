@@ -3,6 +3,22 @@
 . dela_env.sh
 . dela_ports.sh
 
+materialize_sh() 
+{
+  FILE="$1.sh"
+  TEMPLATE="$1_template.sh"
+  VALUES=$2
+  echo "$FILE materializing"
+  rm -f $FILE
+  cp $TEMPLATE $FILE
+  chmod +x $FILE
+  for val in $VALUES
+  do 
+    echo "$val = ${!val}"
+    sed -i -e "s/{$val}/${!val}/g" $FILE
+  done
+  echo "$FILE materialized"
+}
 ##VAGRANTFILE
 rm -f ../vagrantfiles/Vagrantfile.dela.1
 cp ../vagrantfiles/Vagrantfile.dela_template.1 ../vagrantfiles/Vagrantfile.dela.1
@@ -67,25 +83,6 @@ sed -i -e "s/{sourcecode}/${SOURCE_CODE}/g" ../cluster-defns/1.dela.yml
 sed -i -e "s/{CLUSTER_ORG}/${CLUSTER_ORG}/g" ../cluster-defns/1.dela.yml
 sed -i -e "s/{CLUSTER_UNIT}/${CLUSTER_UNIT}/g" ../cluster-defns/1.dela.yml
 sed -i -e "s/{hspassword}/${HOPSSITE_PASSWORD}/g" ../cluster-defns/1.dela.yml
-#REGISTER
-echo "dela_register_template.sh materializing"
-rm -f dela_register.sh
-cp dela_register_template.sh dela_register.sh
-chmod +x dela_register.sh
-REGISTER_VALUES=("CLUSTER_EMAIL" "CLUSTER_PASSWORD" "CLUSTER_ORG" "CLUSTER_UNIT" "HOPSSITE_DOMAIN" "HS_WEB1_P")
-for reg_val in $REGISTER_VALUES
-do 
-  echo "$reg_val = ${!reg_val}"
-  sed -i -e "s/{$reg_val}/${!reg_val}/g" dela_register.sh
-done
-echo "dela_register.sh materialized"
-#*******
-rm -f dela_udp_hacky_fix.sh
-cp udp_hacky_fix_template.sh dela_udp_hacky_fix.sh
-chmod +x dela_udp_hacky_fix.sh
-
-sed -i -e "s/{cluster_domain}/${CLUSTER_DOMAIN}/g" dela_udp_hacky_fix.sh
-#dela ports
-sed -i -e "s/{DELA1_P}/${DELA1_P}/g" dela_udp_hacky_fix.sh
-sed -i -e "s/{DELA2_P}/${DELA2_P}/g" dela_udp_hacky_fix.sh
-sed -i -e "s/{DELA3_P}/${DELA3_P}/g" dela_udp_hacky_fix.sh
+#**
+materialize_sh "dela_register" ("CLUSTER_EMAIL" "CLUSTER_PASSWORD" "CLUSTER_ORG" "CLUSTER_UNIT" "HOPSSITE_DOMAIN" "HS_WEB1_P")
+materialize_sh "udp_hacky_fix" ("CLUSTER_DOMAIN" "DELA1_P" "DELA2_P" "DELA3_P")
