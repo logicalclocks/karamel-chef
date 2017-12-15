@@ -5,7 +5,7 @@ if [ ! -d "scripts" ]; then
   exit 1
 fi
 
-KCHEF_DIR=`pwd`
+KCHEF_DIR=${pwd}
 . ${KCHEF_DIR}/scripts/running/dela_env.sh
 . ${KCHEF_DIR}/scripts/running/dela_ports.sh
 
