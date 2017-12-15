@@ -42,7 +42,7 @@ attrs:
       heartbeat: 600000
   hopssite:
     user: "{CLUSTER_EMAIL}"
-    password: "{HOPSSITE_PASSWORD}"
+    password: "{CLUSTER_PASSWORD}"
     cert:
       o: "{CLUSTER_ORG}"
       ou: "{CLUSTER_UNIT}"
