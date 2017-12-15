@@ -67,6 +67,18 @@ sed -i -e "s/{sourcecode}/${SOURCE_CODE}/g" ../cluster-defns/1.dela.yml
 sed -i -e "s/{CLUSTER_ORG}/${CLUSTER_ORG}/g" ../cluster-defns/1.dela.yml
 sed -i -e "s/{CLUSTER_UNIT}/${CLUSTER_UNIT}/g" ../cluster-defns/1.dela.yml
 sed -i -e "s/{hspassword}/${HOPSSITE_PASSWORD}/g" ../cluster-defns/1.dela.yml
+#REGISTER
+echo "dela_register_template.sh materializing"
+rm -f dela_register.sh
+cp dela_register_template.sh dela_register.sh
+chmod +x dela_register.sh
+REGISTER_VALUES=("CLUSTER_EMAIL" "CLUSTER_PASSWORD" "CLUSTER_ORG" "CLUSTER_UNIT" "HOPSSITE_DOMAIN" "HS_WEB1_P")
+for reg_val in $REGISTER_VALUES
+do 
+  echo "$reg_val = ${!reg_val}"
+  sed -i -e "s/{$reg_val}/${!reg_val}/g" dela_register.sh
+done
+echo "dela_register.sh materialized"
 #*******
 rm -f dela_udp_hacky_fix.sh
 cp udp_hacky_fix_template.sh dela_udp_hacky_fix.sh
