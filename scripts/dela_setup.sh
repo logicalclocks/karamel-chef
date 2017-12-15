@@ -61,7 +61,7 @@ sed -i -e "s/{HS_WEB1_P}/${HS_WEB1_P}/g" ../cluster-defns/1.dela.yml
 sed -i -e "s/{HS_WEB2_P}/${HS_WEB2_P}/g" ../cluster-defns/1.dela.yml
 #
 sed -i -e "s/{CLUSTER_MANUAL_REGISTER}/${CLUSTER_MANUAL_REGISTER}/g" ../cluster-defns/1.dela.yml
-sed -i -e "s/{hsdomain}/${CLUSTER_DOMAIN}/g" ../cluster-defns/1.dela.yml
+sed -i -e "s/{hsdomain}/${HOPSSITE_DOMAIN}/g" ../cluster-defns/1.dela.yml
 sed -i -e "s/{hsemail}/${CLUSTER_EMAIL}/g" ../cluster-defns/1.dela.yml
 sed -i -e "s/{sourcecode}/${SOURCE_CODE}/g" ../cluster-defns/1.dela.yml
 sed -i -e "s/{CLUSTER_ORG}/${CLUSTER_ORG}/g" ../cluster-defns/1.dela.yml
