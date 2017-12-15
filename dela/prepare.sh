@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-if [ ! -d "scripts" ]; then
+if [ ! -d "dela" ]; then
     echo "Run the script from the karamel-chef dir"
 fi
 
