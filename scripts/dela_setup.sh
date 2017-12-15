@@ -1,13 +1,13 @@
 #!/bin/bash
-if [ $# -eq 1 ] ; then
-  echo "$1 - running dir"
+set -e
+if [ ! -d "scripts" ]; then
+  echo "Run the script from the karamel-chef dir"
   exit 1
 fi
 
-set -e
-
-. $1/dela_env.sh
-. $1/dela_ports.sh
+KCHEF_DIR=`pwd`
+. ${KCHEF_DIR}/scripts/running/dela_env.sh
+. ${KCHEF_DIR}/scripts/running/dela_ports.sh
 
 materialize() 
 {
@@ -41,12 +41,12 @@ else
   USER_SETTING="user: vagrant"
 fi
 declare -a VALUES=("OS_VERSION" "SSH_P" "MYSQL_P" "KARAMEL_P" "WEB_P" "DEBUG_P" "GFISH_P" "DELA1_P" "DELA2_P" "DELA3_P" "DELA4_P" "PORT1" "PORT2" "PORT3" "PORT4" "PORT5" "PORT6" "PORT7" "PORT8" "PORT9")
-materialize "$1/../../vagrantfiles/Vagrantfile.dela.1" "$1/../../vagrantfiles/Vagrantfile.dela_template.1" $VALUES
+materialize "${KCHEF_DIR}/vagrantfiles/Vagrantfile.dela.1" "${KCHEF_DIR/scripts/templates/Vagrantfile.dela_template.1" $VALUES
 declare -a VALUES=("GITHUB" "BRANCH" "NETWORK_INTERFACE" "USER_SETTING" "WEB_P" "DELA1_P" "DELA2_P" "DELA3_P" "DELA4_P" "HS_WEB1_P" "HS_WEB2_P" "CLUSTER_MANUAL_REGISTER" "HOPSSITE_DOMAIN" "CLUSTER_EMAIL" "SOURCE_CODE" "CLUSTER_ORG" "CLUSTER_UNIT" "HOPSSITE_PASSWORD")
-materialize "$1/../../cluster-defns/1.dela.yml" "$1/../../cluster-defns/1.dela_template.yml" $VALUES
+materialize "${KCHEF_DIR}/cluster-defns/1.dela.yml" "${KCHEF_DIR}/scripts/templates/1.dela_template.yml" $VALUES
 declare -a VALUES=("CLUSTER_EMAIL" "CLUSTER_PASSWORD" "CLUSTER_ORG" "CLUSTER_UNIT" "HOPSSITE_DOMAIN" "HS_WEB1_P")
-materialize "$1/dela_register.sh" "$1/../templates/dela_register_template.sh" $VALUES
-chmod +x $1/dela_register.sh
+materialize "${KCHEF_DIR}/scripts/running/dela_register.sh" "${KCHEF_DIR}/scripts/templates/dela_register_template.sh" $VALUES
+chmod +x ${KCHEF_DIR}/scripts/running/dela_register.sh
 declare -a VALUES=("CLUSTER_DOMAIN" "DELA1_P" "DELA2_P" "DELA3_P")
-materialize "$1/udp_hacky_fix.sh" "$1/../templates/udp_hacky_fix_template.sh" $VALUES
-chmod +x $1/udp_hacky_fix.sh
+materialize "${KCHEF_DIR}/scripts/running/udp_hacky_fix.sh" "${KCHEF_DIR}/scripts/templates/udp_hacky_fix_template.sh" $VALUES
+chmod +x ${KCHEF_DIR}/scripts/running/udp_hacky_fix.sh

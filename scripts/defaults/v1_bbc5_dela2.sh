@@ -1,4 +1,4 @@
-g#!/bin/bash
+#!/bin/bash
 
 #these variables are used together with 'sed' so please make sure to escape all / characters
 GITHUB="AlexHopsworks\/hopsworks-chef"
