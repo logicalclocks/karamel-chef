@@ -1,13 +1,16 @@
 #!/bin/bash
 set -e
-if [ $# -eq 1 ] ; then
-  echo "$1 - dela env file"
+if [ $# -ne 1 ] ; then
+  echo "first param - dela env file"
   exit 1
 fi
 if [ ! -d "scripts" ]; then
   echo "Run the script from the karamel-chef dir"
   exit 1
 fi
+if [ ! -d "scripts/running" ]; then
+  mkdir scripts/running
+fi 
 KCHEF_DIR=`pwd`
 cp $1 ${KCHEF_DIR}/scripts/running/dela_env.sh
 chmod +x ${KCHEF_DIR}/scripts/running/dela_env.sh
