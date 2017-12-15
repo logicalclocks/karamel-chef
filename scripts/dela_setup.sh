@@ -3,15 +3,14 @@
 . dela_env.sh
 . dela_ports.sh
 
-materialize_sh() 
+materialize() 
 {
-  FILE="$1.sh"
-  TEMPLATE="$1_template.sh"
-  VALUES=$2
+  FILE=$1
+  TEMPLATE=$2
+  VALUES=$3
   echo "$FILE materializing"
   rm -f $FILE
   cp $TEMPLATE $FILE
-  chmod +x $FILE
   for val in $VALUES
   do 
     echo "$val = ${!val}"
@@ -19,70 +18,25 @@ materialize_sh()
   done
   echo "$FILE materialized"
 }
-##VAGRANTFILE
-rm -f ../vagrantfiles/Vagrantfile.dela.1
-cp ../vagrantfiles/Vagrantfile.dela_template.1 ../vagrantfiles/Vagrantfile.dela.1
+
 if [ $CLUSTER_OS == "ubuntu" ] ; then
   OS_VERSION="config.vm.box = \"bento\/ubuntu-16.04\"\\n  config.vm.box_version = \"2.3.5\""
 elif [ $CLUSTER_OS == "centos" ]; then
   OS_VERSION="config.vm.box = \"bento/centos-7.2\""
 fi
-sed -i -e "s/{OS_VERSION}/${OS_VERSION}/g" ../vagrantfiles/Vagrantfile.dela.1
-
-#basic hopsworks ports
-sed -i -e "s/{SSH_P}/${SSH_P}/g" ../vagrantfiles/Vagrantfile.dela.1
-sed -i -e "s/{MYSQL_P}/${MYSQL_P}/g" ../vagrantfiles/Vagrantfile.dela.1
-sed -i -e "s/{KARAMEL_P}/${KARAMEL_P}/g" ../vagrantfiles/Vagrantfile.dela.1
-sed -i -e "s/{WEB_P}/${WEB_P}/g" ../vagrantfiles/Vagrantfile.dela.1
-sed -i -e "s/{DEBUG_P}/${DEBUG_P}/g" ../vagrantfiles/Vagrantfile.dela.1
-sed -i -e "s/{GFISH_P}/${GFISH_P}/g" ../vagrantfiles/Vagrantfile.dela.1
-for i in {1..9}
-do 
-  PORT=$((PORT${i}))
-  sed -i -e "s/{PORT${i}}/${PORT}/g" ../vagrantfiles/Vagrantfile.dela.1
-done
-#dela ports
-sed -i -e "s/{DELA1_P}/${DELA1_P}/g" ../vagrantfiles/Vagrantfile.dela.1
-sed -i -e "s/{DELA2_P}/${DELA2_P}/g" ../vagrantfiles/Vagrantfile.dela.1
-sed -i -e "s/{DELA3_P}/${DELA3_P}/g" ../vagrantfiles/Vagrantfile.dela.1
-sed -i -e "s/{DELA4_P}/${DELA4_P}/g" ../vagrantfiles/Vagrantfile.dela.1
-#CLUSTER_DEF
-rm -f ../cluster-defns/1.dela.yml
-cp ../cluster-defns/1.dela_template.yml ../cluster-defns/1.dela.yml
-
-sed -i -e "s/{github}/${GITHUB}/g" ../cluster-defns/1.dela.yml
-sed -i -e "s/{branch}/${BRANCH}/g" ../cluster-defns/1.dela.yml
 if [ $CLUSTER_OS == "ubuntu" ] ; then
   NETWORK_INTERFACE="enp0s3"
 elif [ $CLUSTER_OS == "centos" ]; then
   NETWORK_INTERFACE="eth0"
 fi
-sed -i -e "s/{NETWORK_INTERFACE}/${NETWORK_INTERFACE}/g" ../cluster-defns/1.dela.yml
-
 if [ $CLUSTER_MULTI_USER == true ] ; then
   USER_SETTING=""
 else
   USER_SETTING="user: vagrant"
 fi
-sed -i -e "s/{USER_SETTING}/${USER_SETTING}/g" ../cluster-defns/1.dela.yml
-#basic ports
-sed -i -e "s/{WEB_P}/${WEB_P}/g" ../cluster-defns/1.dela.yml
-#dela ports
-sed -i -e "s/{DELA1_P}/${DELA1_P}/g" ../cluster-defns/1.dela.yml
-sed -i -e "s/{DELA2_P}/${DELA2_P}/g" ../cluster-defns/1.dela.yml
-sed -i -e "s/{DELA3_P}/${DELA3_P}/g" ../cluster-defns/1.dela.yml
-sed -i -e "s/{DELA4_P}/${DELA4_P}/g" ../cluster-defns/1.dela.yml
-#hopssite ports
-sed -i -e "s/{HS_WEB1_P}/${HS_WEB1_P}/g" ../cluster-defns/1.dela.yml
-sed -i -e "s/{HS_WEB2_P}/${HS_WEB2_P}/g" ../cluster-defns/1.dela.yml
-#
-sed -i -e "s/{CLUSTER_MANUAL_REGISTER}/${CLUSTER_MANUAL_REGISTER}/g" ../cluster-defns/1.dela.yml
-sed -i -e "s/{hsdomain}/${HOPSSITE_DOMAIN}/g" ../cluster-defns/1.dela.yml
-sed -i -e "s/{hsemail}/${CLUSTER_EMAIL}/g" ../cluster-defns/1.dela.yml
-sed -i -e "s/{sourcecode}/${SOURCE_CODE}/g" ../cluster-defns/1.dela.yml
-sed -i -e "s/{CLUSTER_ORG}/${CLUSTER_ORG}/g" ../cluster-defns/1.dela.yml
-sed -i -e "s/{CLUSTER_UNIT}/${CLUSTER_UNIT}/g" ../cluster-defns/1.dela.yml
-sed -i -e "s/{hspassword}/${HOPSSITE_PASSWORD}/g" ../cluster-defns/1.dela.yml
-#**
-materialize_sh "dela_register" ("CLUSTER_EMAIL" "CLUSTER_PASSWORD" "CLUSTER_ORG" "CLUSTER_UNIT" "HOPSSITE_DOMAIN" "HS_WEB1_P")
-materialize_sh "udp_hacky_fix" ("CLUSTER_DOMAIN" "DELA1_P" "DELA2_P" "DELA3_P")
+materialie "../vagrantfiles/Vagrantfile.dela.1" "../vagrantfiles/Vagrantfile.dela_template.1" ("OS_VERSION" "SSH_P" "MYSQL_P" "KARAMEL_P" "WEB_P" "DEBUG_P" "GFISH_P" "DELA1_P" "DELA2_P" "DELA3_P" "DELA4_P" "PORT1" "PORT2" "PORT3" "PORT4" "PORT5" "PORT6" "PORT7" "PORT8" "PORT9")
+materialize "../cluster-defns/1.dela.yml" "../cluster-defns/1.dela_template.yml" ("GITHUB" "BRANCH" "NETWORK_INTERFACE" "USER_SETTING" "WEB_P" "DELA1_P" "DELA2_P" "DELA3_P" "DELA4_P" "HS_WEB1_P" "HS_WEB2_P" "CLUSTER_MANUAL_REGISTER" "HOPSSITE_DOMAIN" "CLUSTER_EMAIL" "SOURCE_CODE" "CLUSTER_ORG" "CLUSTER_UNIT" "HOPSSITE_PASSWORD")
+materialize "dela_register.sh" "dela_register_template.sh" ("CLUSTER_EMAIL" "CLUSTER_PASSWORD" "CLUSTER_ORG" "CLUSTER_UNIT" "HOPSSITE_DOMAIN" "HS_WEB1_P")
+chmod +x dela_register.sh
+materialize "udp_hacky_fix.sh" "udp_hacky_fix_template.sh" ("CLUSTER_DOMAIN" "DELA1_P" "DELA2_P" "DELA3_P")
+chmod +x udp_hacky_fix.sh

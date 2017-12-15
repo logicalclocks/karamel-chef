@@ -5,8 +5,8 @@ baremetal:
 
 cookbooks:
   hopsworks:                                                                     
-    github: "{github}"
-    branch: "{branch}"
+    github: "{GITHUB}"
+    branch: "{BRANCH}"
 
 attrs:
   install:
@@ -29,25 +29,24 @@ attrs:
     stun_servers_id: ["1","2"]
   hopsworks:
     port: 8080
-    email: "{hsemail}"
-    ear_url: {sourcecode}/hopsworks-ear.ear
-    war_url: {sourcecode}/hopsworks.war
-    ca_url: {sourcecode}/hopsworks-ca.war
+    ear_url: {SOURCE_CODE}/hopsworks-ear.ear
+    war_url: {SOURCE_CODE}/hopsworks.war
+    ca_url: {SOURCE_CODE}/hopsworks-ca.war
     dela:
       enabled: true
       cluster_http_port: {DELA4_P}
       public_hopsworks_port: {WEB_P}
     hopssite:
-      domain: "{hsdomain}"
+      domain: "{HOPSSITE_DOMAIN}"
       port: {HS_WEB2_P}
       heartbeat: 600000
   hopssite:
-    user: "{hsemail}"
-    password: "{hspassword}"
+    user: "{CLUSTER_EMAIL}"
+    password: "{HOPSSITE_PASSWORD}"
     cert:
       o: "{CLUSTER_ORG}"
       ou: "{CLUSTER_UNIT}"
-    url: "http://{hsdomain}:{HS_WEB1_P}"
+    url: "http://{HOPSSITE_DOMAIN}:{HS_WEB1_P}"
     retry_interval: 30
     max_retries: 5
     manual_register: {CLUSTER_MANUAL_REGISTER}
