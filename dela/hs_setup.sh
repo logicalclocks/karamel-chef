@@ -43,13 +43,23 @@ fi
 
 declare -a VALUES=("OS_VERSION" "SSH_P" "MYSQL_P" "KARAMEL_P" "WEB_P" "DEBUG_P" "GFISH_P" "DELA1_P" "DELA2_P" "DELA3_P" "DELA4_P" "HS_GFISH_P" "HS_WEB_P" "PORT1" "PORT2" "PORT3" "PORT4" "PORT5" "PORT6" "PORT7" "PORT8" "PORT9")
 materialize "${KCHEF_DIR}/vagrantfiles/Vagrantfile.hopssite.1" "${KCHEF_DIR}/dela/templates/Vagrantfile.hopssite_template.1" $VALUES
+
 declare -a VALUES=("GITHUB" "BRANCH" "NETWORK_INTERFACE" "USER_SETTING" "WEB_P" "DELA1_P" "DELA2_P" "DELA3_P" "DELA4_P" "HS_WEB1_P" "HS_WEB2_P" "CLUSTER_MANUAL_REGISTER" "HOPSSITE_DOMAIN" "CLUSTER_EMAIL" "SOURCE_CODE" "CLUSTER_ORG" "CLUSTER_UNIT" "CLUSTER_PASSWORD")
 materialize "${KCHEF_DIR}/cluster-defns/1.hopssite.yml" "${KCHEF_DIR}/dela/templates/1.hopssite_template.yml" $VALUES
-HOPSSITE_DOMAIN=$CLUSTER_DOMAIN
-HS_WEB1_P=$WEB_P
-declare -a VALUES=("CLUSTER_EMAIL" "CLUSTER_PASSWORD" "CLUSTER_ORG" "CLUSTER_UNIT" "HOPSSITE_DOMAIN" "HS_WEB1_P")
-materialize "${KCHEF_DIR}/dela/running/hopssite_register.sh" "${KCHEF_DIR}/dela/templates/hopssite_register_template.sh" $VALUES
-chmod +x ${KCHEF_DIR}/dela/running/register.sh
+
 declare -a VALUES=("CLUSTER_DOMAIN" "DELA1_P" "DELA2_P" "DELA3_P")
 materialize "${KCHEF_DIR}/dela/running/udp_hacky_fix.sh" "${KCHEF_DIR}/dela/templates/udp_hacky_fix_template.sh" $VALUES
 chmod +x ${KCHEF_DIR}/dela/running/udp_hacky_fix.sh
+
+declare -a VALUES=("CLUSTER_EMAIL" "CLUSTER_PASSWORD" "CLUSTER_ORG" "CLUSTER_UNIT")
+materialize "${KCHEF_DIR}/dela/running/register_data.json" "${KCHEF_DIR}/dela/templates/register_data_template.json" $VALUES
+
+HOPSSITE_DOMAIN=$CLUSTER_DOMAIN
+HS_WEB1_P=$WEB_P
+declare -a VALUES=("HOPSSITE_DOMAIN" "HS_WEB1_P")
+materialize "${KCHEF_DIR}/dela/running/register.sh" "${KCHEF_DIR}/dela/templates/register_template.sh" $VALUES
+chmod +x ${KCHEF_DIR}/dela/running/register.sh
+
+declare -a VALUES=("SSH_P")
+materialize "${KCHEF_DIR}/dela/running/hopssite.sh" "${KCHEF_DIR}/dela/templates/hopssite_template.sh" $VALUES
+chmod +x ${KCHEF_DIR}/dela/running/hopssite.sh
