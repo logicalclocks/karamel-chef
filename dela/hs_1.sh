@@ -28,7 +28,7 @@ echo "WEB_P=${PORT}" >> ${KCHEF_DIR}/dela/running/hs_ports.sh
 PORT=$((25000 + ${CLUSTER_SUFFIX}))
 echo "DEBUG_P=${PORT}" >> ${KCHEF_DIR}/dela/running/hs_ports.sh
 PORT=$((26000 + ${CLUSTER_SUFFIX}))
-echo "GFISH_P=${PORT}" >> ${KCHEF_DIR}/dela/running/hs_ports.sh${KCHEF_DIR}/dela/running/hs_ports.sh
+echo "GFISH_P=${PORT}" >> ${KCHEF_DIR}/dela/running/hs_ports.sh
 for i in {1..9}
 do 
 PORT=$((26000 + ${i} * 1000 + ${CLUSTER_SUFFIX}))
