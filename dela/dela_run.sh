@@ -5,6 +5,7 @@ if [ ! -d "dela" ]; then
   exit 1
 fi
 KCHEF_DIR=${PWD}
+${KCHEF_DIR}/vbox.sh
 ${KCHEF_DIR}/dela/dela_setup.sh
 ${KCHEF_DIR}/run.sh dela 1 dela no-random-ports
 ${KCHEF_DIR}/dela/running/udp_hacky_fix.sh
