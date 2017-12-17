@@ -45,8 +45,8 @@ materialize "${KCHEF_DIR}/vagrantfiles/Vagrantfile.dela.1" "${KCHEF_DIR}/dela/te
 declare -a VALUES=("GITHUB" "BRANCH" "NETWORK_INTERFACE" "USER_SETTING" "WEB_P" "DELA1_P" "DELA2_P" "DELA3_P" "DELA4_P" "HS_WEB1_P" "HS_WEB2_P" "CLUSTER_MANUAL_REGISTER" "HOPSSITE_DOMAIN" "CLUSTER_EMAIL" "SOURCE_CODE" "CLUSTER_ORG" "CLUSTER_UNIT" "CLUSTER_PASSWORD")
 materialize "${KCHEF_DIR}/cluster-defns/1.dela.yml" "${KCHEF_DIR}/dela/templates/1.dela_template.yml" $VALUES
 declare -a VALUES=("CLUSTER_EMAIL" "CLUSTER_PASSWORD" "CLUSTER_ORG" "CLUSTER_UNIT" "HOPSSITE_DOMAIN" "HS_WEB1_P")
-materialize "${KCHEF_DIR}/dela/running/dela_register.sh" "${KCHEF_DIR}/dela/templates/dela_register_template.sh" $VALUES
-chmod +x ${KCHEF_DIR}/dela/running/dela_register.sh
+materialize "${KCHEF_DIR}/dela/running/register.sh" "${KCHEF_DIR}/dela/templates/register_template.sh" $VALUES
+chmod +x ${KCHEF_DIR}/dela/running/register.sh
 declare -a VALUES=("CLUSTER_DOMAIN" "DELA1_P" "DELA2_P" "DELA3_P")
 materialize "${KCHEF_DIR}/dela/running/udp_hacky_fix.sh" "${KCHEF_DIR}/dela/templates/udp_hacky_fix_template.sh" $VALUES
 chmod +x ${KCHEF_DIR}/dela/running/udp_hacky_fix.sh
