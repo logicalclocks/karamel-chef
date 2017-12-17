@@ -36,8 +36,8 @@ attrs:
       cluster_http_port: {DELA4_P}
       public_hopsworks_port: {WEB_P}
     hopssite:
-      domain: "{CLUSTER_DOMAIN}"
-      port: {HS_WEB_P}
+      domain: "{HOPSSITE_DOMAIN}"
+      port: {HS_WEB1_P}
       heartbeat: 600000
   hopssite:
     user: "{CLUSTER_EMAIL}"
@@ -45,10 +45,10 @@ attrs:
     cert:
       o: "{CLUSTER_ORG}"
       ou: "{CLUSTER_UNIT}"
-    url: "http://{CLUSTER_DOMAIN}:{WEB_P}"
+    url: "http://{HOPSSITE_DOMAIN}:{HS_WEB2_P}"
     retry_interval: 30
     max_retries: 5
-    manual_register: true
+    manual_register: {CLUSTER_MANUAL_REGISTER}
 groups:
   dela:
     size: 1
