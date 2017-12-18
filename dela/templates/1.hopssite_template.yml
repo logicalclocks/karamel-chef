@@ -37,7 +37,7 @@ attrs:
       public_hopsworks_port: {WEB_P}
     hopssite:
       domain: "{HOPSSITE_DOMAIN}"
-      port: {HS_WEB1_P}
+      port: {HS_WEB2_P}
       heartbeat: 600000
   hopssite:
     user: "{CLUSTER_EMAIL}"
@@ -45,7 +45,7 @@ attrs:
     cert:
       o: "{CLUSTER_ORG}"
       ou: "{CLUSTER_UNIT}"
-    url: "https://{HOPSSITE_DOMAIN}:{HS_WEB2_P}"
+    url: "http://{HOPSSITE_DOMAIN}:{HS_WEB1_P}"
     retry_interval: 30
     max_retries: 5
     manual_register: {CLUSTER_MANUAL_REGISTER}

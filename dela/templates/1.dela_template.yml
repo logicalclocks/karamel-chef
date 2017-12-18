@@ -46,7 +46,7 @@ attrs:
     cert:
       o: "{CLUSTER_ORG}"
       ou: "{CLUSTER_UNIT}"
-    url: "https://{HOPSSITE_DOMAIN}:{HS_WEB1_P}"
+    url: "http://{HOPSSITE_DOMAIN}:{HS_WEB1_P}"
     retry_interval: 30
     max_retries: 5
     manual_register: {CLUSTER_MANUAL_REGISTER}
