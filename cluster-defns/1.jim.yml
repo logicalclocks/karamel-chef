@@ -5,7 +5,7 @@ baremetal:
 cookbooks:       
   hopsworks:                                                                     
     github: "hopshadoop/hopsworks-chef"
-    branch: "master"
+    branch: "roles"
 
 attrs:
   install:
@@ -15,10 +15,15 @@ attrs:
     network:
       interface: enp0s3
   hopsworks:
+    alert_email_addresses: "dowling.jim@gmail.com, jdowling@kth.se"
     port: 8080
     ear_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ear-jim.ear
     war_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-jim.war
     ca_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ca-jim.war
+    cert:
+      cn: Jim
+      o: Home
+      ou: Bedroom
     dela:
       enabled: false
 
@@ -54,4 +59,4 @@ groups:
       - tensorflow
       - hopsmonitor::telegraf
       - hive2
-      
+      - dela      
