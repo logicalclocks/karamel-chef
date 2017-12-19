@@ -38,6 +38,7 @@ attrs:
     hopssite:
       domain: "{HOPSSITE_DOMAIN}"
       port: {HS_WEB2_P}
+      register_port: {HS_WEB1_P}
       heartbeat: 600000
   hopssite:
     user: "{CLUSTER_EMAIL}"
