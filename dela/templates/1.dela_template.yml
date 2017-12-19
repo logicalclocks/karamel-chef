@@ -75,6 +75,7 @@ groups:
       - epipe
       - hopsworks
       - hopsworks::dev
+      - hopsworks::dela
       - hopsmonitor
       - hopslog
       - hops::dn
