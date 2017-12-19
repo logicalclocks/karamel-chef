@@ -33,6 +33,7 @@ attrs:
     ca_url: {SOURCE_CODE}/hopsworks-ca.war
     dela:
       enabled: true
+      client: {CLIENT_TYPE}
       cluster_http_port: {DELA4_P}
       public_hopsworks_port: {WEB_P}
     hopssite:

@@ -6,6 +6,7 @@ BRANCH="vdcurrent"
 CLUSTER_MULTI_USER=false
 CLUSTER_OS="ubuntu"
 
+CLIENT_TYPE="FULL_CLIENT"
 #CLUSTER_SUFIX will be used as the three last digits for all the vm forwarded ports.
 #Make sure that different clusters working on the same machine have different suffixes
 CLUSTER_SUFFIX=202
