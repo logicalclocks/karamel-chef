@@ -16,9 +16,9 @@ attrs:
     network:
       interface: enp0s3
   hopsworks:
-    ear_url: http://snurran.sics.se/hops/dela/hopsworks-ear.ear
-    war_url: http://snurran.sics.se/hops/dela/hopsworks.war
-    ca_url: http://snurran.sics.se/hops/dela/hopsworks-ca.war
+    ear_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ear.ear
+    war_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks.war
+    ca_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ca.war
     hopssite:
       version: "hops-demo"
   hopssite:
