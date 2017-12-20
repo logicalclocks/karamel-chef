@@ -22,7 +22,7 @@ attrs:
     hopssite:
       version: "hops-demo"
   hopssite:
-    email: "register_email" #replace
+    user: "register_email" #replace
     password: "register_pass" #replace 
 groups:
   dela:
