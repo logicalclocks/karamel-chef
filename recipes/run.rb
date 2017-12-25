@@ -1,6 +1,6 @@
 bash "run_karamel" do
     user "vagrant"
-    timeout 36000
+    timeout node['karamel']['timeout']
     code <<-EOF
     set -e
       cd #{node['karamel']['base_dir']}

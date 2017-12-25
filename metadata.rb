@@ -24,7 +24,7 @@ recipe  "karamel::test", "Run HopsWorks tests"
 
 recipe  "karamel::dela", "Adds IP latencies for all IP network traffic."
 
-#attribute "karamel/port",
-#          :description => "Port that webserver will listen on",
-#          :type => 'string'
+attribute "karamel/timeout",
+          :description => "Timeout for completing karamel. Default: 36000 (s) - 10 hrs",
+          :type => 'string'
 
