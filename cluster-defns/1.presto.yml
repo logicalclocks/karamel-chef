@@ -2,10 +2,10 @@ name: HopsworksVagrantMultiNode
 baremetal:
     username: vagrant
 
-cookbooks:       
-  presto:                                                                     
+cookbooks:
+  presto:
     github: "hopshadoop/presto-chef"
-    branch: "master"  
+    branch: "master"
 
 
 attrs:
@@ -15,19 +15,16 @@ attrs:
   kagent:
     network:
       interface: enp0s8
-  hopsworks:
-    ear_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ear.ear
-    war_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks.war
-groups: 
+groups:
   namenodes:
-    size: 1 
+    size: 1
     baremetal:
       ip: 192.168.56.101
-    recipes: 
+    recipes:
       - kagent
       - ndb::mgmd
       - ndb::ndbd
-      - ndb::mysqld                                                       
+      - ndb::mysqld
       - hops::ndb
       - hops::rm
       - hops::nn
