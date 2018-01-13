@@ -5,10 +5,7 @@ baremetal:
 cookbooks:       
   hopsworks:                                                                     
     github: "hopshadoop/hopsworks-chef"
-    branch: "master"  
-  adam:                                                                     
-    github: "biobankcloud/adam-chef"
-    branch: "master"  
+    branch: "flyway"  
 
 attrs:
   install:
@@ -47,5 +44,7 @@ groups:
       - hops::nm
       - tensorflow
       - hopsmonitor::telegraf
-      - adam 
+      - hive2
+      - dela      
+      
 
