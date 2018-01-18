@@ -1,0 +1,72 @@
+name: HopsworksVagrantMultiNode
+baremetal:
+    username: vagrant
+
+cookbooks:
+  hopsworks:
+    github: "hopshadoop/hopsworks-chef"
+    branch: "master"
+
+attrs:
+  install:
+    dir: /srv/hops
+    user: vagrant
+  kagent:
+    network:
+      interface: enp0s3
+  hopsworks:
+    port: 8080
+  ldap:
+    enabled: true
+    group_mapping: "Directory Administrators->HOPS_USER,HOPS_ADMIN; IT People-> HOPS_USER"
+    user_id: "uid"
+    user_givenName: "givenName"
+    user_surname: "sn"
+    user_email: "mail"
+    user_search_filter: "uid=%s"
+    group_search_filter: "member=%d"
+    attr_binary: "java.naming.ldap.attributes.binary"
+    group_target: "cn"
+    dyn_group_target: "memberOf"
+    user_dn: ""
+    group_dn: ""
+    account_status: 4
+    jndilookupname: "dc\=example\,dc\=com"
+    provider_url: "ldap\\://193\.10\.66\.104\\:1389"
+    attr_binary_val: "entryUUID"
+    security_auth: "none"
+    #security_principal: ""
+    #security_credentials: ""
+    referral: "follow"
+groups:
+  namenodes:
+    size: 1
+    baremetal:
+      ip: 10.0.2.15
+    recipes:
+      - kagent
+      - ndb::mgmd
+      - ndb::ndbd
+      - ndb::mysqld
+      - hops::ndb
+      - hops::rm
+      - hops::nn
+      - hops::jhs
+      - hadoop_spark::yarn
+      - hadoop_spark::historyserver
+      - flink::yarn
+      - elastic
+      - livy
+      - zeppelin
+      - kzookeeper
+      - kkafka
+      - epipe
+      - hopsworks
+      - hopsworks::dev
+      - hopsmonitor
+      - hopslog
+      - hops::dn
+      - hops::nm
+      - tensorflow
+      - hopsmonitor::telegraf
+      - hive2
