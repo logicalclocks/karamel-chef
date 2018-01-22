@@ -31,6 +31,7 @@ attrs:
     user_dn: ""
     group_dn: ""
     account_status: 4
+    #External JNDI Resource
     jndilookupname: "dc=example,dc=com"
     provider_url: "ldap://193.10.66.104:1389"
     attr_binary_val: "entryUUID"
@@ -38,6 +39,7 @@ attrs:
     #security_principal: ""
     #security_credentials: ""
     referral: "follow"
+    #additional_props: ""
 groups:
   namenodes:
     size: 1
