@@ -31,8 +31,8 @@ attrs:
     user_dn: ""
     group_dn: ""
     account_status: 4
-    jndilookupname: "dc\=example\,dc\=com"
-    provider_url: "ldap\\://193\.10\.66\.104\\:1389"
+    jndilookupname: "dc=example,dc=com"
+    provider_url: "ldap://193.10.66.104:1389"
     attr_binary_val: "entryUUID"
     security_auth: "none"
     #security_principal: ""
