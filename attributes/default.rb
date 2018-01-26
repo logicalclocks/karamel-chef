@@ -20,6 +20,3 @@ default['test']['hopsworks']['branch']      = "master"
 default['test']['hopsworks']['base_dir']    = "/home/vagrant/hopsworks"
 default['test']['hopsworks']['test_dir']    = "#{node['test']['hopsworks']['base_dir']}/hopsworks-ear/test"
 default['test']['hopsworks']['report_dir']      = "/home/vagrant/test_report"
-
-default['test']['hopsworks']['ear'] = "#{node['test']['hopsworks']['base_dir']}/hopsworks-ear/target/hopsworks-ear.ear"
-default['test']['hopsworks']['ca'] = "#{node['test']['hopsworks']['base_dir']}/hopsworks-ca/target/hopsworks-ca.war"

@@ -12,17 +12,6 @@ git node['test']['hopsworks']['base_dir']  do
   action :sync
 end
 
-# Build hopsworks
-bash 'build-hopsworks' do
-  user 'vagrant'
-  group 'vagrant'
-  environment ({'HOME' => '/home/vagrant'})
-  cwd node['test']['hopsworks']['base_dir']
-  code <<-EOF
-    mvn clean install -P-web -Dmaven.test.skip=true
-  EOF
-end
-
 # Create chef-solo cache dir
 directory '/tmp/chef-solo' do
   owner 'root'
@@ -31,15 +20,15 @@ directory '/tmp/chef-solo' do
   action :create
 end
 
-# Copy artifacts to cache location to be deployed
-remote_file '/tmp/chef-solo/hopsworks-ear-test.ear' do
-  source "file:///#{node['test']['hopsworks']['ear']}"
-  mode "777"
-  action :create_if_missing
-end
-
-remote_file '/tmp/chef-solo/hopsworks-ca-test.war' do
-  source "file:///#{node['test']['hopsworks']['ca']}"
-  mode "777"
-  action :create_if_missing
+# Build HopsWorks
+bash 'build-hopsworks' do
+   user 'root'
+   group 'root'
+   cwd node['test']['hopsworks']['base_dir']
+   code <<-EOF
+     mvn clean install -P-web -Dmaven.test.skip=true
+     VERSION=$(mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec)
+     mv hopsworks-ear/target/hopsworks-ear.ear /tmp/chef-solo/hopsworks-ear-$VERSION.ear
+     mv hopsworks-ca/target/hopsworks-ca.war /tmp/chef-solo/hopsworks-ca-$VERSION.war
+   EOF
 end
