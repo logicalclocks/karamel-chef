@@ -13,7 +13,7 @@ attrs:
    dir: /srv/hops
   kagent:
     network:
-      interface: eth0
+      interface: enp0s3
   hopsworks:
     version: 0.2.0
 
