@@ -14,8 +14,6 @@ attrs:
   kagent:
     network:
       interface: enp0s3
-  hopsworks:
-    version: 0.2.0
 
 groups: 
   namenodes:
