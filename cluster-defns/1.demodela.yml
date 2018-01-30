@@ -4,7 +4,7 @@ baremetal:
   username: vagrant
 
 cookbooks:
-  hopsworks:                                                                     
+  hopsworks:
     github: "hopshadoop/hopsworks-chef"
     branch: "master"
 
@@ -16,9 +16,11 @@ attrs:
     network:
       interface: enp0s3
   hopsworks:
-    ear_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ear.ear
-    war_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks.war
-    ca_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ca.war
+    email: "registered_email" #replace with registered value
+    cert:
+      cn: "registered_cn" #replace with registered value
+      o: "registered_o" #replace with registered value
+      ou: "registered_ou" #replace with registered value
     hopssite:
       version: "hops-demo"
   hopssite:
@@ -33,7 +35,7 @@ groups:
       - kagent
       - ndb::mgmd
       - ndb::ndbd
-      - ndb::mysqld                                                       
+      - ndb::mysqld
       - hops::ndb
       - hops::rm
       - hops::nn

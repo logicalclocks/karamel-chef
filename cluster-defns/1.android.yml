@@ -4,25 +4,20 @@ baremetal:
 
 cookbooks:
   hopsworks:
-    github: "hopshadoop/hopsworks-chef"
-    branch: "master"
+    github: "tkakantousis/hopsworks-chef"
+    branch: "HOPSWORKS-306"
 
 attrs:
   install:
     dir: /srv/hops
-    user: vagrant
-  ndb:
-    user: mysql
   kagent:
     network:
       interface: enp0s3
   hopsworks:
     port: 8080
-  hops:
-    yarn:
-      max_gpus: 8
-      gpu_enabled: false
-      gpus: '*'
+    ear_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ear-android.ear
+    war_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-android.war
+    ca_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ca-android.war
 groups:
   namenodes:
     size: 1
@@ -54,4 +49,5 @@ groups:
       - hops::nm
       - tensorflow
       - hopsmonitor::telegraf
+      - hive2
 

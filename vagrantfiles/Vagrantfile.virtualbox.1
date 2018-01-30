@@ -10,18 +10,16 @@ Vagrant.configure("2") do |config|
 
     config.vm.network :forwarded_port, guest: 22, host: 10022, id: "ssh"
     # MySQL Server
-    config.vm.network(:forwarded_port, {:guest=>3306, :host=>3306})
+    config.vm.network(:forwarded_port, {:guest=>3306, :host=>3307})
     # karamel http
-    config.vm.network(:forwarded_port, {:guest=>9090, :host=>9090})
+    config.vm.network(:forwarded_port, {:guest=>9090, :host=>9092})     
     # Hopsworks http
-    config.vm.network(:forwarded_port, {:guest=>8080, :host=>8080})
-    # Hopsworks https
-    config.vm.network(:forwarded_port, {:guest=>8181, :host=>8181})
+    config.vm.network(:forwarded_port, {:guest=>8080, :host=>8080})     
     # Glassfish debug port
     config.vm.network(:forwarded_port, {:guest=>9009, :host=>9009})
     # Glassfish admin UI
-    config.vm.network(:forwarded_port, {:guest=>4848, :host=>4848})
-    # Yarn RM
+    config.vm.network(:forwarded_port, {:guest=>4848, :host=>4848})         
+    # Yarn RM 
     config.vm.network(:forwarded_port, {:guest=>8088, :host=>8088})
     # Kibana
     config.vm.network(:forwarded_port, {:guest=>5601, :host=>5601})
@@ -42,30 +40,30 @@ Vagrant.configure("2") do |config|
 
 
     config.vm.provision "file", source: "cluster.yml", destination: "cluster.yml"
-    config.vm.provision "file", source: "~/.vagrant.d/insecure_private_key", destination: "~/.ssh/id_rsa"
+    config.vm.provision "file", source: "~/.vagrant.d/insecure_private_key", destination: "~/.ssh/id_rsa"    
     config.vm.provision "shell", inline: "cp /home/vagrant/.ssh/authorized_keys /home/vagrant/.ssh/id_rsa.pub && sudo chown vagrant:vagrant /home/vagrant/.ssh/id_rsa.pub"
-
+    
     config.vm.provider :virtualbox do |v|
       v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
       v.customize ["modifyvm", :id, "--memory", 14548]
       v.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
       v.customize ["modifyvm", :id, "--nictype1", "virtio"]
       v.customize ["modifyvm", :id, "--name", "hopsworks0"]
-      v.customize ["modifyvm", :id, "--cpus", "3"]
+      v.customize ["modifyvm", :id, "--cpus", "3"]         
     end
 
     config.vm.provision :chef_solo do |chef|
         chef.cookbooks_path = "cookbooks"
         chef.json = {
           "karamel" => {
-	    "default" =>      {
+	    "default" =>      { 
               "private_ips" => ["10.0.2.15"]
 	    },
           },
         }
         chef.add_recipe "karamel::install"
-        chef.add_recipe "karamel::default"
-        chef.add_recipe "karamel::run"
+        chef.add_recipe "karamel::default"     
+        chef.add_recipe "karamel::run"     
     end
-
+    
 end

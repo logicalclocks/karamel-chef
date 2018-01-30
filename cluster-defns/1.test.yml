@@ -2,10 +2,10 @@ name: HopsworksVagrantMultiNode
 baremetal:
     username: vagrant
 
-cookbooks:       
-  hopsworks:                                                                     
+cookbooks:
+  hopsworks:
     github: "hopshadoop/hopsworks-chef"
-    branch: "master"  
+    branch: "master"
 
 attrs:
   install:
@@ -19,15 +19,12 @@ attrs:
     python: false
   hopsworks:
     port: 8080
-    ear_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ear-jim.ear
-    war_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-jim.war
-    ca_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ca-jim.war
-groups: 
+groups:
   namenodes:
-    size: 1 
+    size: 1
     baremetal:
       ip: 10.0.2.15
-    recipes: 
+    recipes:
       - kagent::install
       - ndb::install
-      
+
