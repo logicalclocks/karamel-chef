@@ -203,7 +203,9 @@ accept_license ()
       ;;
      esac
 }
+  
 
+  
 SUDO_PWD=
 enter_sudo_password () 
 {
@@ -289,6 +291,14 @@ if [ $NON_INTERACT -eq 0 ] ; then
   enter_sudo_password
 fi
 
+which java
+if [ $? -eq 0 ] ; then
+    echo "Error."
+    echo "You do not have Java installed."
+    echo "You need to install Java, version 8 or greater"
+    echo ""
+    exit 33
+fi    
 
 sudo systemctl reset-failed
 
