@@ -1,0 +1,23 @@
+name: NginxTest
+baremetal:
+    username: vagrant
+
+cookbooks:       
+  hopsworks:                                                                     
+    github: "logicalclocks/setup-chef"
+    branch: "master"
+
+attrs:
+  install:
+    dir: /srv/hops
+  kagent:
+    network:
+      interface: enp0s3
+
+groups: 
+  namenodes:
+    size: 1 
+    baremetal:
+      ip: 10.0.2.15
+    recipes: 
+      - setup::nginx
