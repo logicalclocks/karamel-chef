@@ -3,9 +3,9 @@ baremetal:
     username: vagrant
 
 cookbooks:       
-  hopsworks:                                                                     
+  setup:                                                                     
     github: "logicalclocks/setup-chef"
-    branch: "master"
+    branch: "v0.4.0"  
 
 attrs:
   install:
