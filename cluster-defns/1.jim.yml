@@ -5,12 +5,11 @@ baremetal:
 cookbooks:       
   hopsworks:                                                                     
     github: "hopshadoop/hopsworks-chef"
-    branch: "flyway"
+    branch: "master"
 
 attrs:
   install:
-   user: vagrant 
-   dir: /srv/hops
+    dir: /srv/hops
   kagent:
     network:
       interface: enp0s3
