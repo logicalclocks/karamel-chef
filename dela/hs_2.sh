@@ -6,6 +6,5 @@ if [ ! -d "dela" ]; then
 fi
 KCHEF_DIR=${PWD}
 ${KCHEF_DIR}/vbox.sh
-${KCHEF_DIR}/dela/hs_setup.sh
 ${KCHEF_DIR}/run.sh hopssite 1 hopssite no-random-ports
 ${KCHEF_DIR}/dela/running/udp_hacky_fix.sh
