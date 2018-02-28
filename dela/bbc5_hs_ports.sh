@@ -25,11 +25,11 @@ do
 PORT=$((26000 + ${i} * 1000 + ${CLUSTER_SUFFIX}))
 echo "PORT${i}=${PORT}" >> ${KCHEF_DIR}/dela/running/hs_ports.sh
 done
-PORT=$((41000 + ${CLUSTER_SUFFIX}))
+PORT=43001
 echo "DELA1_P=${PORT}" >> ${KCHEF_DIR}/dela/running/hs_ports.sh
-PORT=$((42000 + ${CLUSTER_SUFFIX}))
+PORT=43002
 echo "DELA2_P=${PORT}" >> ${KCHEF_DIR}/dela/running/hs_ports.sh
-PORT=$((43000 + ${CLUSTER_SUFFIX}))
+PORT=43003
 echo "DELA3_P=${PORT}" >> ${KCHEF_DIR}/dela/running/hs_ports.sh
 PORT=$((44000 + ${CLUSTER_SUFFIX}))
 echo "DELA4_P=${PORT}" >> ${KCHEF_DIR}/dela/running/hs_ports.sh
