@@ -13,7 +13,10 @@ attrs:
   kagent:
     network:
       interface: enp0s3
-
+  hopsworks:
+    ear_url: http://snurran.sics.se/hops/hopsworks/0.5.0-SNAPSHOT/hopsworks-ear-jim.ear
+    war_url: http://snurran.sics.se/hops/hopsworks/0.5.0-SNAPSHOT/hopsworks-web-jim.war
+  
 groups: 
   namenodes:
     size: 1 

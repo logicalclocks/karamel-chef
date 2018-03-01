@@ -160,6 +160,32 @@ nvidia_download()
 }
 
 
+enable_services()
+{
+  clear
+  echo ""    
+  echo "Do you want to enable Hops Services as daemons that start automatically when the computer starts?"
+  printf 'Do you enable Hops services as daemons? [ yes or no ] '
+  enable_services="false"  
+  read ACCEPT
+  case $ACCEPT in
+      yes | Yes | YES)
+	  enable_services="true"
+      ;;
+    no | No | NO)
+      ;;
+    *)
+      echo "" 
+      echo "Please enter either 'yes' or 'no'." 
+      printf 'Do you enable Hops services as daemons? [ yes or no ] '
+      enable_services
+    ;;
+  esac
+
+  clear_screen
+}
+
+
 display_license()
 {
   echo ""        
@@ -215,6 +241,12 @@ enter_sudo_password ()
  if [ "$ACCEPT" != "" ] ; then
    SUDO_PWD="-passwd $ACCEPT"
  fi
+ echo -n "$ACCEPT" | sudo -S ls / > /dev/null
+ if [ $? -ne 0 ] ; then
+     echo "Your sudo password was incorrect. Exiting..."
+     exit 33
+ fi    
+ 
 }
   
 
@@ -285,6 +317,7 @@ if [ $NON_INTERACT -eq 0 ] ; then
   copyrights
   oracle_download
   nvidia_download
+  enable_services  
   display_license  
   accept_license
   #  clear_screen
@@ -292,7 +325,7 @@ if [ $NON_INTERACT -eq 0 ] ; then
 fi
 
 which java
-if [ $? -eq 0 ] ; then
+if [ $? -ne 0 ] ; then
     echo "Error."
     echo "You do not have Java installed."
     echo "You need to install Java, version 8 or greater"
@@ -526,6 +559,12 @@ if [ $? -ne 0 ] ; then
     exit 1
 fi    
 perl -pi -e "s/REPLACE_GPU/${use_gpu}/g" ${yml}
+if [ $? -ne 0 ] ; then
+    echo "Error. Couldn't edit the YML file to insert the use_gpu decision."
+    echo "Exiting..."
+    exit 1
+fi    
+perl -pi -e "s/REPLACE_ENABLED_SERVICES/${enable_services}/g" ${yml}
 if [ $? -ne 0 ] ; then
     echo "Error. Couldn't edit the YML file to insert the use_gpu decision."
     echo "Exiting..."

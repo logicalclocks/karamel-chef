@@ -5,14 +5,14 @@ baremetal:
 cookbooks:
   hopsworks:
     github: "hopshadoop/hopsworks-chef"
-    branch: "master"
+    branch: "0.4"
 
 attrs:
   install:
     dir: REPLACE_INSTALL_DIRECTORY
     user: REPLACE_USERNAME
   services:
-    enabled: false
+    enabled: REPLACE_ENABLED_SERVICES
   kagent:
     network:
         interface: REPLACE_NET_IF
@@ -45,10 +45,11 @@ groups:
       - kkafka
       - epipe
       - hopsworks
-      - hopsworks::dev
       - hopsmonitor
       - hopslog
       - hops::dn
       - hops::nm
       - tensorflow
       - hopsmonitor::telegraf
+      - dela
+      - hive2
