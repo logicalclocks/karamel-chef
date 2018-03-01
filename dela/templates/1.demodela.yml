@@ -22,7 +22,7 @@ attrs:
     email: "register_email" #replace
     cert:
       o: "register_organization" #replace
-      ou: "registered_organization_unit" #replace 
+      ou: "register_organization_unit" #replace 
     hopssite:
       version: "hops-demo"
   hopssite:
