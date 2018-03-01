@@ -10,12 +10,15 @@ cookbooks:
 attrs:
   install:
     dir: /srv/hops
-    user: vagrant
   kagent:
     network:
       interface: enp0s8
   hops:
      num_replicas: 2
+     rpc:
+      ssl: true
+  hopsworks:
+     encryption_password: "verysecurepassword"
 
 groups:
   namenodes:
