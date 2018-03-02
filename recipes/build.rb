@@ -32,3 +32,11 @@ bash 'build-hopsworks' do
      mv hopsworks-ca/target/hopsworks-ca.war /tmp/chef-solo/hopsworks-ca\:$VERSION-$VERSION.war
    EOF
 end
+
+# Copy anaconda bin into /tmp/chef-solo
+remote_file "/tmp/chef-solo/Anaconda2-#{node['test']['anaconda_cache']['version']}-Linux-x86_64.sh" do
+  source "file:///mnt/anaconda/Anaconda2-#{node['test']['anaconda_cache']['version']}-Linux-x86_64.sh"
+  user 'root'
+  group 'root'
+  mode '777'
+end
