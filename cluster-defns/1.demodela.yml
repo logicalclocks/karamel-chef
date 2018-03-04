@@ -52,7 +52,7 @@ groups:
       - epipe
       - hopsworks
       - hopsworks::dev
-      - hopsworks::dela
+      - hopsworks::delaregister
       - hopsmonitor
       - hopslog
       - hops::dn
