@@ -3,9 +3,10 @@ if [ ! -d "dela" ]; then
   echo "Run the script from the karamel-chef dir"
   exit 1
 fi
+TEMPLATE="1.${1}.yml"
 KCHEF_DIR=${PWD}
-rm cluster-defns/1.demodela.yml
-cp dela/templates/1.demodela.yml cluster-defns/
+rm cluster-defns/${TEMPLATE}
+cp dela/templates/${TEMPLATE} cluster-defns/1.demodela.yml
 
 #random 32 character alphanumeric string (upper and lowercase)
 ID=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
