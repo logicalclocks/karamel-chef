@@ -20,3 +20,5 @@ default['test']['hopsworks']['branch']      = "master"
 default['test']['hopsworks']['base_dir']    = "/home/vagrant/hopsworks"
 default['test']['hopsworks']['test_dir']    = "#{node['test']['hopsworks']['base_dir']}/hopsworks-ear/test"
 default['test']['hopsworks']['report_dir']      = "/home/vagrant/test_report"
+
+default['test']['anaconda_cache']['version'] = "5.0.1"
