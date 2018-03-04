@@ -5,7 +5,7 @@ if [ ! -d "dela" ]; then
 fi
 TEMPLATE="1.${1}.yml"
 KCHEF_DIR=${PWD}
-rm cluster-defns/${TEMPLATE}
+rm cluster-defns/1.demodela.yml
 cp dela/templates/${TEMPLATE} cluster-defns/1.demodela.yml
 
 #random 32 character alphanumeric string (upper and lowercase)
