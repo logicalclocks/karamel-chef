@@ -31,3 +31,11 @@
 ```./dela/dela_1.sh ./dela/defauls/dela_env.sh```
 4. create the vm
 ```./dela/dela_2.sh```
+
+#run demodela
+Running the cluster-defns/1.demodela.yml requires you to change some of the parameters. 
+If you want to run demodela without having to change anything, you can:
+1. run
+```./dela/demodela.sh```
+2. check the cluster file to see the randomly filled variables
+```cluster-defns/1.demodela.yml```
