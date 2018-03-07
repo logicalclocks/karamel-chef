@@ -1,8 +1,8 @@
 set -e
 
-DOMAIN="hops.site"
-REGISTER_PORT=443
-DOMAIN_PREFIX="https://"
+DOMAIN={DOMAIN}
+REGISTER_PORT={REGISTER_PORT}
+DOMAIN_PREFIX={DOMAIN_PREFIX}
 
 INSTALL_DIR=/srv/hops
 HOPSSITE_DIR=${INSTALL_DIR}/hopssite
@@ -53,7 +53,7 @@ else
   echo "cert_ou = ${ID}" >> ${CA_INI}
   echo "cert_email = ${EMAIL}" >> ${CA_INI}
   sudo mv ${CA_INI} ${DOMAINS_DIR}/domain1/config
-  sudo chown glassfish:glassfish ${DOMAINS_DIR}/domain1/config
+  sudo chown glassfish:root ${DOMAINS_DIR}/domain1/config
   sudo su -c ${DOMAINS_DIR}/domain1/bin/csr-ca.py glassfish
   touch ${REGISTERED}
 fi
