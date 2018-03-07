@@ -16,18 +16,26 @@
 /srv/hops/hopssite/registered
 ```
 
+# run demodela
+Running the cluster-defns/1.demodela.yml requires you to change some of the parameters. 
+If you want to run demodela without having to change anything, you can:
+1. run with $PARAM - demodela/alex-demodela/vm-demodela 
+```
+./dela/demodela.sh $PARAM
+```
+2. check the cluster file to see the randomly filled variables 
+```
+cluster-defns/1.demodela.yml
+```
+
 # run bbc5 hopssite mirror vm
 1. run prepare step 
 ```
 ./dela/prepare.sh
 ```
-2. create env file based on default 
+2. generate vagrantfile and cluster-def 
 ```
-dela/defaults/hs_env.sh
-```
-3. generate vagrantfile and cluster-def 
-```
-./dela/bbc5_hs_1.sh ./dela/defauls/hs_env.sh
+./dela/bbc5_hs_1.sh
 ```
 4. create the vm 
 ```
@@ -38,7 +46,7 @@ dela/defaults/hs_env.sh
 ./dela/hs_3.sh
 ```
 
-# run hopssite vm
+# run a dev test hopssite vm
 1. run prepare step 
 ```
 ./dela/prepare.sh
@@ -60,7 +68,7 @@ dela/defaults/hs_env.sh
 ./dela/hs_3.sh
 ```
 
-# run dela vm
+# run dev test dela vm
 1. run prepare step 
 ```
 ./dela/prepare.sh
@@ -76,16 +84,4 @@ dela/defaults/dela_env.sh
 4. create the vm 
 ```
 ./dela/dela_2.sh
-```
-
-# run demodela
-Running the cluster-defns/1.demodela.yml requires you to change some of the parameters. 
-If you want to run demodela without having to change anything, you can:
-1. run with $PARAM - demodela/alex-demodela/vm-demodela 
-```
-./dela/demodela.sh $PARAM
-```
-2. check the cluster file to see the randomly filled variables 
-```
-cluster-defns/1.demodela.yml
 ```
