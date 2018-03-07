@@ -1,5 +1,7 @@
+Run all the bellow scenarios from the karamel-chef folder. It currently matters where you are running the scripts from.
+
 # prepare image for hops.site
-1. create vagrant image - run 
+1. create vagrant image - run from the karamel-chef folder
 ```
 ./dela/demodela.sh vm-demodela
 ```
@@ -18,7 +20,7 @@
 5. step 1 creates/overwrites the cluster definition under cluster-defns/1.demodela.yml
 
 # prepare image for bbc5 mirror
-1. create vagrant image - run 
+1. create vagrant image - run from the karamel-chef folder
 ```
 ./dela/demodela.sh vm-demodela2
 ```
@@ -40,7 +42,7 @@
 # run demodela
 Running the cluster-defns/1.demodela.yml requires you to change some of the parameters. 
 If you want to run demodela without having to change anything, you can:
-1. run with $PARAM - demodela/alex-demodela/vm-demodela/vm-demodela2
+1. run with $PARAM - demodela/alex-demodela/vm-demodela/vm-demodela2 from the karamel-chef folder
 ```
 ./dela/demodela.sh $PARAM
 ```
