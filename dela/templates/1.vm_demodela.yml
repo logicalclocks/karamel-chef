@@ -1,0 +1,59 @@
+name: Dela
+
+baremetal:
+  username: vagrant
+
+cookbooks:
+  hopsworks:
+    github: "hopshadoop/hopsworks-chef"
+    branch: "0.4"
+
+attrs:
+  install:
+    dir: /srv/hops
+    user: vagrant
+  kagent:
+    network:
+      interface: enp0s3
+  hopsworks:
+    email: "REGISTER_EMAIL" #replace
+    cert:
+      o: "REGISTER_ORGANIZATION" #replace
+      ou: "REGISTER_ORG_UNIT" #replace 
+    hopssite:
+      version: "hops-demo"
+  hopssite:
+    password: "REGISTER_PASSWORD" #replace 
+groups:
+  dela:
+    size: 1
+    baremetal:
+      ip: 10.0.2.15
+    recipes:
+      - kagent
+      - ndb::mgmd
+      - ndb::ndbd
+      - ndb::mysqld
+      - hops::ndb
+      - hops::rm
+      - hops::nn
+      - hops::jhs
+      - hadoop_spark::yarn
+      - hadoop_spark::historyserver
+      - flink::yarn
+      - elastic
+      - livy
+      - zeppelin
+      - kzookeeper
+      - kkafka
+      - epipe
+      - hopsworks
+      - hopsworks::dev
+      - hopsmonitor
+      - hopslog
+      - hops::dn
+      - hops::nm
+      - tensorflow
+      - hopsmonitor::telegraf
+      - hive2
+      - dela
