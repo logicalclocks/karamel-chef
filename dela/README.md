@@ -3,11 +3,11 @@ Run all the bellow scenarios from the karamel-chef folder. It currently matters 
 # prepare image for hops.site
 1. create vagrant image - run from the karamel-chef folder
 ```
-./dela/demodela.sh vm-demodela
+./dela/demodela.sh hopssite
 ```
-2. once the vm is created check the vm ssh port($PARAM) and run 
+2. once the vm is created check the vm ssh port($SSH_PORT) type($TYPE - hopssite/bbc5) and run 
 ```
-./dela/vm_image_scripts/copy_scripts $PARAM
+./dela/vm_image_scripts/copy_scripts ${SSH_PORT} ${TYPE}
 ``` 
 3. make sure your image runs this script the first time it boots. 
 ```
@@ -22,11 +22,11 @@ Run all the bellow scenarios from the karamel-chef folder. It currently matters 
 # prepare image for bbc5 mirror
 1. create vagrant image - run from the karamel-chef folder
 ```
-./dela/demodela.sh vm-demodela2
+./dela/demodela.sh bbc5
 ```
-2. once the vm is created check the vm ssh port($PARAM) and run 
+2. once the vm is created check the vm ssh port($SSH_PORT) type($TYPE - hopssite/bbc5) and run 
 ```
-./dela/vm_image_scripts/copy_scripts $PARAM
+./dela/vm_image_scripts/copy_scripts ${SSH_PORT} ${TYPE}
 ``` 
 3. make sure your image runs this script the first time it boots. 
 ```
@@ -42,7 +42,7 @@ Run all the bellow scenarios from the karamel-chef folder. It currently matters 
 # run demodela
 Running the cluster-defns/1.demodela.yml requires you to change some of the parameters. 
 If you want to run demodela without having to change anything, you can:
-1. run with $PARAM - demodela/alex-demodela/vm-demodela/vm-demodela2 from the karamel-chef folder
+1. run with $PARAM - demodela/alex-demodela/hopssite-demodela/bbc5-demodela2 from the karamel-chef folder
 ```
 ./dela/demodela.sh $PARAM
 ```

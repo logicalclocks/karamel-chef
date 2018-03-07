@@ -13,7 +13,7 @@ IMAGE_REGISTER=dela/vm_image_scripts/image_register.sh
 cp dela/vm_image_scripts/image_register_template.sh ${IMAGE_REGISTER}
 chmod +x ${IMAGE_REGISTER}
 if [ $2 = "hopssite" ]; then
-  sed -i -e "s/{REPLACE_DOMAIN}/hopssite/g" ${IMAGE_REGISTER}
+  sed -i -e "s/{REPLACE_DOMAIN}/hops.site/g" ${IMAGE_REGISTER}
   sed -i -e "s/{REPLACE_REGISTER_PORT}/443/g" ${IMAGE_REGISTER}
   sed -i -e "s/{REPLACE_DOMAIN_PREFIX}/https/g" ${IMAGE_REGISTER}
 elif [ $2 = "bbc5" ]; then
