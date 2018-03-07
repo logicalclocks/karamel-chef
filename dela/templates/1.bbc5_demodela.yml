@@ -1,4 +1,4 @@
-name: Dela
+name: Bbc5MirrorDemoDela
 
 baremetal:
   username: vagrant
@@ -11,7 +11,6 @@ cookbooks:
 attrs:
   install:
     dir: /srv/hops
-    user: vagrant
   kagent:
     network:
       interface: enp0s3
@@ -21,7 +20,7 @@ attrs:
       o: "REGISTER_ORGANIZATION" #replace
       ou: "REGISTER_ORG_UNIT" #replace 
     hopssite:
-      version: "hops-demo"
+      version: "bbc5"
   hopssite:
     password: "REGISTER_PASSWORD" #replace 
 groups:

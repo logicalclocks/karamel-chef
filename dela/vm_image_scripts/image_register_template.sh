@@ -1,8 +1,8 @@
 set -e
 
-DOMAIN="hops.site"
-REGISTER_PORT=443
-DOMAIN_PREFIX="https://"
+DOMAIN="{REPLACE_DOMAIN}"
+REGISTER_PORT={REPLACE_REGISTER_PORT}
+DOMAIN_PREFIX="{REPLACE_DOMAIN_PREFIX}://"
 
 INSTALL_DIR=/srv/hops
 HOPSSITE_DIR=${INSTALL_DIR}/hopssite
@@ -35,7 +35,7 @@ else
   fi
   echo "Register success"
 
-  CA_INI=${DOMAINS_DIR}/domain1/config/ca.ini
+  CA_INI=${HOPSSITE_DIR}/ca.ini
   echo "[hops-site]" > ${CA_INI}
   echo "url = ${DOMAIN_PREFIX}${DOMAIN}:${REGISTER_PORT}" >> ${CA_INI}
   echo "path-login = /hopsworks-api/api/auth/login" >> ${CA_INI}
@@ -52,6 +52,8 @@ else
   echo "cert_o = demohops" >> ${CA_INI}
   echo "cert_ou = ${ID}" >> ${CA_INI}
   echo "cert_email = ${EMAIL}" >> ${CA_INI}
-  ${DOMAINS_DIR}/domain1/bin/csr-ca.py
+  sudo mv ${CA_INI} ${DOMAINS_DIR}/domain1/config
+  sudo chown glassfish:root ${DOMAINS_DIR}/domain1/config
+  sudo su -c ${DOMAINS_DIR}/domain1/bin/csr-ca.py glassfish
   touch ${REGISTERED}
 fi
