@@ -1,4 +1,4 @@
-name: HopssiteDemoDela
+name: Bbc5MirrorDemoDela
 
 baremetal:
   username: vagrant
@@ -22,7 +22,7 @@ attrs:
       o: "REGISTER_ORGANIZATION" #replace
       ou: "REGISTER_ORG_UNIT" #replace 
     hopssite:
-      version: "hops-demo"
+      version: "bbc5"
   hopssite:
     password: "REGISTER_PASSWORD" #replace 
 groups:
