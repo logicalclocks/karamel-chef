@@ -12,11 +12,11 @@ SSH_PORT=$1
 IMAGE_REGISTER=dela/vm_image_scripts/image_register.sh
 cp dela/vm_image_scripts/image_register_template.sh ${IMAGE_REGISTER}
 chmod +x ${IMAGE_REGISTER}
-if [ $1="hopssite" ] then
+if [ $1="hopssite" ]; then
   sed -i -e "s/{DOMAIN}/"hopssite"/g" ${IMAGE_REGISTER}
   sed -i -e "s/{REGISTER_PORT}/443/g" ${IMAGE_REGISTER}
   sed -i -e "s/{DOMAIN_PREFIX}/"https://"/g" ${IMAGE_REGISTER}
-elif [ $1="bbc5"] then
+elif [ $1="bbc5" ]; then
   sed -i -e "s/{DOMAIN}/"bbc5"/g" ${IMAGE_REGISTER}
   sed -i -e "s/{REGISTER_PORT}/8080/g" ${IMAGE_REGISTER}
   sed -i -e "s/{DOMAIN_PREFIX}/"http://"/g" ${IMAGE_REGISTER}
