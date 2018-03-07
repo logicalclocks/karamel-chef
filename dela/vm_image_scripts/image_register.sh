@@ -52,6 +52,6 @@ else
   echo "cert_o = demohops" >> ${CA_INI}
   echo "cert_ou = ${ID}" >> ${CA_INI}
   echo "cert_email = ${EMAIL}" >> ${CA_INI}
-  ${DOMAINS_DIR}/domain1/bin/csr-ca.py
+  sudo -u "${DOMAINS_DIR}/domain1/bin/csr-ca.py" glassfish
   touch ${REGISTERED}
 fi
