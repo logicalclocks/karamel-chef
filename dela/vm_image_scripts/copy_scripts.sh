@@ -17,7 +17,7 @@ if [ $2 = "hopssite" ]; then
   sed -i -e "s/{REPLACE_REGISTER_PORT}/443/g" ${IMAGE_REGISTER}
   sed -i -e "s/{REPLACE_DOMAIN_PREFIX}/https/g" ${IMAGE_REGISTER}
 elif [ $2 = "bbc5" ]; then
-  sed -i -e "s/{REPLACE_DOMAIN}/bbc5/g" ${IMAGE_REGISTER}
+  sed -i -e "s/{REPLACE_DOMAIN}/bbc5.sics.se/g" ${IMAGE_REGISTER}
   sed -i -e "s/{REPLACE_REGISTER_PORT}/8080/g" ${IMAGE_REGISTER}
   sed -i -e "s/{REPLACE_DOMAIN_PREFIX}/http/g" ${IMAGE_REGISTER}
 else
