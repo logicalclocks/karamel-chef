@@ -9,7 +9,7 @@ Run all the bellow scenarios from the karamel-chef folder. It currently matters 
 ```
 ./dela/vm_image_scripts/copy_scripts ${SSH_PORT} ${TYPE}
 ``` 
-3. make sure your image runs this script the first time it boots. 
+3. make sure your image runs this script the first time it boots. Do not run this script as root. Execute as install user(vagrant)
 ```
 /srv/hops/hopssite/image_register.sh
 ```
@@ -28,7 +28,7 @@ Run all the bellow scenarios from the karamel-chef folder. It currently matters 
 ```
 ./dela/vm_image_scripts/copy_scripts ${SSH_PORT} ${TYPE}
 ``` 
-3. make sure your image runs this script the first time it boots. 
+3. make sure your image runs this script the first time it boots. Do not run this script as root. Execute as install user(vagrant)
 ```
 /srv/hops/hopssite/image_register.sh
 ```

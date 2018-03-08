@@ -28,13 +28,14 @@ else
   sed -i -e "s/REGISTER_ORGANIZATION/demohops/g" ${CONTENT_DATA}
   sed -i -e "s/REGISTER_ORG_UNIT/${ID}/g" ${CONTENT_DATA}
   sed -i -e "s/REGISTER_PASSWORD/${PASS}/g" ${CONTENT_DATA}
+  echo "contacting:${TARGET}"
   CURL_RES=$(curl -s -o /dev/null -w "%{http_code}" -d "@register_data.json" -H "${CONTENT_TYPE}" -X POST $TARGET)
   if [ ${CURL_RES} != 200 ] ; then
     echo "Register fail"
     exit 1
   fi
   echo "Register success"
-
+  echo "creating certificate"
   CA_INI=${HOPSSITE_DIR}/ca.ini
   echo "[hops-site]" > ${CA_INI}
   echo "url = ${DOMAIN_PREFIX}${DOMAIN}:${REGISTER_PORT}" >> ${CA_INI}
@@ -53,7 +54,7 @@ else
   echo "cert_ou = ${ID}" >> ${CA_INI}
   echo "cert_email = ${EMAIL}" >> ${CA_INI}
   sudo mv ${CA_INI} ${DOMAINS_DIR}/domain1/config
-  sudo chown glassfish:root ${DOMAINS_DIR}/domain1/config
-  sudo su -c ${DOMAINS_DIR}/domain1/bin/csr-ca.py glassfish
+  sudo chown glassfish:root ${DOMAINS_DIR}/domain1/config/ca.ini
+  sudo su -c "python ${DOMAINS_DIR}/domain1/bin/csr-ca.py" glassfish
   touch ${REGISTERED}
 fi
