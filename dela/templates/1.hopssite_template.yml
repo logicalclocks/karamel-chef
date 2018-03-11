@@ -16,6 +16,7 @@ attrs:
     network:
       interface: {NETWORK_INTERFACE}
   dela:
+    version: {DELA_VERSION}
     port: {DELA1_P}
     stun_port1: {DELA2_P}
     stun_port2: {DELA3_P}

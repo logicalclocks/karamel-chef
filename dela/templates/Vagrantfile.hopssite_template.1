@@ -39,8 +39,6 @@ Vagrant.configure("2") do |config|
   config.vm.network(:forwarded_port, {:guest=>{DELA1_P}, :host=>{DELA1_P}, :protocol=>"udp"})
   config.vm.network(:forwarded_port, {:guest=>{DELA2_P}, :host=>{DELA2_P}, :protocol=>"udp"})
   config.vm.network(:forwarded_port, {:guest=>{DELA3_P}, :host=>{DELA3_P}, :protocol=>"udp"})
-  # Dela http port
-  config.vm.network(:forwarded_port, {:guest=>{DELA4_P}, :host=>{DELA4_P}})
   # Hops Site - glassfish admin port
   config.vm.network(:forwarded_port, {:guest=>50048, :host=>{HS_GFISH_P}})
   # Hops Site - https port
