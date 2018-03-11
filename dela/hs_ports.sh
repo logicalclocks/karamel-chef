@@ -38,3 +38,6 @@ echo "HS_GFISH_P=${PORT}" >> ${KCHEF_DIR}/dela/running/hs_ports.sh
 PORT=$((52000 + ${CLUSTER_SUFFIX}))
 echo "HS_WEB_P=${PORT}" >> ${KCHEF_DIR}/dela/running/hs_ports.sh
 chmod +x ${KCHEF_DIR}/dela/running/hs_ports.sh
+PORT=$((53000 + ${CLUSTER_SUFFIX}))
+echo "HS_GFISH_DEBUG=${PORT}" >> ${KCHEF_DIR}/dela/running/hs_ports.sh
+chmod +x ${KCHEF_DIR}/dela/running/hs_ports.sh
