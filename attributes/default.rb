@@ -1,6 +1,6 @@
 # Karamel attributes
 
-default['karamel']['version']         = 0.4
+default['karamel']['version']         = "0.5"
 default['karamel']['download_url']    = "http://www.karamel.io/sites/default/files/downloads/karamel-#{node['karamel']['version']}.tgz"
 
 default['karamel']['download_file']    = "#{Chef::Config['file_cache_path']}/#{File.basename(node['karamel']['download_url'])}"
