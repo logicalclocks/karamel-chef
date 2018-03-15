@@ -32,3 +32,7 @@ ssh -i ~/.vagrant.d/insecure_private_key -p ${SSH_PORT} vagrant@localhost 'sudo 
 scp -i ~/.vagrant.d/insecure_private_key -P ${SSH_PORT} ${IMAGE_REGISTER} vagrant@localhost:/srv/hops/hopssite
 scp -i ~/.vagrant.d/insecure_private_key -P ${SSH_PORT} dela/vm_image_scripts/register_data_template.json vagrant@localhost:/srv/hops/hopssite
 rm ${IMAGE_REGISTER}
+
+#echo "setting http and https forwarded ports in variables"
+PUBLIC_HTTP=$(cat Vagrantfile | grep 8080 | awk '{print($3)}' | cut -d ">" -f 2 | cut -d "}" -f 1)
+PUBLIC_HTTPS=$(cat Vagrantfile | grep 8181 | awk '{print($3)}' | cut -d ">" -f 2 | cut -d "}" -f 1)
