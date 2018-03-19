@@ -1,3 +1,6 @@
+#Important notes
+1. demodela variants run BASE_CLIENTS so they can only download. If you want to move to FULL_CLIENTS, remember to get the HTTP and HTTPS vm forwarded ports in the variables tables. Also remember to get the DELA ports and run the hacky_fix_scripts.
+
 Run all the bellow scenarios from the karamel-chef folder. It currently matters where you are running the scripts from.
 
 # prepare image for hops.site

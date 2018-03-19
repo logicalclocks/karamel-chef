@@ -16,6 +16,7 @@ attrs:
     network:
       interface: {NETWORK_INTERFACE}
   dela:
+    version: {DELA_VERSION}
     port: {DELA1_P}
     stun_port1: {DELA2_P}
     stun_port2: {DELA3_P}
@@ -32,6 +33,7 @@ attrs:
     ear_url: {SOURCE_CODE}/hopsworks-ear.ear
     war_url: {SOURCE_CODE}/hopsworks.war
     ca_url: {SOURCE_CODE}/hopsworks-ca.war
+    public_https_port: {WEB_SEC_P}
     dela:
       enabled: true
       client: {CLIENT_TYPE}

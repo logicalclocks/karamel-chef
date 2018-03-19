@@ -25,6 +25,8 @@ do
 PORT=$((26000 + ${i} * 1000 + ${CLUSTER_SUFFIX}))
 echo "PORT${i}=${PORT}" >> ${KCHEF_DIR}/dela/running/hs_ports.sh
 done
+PORT=$((36000 + ${CLUSTER_SUFFIX}))
+echo "WEB_SEC_P=${PORT}" >> ${KCHEF_DIR}/dela/running/hs_ports.sh
 PORT=$((41000 + ${CLUSTER_SUFFIX}))
 echo "DELA1_P=${PORT}" >> ${KCHEF_DIR}/dela/running/hs_ports.sh
 PORT=$((42000 + ${CLUSTER_SUFFIX}))
@@ -37,4 +39,7 @@ PORT=$((51000 + ${CLUSTER_SUFFIX}))
 echo "HS_GFISH_P=${PORT}" >> ${KCHEF_DIR}/dela/running/hs_ports.sh
 PORT=$((52000 + ${CLUSTER_SUFFIX}))
 echo "HS_WEB_P=${PORT}" >> ${KCHEF_DIR}/dela/running/hs_ports.sh
+chmod +x ${KCHEF_DIR}/dela/running/hs_ports.sh
+PORT=$((53000 + ${CLUSTER_SUFFIX}))
+echo "HS_GFISH_DEBUG=${PORT}" >> ${KCHEF_DIR}/dela/running/hs_ports.sh
 chmod +x ${KCHEF_DIR}/dela/running/hs_ports.sh

@@ -26,3 +26,5 @@ CLUSTER_MANUAL_REGISTER="true"
 #suffix and domain for your hopssite instance
 HOPSSITE_SUFFIX=200
 HOPSSITE_DOMAIN="bbc5.sics.se"
+
+DELA_VERSION="0.0.2-SNAPSHOT"

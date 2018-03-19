@@ -21,3 +21,5 @@ SOURCE_CODE="http:\/\/snurran.sics.se\/hops\/dela"
 #Company and Unit combination has to be unique for each cluster registered with a specific hopssite instance
 CLUSTER_ORG="hopsworks"
 CLUSTER_UNIT="hs"
+
+DELA_VERSION="0.0.2-SNAPSHOT"

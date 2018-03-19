@@ -25,6 +25,8 @@ do
   PORT=$((26000 + ${i} * 1000 + ${CLUSTER_SUFFIX}))
   echo "PORT${i}=${PORT}" >> ${KCHEF_DIR}/dela/running/dela_ports.sh
 done
+PORT=$((36000 + ${CLUSTER_SUFFIX}))
+echo "WEB_SEC_P=${PORT}" >> ${KCHEF_DIR}/dela/running/dela_ports.sh
 PORT=$((41000 + ${CLUSTER_SUFFIX}))
 echo "DELA1_P=${PORT}" >> ${KCHEF_DIR}/dela/running/dela_ports.sh
 PORT=$((42000 + ${CLUSTER_SUFFIX}))
