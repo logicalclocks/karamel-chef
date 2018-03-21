@@ -28,7 +28,7 @@ materialize()
 if [ $CLUSTER_OS == "ubuntu" ] ; then
   OS_VERSION="config.vm.box = \"bento\/ubuntu-16.04\"\\n  config.vm.box_version = \"2.3.5\""
 elif [ $CLUSTER_OS == "centos" ]; then
-  OS_VERSION="config.vm.box = \"bento/centos-7.2\""
+  OS_VERSION="config.vm.box = \"bento\/centos-7.2\""
 fi
 if [ $CLUSTER_OS == "ubuntu" ] ; then
   NETWORK_INTERFACE="enp0s3"
@@ -41,14 +41,16 @@ else
   USER_SETTING="user: vagrant"
 fi
 
-declare -a VALUES=("OS_VERSION" "SSH_P" "MYSQL_P" "KARAMEL_P" "WEB_P" "WEB_SEC_P" "DEBUG_P" "GFISH_P" "DELA1_P" "DELA2_P" "DELA3_P" "HS_GFISH_P" "HS_WEB_P" "HS_GFISH_DEBUG" "PORT1" "PORT2" "PORT3" "PORT4" "PORT5" "PORT6" "PORT7" "PORT8" "PORT9")
-materialize "${KCHEF_DIR}/vagrantfiles/Vagrantfile.hopssite.1" "${KCHEF_DIR}/dela/templates/Vagrantfile.hopssite_template.1" $VALUES
-
 HOPSSITE_DOMAIN=$CLUSTER_DOMAIN
 HS_WEB1_P=$WEB_P
 HS_WEB2_P=$HS_WEB_P
 CLUSTER_MANUAL_REGISTER=true
-declare -a VALUES=("GITHUB" "BRANCH" "USER_SETTING" "NETWORK_INTERFACE" "CLIENT_TYPE" "SOURCE_CODE" "DELA_VERSION" "DELA1_P" "DELA2_P" "DELA3_P" "DELA4_P" "WEB_P" "WEB_SEC_P" "HOPSSITE_DOMAIN" "HS_WEB1_P" "HS_WEB2_P" "CLUSTER_EMAIL" "CLUSTER_PASSWORD" "CLUSTER_ORG" "CLUSTER_UNIT" "CLUSTER_MANUAL_REGISTER")
+REPORT_TRACKER="https:\/\/${HOPSSITE_DOMAIN}:${HS_WEB2_P}\/hops-site\/api"
+
+declare -a VALUES=("OS_VERSION" "SSH_P" "MYSQL_P" "KARAMEL_P" "WEB_P" "WEB_SEC_P" "DEBUG_P" "GFISH_P" "DELA1_P" "DELA2_P" "DELA3_P" "HS_GFISH_P" "HS_WEB_P" "HS_GFISH_DEBUG" "PORT1" "PORT2" "PORT3" "PORT4" "PORT5" "PORT6" "PORT7" "PORT8" "PORT9")
+materialize "${KCHEF_DIR}/vagrantfiles/Vagrantfile.hopssite.1" "${KCHEF_DIR}/dela/templates/Vagrantfile.hopssite_template.1" $VALUES
+
+declare -a VALUES=("GITHUB" "BRANCH" "USER_SETTING" "NETWORK_INTERFACE" "CLIENT_TYPE" "REPORT_TRACKER" "SOURCE_CODE" "DELA_VERSION" "DELA1_P" "DELA2_P" "DELA3_P" "DELA4_P" "WEB_P" "WEB_SEC_P" "HOPSSITE_DOMAIN" "HS_WEB1_P" "HS_WEB2_P" "CLUSTER_EMAIL" "CLUSTER_PASSWORD" "CLUSTER_ORG" "CLUSTER_UNIT" "CLUSTER_MANUAL_REGISTER")
 materialize "${KCHEF_DIR}/cluster-defns/1.hopssite.yml" "${KCHEF_DIR}/dela/templates/1.hopssite_template.yml" $VALUES
 
 declare -a VALUES=("CLUSTER_DOMAIN" "DELA1_P" "DELA2_P" "DELA3_P")

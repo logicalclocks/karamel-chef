@@ -22,4 +22,4 @@ SOURCE_CODE="http:\/\/snurran.sics.se\/hops\/dela\/0.4.1"
 CLUSTER_ORG="hopsworks"
 CLUSTER_UNIT="hs"
 
-DELA_VERSION="0.0.2-SNAPSHOT"
+DELA_VERSION="0.0.3"

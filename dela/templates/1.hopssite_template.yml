@@ -28,6 +28,9 @@ attrs:
         type: "DISK"
     stun_servers_ip: ["193.10.64.107","193.10.64.85"]
     stun_servers_id: ["1","2"]
+    report:
+      type: "other"
+      tracker: {REPORT_TRACKER}
   hopsworks:
     ear_url: {SOURCE_CODE}/hopsworks-ear.ear
     war_url: {SOURCE_CODE}/hopsworks.war
