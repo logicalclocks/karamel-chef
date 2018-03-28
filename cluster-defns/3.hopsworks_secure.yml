@@ -17,6 +17,10 @@ attrs:
      num_replicas: 2
      rpc:
       ssl: true
+     crl:
+      validation_enabled: true
+      fetcher_class: "org.apache.hadoop.security.ssl.DevRemoteCRLFetcher"
+      fetcher_interval: "5m"
   hopsworks:
      encryption_password: "verysecurepassword"
   conda:
