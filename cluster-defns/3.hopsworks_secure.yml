@@ -14,13 +14,12 @@ attrs:
     network:
       interface: enp0s8
   hops:
-     num_replicas: 2
-     rpc:
-      ssl: true
-     crl:
-      validation_enabled: true
-      fetcher_class: "org.apache.hadoop.security.ssl.DevRemoteCRLFetcher"
-      fetcher_interval: "5m"
+    num_replicas: 2
+    tls:
+     enabled: true
+     crl_enabled: true
+     crl_fetcher_class: "org.apache.hadoop.security.ssl.DevRemoteCRLFetcher"
+     crl_fetcher_interval: "5m"
   hopsworks:
      encryption_password: "verysecurepassword"
   conda:

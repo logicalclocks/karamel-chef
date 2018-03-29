@@ -13,8 +13,11 @@ attrs:
   jupyter:
       user: glassfish
   hops:
-    rpc:
-      ssl: true
+    tls:
+     enabled: true
+     crl_enabled: true
+     crl_fetcher_class: "org.apache.hadoop.security.ssl.DevRemoteCRLFetcher"
+     crl_fetcher_interval: "5m"
   kagent:
     network:
       interface: enp0s3
