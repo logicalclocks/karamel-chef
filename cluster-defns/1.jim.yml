@@ -5,7 +5,7 @@ baremetal:
 cookbooks:       
   hopsworks:                                                                     
     github: "hopshadoop/hopsworks-chef"
-    branch: "kagent_fixes"
+    branch: "mml"
 
 attrs:
   install:
@@ -16,10 +16,14 @@ attrs:
   hopsworks:
     ear_url: http://snurran.sics.se/hops/hopsworks/0.5.0-SNAPSHOT/hopsworks-ear-jim.ear
     war_url: http://snurran.sics.se/hops/hopsworks/0.5.0-SNAPSHOT/hopsworks-web-jim.war
+  tensorflow:
+    install: src
   conda: 
     use_defaults: false
     mirror_list: "http://snurran.sics.se/hops/conda/pkgs/main/linux-64,http://snurran.sics.se/hops/conda/pkgs/main/noarch"
-  
+  cuda:
+    accept_nvidia_download_terms: true
+    skip_test: true
 groups: 
   namenodes:
     size: 1 
