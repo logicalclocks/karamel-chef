@@ -24,6 +24,7 @@ attrs:
   cuda:
     accept_nvidia_download_terms: true
     skip_test: true
+
 groups: 
   namenodes:
     size: 1 
