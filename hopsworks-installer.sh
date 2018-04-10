@@ -507,18 +507,18 @@ if [ $? -ne 0 ] ; then
     fi
 fi
 
-if [ ! -f ${yml}.bak ] ; then
+#if [ ! -f ${yml}.bak ] ; then
     rm -f ${yml} 2>&1 > /dev/null
     wget https://raw.githubusercontent.com/hopshadoop/karamel-chef/master/cluster-defns/${yml}
     if [ $? -ne 0 ] ; then
       echo "Could not download hopsworks cluster definition file ${yml}. Exiting..."
       exit 9
     fi
-    cp -f ${yml} ${yml}.bak 
-else
-    # If the file is already there, copy the backup over the install version (which may be in an incorrect state)
-    cp -f ${yml}.bak ${yml}
-fi
+#    cp -f ${yml} ${yml}.bak 
+#else
+#    # If the file is already there, copy the backup over the install version (which may be in an incorrect state)
+#    cp -f ${yml}.bak ${yml}
+#fi
 
 IP_ADDR="127.0.0.1"
 
