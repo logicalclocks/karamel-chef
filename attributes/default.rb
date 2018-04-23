@@ -1,4 +1,3 @@
-# Karamel attributes
 
 default['karamel']['version']         = "0.5"
 default['karamel']['download_url']    = "http://www.karamel.io/sites/default/files/downloads/karamel-#{node['karamel']['version']}.tgz"

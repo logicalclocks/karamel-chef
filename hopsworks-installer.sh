@@ -31,12 +31,13 @@
 
 yml=1.8GB.yml
 NON_INTERACT=0
-HOPSWORKS_INSTALLER_VERSION="Hopsworks Localhost Installer Version 0.1 \n\nCopyright (c) Logical Clocks, 2017."
+HOPSWORKS_INSTALLER_VERSION="Hopsworks Localhost Installer Version 0.1 \n\nCopyright (c) Logical Clocks, 2017/18."
 PARAM_INSTALL_DIR=0
 PARAM_CLEAN_INSTALL_DIR=0
 SCRIPTNAME=`basename $0`
 SSH_PORT=22
-KARAMEL_VERSION=0.4
+KARAMEL_VERSION=0.5
+NET_INTERFACE=""
 
 #ECHO_OUT="2>&1 > /dev/null"
 ECHO_OUT="2>&1 > /tmp/hopsworks-installer.log"
@@ -85,11 +86,11 @@ splash_screen()
 {
   clear
   echo "" 
-  echo "Hopsworks Installer, Copyright(C) 2017 Logical Clocks AB. All rights reserved."
+  echo "$HOPSWORKS_INSTALLER_VERSION"
   echo ""
   echo "This program installs the Hopsworks platform."
   echo ""
-  echo "~4.5GB will be downloaded - make sure you have the bandwidth for this."  
+  echo "Note: ~5GB of data will be downloaded - don't do this on a smartuphone link."  
   echo "" 
   if [ $ROOTUSER -eq 1 ] ; then
     echo "You are running the Installer as a root user." 
@@ -194,7 +195,7 @@ display_license()
   echo "This code is released under the Apache License, Version 2, see:" 
   echo "https://www.apache.org/licenses/LICENSE-2.0"
   echo "" 
-  echo "Copyright(C) 2017 Logical Clocks. All rights reserved." 
+  echo "$HOPSWORKS_INSTALLER_VERSION"
   echo "Logical Clocks AB is furnishing this item \"as is\". Logical Clocks AB does not provide any" 
   echo "warranty of the item whatsoever, whether express, implied, or statutory," 
   echo "including, but not limited to, any warranty of merchantability or fitness" 
@@ -279,6 +280,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
               echo "usage: [sudo] ./$SCRIPTNAME "
 	      echo " [-c|--clean]    clean the install directory when installing"
 	      echo " [-ni|--non-interactive]    skip all the license/accept screens"
+	      echo " [--network-interface]      name of network interface to use (e.g., 'eth0')"
 	      echo " [-d|--dir INSTALL DIRECTORY]"
 	      echo "                  set the base installation directory "
 	      echo " [-v|--version]   version information" 
@@ -291,6 +293,10 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
     -d|--dir)
 	      shift
 	      PARAM_INSTALL_DIR=1
+	      ;;
+    --network-interface)
+	      shift
+	      NET_INTERFACE="$1"
 	      ;;
     -ni|--non-interactive)
 	      NON_INTERACT=1
@@ -328,8 +334,14 @@ which java
 if [ $? -ne 0 ] ; then
     echo "Error."
     echo "You do not have Java installed."
-    echo "You need to install Java, version 8 or greater"
+    echo "You need to install Java, version 8 or greater."
     echo ""
+    echo "Ubuntu/Debian installation instructions:"
+    echo "sudo apt-get install openjdk-8-jdk"
+    echo ""
+    echo "Centos/Redhat installation instructions:"
+    echo "sudo yum install java-1.8.0-openjdk"
+    echo ""    
     exit 33
 fi    
 
@@ -338,10 +350,24 @@ sudo systemctl reset-failed
 
 sudo netstat -ltpn | grep 8080 2>&1 > /dev/null
 if [ $? -eq 0 ] ; then
-    echo "You have a service running on port 8080, needed by hopsworks. Please stop it:"
-    echo "sudo netstat -ltpn | grep 8080"
-    echo ""
-    exit 2
+    sudo netstat -ltpn | grep 8080 | grep glassfish
+    if [ $? -eq 0 ] ; then
+      echo "Trying to stop payara app server."
+      sudo systemctl stop glassfish-domain1
+      
+      if [ $? -ne 0 ] ; then
+        echo "Tried to stop payara server on port 8080, but couldn't."
+        echo "Please stop the service running on port 8080 and try again".
+        echo ""
+        exit 3
+      fi
+    else
+      echo "You have a service running on port 8080, needed by hopsworks. Please stop it, Hopsworks wants to run on port 8080."
+      echo "If you can't stop the service, you will need to edit this bash script and the cluster definition file: cluster-definitions/${yml}"
+      echo "sudo netstat -ltpn | grep 8080"
+      echo ""
+      exit 2
+    fi
 fi    
 
 sudo netstat -ltpn | grep 4848 2>&1 > /dev/null
@@ -494,32 +520,36 @@ if [ $? -ne 0 ] ; then
     fi
 fi
 
-if [ ! -f ${yml}.bak ] ; then
-    rm -f ${yml} 2>&1 > /dev/null
+#if [ ! -f ${yml}.bak ] ; then
+    sudo rm -f ${yml} 2>&1 > /dev/null
+    sudo chown $USERNAME .
     wget https://raw.githubusercontent.com/hopshadoop/karamel-chef/master/cluster-defns/${yml}
     if [ $? -ne 0 ] ; then
       echo "Could not download hopsworks cluster definition file ${yml}. Exiting..."
       exit 9
     fi
-    cp -f ${yml} ${yml}.bak 
-else
-    # If the file is already there, copy the backup over the install version (which may be in an incorrect state)
-    cp -f ${yml}.bak ${yml}
-fi
+#    cp -f ${yml} ${yml}.bak 
+#else
+#    # If the file is already there, copy the backup over the install version (which may be in an incorrect state)
+#    cp -f ${yml}.bak ${yml}
+#fi
 
 IP_ADDR="127.0.0.1"
 
-# net_if is set to the first active network interface
-net_if=$(ip -o link show | awk '{print $2,$9}' | grep UP | sed 's/: UP//' | sed 's/\n.*//')
+# NET_INTERFACE is set to the first active network interface
 
-if [ "$net_if" == "" ] ; then
+if [ "$NET_INTERFACE" == "" ] ; then
+  NET_INTERFACE=$(ip -o link show | awk '{print $2,$9}' | grep UP | sed 's/: UP//' | sed 's/\n.*//')
+fi    
+
+if [ "$NET_INTERFACE" == "" ] ; then
     echo "Error."
     echo "Could not find an active network interface to install with."
     echo "Is your network up?"
     exit 12
 fi   
 
-echo "Found net_if: $net_if"
+echo "Using NET_INTERFACE: $NET_INTERFACE"
 
 targetDir=$(printf "%q" $PWD)
 
@@ -539,14 +569,17 @@ if [ $? -ne 0 ] ; then
     exit 1
 fi
 
-perl -pi -e "s/REPLACE_HOSTNAME/$(hostname)/g" ${yml}
+myhostname=`hostname`
+host_ip=$(getent hosts $myhostname | awk '{ print $1 }')
+
+perl -pi -e "s/REPLACE_HOSTNAME/${host_ip}/g" ${yml}
 if [ $? -ne 0 ] ; then
     echo "Error. Couldn't edit the YML file to insert the username."
     echo "Exiting..."
     exit 1
 fi
 
-perl -pi -e "s/REPLACE_NET_IF/${net_if}/g" ${yml}
+perl -pi -e "s/REPLACE_NET_IF/${NET_INTERFACE}/g" ${yml}
 if [ $? -ne 0 ] ; then
     echo "Error. Couldn't edit the YML file to insert the network interface."
     echo "Exiting..."

@@ -178,7 +178,10 @@ rm -rf cookbooks > /dev/null 2>&1
 rm -f Berksfile.lock nohup.out > /dev/null 2>&1
 echo "Vendoring cookbooks using 'berks vendor cookbooks'"
 berks vendor cookbooks
-
+if [ $? -ne 0 ] ; then
+  echo "ERROR: 'berks vendor cookbooks' failed"
+  exit 3
+fi
 echo "Running the Vagrantfile using 'vagrant up'"
 nohup vagrant up &
 
