@@ -180,7 +180,7 @@ echo "Vendoring cookbooks using 'berks vendor cookbooks'"
 berks vendor cookbooks
 
 echo "Running the Vagrantfile using 'vagrant up'"
-nohup vagrant up &
+nohup vagrant --legacy-mode up &
 
 if [ $UDP_HACK -eq 1 ]; then
     ./udp_hacky_fix.sh

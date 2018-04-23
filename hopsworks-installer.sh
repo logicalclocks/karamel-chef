@@ -350,11 +350,24 @@ sudo systemctl reset-failed
 
 sudo netstat -ltpn | grep 8080 2>&1 > /dev/null
 if [ $? -eq 0 ] ; then
-    echo "You have a service running on port 8080, needed by hopsworks. Please stop it, Hopsworks wants to run on port 8080."
-    echo "If you can't stop the service, you will need to edit this bash script and the cluster definition file: cluster-definitions/${yml}"
-    echo "sudo netstat -ltpn | grep 8080"
-    echo ""
-    exit 2
+    sudo netstat -ltpn | grep 8080 | grep glassfish
+    if [ $? -eq 0 ] ; then
+      echo "Trying to stop payara app server."
+      sudo systemctl stop glassfish-domain1
+      
+      if [ $? -ne 0 ] ; then
+        echo "Tried to stop payara server on port 8080, but couldn't."
+        echo "Please stop the service running on port 8080 and try again".
+        echo ""
+        exit 3
+      fi
+    else
+      echo "You have a service running on port 8080, needed by hopsworks. Please stop it, Hopsworks wants to run on port 8080."
+      echo "If you can't stop the service, you will need to edit this bash script and the cluster definition file: cluster-definitions/${yml}"
+      echo "sudo netstat -ltpn | grep 8080"
+      echo ""
+      exit 2
+    fi
 fi    
 
 sudo netstat -ltpn | grep 4848 2>&1 > /dev/null
@@ -508,7 +521,8 @@ if [ $? -ne 0 ] ; then
 fi
 
 #if [ ! -f ${yml}.bak ] ; then
-    rm -f ${yml} 2>&1 > /dev/null
+    sudo rm -f ${yml} 2>&1 > /dev/null
+    sudo chown $USERNAME .
     wget https://raw.githubusercontent.com/hopshadoop/karamel-chef/master/cluster-defns/${yml}
     if [ $? -ne 0 ] ; then
       echo "Could not download hopsworks cluster definition file ${yml}. Exiting..."
