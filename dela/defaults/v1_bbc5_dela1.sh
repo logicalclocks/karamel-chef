@@ -17,7 +17,7 @@ CLUSTER_EMAIL="dela1@gmail.com"
 #password to register the hopsworks instance on the hopssite
 CLUSTER_PASSWORD="Abcd1234"
 #source for war/ear packages
-SOURCE_CODE="http:\/\/snurran.sics.se\/hops\/dela"
+SOURCE_CODE="http:\/\/snurran.sics.se\/hops\/alex"
 #Company and Unit combination has to be unique for each cluster registered with a specific hopssite instance
 CLUSTER_ORG="hopsworks"
 CLUSTER_UNIT="dela1"
@@ -27,4 +27,4 @@ CLUSTER_MANUAL_REGISTER="true"
 HOPSSITE_SUFFIX=200
 HOPSSITE_DOMAIN="bbc5.sics.se"
 
-DELA_VERSION="0.0.3"
+DELA_VERSION="0.1.0"
