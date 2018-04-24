@@ -39,6 +39,8 @@ Vagrant.configure("2") do |config|
     config.vm.network(:forwarded_port, {:guest=>8888, :host=>8888})
     # membrane proxy
     config.vm.network(:forwarded_port, {:guest=>11112, :host=>11112})
+    # rstudio
+    config.vm.network(:forwarded_port, {:guest=>8787, :host=>8787})    
     # Dela udp ports
     config.vm.network(:forwarded_port, {:guest=>42011, :host=>42011, :protocol=>"udp"})
     config.vm.network(:forwarded_port, {:guest=>42012, :host=>42012, :protocol=>"udp"})
