@@ -2,7 +2,7 @@
 
 #these variables are used together with 'sed' so please make sure to escape all / characters
 GITHUB="AlexHopsworks\/hopsworks-chef"
-BRANCH="vdcurrent"
+BRANCH="0.4.2"
 CLUSTER_MULTI_USER=false
 CLUSTER_OS="ubuntu"
 
@@ -23,3 +23,4 @@ CLUSTER_ORG="hopsworks"
 CLUSTER_UNIT="hs"
 
 DELA_VERSION="0.1.0"
+HS_VERSION="0.4.2"

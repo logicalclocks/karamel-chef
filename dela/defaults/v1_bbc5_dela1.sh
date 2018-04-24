@@ -2,7 +2,7 @@
 
 #these variables are used together with 'sed' so please make sure to escape all / characters
 GITHUB="AlexHopsworks\/hopsworks-chef"
-BRANCH="vdcurrent"
+BRANCH="0.4.2"
 CLUSTER_MULTI_USER=false
 CLUSTER_OS="ubuntu"
 
@@ -28,3 +28,4 @@ HOPSSITE_SUFFIX=200
 HOPSSITE_DOMAIN="bbc5.sics.se"
 
 DELA_VERSION="0.1.0"
+HS_VERSION="0.4.2"
