@@ -8,15 +8,15 @@ Run all the bellow scenarios from the karamel-chef folder. It currently matters 
 ```
 ./dela/demodela.sh hopssite
 ```
-2. once the vm is created check the vm ssh port($SSH_PORT) type($TYPE - hopssite/bbc5) and run 
+2. once the vm is created check the vm ssh port($SSH_PORT) and run 
 ```
-./dela/vm_image_scripts/copy_scripts ${SSH_PORT} ${TYPE}
+./dela/vm_image_scripts/copy_scripts ${SSH_PORT} hopssite
 ``` 
 3. make sure your image runs this script the first time it boots. Do not run this script as root. Execute as install user(vagrant)
 ```
 /srv/hops/hopssite/image_register.sh
 ```
-4. once successffuly execute the above script creates a flag file so that it only executes once per vm - on the very frist bootup. Flag file is: 
+4. once successfully execute the above script creates a flag file so that it only executes once per vm - on the very frist bootup. Flag file is: 
 ```
 /srv/hops/hopssite/registered
 ```
