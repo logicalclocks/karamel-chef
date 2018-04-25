@@ -5,7 +5,7 @@ baremetal:
 cookbooks:       
   hopsworks:                                                                     
     github: "hopshadoop/hopsworks-chef"
-    branch: "pydoop3"
+    branch: "jimtest"
 
 attrs:
   install:
@@ -13,11 +13,8 @@ attrs:
   kagent:
     network:
       interface: enp0s3
-  hopsworks:
-    ear_url: http://snurran.sics.se/hops/hopsworks/0.5.0-SNAPSHOT/hopsworks-ear-jim.ear
-    war_url: http://snurran.sics.se/hops/hopsworks/0.5.0-SNAPSHOT/hopsworks-web-jim.war
   tensorflow:
-    mpi: false
+    mpi: true
     rdma: false
   conda: 
     use_defaults: false
