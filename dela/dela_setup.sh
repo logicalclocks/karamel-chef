@@ -28,7 +28,7 @@ materialize()
 if [ $CLUSTER_OS == "ubuntu" ] ; then
   OS_VERSION="config.vm.box = \"bento\/ubuntu-16.04\"\\n  config.vm.box_version = \"2.3.5\""
 elif [ $CLUSTER_OS == "centos" ]; then
-  OS_VERSION="config.vm.box = \"bento/centos-7.2\""
+  OS_VERSION="config.vm.box = \"bento\/centos-7.2\""
 fi
 if [ $CLUSTER_OS == "ubuntu" ] ; then
   NETWORK_INTERFACE="enp0s3"
@@ -40,10 +40,13 @@ if [ $CLUSTER_MULTI_USER == true ] ; then
 else
   USER_SETTING="user: vagrant"
 fi
+
+REPORT_TRACKER="\"https:\/\/${HOPSSITE_DOMAIN}:${HS_WEB2_P}\/hops-site\/api\""
+
 declare -a VALUES=("OS_VERSION" "SSH_P" "MYSQL_P" "KARAMEL_P" "WEB_P" "WEB_SEC_P" "DEBUG_P" "GFISH_P" "DELA1_P" "DELA2_P" "DELA3_P" "PORT1" "PORT2" "PORT3" "PORT4" "PORT5" "PORT6" "PORT7" "PORT8" "PORT9")
 materialize "${KCHEF_DIR}/vagrantfiles/Vagrantfile.dela.1" "${KCHEF_DIR}/dela/templates/Vagrantfile.dela_template.1" $VALUES
 
-declare -a VALUES=("GITHUB" "BRANCH" "NETWORK_INTERFACE" "USER_SETTING" "CLIENT_TYPE" "WEB_P" "WEB_SEC_P" "DELA_VERSION" "DELA1_P" "DELA2_P" "DELA3_P" "DELA4_P" "HS_WEB1_P" "HS_WEB2_P" "CLUSTER_MANUAL_REGISTER" "HOPSSITE_DOMAIN" "CLUSTER_EMAIL" "SOURCE_CODE" "CLUSTER_ORG" "CLUSTER_UNIT" "CLUSTER_PASSWORD")
+declare -a VALUES=("GITHUB" "BRANCH" "NETWORK_INTERFACE" "USER_SETTING" "CLIENT_TYPE" "REPORT_TRACKER" "WEB_P" "WEB_SEC_P" "DELA_VERSION" "HS_VERSION" "DELA1_P" "DELA2_P" "DELA3_P" "DELA4_P" "HS_WEB1_P" "HS_WEB2_P" "CLUSTER_MANUAL_REGISTER" "HOPSSITE_DOMAIN" "CLUSTER_EMAIL" "SOURCE_CODE" "CLUSTER_ORG" "CLUSTER_UNIT" "CLUSTER_PASSWORD")
 materialize "${KCHEF_DIR}/cluster-defns/1.dela.yml" "${KCHEF_DIR}/dela/templates/1.dela_template.yml" $VALUES
 
 declare -a VALUES=("CLUSTER_DOMAIN" "DELA1_P" "DELA2_P" "DELA3_P")

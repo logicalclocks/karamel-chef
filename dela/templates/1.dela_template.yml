@@ -28,11 +28,15 @@ attrs:
         type: "DISK"
     stun_servers_ip: ["193.10.64.107","193.10.64.85"]
     stun_servers_id: ["1","2"]
+    report:
+      type: "other"
+      tracker: {REPORT_TRACKER}
+    url: {SOURCE_CODE}/dela/{DELA_VERSION}/dela.jar
   hopsworks:
     port: 8080
-    ear_url: {SOURCE_CODE}/hopsworks-ear.ear
-    war_url: {SOURCE_CODE}/hopsworks.war
-    ca_url: {SOURCE_CODE}/hopsworks-ca.war
+    ear_url: {SOURCE_CODE}/hopsworks/{HS_VERSION}/hopsworks-ear.ear
+    war_url: {SOURCE_CODE}/hopsworks/{HS_VERSION}/hopsworks.war
+    ca_url: {SOURCE_CODE}/hopsworks/{HS_VERSION}/hopsworks-ca.war
     public_https_port: {WEB_SEC_P}
     dela:
       enabled: true

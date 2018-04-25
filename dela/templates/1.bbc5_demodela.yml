@@ -14,6 +14,9 @@ attrs:
   kagent:
     network:
       interface: enp0s3
+  dela:
+    report:
+      type: "bbc5"
   hopsworks:
     email: "REGISTER_EMAIL" #replace
     cert:

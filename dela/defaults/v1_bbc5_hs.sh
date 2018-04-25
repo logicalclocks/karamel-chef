@@ -2,7 +2,7 @@
 
 #these variables are used together with 'sed' so please make sure to escape all / characters
 GITHUB="AlexHopsworks\/hopsworks-chef"
-BRANCH="vdcurrent"
+BRANCH="0.4.2"
 CLUSTER_MULTI_USER=false
 CLUSTER_OS="ubuntu"
 
@@ -17,9 +17,10 @@ CLUSTER_EMAIL="delahs@gmail.com"
 #password to register the hopsworks instance on the hopssite
 CLUSTER_PASSWORD="Abcd1234"
 #source for war/ear packages
-SOURCE_CODE="http:\/\/snurran.sics.se\/hops\/dela"
+SOURCE_CODE="http:\/\/snurran.sics.se\/hops\/alex"
 #Company and Unit combination has to be unique for each cluster registered with a specific hopssite instance
 CLUSTER_ORG="hopsworks"
 CLUSTER_UNIT="hs"
 
-DELA_VERSION="0.0.2-SNAPSHOT"
+DELA_VERSION="0.1.0"
+HS_VERSION="0.4.2"
