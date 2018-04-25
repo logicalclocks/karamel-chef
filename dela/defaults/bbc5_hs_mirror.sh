@@ -17,9 +17,9 @@ CLUSTER_EMAIL="delahs@gmail.com"
 #password to register the hopsworks instance on the hopssite
 CLUSTER_PASSWORD="Abcd1234"
 #source for war/ear packages
-SOURCE_CODE="http:\/\/snurran.sics.se\/hops\/dela\/0.4.1"
+SOURCE_CODE="http:\/\/snurran.sics.se\/hops"
 #Company and Unit combination has to be unique for each cluster registered with a specific hopssite instance
 CLUSTER_ORG="hopsworks"
 CLUSTER_UNIT="hs"
 
-DELA_VERSION="0.0.2-SNAPSHOT"
+DELA_VERSION="0.1.0"
