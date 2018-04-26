@@ -1,30 +1,39 @@
-name: HopsworksLocalhost
+name: HopsworksOnLocalhost
 baremetal:
-    username: YOUR_USERNAME 
+    username: REPLACE_USERNAME
 
-cookbooks:       
-  hopsworks:                                                                     
+cookbooks:
+  hopsworks:
     github: "hopshadoop/hopsworks-chef"
-    branch: "master"  
-
+    branch: "pydoop3"
 
 attrs:
   install:
-    user: YOUR_USERNAME
-    dir: INSTALL_DIRECTORY
+    dir: REPLACE_INSTALL_DIRECTORY
+    user: REPLACE_USERNAME
+  hopsworks:
+    ear_url: http://snurran.sics.se/hops/hopsworks/0.5.0-SNAPSHOT/hopsworks-ear-jim.ear
+    war_url: http://snurran.sics.se/hops/hopsworks/0.5.0-SNAPSHOT/hopsworks-web-jim.war
+  tensorflow:
+    mpi: true
+    rdma: false
   services:
-    enabled: false
+    enabled: REPLACE_ENABLED_SERVICES
   kagent:
     network:
-      interface: enp0s3
+        interface: REPLACE_NET_IF
+  cuda:
+    accept_nvidia_download_terms: REPLACE_GPU
+    skip_stop_xserver: true
+  hopsworks:
+    port: 8080
 
-groups: 
-  namenodes:
-    size: 1 
-    baremetal:
-      ip: 127.0.0.1
+groups:
+  theone:
     size: 1
-    recipes: 
+    baremetal:
+      ip: REPLACE_HOSTNAME
+    recipes:
       - kagent
       - ndb::mgmd
       - ndb::ndbd
@@ -32,8 +41,6 @@ groups:
       - hops::ndb
       - hops::rm
       - hops::nn
-      - hops::dn
-      - hops::nm
       - hops::jhs
       - hadoop_spark::yarn
       - hadoop_spark::historyserver
@@ -45,6 +52,13 @@ groups:
       - kkafka
       - epipe
       - hopsworks
-      - hopslog
+      - hopsworks::dev
       - hopsmonitor
-      - hopsmonitor::telegraph
+      - hopslog
+      - hops::dn
+      - hops::nm
+      - tensorflow
+      - hopsmonitor::telegraf
+      - hive2
+      - dela      
+
