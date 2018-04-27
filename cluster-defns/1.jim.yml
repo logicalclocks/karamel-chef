@@ -5,11 +5,12 @@ baremetal:
 cookbooks:       
   hopsworks:                                                                     
     github: "hopshadoop/hopsworks-chef"
-    branch: "jimtest"
+    branch: "pydoop3"
 
 attrs:
   install:
     dir: /srv/hops
+    user: vagrant
   kagent:
     network:
       interface: enp0s3
@@ -24,7 +25,10 @@ attrs:
     skip_test: true
   hopsworks:
     kafka_max_num_topics: 101
-
+    ear_url: http://snurran.sics.se/hops/hopsworks/0.5.0-SNAPSHOT/hopsworks-ear-jim.ear
+    war_url: http://snurran.sics.se/hops/hopsworks/0.5.0-SNAPSHOT/hopsworks-web-jim.war
+  rstudio: 
+    enabled: true
 groups: 
   namenodes:
     size: 1 
