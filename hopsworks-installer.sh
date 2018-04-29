@@ -38,6 +38,7 @@ SCRIPTNAME=`basename $0`
 SSH_PORT=22
 KARAMEL_VERSION=0.5
 NET_INTERFACE=""
+IP=127.0.0.1
 
 #ECHO_OUT="2>&1 > /dev/null"
 ECHO_OUT="2>&1 > /tmp/hopsworks-installer.log"
@@ -66,16 +67,17 @@ clear_screen_no_skipline()
 }
 
 public_key=""
+SOURCE="${BASH_SOURCE[0]}"
+BASEDIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 function finish {
     #
     # Shutdown any services that may be running if there was an error
     #
-    cd ..
     if [ $? -ne 0 ] ; then
-	sudo ./kagent/bin/shutdown-all-local-services.sh -f
+	sudo $BASEDIR/hops/kagent/bin/shutdown-all-local-services.sh -f
     else
-	sudo ./kagent/bin/status-all-local-services.sh
+	sudo $BASEDIR/hops/kagent/bin/status-all-local-services.sh
     fi
     cd ..
 }
@@ -299,6 +301,10 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
     -d|--dir)
 	      shift
 	      PARAM_INSTALL_DIR=1
+	      ;;
+    -ip)
+	      shift
+	      IP=1
 	      ;;
     --network-interface)
 	      shift
@@ -573,7 +579,14 @@ fi
 
 echo "Using NET_INTERFACE: $NET_INTERFACE"
 
-targetDir=$(printf "%q" $PWD)
+#targetDir=$(printf "%q" $PWD)
+targetDir=/srv/hops
+
+if [ ! -d $targetDir ] ; then
+    sudo mkir $targetDir
+    sudo chown root $targetDir
+    sudo chmod 755 $targetDir
+fi
 
 echo "Install directory is $targetDir"
 
@@ -593,10 +606,10 @@ fi
 
 #myhostname=`hostname`
 #host_ip=$(getent hosts $myhostname | awk '{ print $1 }')
+#host_ip=$(ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1')
 
-host_ip=$(ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1')
 
-perl -pi -e "s/REPLACE_HOSTNAME/${host_ip}/g" ${yml}
+perl -pi -e "s/REPLACE_HOSTNAME/${IP}/g" ${yml}
 if [ $? -ne 0 ] ; then
     echo "Error. Couldn't edit the YML file to insert the username."
     echo "Exiting..."
