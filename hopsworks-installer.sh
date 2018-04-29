@@ -7,7 +7,7 @@
 # https://www.apache.org/licenses/LICENSE-2.0                                                     #
 #                                                                                                 #
 #                                                                                                 #
-# Copyright (c) Logical Clocks AB, 2017.                                                           #
+# Copyright (c) Logical Clocks AB, 2017/18.                                                          #
 # All Rights Reserved.                                                                            #
 #                                                                                                 #
 ###################################################################################################
@@ -38,6 +38,7 @@ SCRIPTNAME=`basename $0`
 SSH_PORT=22
 KARAMEL_VERSION=0.5
 NET_INTERFACE=""
+IP=127.0.0.1
 
 #ECHO_OUT="2>&1 > /dev/null"
 ECHO_OUT="2>&1 > /tmp/hopsworks-installer.log"
@@ -66,13 +67,19 @@ clear_screen_no_skipline()
 }
 
 public_key=""
+SOURCE="${BASH_SOURCE[0]}"
+BASEDIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 function finish {
-  grep "$public_key" ${HOME}/.ssh/authorized_keys 2>&1 > /dev/null
-  # if [ $? -eq 0 ] ; then
-  #   grep -v "$public_key" $HOME/.ssh/authorized_keys > $HOME/.ssh/tmp 
-  #   mv $HOME/.ssh/tmp $HOME/.ssh/authorized_keys
-  # fi    
+    #
+    # Shutdown any services that may be running if there was an error
+    #
+    if [ $? -ne 0 ] ; then
+	sudo $BASEDIR/hops/kagent/bin/shutdown-all-local-services.sh -f
+    else
+	sudo $BASEDIR/hops/kagent/bin/status-all-local-services.sh
+    fi
+    cd ..
 }
 trap finish EXIT
 
@@ -283,6 +290,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      echo " [--network-interface]      name of network interface to use (e.g., 'eth0')"
 	      echo " [-d|--dir INSTALL DIRECTORY]"
 	      echo "                  set the base installation directory "
+	      echo " [-y|--yml]   relative pathname for a cluster definition file "
 	      echo " [-v|--version]   version information" 
 	      echo "" 
 	      exit 3
@@ -293,6 +301,10 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
     -d|--dir)
 	      shift
 	      PARAM_INSTALL_DIR=1
+	      ;;
+    -ip)
+	      shift
+	      IP=1
 	      ;;
     --network-interface)
 	      shift
@@ -310,6 +322,10 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      echo "" 
               exit 0
               break ;;
+    -y|--yml) 
+              shift
+              yml=$1
+              ;;
     *)
 	  exit_error "Unrecognized parameter: $1"
 	  ;;
@@ -363,7 +379,7 @@ if [ $? -eq 0 ] ; then
       fi
     else
       echo "You have a service running on port 8080, needed by hopsworks. Please stop it, Hopsworks wants to run on port 8080."
-      echo "If you can't stop the service, you will need to edit this bash script and the cluster definition file: cluster-definitions/${yml}"
+      echo "If you can't stop the service, you will need to edit this bash script and the cluster definition file: cluster-defns/${yml}"
       echo "sudo netstat -ltpn | grep 8080"
       echo ""
       exit 2
@@ -404,7 +420,7 @@ fi
 
 public_key=$(cat ${HOME}/.ssh/id_rsa.pub)
 
-grep "$public_key" ${HOME}/.ssh/authorized_keys
+ssh -p $SSH_PORT -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${USERNAME}@localhost "echo 'authorized_keys already setup. ssh server running.'" 
 if [ $? -ne 0 ] ; then
     echo "Enabling ssh into localhost (needed by Karamel)"
     echo "Adding ${USERNAME} public key to ${HOME}/.ssh/authorized_keys"
@@ -414,7 +430,6 @@ fi
 # 2. check if openssh server installed
 
 echo "Check if openssh server installed and that ${USERNAME} can ssh without a password into ${USERNAME}@localhost"
-
 ssh -p $SSH_PORT -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${USERNAME}@localhost "echo 'ssh connected'" 
 
 if [ $? -ne 0 ] ; then
@@ -452,8 +467,12 @@ if [ $? -ne 0 ] ; then
     sudo apt-get install openjdk-8-jre -y
 fi
 
+#
+# cleanup old cookbooks/installations
+#
 sudo rm -rf ${HOME}/.karamel/install
 sudo rm -rf ${HOME}/.karamel/cookbooks
+sudo rm -rf /tmp/chef-solo/cookbooks/*
 
 # 3. Download chefdk, karamel, and cluster.xml
 mkdir -p ./hops 
@@ -520,19 +539,28 @@ if [ $? -ne 0 ] ; then
     fi
 fi
 
-#if [ ! -f ${yml}.bak ] ; then
-    sudo rm -f ${yml} 2>&1 > /dev/null
-    sudo chown $USERNAME .
-    wget https://raw.githubusercontent.com/hopshadoop/karamel-chef/master/cluster-defns/${yml}
+cd ..
+if [ ! -f ${yml} ] ; then
+    theFile=cluster-defns/${yml}
+else
+    theFile=$yml
+fi    
+cp -f ${theFile} ${theFile}.bak 2>&1 > /dev/null
+sudo chown $USERNAME hops
+if [ ! -f ${theFile} ] ; then
+    wget https://raw.githubusercontent.com/hopshadoop/karamel-chef/master/${theFile} .
     if [ $? -ne 0 ] ; then
-      echo "Could not download hopsworks cluster definition file ${yml}. Exiting..."
-      exit 9
+	echo "Could find ${theFile} locally. Failed to download the hopsworks cluster definition file ${theFile}. Exiting..."
+	exit 9
     fi
-#    cp -f ${yml} ${yml}.bak 
-#else
-#    # If the file is already there, copy the backup over the install version (which may be in an incorrect state)
-#    cp -f ${yml}.bak ${yml}
-#fi
+fi
+cp  ${theFile} hops
+  if [ $? -ne 0 ] ; then
+    echo "Could not copy the hopsworks cluster definition file in ${yml} to hops/. Exiting..."
+    exit 19
+  fi
+
+cd hops
 
 IP_ADDR="127.0.0.1"
 
@@ -551,7 +579,14 @@ fi
 
 echo "Using NET_INTERFACE: $NET_INTERFACE"
 
-targetDir=$(printf "%q" $PWD)
+#targetDir=$(printf "%q" $PWD)
+targetDir=/srv/hops
+
+if [ ! -d $targetDir ] ; then
+    sudo mkir $targetDir
+    sudo chown root $targetDir
+    sudo chmod 755 $targetDir
+fi
 
 echo "Install directory is $targetDir"
 
@@ -569,10 +604,12 @@ if [ $? -ne 0 ] ; then
     exit 1
 fi
 
-myhostname=`hostname`
-host_ip=$(getent hosts $myhostname | awk '{ print $1 }')
+#myhostname=`hostname`
+#host_ip=$(getent hosts $myhostname | awk '{ print $1 }')
+#host_ip=$(ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1')
 
-perl -pi -e "s/REPLACE_HOSTNAME/${host_ip}/g" ${yml}
+
+perl -pi -e "s/REPLACE_HOSTNAME/${IP}/g" ${yml}
 if [ $? -ne 0 ] ; then
     echo "Error. Couldn't edit the YML file to insert the username."
     echo "Exiting..."
