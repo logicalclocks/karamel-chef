@@ -5,7 +5,7 @@ baremetal:
 cookbooks:       
   hopsworks:                                                                     
     github: "hopshadoop/hopsworks-chef"
-    branch: "downloader"  
+    branch: "pydoop3"
 
 attrs:
   install:
@@ -13,6 +13,22 @@ attrs:
   kagent:
     network:
       interface: eth0
+  tensorflow:
+    mpi: true
+    rdma: true
+    install: src
+  conda: 
+    use_defaults: false
+    mirror_list: http://snurran.sics.se/hops/conda/pkgs/main/linux-64,http://snurran.sics.se/hops/conda/pkgs/main/noarch
+  cuda:
+    accept_nvidia_download_terms: false
+    skip_test: true
+  hopsworks:
+    kafka_max_num_topics: 101
+    ear_url: http://snurran.sics.se/hops/hopsworks/0.5.0-SNAPSHOT/hopsworks-ear-jim.ear
+    war_url: http://snurran.sics.se/hops/hopsworks/0.5.0-SNAPSHOT/hopsworks-web-jim.war
+  rstudio: 
+    enabled: true
 groups: 
   namenodes:
     size: 1 
@@ -46,5 +62,3 @@ groups:
       - hopsmonitor::telegraf
       - hive2
       - dela      
-      
-
