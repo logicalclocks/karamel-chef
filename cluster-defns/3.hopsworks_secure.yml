@@ -69,6 +69,7 @@ groups:
       - epipe
       - hadoop_spark::yarn
       - hopsmonitor::telegraf
+      - tensorflow
   datanode2:
     size: 1
     baremetal:
@@ -83,4 +84,4 @@ groups:
       - kkafka
       - hadoop_spark::yarn
       - hopsmonitor::telegraf
-
+      - tensorflow
