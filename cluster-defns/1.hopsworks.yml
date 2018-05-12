@@ -1,15 +1,16 @@
-name: HopsworksVagranSingleNode
+name: HopsworksVagranSingleNo
 baremetal:
     username: vagrant
 
 cookbooks:
   hopsworks:
-    github: "hopshadoop/hopsworks-chef"
-    branch: "master"
+    github: hopshadoop/hopsworks-chef
+    branch: jimfix
 
 attrs:
   install:
     dir: /srv/hops
+    upgrade: true
     # user: vagrant
   kagent:
     network:
