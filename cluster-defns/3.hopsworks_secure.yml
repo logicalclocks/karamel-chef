@@ -17,6 +17,7 @@ attrs:
     num_replicas: 2
     tls:
      enabled: true
+     certs_actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppCertificateActions"
      crl_enabled: true
      crl_fetcher_class: "org.apache.hadoop.security.ssl.DevRemoteCRLFetcher"
      crl_fetcher_interval: "5m"
@@ -68,6 +69,7 @@ groups:
       - epipe
       - hadoop_spark::yarn
       - hopsmonitor::telegraf
+      - tensorflow
   datanode2:
     size: 1
     baremetal:
@@ -82,4 +84,4 @@ groups:
       - kkafka
       - hadoop_spark::yarn
       - hopsmonitor::telegraf
-
+      - tensorflow
