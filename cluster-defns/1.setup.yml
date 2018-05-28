@@ -5,7 +5,7 @@ baremetal:
 cookbooks:       
   setup:                                                                     
     github: "logicalclocks/setup-chef"
-    branch: "v0.4.0"  
+    branch: "master"  
 
 attrs:
   install:
