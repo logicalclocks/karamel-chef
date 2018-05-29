@@ -29,7 +29,7 @@ else
   sed -i -e "s/REGISTER_ORG_UNIT/${ID}/g" ${CONTENT_DATA}
   sed -i -e "s/REGISTER_PASSWORD/${PASS}/g" ${CONTENT_DATA}
   echo "contacting:${TARGET}"
-  CURL_RES=$(curl -s -o /dev/null -w "%{http_code}" -d "@register_data.json" -H "${CONTENT_TYPE}" -X POST $TARGET)
+  CURL_RES=$(curl -s -o /dev/null -w "%{http_code}" -d "@${HOPSSITE_DIR}/register_data.json" -H "${CONTENT_TYPE}" -X POST $TARGET)
   if [ ${CURL_RES} != 200 ] ; then
     echo "Register fail"
     exit 1

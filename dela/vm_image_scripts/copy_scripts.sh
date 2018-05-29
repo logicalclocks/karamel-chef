@@ -30,6 +30,7 @@ ssh -i ~/.vagrant.d/insecure_private_key -p ${SSH_PORT} vagrant@localhost 'sudo 
 ssh -i ~/.vagrant.d/insecure_private_key -p ${SSH_PORT} vagrant@localhost 'sudo rm /home/glassfish/.ssh/authorized_keys'
 ssh -i ~/.vagrant.d/insecure_private_key -p ${SSH_PORT} vagrant@localhost 'sudo mkdir -p /srv/hops/hopssite; sudo chown vagrant:vagrant /srv/hops/hopssite'
 scp -i ~/.vagrant.d/insecure_private_key -P ${SSH_PORT} ${IMAGE_REGISTER} vagrant@localhost:/srv/hops/hopssite
+ssh -i ~/.vagrant.d/insecure_private_key -p ${SSH_PORT} vagrant@localhost 'chmod +x /srv/hops/hopssite/image_register.sh'
 scp -i ~/.vagrant.d/insecure_private_key -P ${SSH_PORT} dela/vm_image_scripts/register_data_template.json vagrant@localhost:/srv/hops/hopssite
 rm ${IMAGE_REGISTER}
 
