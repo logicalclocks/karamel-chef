@@ -6,9 +6,6 @@ cookbooks:
   hopsworks:                                                                     
     github: "hopshadoop/hopsworks-chef"
     branch: "master"
-  adam:
-    github: "biobankcloud/adam-chef"
-    branch: "master"
 
 attrs:
   install:
@@ -17,9 +14,15 @@ attrs:
     network:
       interface: enp0s8
   hopsworks:
-    ear_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ear-jim.ear
-    war_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-jim.war
-    ca_url: http://snurran.sics.se/hops/hopsworks/0.1.0/hopsworks-ca-jim.war
+    ear_url: http://snurran.sics.se/hops/hopsworks/0.6.0-SNAPSHOT/hopsworks-ear-jim.ear
+    war_url: http://snurran.sics.se/hops/hopsworks/0.6.0-SNAPSHOT/hopsworks-web-jim.war
+    ca_url: http://snurran.sics.se/hops/hopsworks/0.6.0-SNAPSHOT/hopsworks-ca-jim.war
+  tensorflow:
+    mpi: true
+    rdma: false
+  conda: 
+    use_defaults: false
+    mirror_list: "http://snurran.sics.se/hops/conda/pkgs/main/linux-64,http://snurran.sics.se/hops/conda/pkgs/main/noarch"
     
 groups: 
   namenodes:
@@ -43,7 +46,8 @@ groups:
       - tensorflow
       - hopslog
       - hopsmonitor::telegraf
-      - kzookeeper      
+      - kzookeeper
+      - livy      
   datanode1:
     size: 1
     baremetal:
@@ -56,14 +60,12 @@ groups:
       - hops::nm
       - ndb::mysqld                                                             
       - hops::nn      
-      - livy      
       - kzookeeper
       - elastic
       - epipe
       - hadoop_spark::yarn
       - hopsmonitor::telegraf      
       - tensorflow
-      - adam      
   datanode2:
     size: 1
     baremetal:
@@ -78,4 +80,3 @@ groups:
       - hadoop_spark::yarn
       - hopsmonitor::telegraf 
       - tensorflow
-      - adam
