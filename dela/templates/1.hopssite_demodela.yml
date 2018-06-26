@@ -6,7 +6,7 @@ baremetal:
 cookbooks:
   hopsworks:
     github: "hopshadoop/hopsworks-chef"
-    branch: "0.4"
+    branch: "0.5"
 
 attrs:
   install:
