@@ -12,7 +12,11 @@ attrs:
     dir: /srv/hops
   kagent:
     enabled: false
-
+  ndb:
+    ndbd:
+      ips_ids: ["192.168.56.101:1"]
+    mysqld:
+      ips_ids: ["192.168.56.101:100"]
 groups:
   biggie:
     size: 1
