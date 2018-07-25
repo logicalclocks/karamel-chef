@@ -5,11 +5,16 @@ baremetal:
 cookbooks:       
   hopsworks:                                                                     
     github: "hopshadoop/hopsworks-chef"
-    branch: "cudize"
+    branch: "chef_fixes_jd"
 
 attrs:
   install:
     dir: /srv/hops
+#  ndb:
+#    ndbd:
+#      ips_ids: ["10.0.2.15:2"]
+#    mysqld:
+#      ips_ids: ["10.0.2.15:58"]
   kagent:
     network:
       interface: enp0s3
