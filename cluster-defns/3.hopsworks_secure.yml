@@ -69,6 +69,7 @@ groups:
       - epipe
       - hadoop_spark::yarn
       - hopsmonitor::telegraf
+      - hopslog::_filebeat
       - tensorflow
   datanode2:
     size: 1
@@ -84,4 +85,5 @@ groups:
       - kkafka
       - hadoop_spark::yarn
       - hopsmonitor::telegraf
+      - hopslog::_filebeat
       - tensorflow
