@@ -21,6 +21,7 @@ attrs:
      crl_enabled: true
      crl_fetcher_class: "org.apache.hadoop.security.ssl.DevRemoteCRLFetcher"
      crl_fetcher_interval: "5m"
+    encrypt_data_transfer: true
   hopsworks:
      encryption_password: "verysecurepassword"
   conda:
