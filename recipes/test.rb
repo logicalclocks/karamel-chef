@@ -41,7 +41,8 @@ when 'ubuntu'
     ignore_failure true
     cwd node['test']['hopsworks']['test_dir']
     environment ({'PATH' => "#{ENV['PATH']}:/home/vagrant/.gem/ruby/2.3.0/bin:/srv/hops/mysql/bin",
-                  'LD_LIBRARY_PATH' => "#{ENV['LD_LIBRARY_PATH']}:/srv/hops/mysql/lib"})
+                  'LD_LIBRARY_PATH' => "#{ENV['LD_LIBRARY_PATH']}:/srv/hops/mysql/lib",
+                  'JAVA_HOME' => "/usr/lib/jvm/default-java"})
     code <<-EOH
       bundle install
       rspec --format RspecJunitFormatter --out #{node['test']['hopsworks']['report_dir']}/ubuntu.xml
@@ -54,7 +55,8 @@ when 'centos'
     ignore_failure true
     cwd node['test']['hopsworks']['test_dir']
     environment ({'PATH' => "#{ENV['PATH']}:/usr/local/bin:/srv/hops/mysql/bin",
-                  'LD_LIBRARY_PATH' => "#{ENV['LD_LIBRARY_PATH']}:/srv/hops/mysql/lib"})
+                  'LD_LIBRARY_PATH' => "#{ENV['LD_LIBRARY_PATH']}:/srv/hops/mysql/lib",
+                  'JAVA_HOME' => "/usr/lib/jvm/java"})
     code <<-EOH
       set -e
       source /usr/local/rvm/scripts/rvm
