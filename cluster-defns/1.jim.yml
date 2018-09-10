@@ -5,7 +5,7 @@ baremetal:
 cookbooks:       
   hopsworks:                                                                     
     github: "hopshadoop/hopsworks-chef"
-    branch: "chef_fixes_jd"
+    branch: "master"
 
 attrs:
   install:
@@ -32,7 +32,7 @@ attrs:
     ear_url: http://snurran.sics.se/hops/hopsworks/0.6.0-SNAPSHOT/hopsworks-ear-jim.ear
     war_url: http://snurran.sics.se/hops/hopsworks/0.6.0-SNAPSHOT/hopsworks-web-jim.war
   rstudio: 
-    enabled: false
+    enabled: true
 groups: 
   namenodes:
     size: 1 
