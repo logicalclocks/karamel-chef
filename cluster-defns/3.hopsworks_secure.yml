@@ -21,6 +21,8 @@ attrs:
      crl_enabled: true
      crl_fetcher_class: "org.apache.hadoop.security.ssl.DevRemoteCRLFetcher"
      crl_fetcher_interval: "5m"
+    encrypt_data_transfer:
+     enabled: true
   hopsworks:
      encryption_password: "verysecurepassword"
   conda:
@@ -69,6 +71,7 @@ groups:
       - epipe
       - hadoop_spark::yarn
       - hopsmonitor::telegraf
+      - hopslog::_filebeat
       - tensorflow
   datanode2:
     size: 1
@@ -84,4 +87,5 @@ groups:
       - kkafka
       - hadoop_spark::yarn
       - hopsmonitor::telegraf
+      - hopslog::_filebeat
       - tensorflow
