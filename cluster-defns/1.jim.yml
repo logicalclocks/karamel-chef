@@ -5,7 +5,7 @@ baremetal:
 cookbooks:       
   hopsworks:                                                                     
     github: "logicalclocks/hopsworks-chef"
-    branch: "master"
+    branch: "airflow"
 
 attrs:
   install:
@@ -66,3 +66,6 @@ groups:
       - hopsmonitor::telegraf
       - hive2
       - dela      
+      - hops_airflow
+      - hops_airflow::worker
+      - hops_airflow::kerberos
