@@ -2,7 +2,7 @@
 Vagrant.configure("2") do |config|
 
    config.ssh.insert_key = false
-   config.vm.box = "bento/centos-7.2" 
+   config.vm.box = "bento/centos-7.5" 
    config.vm.hostname = 'hopsworks0'
 
     config.vm.network :forwarded_port, guest: 22, host: 10022, id: "ssh"
