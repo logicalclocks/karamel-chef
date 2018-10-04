@@ -86,6 +86,7 @@ groups:
       - hopsworks::delaregister
       - hopsmonitor
       - hopslog
+      - hopslog::_filebeat
       - hops::dn
       - hops::nm
       - tensorflow
