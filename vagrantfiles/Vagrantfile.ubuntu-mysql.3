@@ -8,7 +8,7 @@ Vagrant.configure("2") do |config|
     hopsworks2.vm.box = "bento/ubuntu-16.04"
     hopsworks2.vm.box_version = "2.3.5"
     hopsworks2.vm.box_check_update = false
-    hopsworks2.vm.hostname = 'hopsworks2' 
+    hopsworks2.vm.hostname = 'hopsworks2.logicalclocks.com' 
     #hopsworks2.vm.box_url = 'https://opscode-vm-bento.s3.amazonaws.com/vagrant/virtualbox/opscode_ubuntu-14.04_chef-provisionerless.box'
 
     hopsworks2.vm.network :private_network, ip: "192.168.56.103"
@@ -41,7 +41,7 @@ Vagrant.configure("2") do |config|
     hopsworks1.vm.box = "bento/ubuntu-16.04"
     hopsworks1.vm.box_version = "2.3.5"
     hopsworks1.vm.box_check_update = false
-    hopsworks1.vm.hostname = 'hopsworks1'
+    hopsworks1.vm.hostname = 'hopsworks1.logicalclocks.com'
     hopsworks1.vm.network :private_network, ip: "192.168.56.102"
     hopsworks1.vm.network :forwarded_port, guest: 22, host: 10023, id: "ssh"
 
@@ -73,7 +73,7 @@ Vagrant.configure("2") do |config|
     hopsworks0.vm.box = "bento/ubuntu-16.04"
     hopsworks0.vm.box_version = "2.3.5"
     hopsworks0.vm.box_check_update = false
-    hopsworks0.vm.hostname = 'hopsworks0'
+    hopsworks0.vm.hostname = 'hopsworks0.logicalclocks.com'
 
     hopsworks0.vm.network :private_network, ip: "192.168.56.101"
     hopsworks0.vm.network :forwarded_port, guest: 22, host: 10024, id: "ssh"
