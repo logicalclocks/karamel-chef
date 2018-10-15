@@ -5,15 +5,18 @@ node.default[:java][:oracle][:accept_oracle_download_terms] = true
 
 include_recipe "java"
 
+node[:karamel][:default][:private_ips].each_with_index do |ip, index|
+  hostsfile_entry "#{ip}" do
+    hostname  "hopsworks#{index}.logicalclocks.com"
+    aliases   ["hopsworks#{index}"]
+    comment   "Created by karamel-chef"
+    action    :create
+    unique    true
+  end
+end
+
 case node['platform']
 when 'debian', 'ubuntu'
-  node[:karamel][:default][:private_ips].each_with_index do |ip, index|
-    hostsfile_entry "#{ip}" do
-      hostname  "hopsworks#{index}"
-      action    :create
-      unique    true
-    end
-  end
 
   ### BEGIN OF HACK
 
@@ -47,13 +50,7 @@ when 'debian', 'ubuntu'
 
 when 'redhat', 'centos', 'fedora'
 
-  node[:karamel][:default][:private_ips].each_with_index do |ip, index|
-    hostsfile_entry "#{ip}" do
-      hostname  "hopsworks#{index}"
-      action    :create
-      unique    true
-    end
-  end
+
 
   # Fix bug: https://github.com/mitchellh/vagrant/issues/8115
   bash "restart_network" do
