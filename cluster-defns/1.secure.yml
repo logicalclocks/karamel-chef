@@ -20,7 +20,7 @@ attrs:
      crl_fetcher_class: "org.apache.hadoop.security.ssl.DevRemoteCRLFetcher"
      crl_fetcher_interval: "5m"
     encrypt_data_transfer:
-     enabled: true
+     enabled: false
   kagent:
     network:
       interface: enp0s3
