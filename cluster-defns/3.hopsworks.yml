@@ -44,6 +44,7 @@ groups:
       - livy
       - hive2
       - kagent::dev
+      - hopslog::_filebeat-serving
   datanode1:
     size: 1
     baremetal:
@@ -60,7 +61,7 @@ groups:
       - epipe
       - hadoop_spark::yarn
       - hopsmonitor::telegraf
-      - hopslog::_filebeat
+      - hopslog::_filebeat-spark
       - tensorflow
   datanode2:
     size: 1
@@ -76,5 +77,5 @@ groups:
       - kkafka
       - hadoop_spark::yarn
       - hopsmonitor::telegraf
-      - hopslog::_filebeat
+      - hopslog::_filebeat-spark
       - tensorflow

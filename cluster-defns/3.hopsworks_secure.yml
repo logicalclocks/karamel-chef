@@ -51,6 +51,7 @@ groups:
       - tensorflow
       - hopslog
       - hopsmonitor::telegraf
+      - hopslog::_filebeat-serving
       - kzookeeper
       - livy
       - hive2
@@ -71,7 +72,7 @@ groups:
       - epipe
       - hadoop_spark::yarn
       - hopsmonitor::telegraf
-      - hopslog::_filebeat
+      - hopslog::_filebeat-spark
       - tensorflow
   datanode2:
     size: 1
@@ -87,5 +88,5 @@ groups:
       - kkafka
       - hadoop_spark::yarn
       - hopsmonitor::telegraf
-      - hopslog::_filebeat
+      - hopslog::_filebeat-spark
       - tensorflow

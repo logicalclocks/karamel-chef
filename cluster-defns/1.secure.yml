@@ -55,7 +55,8 @@ groups:
       - hopsworks::dev
       - hopsmonitor
       - hopslog
-      - hopslog::_filebeat
+      - hopslog::_filebeat-spark
+      - hopslog::_filebeat-serving
       - hops::dn
       - hops::nm
       - tensorflow
