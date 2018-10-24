@@ -19,6 +19,13 @@ when 'centos'
   end
 end
 
+elastic_endpoint=""
+case node['platform']
+when 'ubuntu'
+  elastic_endpoint="#{node[:karamel][:default][:private_ips][2]}:9200"
+when 'centos'
+  elastic_endpoint="#{node[:karamel][:default][:private_ips][0]}:9200"
+end
 
 # Copy the environment configuration in the test directory
 template "#{node['test']['hopsworks']['test_dir']}/.env" do
@@ -26,6 +33,11 @@ template "#{node['test']['hopsworks']['test_dir']}/.env" do
   owner "vagrant"
   group "vagrant"
   mode 0755
+  variables(lazy {
+    h = {}
+    h['elastic_endpoint'] = elastic_endpoint
+    h
+  })
 end
 
 # Delete form workspace preivous test results
