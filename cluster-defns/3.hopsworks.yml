@@ -24,6 +24,7 @@ groups:
       ip: 192.168.56.101
     recipes:
       - kagent
+      - conda
       - ndb::mgmd
       - ndb::mysqld
       - hops::ndb
@@ -51,6 +52,7 @@ groups:
       ip: 192.168.56.102
     recipes:
       - kagent
+      - conda
       - ndb::ndbd
       - ndb::mysqld
       - hops::ndb
@@ -69,6 +71,7 @@ groups:
       ip: 192.168.56.103
     recipes:
       - kagent
+      - conda
       - ndb::ndbd
       - kzookeeper
       - elastic
