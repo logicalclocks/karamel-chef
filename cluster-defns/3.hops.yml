@@ -4,7 +4,7 @@ baremetal:
 
 cookbooks:       
   hops:                                                                     
-    github: "hopshadoop/hops-hadoop-chef"
+    github: "logicalclocks/hops-hadoop-chef"
     branch: "master"  
 
 
