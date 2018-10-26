@@ -4,10 +4,10 @@ baremetal:
 
 cookbooks:       
   hops:                                                                     
-    github: "hopshadoop/hops-hadoop-chef"
+    github: "logicalclocks/hops-hadoop-chef"
     branch: "master"  
   ndb:                                                                     
-    github: "hopshadoop/ndb-chef"
+    github: "logicalclocks/ndb-chef"
     branch: "master"  
 
 attrs:

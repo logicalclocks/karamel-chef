@@ -1,11 +1,11 @@
-name: HopsworksVagrantMultiNode
+name: HopsworksVagrantMultiNodeTLS-Release-0.6
 baremetal:
     username: vagrant
 
 cookbooks:
   hopsworks:
     github: "logicalclocks/hopsworks-chef"
-    branch: "master"
+    branch: "0.6"
 
 attrs:
   install:

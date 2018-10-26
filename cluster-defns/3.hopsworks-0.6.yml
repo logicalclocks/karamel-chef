@@ -1,32 +1,21 @@
-name: HopsworksVagrantMultiNode
+name: HopsworksVagrantMultiNode-Release-0.6
 baremetal:
     username: vagrant
 
 cookbooks:
   hopsworks:
     github: "logicalclocks/hopsworks-chef"
-    branch: "master"
+    branch: "0.6"
 
 attrs:
   install:
     dir: /srv/hops
+    user: vagrant
   kagent:
     network:
       interface: enp0s8
   hops:
-    num_replicas: 2
-    tls:
-     enabled: true
-     certs_actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppCertificateActions"
-     crl_enabled: true
-     crl_fetcher_class: "org.apache.hadoop.security.ssl.DevRemoteCRLFetcher"
-     crl_fetcher_interval: "5m"
-    encrypt_data_transfer:
-     enabled: false
-  hopsworks:
-     encryption_password: "verysecurepassword"
-  conda:
-    mirror_list: "http://bbc2.sics.se:8000/pkgs/main/linux-64,http://bbc2.sics.se:8000/pkgs/main/noarch"
+     num_replicas: 2
 
 groups:
   namenodes:
@@ -51,11 +40,11 @@ groups:
       - tensorflow
       - hopslog
       - hopsmonitor::telegraf
-      - hopslog::_filebeat-serving
       - kzookeeper
       - livy
       - hive2
       - kagent::dev
+      - hopslog::_filebeat-serving
   datanode1:
     size: 1
     baremetal:
