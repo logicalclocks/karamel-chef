@@ -1,4 +1,4 @@
-name: HopsworksVagrantMultiNodeTLS-Release-0.6
+name: HopsworksVagrantMultiNodeTLS06
 baremetal:
     username: vagrant
 

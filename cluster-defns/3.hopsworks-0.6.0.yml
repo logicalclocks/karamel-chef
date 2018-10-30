@@ -1,4 +1,4 @@
-name: HopsworksVagrantMultiNode-Release-0.6
+name: HopsworksVagrantMultiNode06
 baremetal:
     username: vagrant
 
