@@ -4,8 +4,8 @@ baremetal:
 
 cookbooks:
   hopsworks:
-    github: tkakantousis/hopsworks-chef
-    branch: kibana_upgrade_fix_06
+    github: logicalclocks/hopsworks-chef
+    branch: master
 
 attrs:
   install:
