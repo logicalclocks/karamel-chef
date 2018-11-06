@@ -29,7 +29,6 @@ groups:
       ip: 10.0.2.15
     recipes:
       - kagent
-      - conda
       - ndb::mgmd
       - ndb::ndbd
       - ndb::mysqld
