@@ -52,6 +52,7 @@ when 'ubuntu'
     user "root"
     ignore_failure true
     cwd node['test']['hopsworks']['test_dir']
+    timeout node['karamel']['test_timeout']
     environment ({'PATH' => "#{ENV['PATH']}:/home/vagrant/.gem/ruby/2.3.0/bin:/srv/hops/mysql/bin",
                   'LD_LIBRARY_PATH' => "#{ENV['LD_LIBRARY_PATH']}:/srv/hops/mysql/lib",
                   'JAVA_HOME' => "/usr/lib/jvm/default-java"})
@@ -65,6 +66,7 @@ when 'centos'
   bash "dependencies_tests" do
     user "root"
     ignore_failure true
+    timeout node['karamel']['test_timeout']
     cwd node['test']['hopsworks']['test_dir']
     environment ({'PATH' => "#{ENV['PATH']}:/usr/local/bin:/srv/hops/mysql/bin",
                   'LD_LIBRARY_PATH' => "#{ENV['LD_LIBRARY_PATH']}:/srv/hops/mysql/lib",
