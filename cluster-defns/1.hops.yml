@@ -6,22 +6,23 @@ cookbooks:
   hops:                                                                     
     github: "logicalclocks/hops-hadoop-chef"
     branch: "master"  
-  ndb:                                                                     
-    github: "logicalclocks/ndb-chef"
-    branch: "master"  
 
 attrs:
   install:
     dir: /srv/hops
     user: vagrant
-     
+  kagent:
+    enabled: "false"
+  hops:
+    yarn:
+      aux_services: "mapreduce_shuffle"
+
 groups: 
   master:
     size: 1 
     baremetal:
-      ip: 192.168.56.101
+      ip: 10.0.2.15
     recipes: 
-      - kagent::install
       - ndb::mgmd
       - ndb::mysqld
       - ndb::ndbd

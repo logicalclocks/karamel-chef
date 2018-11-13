@@ -13,10 +13,11 @@ attrs:
     dir: /srv/hops
     user: vagrant
   kagent:
-    network:
-      interface: enp0s8
+    enabled: "false"
   hops:
     num_replicas: 2
+    yarn:
+      aux_services: "mapreduce_shuffle"
 
 groups: 
   namenodes:
@@ -24,8 +25,6 @@ groups:
     baremetal:
       ip: 192.168.56.101
     recipes: 
-      - kagent
-      - conda
       - ndb::mgmd
       - ndb::mysqld                                                       
       - hops::ndb
@@ -37,8 +36,6 @@ groups:
     baremetal:
       ip: 192.168.56.102
     recipes: 
-      - kagent
-      - conda
       - ndb::ndbd
       - hops::dn
       - hops::nm
@@ -47,10 +44,6 @@ groups:
     baremetal:
       ip: 192.168.56.103
     recipes: 
-      - kagent
-      - conda
       - ndb::ndbd
       - hops::dn
       - hops::nm
-
-
