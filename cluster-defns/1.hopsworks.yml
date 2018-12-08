@@ -10,15 +10,11 @@ cookbooks:
 attrs:
   install:
     dir: /srv/hops
-    # upgrade: false
-    # user: vagrant
   kagent:
     network:
       interface: enp0s3
   hopsworks:
     port: 8080
-  conda:
-    mirror_list: "http://bbc2.sics.se:8000/pkgs/main/linux-64,http://bbc2.sics.se:8000/pkgs/main/noarch"
 groups:
   namenodes:
     size: 1
