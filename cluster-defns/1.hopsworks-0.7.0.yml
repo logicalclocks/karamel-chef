@@ -1,4 +1,4 @@
-name: HopsworksVagrantSingleNodeRelease07
+name: HopsworksVagrantSingleNode
 baremetal:
     username: vagrant
 
@@ -13,9 +13,6 @@ attrs:
   kagent:
     network:
       interface: enp0s3
-  elastic:
-    projects:
-      reindex: true
   hopsworks:
     port: 8080
 groups:
@@ -25,6 +22,7 @@ groups:
       ip: 10.0.2.15
     recipes:
       - kagent
+      - conda
       - ndb::mgmd
       - ndb::ndbd
       - ndb::mysqld
@@ -52,3 +50,4 @@ groups:
       - tensorflow
       - hopsmonitor::telegraf
       - hive2
+
