@@ -70,6 +70,7 @@ when 'centos'
     cwd node['test']['hopsworks']['test_dir']
     environment ({'PATH' => "#{ENV['PATH']}:/usr/local/bin:/srv/hops/mysql/bin",
               'LD_LIBRARY_PATH' => "#{ENV['LD_LIBRARY_PATH']}:/srv/hops/mysql/lib",
+              'rvm_path' => "/usr/local/rvm",
               'HOME' => "/home/vagrant",
               'GEM_PATH' => "/usr/local/rvm/gems/ruby-2.4.1:/usr/local/rvm/gems/ruby-2.4.1@global",
               'GEM_HOME' => "/usr/local/rvm/gems/ruby-2.4.1",
