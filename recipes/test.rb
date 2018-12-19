@@ -77,6 +77,7 @@ when 'centos'
               'JAVA_HOME' => "/usr/lib/jvm/java"})
     code <<-EOH
       set -e
+      source /etc/profile.d/rvm.sh
       rvm use 2.4.1
       gem install bundler
       bundle install
