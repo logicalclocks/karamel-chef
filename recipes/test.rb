@@ -68,7 +68,7 @@ when 'centos'
     ignore_failure true
     timeout node['karamel']['test_timeout']
     cwd node['test']['hopsworks']['test_dir']
-    environment ({'PATH' => "#{ENV['PATH']}:/usr/local/bin:/srv/hops/mysql/bin",
+    environment ({'PATH' => "#{ENV['PATH']}:/usr/local/rvm/gems/ruby-2.4.1/bin:/usr/local/rvm/gems/ruby-2.4.1@global/bin:/usr/local/rvm/rubies/ruby-2.4.1/bin:/usr/local/bin:/srv/hops/mysql/bin",
               'LD_LIBRARY_PATH' => "#{ENV['LD_LIBRARY_PATH']}:/srv/hops/mysql/lib",
               'rvm_path' => "/usr/local/rvm",
               'HOME' => "/home/vagrant",
