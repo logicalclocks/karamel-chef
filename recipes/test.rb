@@ -70,15 +70,18 @@ when 'centos'
     cwd node['test']['hopsworks']['test_dir']
     environment ({'PATH' => "#{ENV['PATH']}:/usr/local/rvm/gems/ruby-2.4.1/bin:/usr/local/rvm/gems/ruby-2.4.1@global/bin:/usr/local/rvm/rubies/ruby-2.4.1/bin:/usr/local/bin:/srv/hops/mysql/bin",
               'LD_LIBRARY_PATH' => "#{ENV['LD_LIBRARY_PATH']}:/srv/hops/mysql/lib",
-              'rvm_path' => "/usr/local/rvm",
               'HOME' => "/home/vagrant",
+              'rvm_bin_path' => '/usr/local/rvm/bin',
+              'rvm_path' => "/usr/local/rvm",
+              'rvm_prefix' => "/usr/local",
+              'RUBY_VERSION' => 'ruby-2.4.1',
+              'MY_RUBY_HOME' => '/usr/local/rvm/rubies/ruby-2.4.1',
               'GEM_PATH' => "/usr/local/rvm/gems/ruby-2.4.1:/usr/local/rvm/gems/ruby-2.4.1@global",
               'GEM_HOME' => "/usr/local/rvm/gems/ruby-2.4.1",
               'JAVA_HOME' => "/usr/lib/jvm/java"})
     code <<-EOH
       set -e
-      source /etc/profile.d/rvm.sh
-      rvm use 2.4.1
+      /usr/local/rvm/bin/rvm use 2.4.1
       gem install bundler
       bundle install
       rspec --format RspecJunitFormatter --out #{node['test']['hopsworks']['report_dir']}/centos.xml
