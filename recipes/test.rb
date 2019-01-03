@@ -82,7 +82,7 @@ when 'centos'
     code <<-EOH
       set -e
       /usr/local/rvm/bin/rvm use 2.4.1
-      gem install bundler
+      gem install bundler -v 1.17.3
       bundle install
       rspec --format RspecJunitFormatter --out #{node['test']['hopsworks']['report_dir']}/centos.xml
     EOH
