@@ -1,4 +1,4 @@
-name: HopsworksVagrantSingleNode
+name: HopsworksVagrantSingleNode08
 baremetal:
     username: vagrant
 
