@@ -1,0 +1,93 @@
+name: HopsworksVagrantMultiNodeTLS08
+baremetal:
+    username: vagrant
+
+cookbooks:
+  hopsworks:
+    github: logicalclocks/hopsworks-chef
+    branch: 0.8
+
+attrs:
+  install:
+    dir: /srv/hops
+  kagent:
+    network:
+      interface: enp0s8
+  hops:
+    num_replicas: 2
+    tls:
+     enabled: true
+     certs_actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppCertificateActions"
+     crl_enabled: true
+     crl_fetcher_class: "org.apache.hadoop.security.ssl.DevRemoteCRLFetcher"
+     crl_fetcher_interval: "5m"
+    encrypt_data_transfer:
+     enabled: false
+  hopsworks:
+     encryption_password: "verysecurepassword"
+
+groups:
+  namenodes:
+    size: 1
+    baremetal:
+      ip: 192.168.56.101
+    recipes:
+      - kagent
+      - conda
+      - ndb::mgmd
+      - ndb::mysqld
+      - hops::ndb
+      - hops::rm
+      - hops::nn
+      - hops::jhs
+      - hadoop_spark::yarn
+      - hadoop_spark::historyserver
+      - flink::yarn
+      - zeppelin
+      - hopsworks
+      - hopsworks::dev
+      - hopsmonitor
+      - tensorflow
+      - hopslog
+      - hopsmonitor::telegraf
+      - hopslog::_filebeat-serving
+      - kzookeeper
+      - livy
+      - hive2
+      - kagent::dev
+  datanode1:
+    size: 1
+    baremetal:
+      ip: 192.168.56.102
+    recipes:
+      - kagent
+      - conda
+      - ndb::ndbd
+      - ndb::mysqld
+      - hops::ndb
+      - hops::nn
+      - hops::dn
+      - hops::nm
+      - kzookeeper
+      - epipe
+      - hadoop_spark::yarn
+      - hopsmonitor::telegraf
+      - hopslog::_filebeat-spark
+      - tensorflow
+  datanode2:
+    size: 1
+    baremetal:
+      ip: 192.168.56.103
+    recipes:
+      - kagent
+      - conda
+      - ndb::ndbd
+      - kzookeeper
+      - elastic
+      - hops::dn
+      - hops::nm
+      - kkafka
+      - hadoop_spark::yarn
+      - hopsmonitor::telegraf
+      - hopslog::_filebeat-spark
+      - tensorflow
