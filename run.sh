@@ -28,7 +28,7 @@ ORIGINAL_OCTETS=${OCTETS}"56"
 function replace_port() {
     res=0
     p=
-    while [ $res -eq 0 ] ; do 
+    while [ $res -eq 0 ] ; do
 	p=`shuf -i 20000-65000 -n 1`
 	# If the port is already in the file, try again
 	grep $p Vagrantfile
@@ -52,23 +52,23 @@ function replace_port() {
 #       if [ "$forwarded_port" == "9090" ] ; then
 #          echo "9090 - leave it alone"
 #      else if [ "$forwarded_port" == "8080" ] ; then
-#         perl -pi -e "s/$forwarded_port/$p/g" Vagrantfile	
+#         perl -pi -e "s/$forwarded_port/$p/g" Vagrantfile
 #         perl -pi -e "s/$forwarded_port/$p/" cluster.yml
 #      	 http_port=$p
 #         echo "http_port -> $p"
       else
-        perl -pi -e "s/$forwarded_port/$p/g" Vagrantfile	
+        perl -pi -e "s/$forwarded_port/$p/g" Vagrantfile
         perl -pi -e "s/$p/$forwarded_port/" Vagrantfile
         echo "$port -> $p"
       fi
-    else 
+    else
        echo "New port is: $p"
        sed "0,/RE/s/10022/$p/" Vagrantfile > Vagrantfile.new
        sed "0,/RE/s/10023/$(expr $p + 1)/" Vagrantfile.new > Vagrantfile
        sed "0,/RE/s/10024/$(expr $p + 2)/" Vagrantfile > Vagrantfile.new
        mv Vagrantfile.new Vagrantfile
     fi
-}    
+}
 
 function parse_ports() {
     SAVEIFS=$IFS
@@ -92,18 +92,30 @@ function parse_ports() {
 }
 
 function change_subnet() {
-    priv_subnets=($($VBOX_MANAGE list hostonlyifs | grep "IPAddress:" | awk -F' ' '{print $2}' | awk -F'.' '{print $3}'))
-    
-    if [ ${#priv_subnets[@]} -gt 0 ]; then
-	SAVEIFS=$IFS
-	IFS=$'\n'
-	sorted=($(sort <<<"${priv_subnets[*]}"))
-	IFS=$SAVEIFS
-	new_subnet=$((${sorted[-1]} + 1))
-	new_octets=${OCTETS}${new_subnet}
-	sed -i "s/${ORIGINAL_OCTETS}/${new_octets}/g" Vagrantfile
-	sed -i "s/${ORIGINAL_OCTETS}/${new_octets}/g" cluster.yml
-    fi
+  priv_subnets=($($VBOX_MANAGE list hostonlyifs | grep "IPAddress:" | awk -F' ' '{print $2}' | awk -F'.' '{print $3}'))
+
+  if [ ${#priv_subnets[@]} -gt 0 ]; then
+    new_subnet=-1
+    while [ $new_subnet -eq -1 ]
+    do
+      tentative=$(($RANDOM % 255))
+      present=0
+      for i in "${priv_subnets[@]}"
+      do
+        if [ "$i" == "$tentative" ]; then
+          present=1
+          break
+        fi
+      done
+      if [ $present -eq 0 ]; then
+        new_subnet=$tentative
+      fi
+    done
+
+    new_octets=${OCTETS}${new_subnet}
+    sed -i "s/${ORIGINAL_OCTETS}/${new_octets}/g" Vagrantfile
+    sed -i "s/${ORIGINAL_OCTETS}/${new_octets}/g" cluster.yml
+  fi
 }
 
 if [ "$1" == "ports" ] ; then
@@ -119,22 +131,22 @@ PORTS=1
 
 if [ $# -eq 4 ] ; then
     if [ $4 != "no-random-ports" ] ; then
-       help	   
+       help
     fi
-    PORTS=0	 
-fi 
+    PORTS=0
+fi
 
 UDP_HACK=0
 if [ $# -eq 5 ] ; then
     if [ $4 != "no-random-ports" ] ; then
-       help    
+       help
     fi
-    PORTS=0  
+    PORTS=0
     if [ $5 != "udp-hack" ] ; then
-       help    
+       help
     fi
     UDP_HACK=1
-fi    
+fi
 
 #set -e
 
@@ -146,7 +158,7 @@ if [ ! -f cluster-defns/$2.$3.yml ] ; then
  echo "Couldn't find the $2.$3.yml for your cluster in the cluster-defns directory"
  exit 1
 fi
- 
+
 cp vagrantfiles/Vagrantfile.$1.$2 Vagrantfile
 cp cluster-defns/$2.$3.yml cluster.yml
 
@@ -166,7 +178,7 @@ if [ $PORTS -eq 1 ] ; then
 	fi
 	count=$(($count + 1))
     done
-fi    
+fi
 
 if [ $2 -gt 1 ]; then
     echo "Changing VMs subnet"

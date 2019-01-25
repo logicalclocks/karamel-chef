@@ -61,18 +61,31 @@ function parse_ports() {
 }
 
 function change_subnet() {
-    priv_subnets=($($VBOX_MANAGE list hostonlyifs | grep "IPAddress:" | awk -F' ' '{print $2}' | awk -F'.' '{print $3}'))
+  priv_subnets=($($VBOX_MANAGE list hostonlyifs | grep "IPAddress:" | awk -F' ' '{print $2}' | awk -F'.' '{print $3}'))
 
-    if [ ${#priv_subnets[@]} -gt 0 ]; then
-	SAVEIFS=$IFS
-	IFS=$'\n'
-	sorted=($(sort <<<"${priv_subnets[*]}"))
-	IFS=$SAVEIFS
-	new_subnet=$((${sorted[-1]} + 1))
-	new_octets=${OCTETS}${new_subnet}
-	sed -i "s/${ORIGINAL_OCTETS}/${new_octets}/g" Vagrantfile
-	sed -i "s/${ORIGINAL_OCTETS}/${new_octets}/g" cluster.yml
-    fi
+  if [ ${#priv_subnets[@]} -gt 0 ]; then
+    new_subnet=-1
+    while [ $new_subnet -eq -1 ]
+    do
+      tentative=$(($RANDOM % 255))
+      present=0
+      for i in "${priv_subnets[@]}"
+      do
+        if [ "$i" == "$tentative" ]; then
+          present=1
+          break
+        fi
+      done
+      if [ $present -eq 0 ]; then
+        new_subnet=$tentative
+      fi
+    done
+
+    new_octets=${OCTETS}${new_subnet}
+    sed -i "s/${ORIGINAL_OCTETS}/${new_octets}/g" Vagrantfile
+    sed -i "s/${ORIGINAL_OCTETS}/${new_octets}/g" cluster.yml
+  fi
+
 }
 
 PORTS=1
