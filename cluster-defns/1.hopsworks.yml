@@ -50,4 +50,4 @@ groups:
       - tensorflow
       - hopsmonitor::telegraf
       - hive2
-
+      - hops_airflow

@@ -55,6 +55,7 @@ groups:
       - livy
       - hive2
       - kagent::dev
+      - hops_airflow
   datanode1:
     size: 1
     baremetal:
