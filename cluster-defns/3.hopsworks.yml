@@ -45,6 +45,7 @@ groups:
       - hive2
       - kagent::dev
       - hopslog::_filebeat-serving
+      - hopslog::_filebeat-kagent
       - hops_airflow
   datanode1:
     size: 1
@@ -64,6 +65,7 @@ groups:
       - hadoop_spark::yarn
       - hopsmonitor::telegraf
       - hopslog::_filebeat-spark
+      - hopslog::_filebeat-kagent
       - tensorflow
   datanode2:
     size: 1
@@ -81,4 +83,5 @@ groups:
       - hadoop_spark::yarn
       - hopsmonitor::telegraf
       - hopslog::_filebeat-spark
+      - hopslog::_filebeat-kagent
       - tensorflow
