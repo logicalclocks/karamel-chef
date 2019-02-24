@@ -32,6 +32,24 @@ Vagrant.configure("2") do |config|
     config.vm.network(:forwarded_port, {:guest=>2003, :host=>2003})
     # Jupyter
     config.vm.network(:forwarded_port, {:guest=>8888, :host=>8887})
+    # membrane proxy
+    config.vm.network(:forwarded_port, {:guest=>11112, :host=>11112})
+    # airflow
+    config.vm.network(:forwarded_port, {:guest=>12358, :host=>12358})    
+    # rstudio
+    config.vm.network(:forwarded_port, {:guest=>8787, :host=>8787})    
+    # Dela udp ports
+    config.vm.network(:forwarded_port, {:guest=>42011, :host=>42011, :protocol=>"udp"})
+    config.vm.network(:forwarded_port, {:guest=>42012, :host=>42012, :protocol=>"udp"})
+    config.vm.network(:forwarded_port, {:guest=>42013, :host=>42013, :protocol=>"udp"})
+    # zookeeper
+    config.vm.network(:forwarded_port, {:guest=>2181, :host=>2181})    
+    # kafka
+    config.vm.network(:forwarded_port, {:guest=>9092, :host=>9092})    
+    # sqoop
+    config.vm.network(:forwarded_port, {:guest=>16000, :host=>16000})    
+    # cvat
+    config.vm.network(:forwarded_port, {:guest=>8000, :host=>8000})    
 
   
     config.vm.provision "file", source: "cluster.yml", destination: "cluster.yml"
