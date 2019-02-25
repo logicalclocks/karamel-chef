@@ -13,3 +13,5 @@ LAUNCH_BROWSER=false                                      # If set to true will 
 OS=<%= node['platform'] %>
 ELASTIC_API=<%= @elastic_endpoint %>
 MYSQL_SOCKET=/tmp/mysql.sock
+RSPEC_VAGRANT_HDFS_USER=<%= node['hops']['hdfs']['user'] %>
+RSPEC_VAGRANT_MYSQL_USER=<%= node['hops']['mysql']['user'] %>
