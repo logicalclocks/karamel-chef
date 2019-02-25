@@ -4,8 +4,8 @@ baremetal:
 
 cookbooks:
   hopsworks:
-    github: "ErmiasG/hopsworks-chef"
-    branch: "kerberos"
+    github: logicalclocks/hopsworks-chef
+    branch: master
 
 attrs:
   install:
