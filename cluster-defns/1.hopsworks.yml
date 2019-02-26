@@ -50,3 +50,4 @@ groups:
       - hopsmonitor::telegraf
       - hive2
       - hops_airflow
+      - hops_airflow::sqoop
