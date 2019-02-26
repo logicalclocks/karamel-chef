@@ -47,6 +47,7 @@ groups:
       - hopslog::_filebeat-serving
       - hopslog::_filebeat-kagent
       - hops_airflow
+      - hops_airflow::sqoop
   datanode1:
     size: 1
     baremetal:
