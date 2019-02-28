@@ -1,6 +1,24 @@
 case node['platform']
 when 'ubuntu'
-  package ['bundler']
+  package ['bundler', 'firefox', 'libappindicator1', 'fonts-liberation', 'libxss1', 'xdg-utils']
+
+  remote_file '/tmp/google-chrome.deb' do
+    source 'https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb'
+    owner 'root'
+    group 'root'
+    mode '0755'
+    action :create
+  end
+
+  bash 'install_chrome' do 
+    user 'root'
+    group 'root'
+    cwd '/tmp'
+    code <<-EOH
+      dpkg -i google-chrome*.deb
+    EOH
+  end
+  
 when 'centos'
   # Centos comes with a pre world-war-1 version of ruby
   # We are going to install ruby 2.4 using RVM (Ruby version manage)
@@ -60,6 +78,35 @@ when 'ubuntu'
       bundle install
       rspec --format RspecJunitFormatter --out #{node['test']['hopsworks']['report_dir']}/ubuntu.xml
     EOH
+  end
+
+  # Run Selenium tests
+  bash 'selenium-firefox' do 
+    user 'root'
+    ignore_failure true
+    cwd node['test']['hopsworks']['base_dir']
+    environment ({'HOPSWORKS_URL' => 'https://localhost:8181/hopsworks',
+                  'HEADLESS' => "true",
+                  'BROWSER' => "firefox"})
+    code <<-FIREFOX
+      mvn clean install -P-web
+      cd hopsworks-IT/target/failsafe-reports
+      for file in *.xml ; do cp $file #{node['test']['hopsworks']['report_dir']}/firefox-${file} ; done
+    FIREFOX
+  end
+
+  bash 'selenium-chrome' do 
+    user 'root'
+    ignore_failure true
+    cwd node['test']['hopsworks']['base_dir']
+    environment ({'HOPSWORKS_URL' => 'https://localhost:8181/hopsworks',
+                  'HEADLESS' => "true",
+                  'BROWSER' => "chrome"})
+    code <<-CHROME
+      mvn clean install -P-web
+      cd hopsworks-IT/target/failsafe-reports
+      for file in *.xml ; do cp $file #{node['test']['hopsworks']['report_dir']}/chrome-${file} ; done
+    CHROME
   end
 
 when 'centos'
