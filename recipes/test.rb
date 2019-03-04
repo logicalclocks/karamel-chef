@@ -93,6 +93,7 @@ when 'ubuntu'
       cd hopsworks-IT/target/failsafe-reports
       for file in *.xml ; do cp $file #{node['test']['hopsworks']['report_dir']}/firefox-${file} ; done
     FIREFOX
+    only_if { node['test']['hopsworks']['frontend'] }
   end
 
   bash 'selenium-chrome' do 
@@ -107,6 +108,7 @@ when 'ubuntu'
       cd hopsworks-IT/target/failsafe-reports
       for file in *.xml ; do cp $file #{node['test']['hopsworks']['report_dir']}/chrome-${file} ; done
     CHROME
+    only_if { node['test']['hopsworks']['frontend'] }
   end
 
 when 'centos'
