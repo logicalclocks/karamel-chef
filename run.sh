@@ -57,8 +57,7 @@ function replace_port() {
 #      	 http_port=$p
 #         echo "http_port -> $p"
       else
-        perl -pi -e "s/$forwarded_port/$p/g" Vagrantfile
-        perl -pi -e "s/$p/$forwarded_port/" Vagrantfile
+        perl -pi -e "s/host=>$forwarded_port/host=>$p/g" Vagrantfile
         echo "$port -> $p"
       fi
     else
