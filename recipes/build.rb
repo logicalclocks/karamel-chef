@@ -64,7 +64,7 @@ when 'redhat'
     group 'root'
     cwd node['test']['hopsworks']['base_dir']
     code <<-EOF
-      mvn clean install -DskipTests 
+      mvn clean install -P-web -DskipTests 
       VERSION=$(mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec)
       mv hopsworks-ear/target/hopsworks-ear.ear /tmp/chef-solo/hopsworks-ear\:$VERSION-$VERSION.ear
       mv hopsworks-ca/target/hopsworks-ca.war /tmp/chef-solo/hopsworks-ca\:$VERSION-$VERSION.war
