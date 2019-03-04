@@ -14,7 +14,7 @@ default['cluster_def']                = "/home/vagrant/cluster.yml"
 default['region']                     = "se"
 
 # Testing attributes
-default['test']['hopsworks']['repo']        = "https://github.com/hopshadoop/hopsworks"
+default['test']['hopsworks']['repo']        = "https://github.com/logicalclocks/hopsworks"
 default['test']['hopsworks']['branch']      = "master"
 
 default['test']['hopsworks']['base_dir']    = "/home/vagrant/hopsworks"
