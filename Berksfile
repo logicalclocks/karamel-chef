@@ -6,5 +6,5 @@ metadata
 
 cookbook 'java'
 cookbook 'hostsfile', '~> 2.4.5'
-cookbook 'nodejs', '~> 4.0.0'
+cookbook 'nodejs', '~> 6.0.0'
 
