@@ -40,9 +40,7 @@ groups:
       - kzookeeper
       - livy
       - hive2
-      - kagent::dev
       - hopslog::_filebeat-serving
-      - hopslog::_filebeat-kagent
       - hops_airflow
       - hops_airflow::sqoop
   datanode1:
@@ -62,7 +60,6 @@ groups:
       - epipe
       - hadoop_spark::yarn
       - hopslog::_filebeat-spark
-      - hopslog::_filebeat-kagent
       - tensorflow
   datanode2:
     size: 1
@@ -79,5 +76,4 @@ groups:
       - kkafka
       - hadoop_spark::yarn
       - hopslog::_filebeat-spark
-      - hopslog::_filebeat-kagent
       - tensorflow
