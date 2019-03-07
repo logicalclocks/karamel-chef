@@ -18,9 +18,9 @@ default['test']['hopsworks']['repo']        = "https://github.com/logicalclocks/
 default['test']['hopsworks']['branch']      = "master"
 
 default['test']['hopsworks']['base_dir']    = "/home/vagrant/hopsworks"
-default['test']['hopsworks']['test_dir']    = "#{node['test']['hopsworks']['base_dir']}/hopsworks-ear/test"
+default['test']['hopsworks']['test_dir']    = "#{node['test']['hopsworks']['base_dir']}/hopsworks-IT/src/test/ruby"
 default['test']['hopsworks']['report_dir']  = "/home/vagrant/test_report"
-default['test']['hopsworks']['frontend']    = false 
+default['test']['hopsworks']['frontend']    = true
 
 default['java']['jdk_version'] = '8'
 default['java']['install_flavor'] = 'openjdk'
