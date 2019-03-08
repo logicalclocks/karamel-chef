@@ -34,7 +34,7 @@ when "debian"
     user 'root'
   end
 
-  bash 'root_hack' do 
+  bash 'root_hack' do
     user 'root'
     group 'root'
     code <<-EOH
@@ -48,7 +48,7 @@ when "debian"
     group 'root'
     cwd node['test']['hopsworks']['base_dir']
     code <<-EOF
-      mvn clean install -Pweb -Pcluster -Phops-site -DskipTests 
+      mvn clean install -Pweb -Pcluster -Phops-site -DskipTests
       VERSION=$(mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec)
       mv hopsworks-ear/target/hopsworks-ear.ear /tmp/chef-solo/hopsworks-ear\:$VERSION-$VERSION.ear
       mv hopsworks-ca/target/hopsworks-ca.war /tmp/chef-solo/hopsworks-ca\:$VERSION-$VERSION.war
@@ -56,15 +56,15 @@ when "debian"
     EOF
   end
 
-when 'redhat'
+when 'rhel'
   # It's a bit of a pain to install npm packages on Centos. We run the frontend tests only on ubuntu
-  # so there is no need to install npm packages and build the web anyway 
+  # so there is no need to install npm packages and build the web anyway
   bash 'build-hopsworks' do
     user 'root'
     group 'root'
     cwd node['test']['hopsworks']['base_dir']
     code <<-EOF
-      mvn clean install -P-web -DskipTests 
+      mvn clean install -P-web -DskipTests
       VERSION=$(mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec)
       mv hopsworks-ear/target/hopsworks-ear.ear /tmp/chef-solo/hopsworks-ear\:$VERSION-$VERSION.ear
       mv hopsworks-ca/target/hopsworks-ca.war /tmp/chef-solo/hopsworks-ca\:$VERSION-$VERSION.war
