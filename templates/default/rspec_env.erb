@@ -8,6 +8,7 @@ RSPEC_REPORT=<%= node['test']['hopsworks']['report'] %>   # where to put the rep
 HOPSWORKS_API=/hopsworks-api/api                          # The path to the rest api to be tested.
 HOPSWORKS_ADMIN=/hopsworks-admin/                         # The path to hopsworks admin pages.
 HOPSWORKS_CA=/hopsworks-ca/v2                             # The path to hopsworks admin pages.
+HOPSWORKS_DELA_TRACKER=/hopsworks-cluster/api             # The path to Dela Tracker endpoint
 JENKINS=true                                              # Avoid cleaning up as we are testing with Jenkins
 LAUNCH_BROWSER=false                                      # If set to true will launch test report in a browser
 OS=<%= node['platform'] %>
