@@ -33,7 +33,6 @@ groups:
       - hadoop_spark::yarn
       - hadoop_spark::historyserver
       - flink::yarn
-      - zeppelin
       - hopsworks
       - hopsworks::dev
       - hopsmonitor
