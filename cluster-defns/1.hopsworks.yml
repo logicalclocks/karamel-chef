@@ -13,6 +13,10 @@ attrs:
   kagent:
     network:
       interface: enp0s3
+  hops:
+    rmappsecurity:
+      actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
+
 groups:
   namenodes:
     size: 1

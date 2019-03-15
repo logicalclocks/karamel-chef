@@ -14,7 +14,9 @@ attrs:
     network:
       interface: enp0s8
   hops:
-     num_replicas: 2
+    num_replicas: 2
+    rmappsecurity:
+      actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
 
 groups:
   namenodes:

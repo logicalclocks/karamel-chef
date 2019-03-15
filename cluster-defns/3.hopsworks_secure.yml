@@ -17,10 +17,11 @@ attrs:
     num_replicas: 2
     tls:
      enabled: true
-     certs_actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppCertificateActions"
      crl_enabled: true
      crl_fetcher_class: "org.apache.hadoop.security.ssl.DevRemoteCRLFetcher"
      crl_fetcher_interval: "5m"
+    rmappsecurity:
+      actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
     encrypt_data_transfer:
      enabled: false
   hopsworks:
