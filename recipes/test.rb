@@ -10,7 +10,7 @@ when 'ubuntu'
     action :create
   end
 
-  bash 'install_chrome' do 
+  bash 'install_chrome' do
     user 'root'
     group 'root'
     cwd '/tmp'
@@ -18,7 +18,7 @@ when 'ubuntu'
       dpkg -i google-chrome*.deb
     EOH
   end
-  
+
 when 'centos'
   # Centos comes with a pre world-war-1 version of ruby
   # We are going to install ruby 2.4 using RVM (Ruby version manage)
@@ -29,6 +29,8 @@ when 'centos'
     code <<-EOH
       yum install gcc-c++ patch readline readline-devel zlib zlib-devel libyaml-devel libffi-devel openssl-devel make bzip2 autoconf automake libtool bison iconv-devel sqlite-devel
       gpg2 --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
+      curl -sSL https://rvm.io/mpapis.asc | sudo gpg2 --import -
+      curl -sSL https://rvm.io/pkuczynski.asc | sudo gpg2 --import -
       curl -sSL https://get.rvm.io | bash -s stable
       source /etc/profile.d/rvm.sh
       rvm reload
@@ -81,7 +83,7 @@ when 'ubuntu'
   end
 
   # Run Selenium tests
-  bash 'selenium-firefox' do 
+  bash 'selenium-firefox' do
     user 'root'
     ignore_failure true
     cwd node['test']['hopsworks']['base_dir']
@@ -96,7 +98,7 @@ when 'ubuntu'
     only_if { node['test']['hopsworks']['frontend'] }
   end
 
-  bash 'selenium-chrome' do 
+  bash 'selenium-chrome' do
     user 'root'
     ignore_failure true
     cwd node['test']['hopsworks']['base_dir']
