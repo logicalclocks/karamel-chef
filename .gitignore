@@ -13,3 +13,5 @@ nohup.out
 .forwarded_ports
 Vagrantfile
 cluster.yml
+
+.idea

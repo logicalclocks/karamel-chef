@@ -16,6 +16,7 @@ end
 depends 'java'
 depends 'hostsfile'
 depends 'nodejs'
+depends 'hops'
 
 recipe  "karamel::install", "Installs Karamel"
 recipe  "karamel::default", "Configures and starts karamel."

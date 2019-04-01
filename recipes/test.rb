@@ -60,9 +60,14 @@ template "#{node['test']['hopsworks']['test_dir']}/.env" do
   })
 end
 
-# Delete form workspace preivous test results
+# Delete form workspace previous test results
 file "#{node['test']['hopsworks']['report_dir']}/#{node['platform']}.xml" do
   action :delete
+end
+
+# If it_tests should be run, prepare it test resources
+if node['test']['hopsworks']['it']
+  include_recipe "karamel::it_tests"
 end
 
 # Install dependencies and execute tests
@@ -76,10 +81,19 @@ when 'ubuntu'
     environment ({'PATH' => "#{ENV['PATH']}:/home/vagrant/.gem/ruby/2.3.0/bin:/srv/hops/mysql/bin",
                   'LD_LIBRARY_PATH' => "#{ENV['LD_LIBRARY_PATH']}:/srv/hops/mysql/lib",
                   'JAVA_HOME' => "/usr/lib/jvm/default-java"})
-    code <<-EOH
+    if node['test']['hopsworks']['it']
+      # Run regular ruby tests and integration tests
+      code <<-EOH
       bundle install
       rspec --format RspecJunitFormatter --out #{node['test']['hopsworks']['report_dir']}/ubuntu.xml
-    EOH
+      EOH
+    else
+      # Run regular ruby tests, excluding integration tests
+      code <<-EOH
+      bundle install
+      rspec --format RspecJunitFormatter --out #{node['test']['hopsworks']['report_dir']}/ubuntu.xml --exclude-pattern '*it_spec.rb'
+      EOH
+    end
   end
 
   # Run Selenium tests
@@ -130,12 +144,25 @@ when 'centos'
               'GEM_PATH' => "/usr/local/rvm/gems/ruby-2.4.1:/usr/local/rvm/gems/ruby-2.4.1@global",
               'GEM_HOME' => "/usr/local/rvm/gems/ruby-2.4.1",
               'JAVA_HOME' => "/usr/lib/jvm/java"})
-    code <<-EOH
+
+    if node['test']['hopsworks']['it']
+      # Run regular ruby tests and the integration tests
+      code <<-EOH
       set -e
       /usr/local/rvm/bin/rvm use 2.4.1
       gem install bundler -v 1.17.3
       bundle install
       rspec --format RspecJunitFormatter --out #{node['test']['hopsworks']['report_dir']}/centos.xml
-    EOH
+      EOH
+    else
+      # Run regular ruby tests, excluding integration tests
+      code <<-EOH
+      set -e
+      /usr/local/rvm/bin/rvm use 2.4.1
+      gem install bundler -v 1.17.3
+      bundle install
+      rspec --format RspecJunitFormatter --out #{node['test']['hopsworks']['report_dir']}/centos.xml --exclude-pattern '*it_spec.rb'
+      EOH
+    end
   end
 end
