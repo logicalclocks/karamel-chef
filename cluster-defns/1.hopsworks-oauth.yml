@@ -16,12 +16,15 @@ attrs:
   hops:
     rmappsecurity:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
-
   oauth:
     enabled: true
     redirect_uri: "hopsworks/callback"
     account_status: 1
     group_mapping: "Administrators->HOPS_USER,HOPS_ADMIN; IT People-> HOPS_USER"
+  hopsworks:
+    kagent_liveness:
+      enabled: true
+      threshold: "40s"
 
 groups:
   namenodes:

@@ -17,6 +17,10 @@ attrs:
     num_replicas: 2
     rmappsecurity:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
+  hopsworks:
+    kagent_liveness:
+      enabled: true
+      threshold: "40s"
 
 groups:
   namenodes:

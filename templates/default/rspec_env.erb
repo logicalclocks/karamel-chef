@@ -14,3 +14,7 @@ LAUNCH_BROWSER=false                                      # If set to true will 
 OS=<%= node['platform'] %>
 ELASTIC_API=<%= @elastic_endpoint %>
 MYSQL_SOCKET=/tmp/mysql.sock
+
+REMOTE_SSH_USER=vagrant					  # User on remote machine
+REMOTE_SSH_PASSWORD=vagrant				  # Password of remote user
+REMOTE_SSH_PORT=22					  # Port on remote machine sshd listens to
