@@ -16,6 +16,10 @@ attrs:
   hops:
     rmappsecurity:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
+  hopsworks:
+    kagent_liveness:
+      enabled: true
+      threshold: "40s"
 
   kerberos:
     enabled: true
@@ -51,7 +55,7 @@ attrs:
     security_credentials: "Adminpw"
     referral: "follow"
     #additional_props: ""
-
+      
 groups:
   namenodes:
     size: 1

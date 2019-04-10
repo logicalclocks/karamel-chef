@@ -25,7 +25,10 @@ attrs:
     encrypt_data_transfer:
      enabled: false
   hopsworks:
-     encryption_password: "verysecurepassword"
+    encryption_password: "verysecurepassword"
+    kagent_liveness:
+      enabled: true
+      threshold: "40s"
 
 groups:
   namenodes:
