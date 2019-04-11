@@ -82,10 +82,10 @@ when 'ubuntu'
                   'LD_LIBRARY_PATH' => "#{ENV['LD_LIBRARY_PATH']}:/srv/hops/mysql/lib",
                   'JAVA_HOME' => "/usr/lib/jvm/default-java"})
     if node['test']['hopsworks']['it']
-      # Run regular ruby tests and integration tests
+      # Run integration tests
       code <<-EOH
       bundle install
-      rspec --format RspecJunitFormatter --out #{node['test']['hopsworks']['report_dir']}/ubuntu.xml
+      rspec --format RspecJunitFormatter --out #{node['test']['hopsworks']['report_dir']}/ubuntu.xml --pattern "**{,/*/**}/*it_spec.rb"
       EOH
     else
       # Run regular ruby tests, excluding integration tests
@@ -146,13 +146,13 @@ when 'centos'
               'JAVA_HOME' => "/usr/lib/jvm/java"})
 
     if node['test']['hopsworks']['it']
-      # Run regular ruby tests and the integration tests
+      # Run integration tests
       code <<-EOH
       set -e
       /usr/local/rvm/bin/rvm use 2.4.1
       gem install bundler -v 1.17.3
       bundle install
-      rspec --format RspecJunitFormatter --out #{node['test']['hopsworks']['report_dir']}/centos.xml
+      rspec --format RspecJunitFormatter --out #{node['test']['hopsworks']['report_dir']}/centos.xml --pattern "**{,/*/**}/*it_spec.rb"
       EOH
     else
       # Run regular ruby tests, excluding integration tests
