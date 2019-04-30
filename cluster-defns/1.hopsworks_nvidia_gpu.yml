@@ -1,0 +1,61 @@
+name: HopsworksVagrantSingleNode
+baremetal:
+    username: vagrant
+
+cookbooks:
+  hopsworks:
+    github: logicalclocks/hopsworks-chef
+    branch: master
+
+attrs:
+  install:
+    dir: /srv/hops
+  kagent:
+    network:
+      interface: enp0s3
+  hops:
+    yarn:
+      gpus: '*'
+    capacity:
+      resource_calculator_class: org.apache.hadoop.yarn.util.resource.DominantResourceCalculatorGPU
+    rmappsecurity:
+      actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
+  cuda:
+    accept_nvidia_download_terms: "true"
+
+groups:
+  namenodes:
+    size: 1
+    baremetal:
+      ip: 10.0.2.15
+    recipes:
+      - kagent
+      - conda
+      - ndb::mgmd
+      - ndb::ndbd
+      - ndb::mysqld
+      - hops::ndb
+      - hops::rm
+      - hops::nn
+      - hops::jhs
+      - hadoop_spark::yarn
+      - hadoop_spark::historyserver
+      - flink::yarn
+      - elastic
+      - livy
+      - kzookeeper
+      - kkafka
+      - epipe
+      - hopsworks
+      - hopsmonitor
+      - hopslog
+      - hopslog::_filebeat-spark
+      - hopslog::_filebeat-serving
+      - hopslog::_filebeat-kagent
+      - hops::dn
+      - hops::nm
+      - tensorflow
+      - hive2
+      - hops_airflow
+      - hops_airflow::sqoop
+
