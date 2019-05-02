@@ -6,7 +6,7 @@ ports=
 #http_port=8080
 
 VBOX_MANAGE=/usr/bin/VBoxManage
-OCTETS="192.168."
+OCTETS="172.24."
 ORIGINAL_OCTETS=${OCTETS}"56"
 
 function replace_port() {
