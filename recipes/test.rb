@@ -141,7 +141,7 @@ when 'centos'
               'rvm_prefix' => "/usr/local",
               'RUBY_VERSION' => 'ruby-2.4.1',
               'MY_RUBY_HOME' => '/usr/local/rvm/rubies/ruby-2.4.1',
-              'GEM_PATH' => "/usr/local/rvm/gems/ruby-2.4.1:/usr/local/rvm/gems/ruby-2.4.1@global",
+              'GEM_PATH' => "/usr/share/gems:/usr/local/rvm/gems/ruby-2.4.1:/usr/local/rvm/gems/ruby-2.4.1@global",
               'GEM_HOME' => "/usr/local/rvm/gems/ruby-2.4.1",
               'JAVA_HOME' => "/usr/lib/jvm/java"})
 
