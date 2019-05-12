@@ -133,24 +133,15 @@ when 'centos'
     ignore_failure true
     timeout node['karamel']['test_timeout']
     cwd node['test']['hopsworks']['test_dir']
-    environment ({'PATH' => "#{ENV['PATH']}:/usr/local/rvm/gems/ruby-2.4.1/bin:/usr/local/rvm/gems/ruby-2.4.1@global/bin:/usr/local/rvm/rubies/ruby-2.4.1/bin:/usr/local/bin:/srv/hops/mysql/bin",
+    environment ({'PATH' => "/usr/local/rvm/gems/ruby-2.4.1/bin:/usr/local/rvm/gems/ruby-2.4.1@global/bin:/usr/local/rvm/rubies/ruby-2.4.1/bin:/usr/local/bin:/srv/hops/mysql/bin:#{ENV['PATH']}",
               'LD_LIBRARY_PATH' => "#{ENV['LD_LIBRARY_PATH']}:/srv/hops/mysql/lib",
               'HOME' => "/home/vagrant",
-              'rvm_bin_path' => '/usr/local/rvm/bin',
-              'rvm_path' => "/usr/local/rvm",
-              'rvm_prefix' => "/usr/local",
-              'RUBY_VERSION' => 'ruby-2.4.1',
-              'MY_RUBY_HOME' => '/usr/local/rvm/rubies/ruby-2.4.1',
-              'GEM_PATH' => "/usr/share/gems:/usr/local/rvm/gems/ruby-2.4.1:/usr/local/rvm/gems/ruby-2.4.1@global",
-              'GEM_HOME' => "/usr/local/rvm/gems/ruby-2.4.1",
               'JAVA_HOME' => "/usr/lib/jvm/java"})
 
     if node['test']['hopsworks']['it']
       # Run integration tests
       code <<-EOH
       set -e
-      /usr/local/rvm/bin/rvm use 2.4.1
-      gem install bundler -v 1.17.3
       bundle install
       rspec --format RspecJunitFormatter --out #{node['test']['hopsworks']['report_dir']}/centos.xml --pattern "**{,/*/**}/*it_spec.rb"
       EOH
@@ -158,8 +149,6 @@ when 'centos'
       # Run regular ruby tests, excluding integration tests
       code <<-EOH
       set -e
-      /usr/local/rvm/bin/rvm use 2.4.1
-      gem install bundler -v 1.17.3
       bundle install
       rspec --format RspecJunitFormatter --out #{node['test']['hopsworks']['report_dir']}/centos.xml --exclude-pattern '*it_spec.rb'
       EOH
