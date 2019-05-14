@@ -12,16 +12,16 @@ Vagrant.configure("2") do |config|
     # MySQL Server
     config.vm.network(:forwarded_port, {:guest=>3306, :host=>3307})
     # karamel http
-    config.vm.network(:forwarded_port, {:guest=>9090, :host=>9090})     
+    config.vm.network(:forwarded_port, {:guest=>9090, :host=>9090})
     # Hopsworks http
-    config.vm.network(:forwarded_port, {:guest=>8080, :host=>8080})     
+    config.vm.network(:forwarded_port, {:guest=>8080, :host=>8080})
     # Hopsworks https
     config.vm.network(:forwarded_port, {:guest=>8181, :host=>8181})
     # Glassfish debug port
     config.vm.network(:forwarded_port, {:guest=>9009, :host=>9009})
     # Glassfish admin UI
-    config.vm.network(:forwarded_port, {:guest=>4848, :host=>4848})         
-    # Yarn RM 
+    config.vm.network(:forwarded_port, {:guest=>4848, :host=>4848})
+    # Yarn RM
     #config.vm.network(:forwarded_port, {:guest=>8088, :host=>8088})
     # Kibana
     config.vm.network(:forwarded_port, {:guest=>5601, :host=>5601})
@@ -40,46 +40,47 @@ Vagrant.configure("2") do |config|
     # membrane proxy
     config.vm.network(:forwarded_port, {:guest=>11112, :host=>11112})
     # rstudio
-    config.vm.network(:forwarded_port, {:guest=>8787, :host=>8787})    
+    config.vm.network(:forwarded_port, {:guest=>8787, :host=>8787})
     # Dela udp ports
     config.vm.network(:forwarded_port, {:guest=>42011, :host=>42011, :protocol=>"udp"})
     config.vm.network(:forwarded_port, {:guest=>42012, :host=>42012, :protocol=>"udp"})
     config.vm.network(:forwarded_port, {:guest=>42013, :host=>42013, :protocol=>"udp"})
     # zookeeper
-    config.vm.network(:forwarded_port, {:guest=>2181, :host=>2181})    
+    config.vm.network(:forwarded_port, {:guest=>2181, :host=>2181})
     # kafka
-    config.vm.network(:forwarded_port, {:guest=>9092, :host=>9092})    
+    config.vm.network(:forwarded_port, {:guest=>9092, :host=>9092})
     # sqoop
-    config.vm.network(:forwarded_port, {:guest=>16000, :host=>16000})    
+    config.vm.network(:forwarded_port, {:guest=>16000, :host=>16000})
     # cvat
-    config.vm.network(:forwarded_port, {:guest=>8000, :host=>8000})    
+    config.vm.network(:forwarded_port, {:guest=>8000, :host=>8000})
 
 
     config.vm.provision "file", source: "cluster.yml", destination: "cluster.yml"
-    config.vm.provision "file", source: "~/.vagrant.d/insecure_private_key", destination: "~/.ssh/id_rsa"    
+    config.vm.provision "file", source: "~/.vagrant.d/insecure_private_key", destination: "~/.ssh/id_rsa"
     config.vm.provision "shell", inline: "cp /home/vagrant/.ssh/authorized_keys /home/vagrant/.ssh/id_rsa.pub && sudo chown vagrant:vagrant /home/vagrant/.ssh/id_rsa.pub"
-    
+    config.vm.provision "shell", inline: "mkdir -p /etc/chef/accepted_licenses && touch /etc/chef/accepted_licenses/chef_infra_client && touch /etc/chef/accepted_licenses/inspec"
+
     config.vm.provider :virtualbox do |v|
       v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
       v.customize ["modifyvm", :id, "--memory", 18548]
       v.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
       v.customize ["modifyvm", :id, "--nictype1", "virtio"]
       v.customize ["modifyvm", :id, "--name", "hopsworks0"]
-      v.customize ["modifyvm", :id, "--cpus", "3"]         
+      v.customize ["modifyvm", :id, "--cpus", "3"]
     end
 
     config.vm.provision :chef_solo do |chef|
         chef.cookbooks_path = "cookbooks"
         chef.json = {
           "karamel" => {
-	    "default" =>      { 
+	    "default" =>      {
               "private_ips" => ["10.0.2.15"]
 	    },
           },
         }
         chef.add_recipe "karamel::install"
-        chef.add_recipe "karamel::default"     
-        chef.add_recipe "karamel::run"     
+        chef.add_recipe "karamel::default"
+        chef.add_recipe "karamel::run"
     end
-    
+
 end
