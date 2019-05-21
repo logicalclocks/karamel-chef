@@ -26,6 +26,7 @@ Vagrant.configure("2") do |config|
     end
 
     hopsworks2.vm.provision :chef_solo do |chef|
+      chef.version = "13.4.19"
       chef.cookbooks_path = "cookbooks"
       chef.json = {
           "karamel" => {
@@ -58,6 +59,7 @@ Vagrant.configure("2") do |config|
     end
 
     hopsworks1.vm.provision :chef_solo do |chef|
+      chef.version = "13.4.19"
       chef.cookbooks_path = "cookbooks"
       chef.json = {
           "karamel" => {
@@ -125,6 +127,7 @@ Vagrant.configure("2") do |config|
     end
 
     hopsworks0.vm.provision :chef_solo do |chef|
+        chef.version = "13.4.19"
         chef.cookbooks_path = "cookbooks"
         chef.json = {
           "karamel" => {
