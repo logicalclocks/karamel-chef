@@ -103,9 +103,10 @@ when 'ubuntu'
     cwd node['test']['hopsworks']['base_dir']
     environment ({'HOPSWORKS_URL' => 'https://localhost:8181/hopsworks',
                   'HEADLESS' => "true",
+                  'DB_HOST' => "localhost",
                   'BROWSER' => "firefox"})
     code <<-FIREFOX
-      mvn clean install -P-web
+      mvn clean install -P-web,mysql
       cd hopsworks-IT/target/failsafe-reports
       for file in *.xml ; do cp $file #{node['test']['hopsworks']['report_dir']}/firefox-${file} ; done
     FIREFOX
@@ -118,9 +119,10 @@ when 'ubuntu'
     cwd node['test']['hopsworks']['base_dir']
     environment ({'HOPSWORKS_URL' => 'https://localhost:8181/hopsworks',
                   'HEADLESS' => "true",
+                  'DB_HOST' => "localhost",
                   'BROWSER' => "chrome"})
     code <<-CHROME
-      mvn clean install -P-web
+      mvn clean install -P-web,mysql
       cd hopsworks-IT/target/failsafe-reports
       for file in *.xml ; do cp $file #{node['test']['hopsworks']['report_dir']}/chrome-${file} ; done
     CHROME
