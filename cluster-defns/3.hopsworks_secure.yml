@@ -10,9 +10,6 @@ cookbooks:
 attrs:
   install:
     dir: /srv/hops
-  kagent:
-    network:
-      interface: enp0s8
   hops:
     num_replicas: 2
     tls:
