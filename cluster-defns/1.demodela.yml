@@ -12,18 +12,15 @@ attrs:
   install:
     dir: /srv/hops
     user: vagrant
-  kagent:
-    network:
-      interface: enp0s3
   hopsworks:
     email: "REGISTER_EMAIL" #replace
     cert:
       o: "REGISTER_ORGANIZATION" #replace
-      ou: "REGISTER_ORG_UNIT" #replace 
+      ou: "REGISTER_ORG_UNIT" #replace
     hopssite:
       version: "hops-demo"
   hopssite:
-    password: "REGISTER_PASSWORD" #replace 
+    password: "REGISTER_PASSWORD" #replace
 groups:
   dela:
     size: 1

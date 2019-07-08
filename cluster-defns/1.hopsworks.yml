@@ -10,9 +10,6 @@ cookbooks:
 attrs:
   install:
     dir: /srv/hops
-  kagent:
-    network:
-      interface: enp0s3
   hops:
     rmappsecurity:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
