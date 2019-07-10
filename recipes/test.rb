@@ -103,7 +103,7 @@ when 'ubuntu'
     cwd node['test']['hopsworks']['base_dir']
     environment ({'HOPSWORKS_URL' => 'https://localhost:8181/hopsworks',
                   'HEADLESS' => "true",
-                  'DB_HOST' => "localhost",
+                  'DB_HOST' => node[:karamel][:default][:private_ips][0],
                   'BROWSER' => "firefox"})
     code <<-FIREFOX
       mvn clean install -P-web,mysql
@@ -119,7 +119,7 @@ when 'ubuntu'
     cwd node['test']['hopsworks']['base_dir']
     environment ({'HOPSWORKS_URL' => 'https://localhost:8181/hopsworks',
                   'HEADLESS' => "true",
-                  'DB_HOST' => "localhost",
+                  'DB_HOST' => node[:karamel][:default][:private_ips][0],
                   'BROWSER' => "chrome"})
     code <<-CHROME
       mvn clean install -P-web,mysql
