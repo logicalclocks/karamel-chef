@@ -41,6 +41,7 @@ groups:
       - hadoop_spark::yarn
       - hadoop_spark::historyserver
       - flink::yarn
+      - flink::historyserver
       - elastic
       - livy
       - kzookeeper
@@ -52,6 +53,7 @@ groups:
       - hopslog::_filebeat-spark
       - hopslog::_filebeat-serving
       - hopslog::_filebeat-kagent
+      - hopslog::_filebeat-beam
       - hops::dn
       - hops::nm
       - tensorflow
