@@ -1,7 +1,7 @@
 # Install NPM
 include_recipe "nodejs"
 
-package ['git', 'maven']
+package ['npm', 'git', 'maven']
 
 # Clone Hopsworks
 git node['test']['hopsworks']['base_dir']  do
