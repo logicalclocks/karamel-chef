@@ -1,7 +1,7 @@
 # Install NPM
 include_recipe "nodejs"
 
-package ['npm', 'git', 'maven']
+package ['git', 'maven']
 
 # Clone Hopsworks
 git node['test']['hopsworks']['base_dir']  do
@@ -22,6 +22,7 @@ end
 
 case node['platform_family']
 when "debian"
+  package ['npm']
   npm_package 'bower' do
     user 'root'
   end
