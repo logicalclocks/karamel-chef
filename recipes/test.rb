@@ -11,6 +11,7 @@ when 'ubuntu'
   end
 
   bash 'install_chrome' do
+    ignore_failure true
     user 'root'
     group 'root'
     cwd '/tmp'
