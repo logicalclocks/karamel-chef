@@ -1,6 +1,6 @@
 case node['platform']
 when 'ubuntu'
-  package ['bundler', 'firefox', 'libappindicator1', 'fonts-liberation', 'libxss1', 'xdg-utils']
+  package ['bundler', 'firefox', 'libappindicator3-1', 'fonts-liberation', 'libxss1', 'xdg-utils']
 
   remote_file '/tmp/google-chrome.deb' do
     source 'https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb'
