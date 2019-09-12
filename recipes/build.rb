@@ -55,8 +55,8 @@ when "debian"
   end
 
 when 'rhel'
-  # It's a bit of a pain to install npm packages on Centos. We run the frontend tests only on ubuntu
-  # so there is no need to install npm packages and build the web anyway
+  include_recipe "nodejs"
+
   bash 'build-hopsworks' do
     user 'root'
     group 'root'
