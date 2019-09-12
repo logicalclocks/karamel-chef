@@ -57,6 +57,7 @@ groups:
     recipes:
       - kagent
       - conda
+      - livy::install      
       - ndb::ndbd
       - ndb::mysqld
       - hops::ndb
@@ -77,6 +78,7 @@ groups:
     recipes:
       - kagent
       - conda
+      - livy::install      
       - ndb::ndbd
       - kzookeeper
       - elastic
