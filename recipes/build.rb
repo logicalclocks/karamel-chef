@@ -1,6 +1,3 @@
-# Install NPM
-include_recipe "nodejs"
-
 package ['git', 'maven']
 
 # Clone Hopsworks
