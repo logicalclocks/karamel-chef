@@ -43,6 +43,16 @@ when 'debian', 'ubuntu'
 
   ### END OF HACK
 
+  # ubuntu/bionic64 box doesn't have password authentication enabled for SSH
+  # Which is useful in a development environment (And we have IT tests depending on it)
+  bash "enable_pwd_auth" do
+    user "root"
+    code <<-EOH
+      sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+      systemctl restart sshd
+    EOH
+  end
+
 when 'redhat', 'centos', 'fedora'
 
 
