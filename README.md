@@ -1,11 +1,9 @@
 # karamel-chef
 This chef cookbook installs Karamel. Used by Vagrant to provision multi-node clusters.
 
+0. Install plugin `vagrant plugin install vagrant-disksize`
 
-
-1. Run the init script to download chef-dk and karamel to the downloads directory.
-
-1a. Create your own cluster by copying an existing Karamel cluster definition. If your name is John, call it 'hopsworks.1.john'. Then customize it. 
+1. Create your own cluster by copying an existing Karamel cluster definition. If your name is John, call it 'hopsworks.1.john'. Then customize it. 
 
 2. To start a Hopsworks VM, use the run.sh script. The parameters are: <operating sys>(ubuntu or centos), number of VMs in the vagrant configuration (1 or 3),  <cluster-postfix-name> (john, hopsworks, jim, virtualbox, etc), [no-random-ports]  - this will forward the ports in the Vagrantfile.
 
