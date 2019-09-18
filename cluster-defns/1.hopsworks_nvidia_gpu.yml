@@ -19,6 +19,12 @@ attrs:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
   cuda:
     accept_nvidia_download_terms: "true"
+  alertmanager:
+    email:
+      to: sre@logicalclocks.com
+      from: hopsworks@logicalclocks.com
+      smtp_host: mail.hello.com
+
 
 groups:
   namenodes:
@@ -55,4 +61,7 @@ groups:
       - hive2
       - hops_airflow
       - hops_airflow::sqoop
-
+      - hopsmonitor::prometheus
+      - hopsmonitor::alertmanager
+      - hopsmonitor::node_exporter
+      - hopsmonitor::purge_telegraf

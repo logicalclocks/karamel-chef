@@ -23,6 +23,12 @@ attrs:
       resource_calculator_class: org.apache.hadoop.yarn.util.resource.DominantResourceCalculatorGPU
   rocm:
     install: true
+  alertmanager:
+    email:
+      to: sre@logicalclocks.com
+      from: hopsworks@logicalclocks.com
+      smtp_host: mail.hello.com
+
 groups:
   namenodes:
     size: 1
@@ -58,4 +64,7 @@ groups:
       - hive2
       - hops_airflow
       - hops_airflow::sqoop
-
+      - hopsmonitor::prometheus
+      - hopsmonitor::alertmanager
+      - hopsmonitor::node_exporter
+      - hopsmonitor::purge_telegraf

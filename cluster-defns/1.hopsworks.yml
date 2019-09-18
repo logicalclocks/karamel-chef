@@ -13,6 +13,11 @@ attrs:
   hops:
     rmappsecurity:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
+  alertmanager:
+    email:
+      to: sre@logicalclocks.com
+      from: hopsworks@logicalclocks.com
+      smtp_host: mail.hello.com
   hopsworks:
     kagent_liveness:
       enabled: true
@@ -53,3 +58,7 @@ groups:
       - hive2
       - hops_airflow
       - hops_airflow::sqoop
+      - hopsmonitor::prometheus
+      - hopsmonitor::alertmanager
+      - hopsmonitor::node_exporter
+      - hopsmonitor::purge_telegraf

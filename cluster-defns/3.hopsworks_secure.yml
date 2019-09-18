@@ -21,6 +21,11 @@ attrs:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
     encrypt_data_transfer:
      enabled: false
+  alertmanager:
+    email:
+      to: sre@logicalclocks.com
+      from: hopsworks@logicalclocks.com
+      smtp_host: mail.hello.com
   hopsworks:
     encryption_password: "verysecurepassword"
     kagent_liveness:
@@ -49,7 +54,6 @@ groups:
       - hopsmonitor
       - tensorflow
       - hopslog
-      - hopsmonitor::telegraf
       - hopslog::_filebeat-serving
       - hopslog::_filebeat-kagent
       - kzookeeper
@@ -58,6 +62,10 @@ groups:
       - kagent::dev
       - hops_airflow
       - hops_airflow::sqoop
+      - hopsmonitor::prometheus
+      - hopsmonitor::alertmanager
+      - hopsmonitor::node_exporter
+      - hopsmonitor::purge_telegraf
   datanode1:
     size: 1
     baremetal:
@@ -65,7 +73,7 @@ groups:
     recipes:
       - kagent
       - conda
-      - livy::install      
+      - livy::install
       - ndb::ndbd
       - ndb::mysqld
       - hops::ndb
@@ -75,10 +83,11 @@ groups:
       - kzookeeper
       - epipe
       - hadoop_spark::yarn
-      - hopsmonitor::telegraf
       - hopslog::_filebeat-spark
       - hopslog::_filebeat-kagent
       - tensorflow
+      - hopsmonitor::node_exporter
+      - hopsmonitor::purge_telegraf
   datanode2:
     size: 1
     baremetal:
@@ -86,7 +95,7 @@ groups:
     recipes:
       - kagent
       - conda
-      - livy::install      
+      - livy::install
       - ndb::ndbd
       - kzookeeper
       - elastic
@@ -94,7 +103,8 @@ groups:
       - hops::nm
       - kkafka
       - hadoop_spark::yarn
-      - hopsmonitor::telegraf
       - hopslog::_filebeat-spark
       - hopslog::_filebeat-kagent
       - tensorflow
+      - hopsmonitor::node_exporter
+      - hopsmonitor::purge_telegraf
