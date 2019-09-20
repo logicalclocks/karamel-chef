@@ -23,6 +23,36 @@ VBOX_MANAGE=/usr/bin/VBoxManage
 OCTETS="192.168."
 ORIGINAL_OCTETS=${OCTETS}"56"
 
+GB=1024
+SOFT_LIMIT=$(( 80 * GB ))
+HARD_LIMIT=$(( 30 * GB ))
+
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+function check_available_disk_space() {
+    available_mb_str=$(df . --output=avail -B MB | grep -v "\W")
+    available_mb=${available_mb_str//[^0-9]*/}
+    echo "Available MB on device: $available_mb_str HARD limit : ${HARD_LIMIT}GB SOFT limit: ${SOFT_LIMIT}GB"
+    if [ $available_mb -le $HARD_LIMIT ]
+    then
+        echo -e "${RED}*****************************************************${NC}"
+        echo -e "${RED}*                                                   *${NC}"
+        echo -e "${RED}*   Error: Not enough disk space left on device :(  *${NC}"
+        echo -e "${RED}*                                                   *${NC}"
+        echo -e "${RED}*****************************************************${NC}"
+	exit 3
+    elif [ $available_mb -le $SOFT_LIMIT ]
+    then
+        echo -e "${YELLOW}**************************************************************${NC}"
+        echo -e "${YELLOW}*                                                            *${NC}"
+        echo -e "${YELLOW}*   Warning: Available disk space on device is getting low   *${NC}"
+        echo -e "${YELLOW}*                                                            *${NC}"
+        echo -e "${YELLOW}**************************************************************${NC}"
+    fi
+}
+
 function replace_port() {
     res=0
     p=
@@ -124,6 +154,10 @@ fi
 if [ $# -lt 3 ] ; then
     help
 fi
+
+
+check_available_disk_space
+
 
 PORTS=1
 
