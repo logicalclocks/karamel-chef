@@ -34,7 +34,7 @@ NC='\033[0m'
 function check_available_disk_space() {
     available_mb_str=$(df . --output=avail -B MB | grep -v "\W")
     available_mb=${available_mb_str//[^0-9]*/}
-    echo "Available MB on device: $available_mb_str HARD limit : ${HARD_LIMIT}GB SOFT limit: ${SOFT_LIMIT}GB"
+    echo "Available MB on device: $available_mb_str HARD limit : ${HARD_LIMIT}MB SOFT limit: ${SOFT_LIMIT}MB"
     if [ $available_mb -le $HARD_LIMIT ]
     then
         echo -e "${RED}*****************************************************${NC}"
@@ -50,6 +50,7 @@ function check_available_disk_space() {
         echo -e "${YELLOW}*   Warning: Available disk space on device is getting low   *${NC}"
         echo -e "${YELLOW}*                                                            *${NC}"
         echo -e "${YELLOW}**************************************************************${NC}"
+	sleep 2
     fi
 }
 
