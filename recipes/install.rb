@@ -65,3 +65,17 @@ when 'redhat', 'centos', 'fedora'
   EOH
   end
 end
+
+bash "Add swap" do
+  user "root"
+  group "root"
+  ignore_failure true
+  code <<-EOF
+       fallocate -l 2G /swapfile
+       chmod 600 /swapfile
+       mkswap /swapfile
+       swapon /swapfile
+       echo '/swapfile none swap sw 0 0' | tee -a /etc/fstab
+  EOF
+  not_if 'swapon --bytes | grep NAME'
+end
