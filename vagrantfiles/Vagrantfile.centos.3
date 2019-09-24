@@ -14,12 +14,13 @@ Vagrant.configure("2") do |config|
 
     hopsworks2.vm.provider :virtualbox do |v|
       v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
-      v.customize ["modifyvm", :id, "--memory", 3048]
+      v.customize ["modifyvm", :id, "--memory", 6144]
       v.customize ["modifyvm", :id, "--name", "hopsworks2"]
       v.customize ["modifyvm", :id, "--nictype1", "virtio"]
       v.customize ["modifyvm", :id, "--nictype2", "virtio"]
       v.customize ["modifyvm", :id, "--cableconnected1", "on"]
       v.customize ["modifyvm", :id, "--cableconnected2", "on"]
+      v.customize ["modifyvm", :id, "--cpus", "4"]      
     end
 
     hopsworks2.vm.provision :chef_solo do |chef|
@@ -45,12 +46,13 @@ Vagrant.configure("2") do |config|
     hopsworks1.vm.provision "shell", inline: "mkdir -p /etc/chef/accepted_licenses && touch /etc/chef/accepted_licenses/chef_infra_client && touch /etc/chef/accepted_licenses/inspec"
     hopsworks1.vm.provider :virtualbox do |v|
       v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
-      v.customize ["modifyvm", :id, "--memory", 3048]
+      v.customize ["modifyvm", :id, "--memory", 6144]
       v.customize ["modifyvm", :id, "--name", "hopsworks1"]
       v.customize ["modifyvm", :id, "--nictype1", "virtio"]
       v.customize ["modifyvm", :id, "--nictype2", "virtio"]
       v.customize ["modifyvm", :id, "--cableconnected1", "on"]
       v.customize ["modifyvm", :id, "--cableconnected2", "on"]
+      v.customize ["modifyvm", :id, "--cpus", "4"]      
     end
 
     hopsworks1.vm.provision :chef_solo do |chef|
@@ -115,7 +117,7 @@ Vagrant.configure("2") do |config|
       v.customize ["modifyvm", :id, "--memory", 15048]
       v.customize ["modifyvm", :id, "--name", "hopsworks0"]
       v.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
-      v.customize ["modifyvm", :id, "--cpus", "2"]
+      v.customize ["modifyvm", :id, "--cpus", "4"]
       v.customize ["modifyvm", :id, "--nictype1", "virtio"]
       v.customize ["modifyvm", :id, "--nictype2", "virtio"]
       v.customize ["modifyvm", :id, "--cableconnected1", "on"]
