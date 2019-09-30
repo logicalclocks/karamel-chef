@@ -48,7 +48,6 @@ groups:
       - hops::jhs
       - hadoop_spark::yarn
       - hadoop_spark::historyserver
-      - flink::yarn
       - hopsworks
       - hopsworks::dev
       - hopsmonitor
