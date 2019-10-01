@@ -1,0 +1,32 @@
+name: Hops
+ec2:
+  type: c5d.2xlarge
+  region: eu-west-1
+  ami: ami-06358f49b5839867c
+
+cookbooks:
+  hops:
+    github: "logicalclocks/hops-hadoop-chef"
+    branch: "master"
+
+attrs:
+  install:
+    dir: /mnt/nvme_ssd0/hops
+  kagent:
+    enabled: "false"
+  hops:
+    yarn:
+      aux_services: "mapreduce_shuffle"
+
+groups:
+  n:
+    size: 1
+    recipes:
+      - ndb::mgmd
+      - ndb::mysqld
+      - ndb::ndbd
+      - hops::ndb
+      - hops::nn
+      - hops::dn
+      - hops::rm
+      - hops::nm

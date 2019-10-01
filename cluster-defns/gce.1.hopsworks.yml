@@ -1,0 +1,68 @@
+name: Hopsworks
+gce:
+  type: n1-standard-8
+  zone: europe-west1-b
+  image: ubuntu-1804-bionic-v20190918
+  diskSize: 100
+
+cookbooks:
+  hopsworks:
+    github: logicalclocks/hopsworks-chef
+    branch: master
+
+attrs:
+  install:
+    dir: /srv/hops
+  hops:
+    rmappsecurity:
+      actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
+  alertmanager:
+    email:
+      to: sre@logicalclocks.com
+      from: hopsworks@logicalclocks.com
+      smtp_host: mail.hello.com
+  hopsworks:
+    kagent_liveness:
+      enabled: true
+      threshold: "40s"
+
+groups:
+  n:
+    size: 1
+    recipes:
+      - kagent
+      - conda
+      - ndb::mgmd
+      - ndb::ndbd
+      - ndb::mysqld
+      - hops::ndb
+      - hops::rm
+      - hops::nn
+      - hops::jhs
+      - hadoop_spark::yarn
+      - hadoop_spark::historyserver
+      - hadoop_spark::certs
+      - flink::yarn
+      - flink::historyserver
+      - elastic
+      - livy
+      - kzookeeper
+      - kkafka
+      - epipe
+      - hopsworks
+      - hopsmonitor
+      - hopslog
+      - hopslog::_filebeat-spark
+      - hopslog::_filebeat-serving
+      - hopslog::_filebeat-kagent
+      - hopslog::_filebeat-beam
+      - hops::dn
+      - hops::nm
+      - tensorflow
+      - hive2
+      - hops_airflow
+      - hops_airflow::sqoop
+      - hopsmonitor::prometheus
+      - hopsmonitor::alertmanager
+      - hopsmonitor::node_exporter
+      - hopsmonitor::purge_telegraf
