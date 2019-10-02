@@ -27,10 +27,13 @@ attrs:
       from: hopsworks@logicalclocks.com
       smtp_host: mail.hello.com
   hopsworks:
+    featurestore_online: true
     encryption_password: "verysecurepassword"
     kagent_liveness:
       enabled: true
       threshold: "40s"
+  mysql:
+    tls: 'true'
 
 groups:
   namenodes:
