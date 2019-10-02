@@ -86,10 +86,10 @@ groups:
       - epipe
       - hadoop_spark::yarn
       - hadoop_spark::certs
-      - flink
-      - flink::yarn      
+      - flink::yarn
       - hopslog::_filebeat-spark
       - hopslog::_filebeat-kagent
+      - hopslog::_filebeat-beam
       - tensorflow
       - hopsmonitor::node_exporter
       - hopsmonitor::purge_telegraf
@@ -109,10 +109,10 @@ groups:
       - kkafka
       - hadoop_spark::yarn
       - hadoop_spark::certs
-      - flink
-      - flink::yarn      
+      - flink::yarn
       - hopslog::_filebeat-spark
       - hopslog::_filebeat-kagent
+      - hopslog::_filebeat-beam
       - tensorflow
       - hopsmonitor::node_exporter
       - hopsmonitor::purge_telegraf
