@@ -41,7 +41,6 @@ groups:
       - hadoop_spark::yarn
       - hadoop_spark::historyserver
       - hadoop_spark::certs
-      - flink
       - flink::yarn
       - flink::historyserver
       - elastic
