@@ -1,0 +1,33 @@
+name: Hops
+gce:
+  type: n1-standard-8
+  zone: europe-west1-b
+  image: ubuntu-1804-bionic-v20190918
+  diskSize: 100
+
+cookbooks:
+  hops:
+    github: "logicalclocks/hops-hadoop-chef"
+    branch: "master"
+
+attrs:
+  install:
+    dir: /srv/hops
+  kagent:
+    enabled: "false"
+  hops:
+    yarn:
+      aux_services: "mapreduce_shuffle"
+
+groups:
+  n:
+    size: 1
+    recipes:
+      - ndb::mgmd
+      - ndb::mysqld
+      - ndb::ndbd
+      - hops::ndb
+      - hops::nn
+      - hops::dn
+      - hops::rm
+      - hops::nm
