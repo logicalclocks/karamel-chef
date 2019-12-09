@@ -28,7 +28,28 @@ attrs:
       to: sre@logicalclocks.com
       from: hopsworks@logicalclocks.com
       smtp_host: mail.hello.com
-
+  elastic:
+    opendistro_security:
+      jwt:
+        exp_ms: "1800000"
+      audit:
+        enable_rest: "true"
+        enable_transport: "false"
+      admin:
+        username: "admin"
+        password: "adminpass"
+      kibana:
+        username: "kibana"
+        password: "kibanapass"
+      logstash:
+        username: "logstash"
+        password: "logstashpass"
+      epipe:
+        username: "epipe"
+        password: "epipepass"
+      elastic_exporter:
+        username: "elasticexporter"
+        password: "elasticexporterpass"
 groups:
   namenodes:
     size: 1

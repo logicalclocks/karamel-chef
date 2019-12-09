@@ -24,7 +24,28 @@ attrs:
     kagent_liveness:
       enabled: true
       threshold: "40s"
-
+  elastic:
+    opendistro_security:
+      jwt:
+        exp_ms: "1800000"
+      audit:
+        enable_rest: "true"
+        enable_transport: "false"
+      admin:
+        username: "admin"
+        password: "adminpass"
+      kibana:
+        username: "kibana"
+        password: "kibanapass"
+      logstash:
+        username: "logstash"
+        password: "logstashpass"
+      epipe:
+        username: "epipe"
+        password: "epipepass"
+      elastic_exporter:
+        username: "elasticexporter"
+        password: "elasticexporterpass"
 groups:
   n:
     size: 1
