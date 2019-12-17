@@ -44,7 +44,9 @@ when "debian"
     user 'root'
     group 'root'
     code <<-EOH
-      npm install -g npm
+      npm install -g n
+      n 11.15.0
+      npm install -g npm@6.9.0
     EOH
   end
 
