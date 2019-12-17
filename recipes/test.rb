@@ -36,6 +36,9 @@ when 'centos'
       source /etc/profile.d/rvm.sh
       rvm reload
       rvm install 2.4.1
+      # The stackoverflowing is strong in this script
+      rvm @global
+      gem uninstall rubygems-bundler
     EOH
   end
 end
