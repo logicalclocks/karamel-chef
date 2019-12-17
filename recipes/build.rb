@@ -40,6 +40,14 @@ when "debian"
     EOH
   end
 
+  bash 'update-npm' do
+    user 'root'
+    group 'root'
+    code <<-EOH
+      npm install -g npm
+    EOH
+  end
+
   # Build HopsWorks
   bash 'build-hopsworks' do
     user 'root'
