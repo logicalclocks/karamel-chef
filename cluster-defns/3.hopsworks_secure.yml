@@ -28,6 +28,7 @@ attrs:
       smtp_host: mail.hello.com
   hopsworks:
     encryption_password: "verysecurepassword"
+    featurestore_online: true
     kagent_liveness:
       enabled: true
       threshold: "40s"
