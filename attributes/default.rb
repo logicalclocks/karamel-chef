@@ -1,4 +1,4 @@
-
+include_attribute "elastic"
 default['karamel']['version']         = "0.6"
 default['karamel']['download_url']    = "http://www.karamel.io/sites/default/files/downloads/karamel-#{node['karamel']['version']}.tgz"
 
