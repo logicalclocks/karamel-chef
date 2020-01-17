@@ -14,6 +14,9 @@ JENKINS=true                                              # Avoid cleaning up as
 LAUNCH_BROWSER=false                                      # If set to true will launch test report in a browser
 OS=<%= node['platform'] %>
 ELASTIC_API=<%= @elastic_endpoint %>
+ELASTIC_USER=<%= @elastic_user %>                         # The elastic user used for http requests
+ELASTIC_PASS=<%= @elastic_pass %>                         # The elastic pass used for http requests
+EPIPE_HOST=<%= @epipe_host %>
 MYSQL_SOCKET=/tmp/mysql.sock
 
 REMOTE_SSH_USER=vagrant					  # User on remote machine

@@ -46,12 +46,16 @@ end
 elastic_endpoint=""
 my_ip=""
 case node['platform']
+elastic_user = "#{node['elastic']['opendistro_security']['admin']['username']}"
+elastic_pass = "#{node['elastic']['opendistro_security']['admin']['password']}"
 when 'ubuntu'
   elastic_endpoint="#{node[:karamel][:default][:private_ips][2]}:9200"
   my_ip = node[:karamel][:default][:private_ips][0]
+  epipe_host = "#{node[:karamel][:default][:private_ips][1]}"
 when 'centos'
   elastic_endpoint="#{node[:karamel][:default][:private_ips][0]}:9200"
   my_ip = node[:karamel][:default][:private_ips][0]
+  epipe_host = "#{node[:karamel][:default][:private_ips][0]}"
 end
 
 # Copy the environment configuration in the test directory
@@ -62,7 +66,10 @@ template "#{node['test']['hopsworks']['test_dir']}/.env" do
   mode 0755
   variables({
     'my_ip' => my_ip,
-    'elastic_endpoint' => elastic_endpoint
+    'elastic_endpoint' => elastic_endpoint,
+    'elastic_user' => elastic_user,
+    'elastic_pass' => elastic_pass,
+    'epipe_host' => epipe_host
   })
 end
 
