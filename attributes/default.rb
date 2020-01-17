@@ -8,7 +8,7 @@ default['karamel']['bin_file']        = "#{node['karamel']['base_dir']}/bin/kara
 default['karamel']['output_dir']      = "/home/vagrant/.karamel"
 
 default['karamel']['run_timeout']     = 36000
-default['karamel']['test_timeout']    = 9000
+default['karamel']['test_timeout']    = 27000
 
 default['cluster_def']                = "/home/vagrant/cluster.yml"
 default['region']                     = "se"
