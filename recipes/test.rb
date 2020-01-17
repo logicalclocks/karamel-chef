@@ -45,9 +45,9 @@ end
 
 elastic_endpoint=""
 my_ip=""
+elastic_user="#{node['elastic']['opendistro_security']['admin']['username']}"
+elastic_pass="#{node['elastic']['opendistro_security']['admin']['password']}"
 case node['platform']
-elastic_user = "#{node['elastic']['opendistro_security']['admin']['username']}"
-elastic_pass = "#{node['elastic']['opendistro_security']['admin']['password']}"
 when 'ubuntu'
   elastic_endpoint="#{node[:karamel][:default][:private_ips][2]}:9200"
   my_ip = node[:karamel][:default][:private_ips][0]
