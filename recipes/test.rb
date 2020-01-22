@@ -74,10 +74,9 @@ template "#{node['test']['hopsworks']['test_dir']}/.env" do
 end
 
 # Delete form workspace previous test results
-# Comment-out temporarily 
-#file "#{node['test']['hopsworks']['report_dir']}/#{node['platform']}.xml" do
-#  action :delete
-#end
+file "#{node['test']['hopsworks']['report_dir']}/#{node['platform']}.xml" do
+  action :delete
+end
 
 # If it_tests should be run, prepare it test resources
 if node['test']['hopsworks']['it']
