@@ -6,6 +6,7 @@ DB_PORT=3306                                              # Database port local 
 PROJECT_DIR=<%= node['test']['hopsworks']['base_dir'] %>  # where hopsworks project is.
 RSPEC_REPORT=<%= node['test']['hopsworks']['report'] %>   # where to put the report name should be test-report.html.
 HOPSWORKS_API=/hopsworks-api/api                          # The path to the rest api to be tested.
+HOPSWORKS_TESTING=/hopsworks-testing/api                  # The path to the rest api auxiliary endpoints - used for testing.
 HOPSWORKS_BASE_API=/hopsworks-api/                        # The path to the hopsworks base api, used by proxyservlets.
 HOPSWORKS_ADMIN=/hopsworks-admin/                         # The path to hopsworks admin pages.
 HOPSWORKS_CA=/hopsworks-ca/v2                             # The path to hopsworks admin pages.
