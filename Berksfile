@@ -7,12 +7,12 @@ metadata
 cookbook 'java'
 cookbook 'hostsfile', '~> 2.4.5'
 cookbook 'nodejs', '~> 6.0.0'
-cookbook 'hops', github: "logicalclocks/hops-hadoop-chef", branch: "master"
-cookbook 'kagent', github: "logicalclocks/kagent-chef", branch: "master"
-cookbook 'ndb', github: "logicalclocks/ndb-chef", branch: "master"
-cookbook 'conda', github: "logicalclocks/conda-chef", branch: "master"
-cookbook 'kzookeeper', github: "logicalclocks/kzookeeper", branch: "master"
-cookbook 'elastic', github: "logicalclocks/elasticsearch-chef", branch: "master"
+cookbook 'hops', github: "logicalclocks/hops-hadoop-chef", branch: "1.2"
+cookbook 'kagent', github: "logicalclocks/kagent-chef", branch: "1.2"
+cookbook 'ndb', github: "logicalclocks/ndb-chef", branch: "1.2"
+cookbook 'conda', github: "logicalclocks/conda-chef", branch: "1.2"
+cookbook 'kzookeeper', github: "logicalclocks/kzookeeper", branch: "1.2"
+cookbook 'elastic', github: "logicalclocks/elasticsearch-chef", branch: "1.2"
 cookbook 'magic_shell'
 cookbook 'sysctl', '~> 1.0.3'
 cookbook 'cmake', '~> 0.3.0'

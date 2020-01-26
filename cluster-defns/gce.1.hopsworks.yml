@@ -8,7 +8,7 @@ gce:
 cookbooks:
   hopsworks:
     github: logicalclocks/hopsworks-chef
-    branch: master
+    branch: 1.2
 
 attrs:
   install:
