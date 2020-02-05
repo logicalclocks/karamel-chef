@@ -47,13 +47,15 @@ elastic_endpoint=""
 my_ip=""
 elastic_user="#{node['elastic']['opendistro_security']['admin']['username']}"
 elastic_pass="#{node['elastic']['opendistro_security']['admin']['password']}"
+kibana_endpoint="#{node[:karamel][:default][:private_ips][0]}:#{node[:kibana][:port]}"
+
 case node['platform']
 when 'ubuntu'
-  elastic_endpoint="#{node[:karamel][:default][:private_ips][2]}:9200"
+  elastic_endpoint="#{node[:karamel][:default][:private_ips][2]}:#{node[:elastic][:port]}"
   my_ip = node[:karamel][:default][:private_ips][0]
   epipe_host = "#{node[:karamel][:default][:private_ips][1]}"
 when 'centos'
-  elastic_endpoint="#{node[:karamel][:default][:private_ips][0]}:9200"
+  elastic_endpoint="#{node[:karamel][:default][:private_ips][0]}:#{node[:elastic][:port]}"
   my_ip = node[:karamel][:default][:private_ips][0]
   epipe_host = "#{node[:karamel][:default][:private_ips][0]}"
 end
@@ -67,6 +69,7 @@ template "#{node['test']['hopsworks']['test_dir']}/.env" do
   variables({
     'my_ip' => my_ip,
     'elastic_endpoint' => elastic_endpoint,
+    'kibana_endpoint' => kibana_endpoint,
     'elastic_user' => elastic_user,
     'elastic_pass' => elastic_pass,
     'epipe_host' => epipe_host

@@ -18,6 +18,7 @@ depends 'hostsfile'
 depends 'nodejs'
 depends 'hops'
 depends 'elastic'
+depends 'hopslog'
 
 recipe  "karamel::install", "Installs Karamel"
 recipe  "karamel::default", "Configures and starts karamel."
