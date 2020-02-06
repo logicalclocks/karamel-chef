@@ -99,6 +99,7 @@ groups:
       - hops::dn
       - hops::nm
       - kzookeeper
+      - kkafka
       - epipe
       - hadoop_spark::yarn
       - hadoop_spark::certs
