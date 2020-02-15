@@ -1,13 +1,12 @@
-#!/bin/bash
-#-xv
+#!/bin/bash 
 
 ###################################################################################################
 #                                                                                                 #
-# This code is released under the Apache Public License, Version 2, see for details:              #
-# https://www.apache.org/licenses/LICENSE-2.0                                                     #
+# This code is released under the GNU General Public License, Version 3, see for details:         #
+# http://www.gnu.org/licenses/gpl-3.0.txt                                                         #
 #                                                                                                 #
 #                                                                                                 #
-# Copyright (c) Logical Clocks AB, 2017/18.                                                          #
+# Copyright (c) Logical Clocks, 2020.                                                             #
 # All Rights Reserved.                                                                            #
 #                                                                                                 #
 ###################################################################################################
@@ -28,20 +27,48 @@
 #                                                                                                 #
 ###################################################################################################
 
+YML_CLUSTER=cluster.yml
 
-yml=1.8GB.yml
+HOPSWORKS_VERSION=1.2
+KARAMEL_VERSION=0.6
+INSTALL_ACTION=
 NON_INTERACT=0
-HOPSWORKS_INSTALLER_VERSION="Hopsworks Localhost Installer Version 0.1 \n\nCopyright (c) Logical Clocks, 2017/18."
-PARAM_INSTALL_DIR=0
-PARAM_CLEAN_INSTALL_DIR=0
 SCRIPTNAME=`basename $0`
-SSH_PORT=22
-KARAMEL_VERSION=0.5
-NET_INTERFACE=""
-IP=127.0.0.1
+AVAILABLE_MEMORY=$(free -g | grep Mem | awk '{ print $2 }')
+AVAILABLE_DISK=$(df -h | grep '/$' | awk '{ print $4 }')
+AVAILABLE_CPUS=$(cat /proc/cpuinfo | grep '^processor' | wc -l)
+ip=$(hostname -I | awk '{ print $1 }')
+DISTRO=
+WORKER_ID=0
+DRY_RUN=0
+CLEAN_INSTALL_DIR=0
 
-#ECHO_OUT="2>&1 > /dev/null"
-ECHO_OUT="2>&1 > /tmp/hopsworks-installer.log"
+INSTALL_LOCALHOST=1
+INSTALL_CLUSTER=2
+INSTALL_KARAMEL=3
+INSTALL_NVIDIA=4
+
+GCP_NVME=0
+
+# $1 = String describing error
+exit_error() 
+{
+  #CleanUpTempFiles
+
+  echo "" $ECHO_OUT
+  echo "Error number: $1" $ECHO_OUT
+  echo "Exiting $PRODUCT $VERSION installer." $ECHO_OUT
+  echo "" $ECHO_OUT
+  exit 1
+}
+
+# $1 = accept phrase (what to accept)
+# caller reads $ENTERED_STRING global variable for result
+enter_string() 
+{
+     echo "$1" $ECHO_OUT
+     read ENTERED_STRING
+}
 
 ###################################################################################################
 # SCREEN CLEAR FUNCTIONS
@@ -50,8 +77,8 @@ ECHO_OUT="2>&1 > /tmp/hopsworks-installer.log"
 clear_screen()
 {
  if [ $NON_INTERACT -eq 0 ] ; then
-   echo "" 
-   echo "Press ENTER to continue"
+   echo "" $ECHO_OUT
+   echo "Press ENTER to continue" $ECHO_OUT
    read cont < /dev/tty
  fi 
  clear
@@ -60,165 +87,62 @@ clear_screen()
 clear_screen_no_skipline()
 {
  if [ $NON_INTERACT -eq 0 ] ; then
-    echo "Press ENTER to continue"
+    echo "Press ENTER to continue" $ECHO_OUT
     read cont < /dev/tty
  fi 
  clear
 }
 
-public_key=""
-SOURCE="${BASH_SOURCE[0]}"
-BASEDIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-
-function finish {
-    #
-    # Shutdown any services that may be running if there was an error
-    #
-    if [ $? -ne 0 ] ; then
-	sudo $BASEDIR/hops/kagent/bin/shutdown-all-local-services.sh -f
-    else
-	sudo $BASEDIR/hops/kagent/bin/status-all-local-services.sh
-    fi
-    cd ..
-}
-trap finish EXIT
-
-
 
 #######################################################################
-# Introduction Splash Screen
+# LICENSING
 #######################################################################
 
 splash_screen() 
 {
   clear
-  echo "" 
-  echo "$HOPSWORKS_INSTALLER_VERSION"
-  echo ""
-  echo "This program installs the Hopsworks platform."
-  echo ""
-  echo "Note: ~5GB of data will be downloaded - don't do this on a smartuphone link."  
-  echo "" 
-  if [ $ROOTUSER -eq 1 ] ; then
-    echo "You are running the Installer as a root user." 
-  fi
-  echo "Hopsworks will install by default to: /srv/hops/"
-  echo "To install to a different directory, pass in the -d option"
-  echo "e.g., ./hopsinstaller.sh -d /opt/hops"
-  echo ""  
-  echo "To cancel installation at any time, press CONTROL-C"  
+  echo "" $ECHO_OUT
+  echo "Karamel/Hopsworks Installer, Copyright(C) 2020 Logical Clocks AB. All rights reserved." $ECHO_OUT
+  echo "" $ECHO_OUT
+  echo "This program can install Karamel/Chef and/or Hopsworks." $ECHO_OUT
+  echo "" $ECHO_OUT
+  echo "To cancel installation at any time, press CONTROL-C"  $ECHO_OUT
+  echo "" $ECHO_OUT  
+  echo "You appear to have following setup on this host:"
+  echo "* available memory: $AVAILABLE_MEMORY"
+  echo "* available disk space (on '/' root partition): $AVAILABLE_DISK"
+  echo "* available CPUs: $AVAILABLE_CPUS"
+  echo "* your ip is: $ip"
+  echo "* installation user: $USER"
+  echo "* linux distro: $DISTRO"
   
-  clear_screen
-}
-
-copyrights() 
-{
-  clear
-  echo ""
-  echo "This program installs a number of third-party open source platforms."
-  echo ""      
-  echo "By agreeing to the terms and conditions below, you agree to all licensing by these frameworks."
-  echo "Apache products: Kafka, Flink, Spark, Livy, Zeppelin, Zookeeper: all Apache v2 licensed."  
-  echo "Elasticsearch, Kibana, Logstash, Copyright(C) Elastic"
-  echo "Dr Elephant, Copyright(C) LinkedIn, Apache v2 licensed."
-  echo "Tensorflow, Copyright(C) Google, Apache v2 licensed."
-  echo "Grafana, Copyright(C) Torkel Ödegaard, Raintank Inc., Apache v2 licensed."
-  echo "InfluxDB, Copyright(C) Errplane Inc., MIT license."
-  echo "Do you agree to download these products and their open-source licenses?"
-  clear_screen
-}
-
-oracle_download()
-{
-  clear
-  echo ""    
-  echo "You will also need to download a database driver and database for Hops."
-  echo ""      
-  echo "Hops currently suppports MySQL Server and NDB Storage Engine (MySQL Cluster), Copyright(C) Oracle, GPL v2 licensed."
-  echo "By clicking enter, you indicated that you want to download GPL v2 licensed MySQL Cluster."
-  clear_screen
-}
-
-nvidia_download()
-{
-  clear
-  echo ""    
-  echo "You will also need to download Nvidia drivers (cuda) and libraries (cudnn)."
-  echo "By entering 'yes', you indicate that you agree with Nvidia's terms and conditions, see http://nvidia.com."
-  echo ""
-  echo "Please enter either 'yes' or 'no'." 
-  printf 'Do you want to install Nvidia Cuda and Cudnn libraries? [ yes or no ] '
-  use_gpu="true"
-  read ACCEPT
-  case $ACCEPT in
-    yes | Yes | YES)
-      ;;
-    no | No | NO)
-      use_gpu="false"
-      ;;
-    *)
-      echo "" 
-      echo "Please enter either 'yes' or 'no'." 
-      printf 'Do you want to install Nvidia Cuda and Cudnn libraries? [ yes or no ] '
-      nvidia_download
-    ;;
-  esac
-
-  clear_screen
-}
-
-
-enable_services()
-{
-  clear
-  echo ""    
-  echo "Do you want to enable Hops Services as daemons that start automatically when the computer starts?"
-  printf 'Do you enable Hops services as daemons? [ yes or no ] '
-  enable_services="false"  
-  read ACCEPT
-  case $ACCEPT in
-      yes | Yes | YES)
-	  enable_services="true"
-      ;;
-    no | No | NO)
-      ;;
-    *)
-      echo "" 
-      echo "Please enter either 'yes' or 'no'." 
-      printf 'Do you enable Hops services as daemons? [ yes or no ] '
-      enable_services
-    ;;
-  esac
-
   clear_screen
 }
 
 
 display_license()
 {
-  echo ""        
-  echo "Support is available at http://www.logicalclocks.com/" 
-  echo ""  
-  echo "This code is released under the Apache License, Version 2, see:" 
-  echo "https://www.apache.org/licenses/LICENSE-2.0"
-  echo "" 
-  echo "$HOPSWORKS_INSTALLER_VERSION"
-  echo "Logical Clocks AB is furnishing this item \"as is\". Logical Clocks AB does not provide any" 
-  echo "warranty of the item whatsoever, whether express, implied, or statutory," 
-  echo "including, but not limited to, any warranty of merchantability or fitness" 
-  echo "for a particular purpose or any warranty that the contents of the item will" 
-  echo "be error-free. In no respect shall Logical Clocks AB incur any liability for any"  
-  echo "damages, including, but limited to, direct, indirect, special, or consequential" 
-  echo "damages arising out of, resulting from, or any way connected to the use of the" 
-  echo "item, whether or not based upon warranty, contract, tort, or otherwise; "  
-  echo "whether or not injury was sustained by persons or property or otherwise;" 
-  echo "and whether or not loss was sustained from, or arose out of, the results of," 
-  echo "the item, or any services that may be provided by Logical Clocks AB." 
-  echo "" 
+  echo "Support is available at http://www.jiimdowling.info/ndbinstaller-trac/" $ECHO_OUT
+  echo ""  $ECHO_OUT
+  echo "This code is released under the GNU General Public License, Version 3, see:" $ECHO_OUT
+  echo "http://www.gnu.org/licenses/gpl-3.0.txt" $ECHO_OUT
+  echo "" $ECHO_OUT
+  echo "Copyright(C) 2020 Logical Clocks AB. All rights reserved." $ECHO_OUT
+  echo "Logical Clocks AB is furnishing this item "as is". Logical Clocks AB does not provide any" $ECHO_OUT
+  echo "warranty of the item whatsoever, whether express, implied, or statutory," $ECHO_OUT
+  echo "including, but not limited to, any warranty of merchantability or fitness" $ECHO_OUT
+  echo "for a particular purpose or any warranty that the contents of the item will" $ECHO_OUT
+  echo "be error-free. In no respect shall Logical Clocks AB incur any liability for any" $ECHO_OUT 
+  echo "damages, including, but limited to, direct, indirect, special, or consequential" $ECHO_OUT
+  echo "damages arising out of, resulting from, or any way connected to the use of the" $ECHO_OUT
+  echo "item, whether or not based upon warranty, contract, tort, or otherwise; " $ECHO_OUT 
+  echo "whether or not injury was sustained by persons or property or otherwise;" $ECHO_OUT
+  echo "and whether or not loss was sustained from, or arose out of, the results of," $ECHO_OUT
+  echo "the item, or any services that may be provided by Logical Clocks AB." $ECHO_OUT
+  echo "" $ECHO_OUT
   printf 'Do you accept these terms and conditions? [ yes or no ] '
 }
   
-
 accept_license () 
   {
     read ACCEPT
@@ -226,106 +150,278 @@ accept_license ()
       yes | Yes | YES)
         ;;
 	no | No | NO)
-        echo "" 
+        echo "" $ECHO_OUT
         exit 0
         ;;
       *)
-        echo "" 
-        echo "Please enter either 'yes' or 'no'." 
+        echo "" $ECHO_OUT
+        echo "Please enter either 'yes' or 'no'." $ECHO_OUT
 	printf 'Do you accept these terms and conditions? [ yes or no ] '
         accept_license
       ;;
      esac
 }
-  
 
-  
-SUDO_PWD=
-enter_sudo_password () 
+
+get_install_option_help()
 {
- echo ""
- echo "Enter the sudo password for user $USER (press enter, if there is no sudo password):"
- read -s ACCEPT
- if [ "$ACCEPT" != "" ] ; then
-   SUDO_PWD="-passwd $ACCEPT"
- fi
- echo -n "$ACCEPT" | sudo -S ls / > /dev/null
- if [ $? -ne 0 ] ; then
-     echo "Your sudo password was incorrect. Exiting..."
-     exit 33
- fi    
- 
-}
-  
+  if [ $ROOTUSER -eq 1 ] ; then
+    INSTALL_AS_DAEMON_HELP="You are installing cluster as root user. Karamel will run as a root process in 'nohup' mode."
+  else
+    INSTALL_AS_DAEMON_HELP="You are installing cluster as normal (non-root) user. Karamel will run as a user-level process in 'nohup' mode."
+  fi
 
-#
-# Checks if you are running the script as root or not
-#
+INSTALL_OPTION_HELP="
+Install Options Help\n
+===========================================================================\n
+This program installs Karamel and can also install Hopsworks using Karamel and Chef-Solo.\n
+$INSTALL_AS_DAEMON_HELP\n
+\n
+(1) Setup and start a localhost Hopsworks cluster using Karamel. The cluster will run on this machine. \n
+    \tThe binaries and directories for storing data will all be under /srv/hops.\n
+    \tHopsworks will run at the end of the installation.\n
+(2) Setup and start a multi-host Hopsworks cluster using Karamel. The cluster will run on all the machines. \n
+    \tHopsworks will run at the end of the installation.\n
+(3) Setup, install, and run Karamel on this host. \n
+    \tKaramel can be used to install Hopsworks by opening the URL in your browser: http://${ip}:9090/index.html \n
+"
+}
+
+install_action()
+{
+    if [ "$INSTALL_ACTION" = "" ] ; then
+
+        echo "-------------------- Installation Options --------------------" $ECHO_OUT
+	echo "" $ECHO_OUT
+        echo "What would you like to do?" $ECHO_OUT
+	echo "" $ECHO_OUT
+	echo "(1) Setup a Hopsworks cluster on only this host." $ECHO_OUT
+	echo "" $ECHO_OUT
+	echo "(2) Setup a Hopsworks cluster using more than 1 host." $ECHO_OUT
+	echo "" $ECHO_OUT
+	echo "(3) Install and start Karamel." $ECHO_OUT
+	echo "" $ECHO_OUT
+	echo "(4) Install Nvidia drivers and reboot server." $ECHO_OUT
+	echo "" $ECHO_OUT
+	printf 'Please enter your choice '1', '2', '3', 'q' \(quit\), or 'h' \(help\) :  '
+        read ACCEPT
+        case $ACCEPT in
+          1)
+            if [ $ROOTUSER -eq 1 ] ; then
+	       echo "" $ECHO_OUT
+	       echo "You cannot install a localhost cluster as 'root'." $ECHO_OUT
+	       exit_error "Run the installer again as a normal user to install a localhost cluster."
+	    fi
+
+	    INSTALL_ACTION=$INSTALL_LOCALHOST
+            ;;
+          2)
+	    INSTALL_ACTION=$INSTALL_CLUSTER
+            ;;
+          3)
+	    INSTALL_ACTION=$INSTALL_KARAMEL
+            ;;
+          4)
+	    INSTALL_ACTION=$INSTALL_NVIDIA
+            ;;
+          h | H)
+	  clear
+	  get_install_option_help
+	  echo -e $INSTALL_OPTION_HELP
+          clear_screen_no_skipline
+          install_action
+          ;;
+          q | Q)
+          exit_error
+          ;;
+          *)
+            echo "" $ECHO_OUT
+            echo "Invalid Choice: $ACCEPT" $ECHO_OUT
+            echo "Please enter your choice '1', '2', '3', '4', 'q', or 'h'." $ECHO_OUT
+	    clear_screen
+            install_action
+            ;;
+         esac
+	clear_screen
+   fi
+}
+
+add_worker()
+{
+   printf 'Please enter the number of workers you want to add (default: 0): '
+   read WORKER_IP
+
+   ssh -t -o StrictHostKeyChecking=no $WORKER_IP "ls"
+   if [ $? -ne 0 ] ; then
+      echo "Failed to ssh using public into: ${USER}@${WORKER_IP}"
+      echo "Cannot add worker node, as you need to be able to ssh into it using your public key"
+      exit_error
+   fi
+
+   printf 'Please enter the amout of memory in this worker that is to be used by YARN in GBs: '
+   read GBS
+
+   MBS=$(expr $GBS \* 1024)
+   printf 'Please enter the number of CPUs in this worker to be used by YARN:'
+   read CPUS
+   
+echo "  
+  datanode${WORKER_ID}:
+    size: 1
+    baremetal:
+      ip: ${WORKER_IP}
+    attrs:
+      hops:
+        yarn:
+          vcores: $CPUS
+          memory_mbs: $MBS
+    recipes:
+      - kagent
+      - conda
+      - hops::dn
+      - hops::nm
+      - hadoop_spark::yarn
+      - hadoop_spark::certs
+      - flink::yarn
+      - hopslog::_filebeat-spark
+      - hopslog::_filebeat-kagent
+      - hopslog::_filebeat-beam
+      - tensorflow
+      - hopsmonitor::node_exporter
+      - hopsmonitor::purge_telegraf
+
+" >> $YML_CLUSTER $ECHO_OUT
+
+if [ $? -ne 0 ] ; then
+ echo "" $ECHO_OUT
+ echo "Failure: could not add a worker to the yml cnf file: $YML_CLUSTER" $ECHO_OUT
+ exit_error
+fi
+WORKER_ID=$((WORKER_ID+1))
+}
+
+
+worker_size()
+{
+   printf 'Please enter the number of extra workers you want to add (default: 0): '
+   read NUM_WORKERS
+   i=0
+   while $i -lt $NUM_WORKERS
+   do
+      add_worker
+      i=$((i+1))
+   done
+}
+
+# called if interrupt signal is handled
+TrapBreak() 
+{
+  trap "" HUP INT TERM
+  echo -e "\n\nInstallation cancelled by user!"
+  exit_error $EXIT_SIGNAL_CAUGHT
+}
+
+check_linux()
+{
+
+    UNAME=$(uname | tr \"[:upper:]\" \"[:lower:]\")
+    # If Linux, try to determine specific distribution
+    echo \"name: $UNAME\"
+
+    if [ \"$UNAME\" == \"linux\" ]; then
+	# If available, use LSB to identify distribution
+	if [ -f /etc/lsb-release -o -d /etc/lsb-release.d ]; then
+	    DISTRO=$(lsb_release -i | cut -d: -f2 | sed s/'^\t'//)
+	    # Otherwise, use release info file
+	else
+	    DISTRO=$(ls -d /etc/[A-Za-z]*[_-][rv]e[lr]* | grep -v \"lsb\" | cut -d'/' -f3 | cut -d'-' -f1 | cut -d'_' -f1 | head -1)
+	fi
+    else
+        exit_error "This script only works for Linux."	
+    fi
+}
+
 check_userid()
 {
-  ROOTUSER=0
   # Check if user is root
   USERID=`id | sed -e 's/).*//; s/^.*(//;'`
   if [ "X$USERID" = "Xroot" ]; then
-    ROOTUSER=1
-  else
-    HOMEDIR=`(cd ; pwd)`
-    USERNAME=$USERID
+    exit_error "This script only works for non-root users."
   fi
 }
 
-check_userid
+
+###################################################################################################
+###################################################################################################
+###################################################################################################
+# 
+# START OF SCRIPT MAINLINE
+# 
+###################################################################################################
+###################################################################################################
+###################################################################################################
+
 
 
 while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
   case "$1" in
     -h|--help|-help)
-	      echo "" 
-	      echo "You can install Hopsworks as 'root' or normal user." 
-	      echo "Install as normal user to install to user directories [~/.mysql]." 
-	      echo "" 
+	      echo "" $ECHO_OUT
+	      echo "You can install Karamel asa normal user." $ECHO_OUT
               echo "usage: [sudo] ./$SCRIPTNAME "
-	      echo " [-c|--clean]    clean the install directory when installing"
-	      echo " [-ni|--non-interactive]    skip all the license/accept screens"
-	      echo " [--network-interface]      name of network interface to use (e.g., 'eth0')"
-	      echo " [-d|--dir INSTALL DIRECTORY]"
-	      echo "                  set the base installation directory "
-	      echo " [-y|--yml]   relative pathname for a cluster definition file "
-	      echo " [-v|--version]   version information" 
+	      echo " [-h|--help]      help for ndbinstaller.sh" $ECHO_OUT
+	      echo " [-i|--install-action localhost|cluster|karamel] " $ECHO_OUT
+	      echo "                 'localhost' installs a localhost Hopsworks cluster"
+	      echo "                 'cluster' installs a multi-host Hopsworks cluster"
+	      echo "                 'karamel' installs and starts Karamel"
+	      echo " [-cl|--clean]    removes the karamel installation"
+	      echo " [-dr|--dry-run]      does not run karamel, just generates YML file"
+	      echo " [--gcp-nvme]     mount NVMe disk on GCP node"	      
+	      echo " [-ni|--non-interactive)]"
+	      echo "                  skip license/terms acceptance and all confirmation screens."
 	      echo "" 
 	      exit 3
-              break ;;
-    -c|--clean)
+              break
+	      ;;
+    -i|--install-action)
+	      shift
+	      case $1 in
+		 localhost)
+		      INSTALL_ACTION=$INSTALL_LOCALHOST
+  		      ;;
+		 cluster)
+		      INSTALL_ACTION=$INSTALL_CLUSTER
+		      ;;
+	         karamel)
+		      INSTALL_ACTION=$INSTALL_KARAMEL
+		      ;;
+	         nvidia)
+		      INSTALL_ACTION=$INSTALL_NVIDIA
+		      ;;
+		  *)
+		      echo "Could not recognise option: $1"
+		      exit_error "Failed."
+		 esac
+	       ;;
+    -cl|--clean)
 	      CLEAN_INSTALL_DIR=1
 	      ;;
-    -d|--dir)
-	      shift
-	      PARAM_INSTALL_DIR=1
+    -dr|--dry-run)
+	      DRY_RUN=1
 	      ;;
-    -ip)
-	      shift
-	      IP=1
-	      ;;
-    --network-interface)
-	      shift
-	      NET_INTERFACE="$1"
+    -gn|--gcp-nvme)
+	      GCP_NVME=1
 	      ;;
     -ni|--non-interactive)
 	      NON_INTERACT=1
 	      ;;
-    -pwd|--password)
-	      SUDO_PWD= SUDO_PWD="-passwd $1"
-	      ;;
-    -v|--version) 
-	      echo ""     
-              echo -e $HOPSWORKS_INSTALLER_VERSION 
-	      echo "" 
-              exit 0
-              break ;;
     -y|--yml) 
               shift
               yml=$1
               ;;
+    -pwd|--password)
+	      SUDO_PWD= SUDO_PWD="-passwd $1"
+	      ;;
     *)
 	  exit_error "Unrecognized parameter: $1"
 	  ;;
@@ -334,340 +430,89 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 done
 
 
+############################################################################################################
+############################################################################################################
+#                                                                                                          #
+#   MAINLINE: START OF CONTROL FOR PROGRAM: FUNCTIONS CALLED FROM HERE                                     #
+#                                                                                                          #
+############################################################################################################
+############################################################################################################
+
+# Catch signals and clean up temp files
+trap TrapBreak HUP INT TERM  
+
+
+if [ "$INSTALL_ACTION" == "$INSTALL_NVIDIA" ] ; then
+   sudo -- sh -c 'echo "blacklist nouveau
+     options nouveau modeset=0" > /etc/modprobe.d/blacklist-nouveau.conf'
+   sudo update-initramfs -u
+   echo "Rebooting....."
+   sudo reboot
+fi    
+
+
+check_linux
+
+check_userid
+
 if [ $NON_INTERACT -eq 0 ] ; then
-  splash_screen
-  copyrights
-  oracle_download
-  nvidia_download
-  enable_services  
-  display_license  
-  accept_license
-  #  clear_screen
-  enter_sudo_password
+    clear_screen
+    splash_screen  
+    display_license
+    accept_license  
+    clear_screen
 fi
+
+git checkout $HOPSWORKS_VERSION
+
+if [ ! -e ~/.ssh/id_rsa.pub ] ; then
+  cat /dev/zero | ssh-keygen -q -N ""
+  pushd .
+  cd ~/.ssh
+  cat id_rsa.pub >> authorized_keys
+  popd
+else
+  echo "Found id_rsa.pub"
+fi    
+
+ssh -t -o StrictHostKeyChecking=no localhost "ls"
+ssh -t -o StrictHostKeyChecking=no $ip "ls"
 
 which java
 if [ $? -ne 0 ] ; then
-    echo "Error."
-    echo "You do not have Java installed."
-    echo "You need to install Java, version 8 or greater."
-    echo ""
-    echo "Ubuntu/Debian installation instructions:"
-    echo "sudo apt-get install openjdk-8-jdk"
-    echo ""
-    echo "Centos/Redhat installation instructions:"
-    echo "sudo yum install java-1.8.0-openjdk"
-    echo ""    
-    exit 33
-fi    
-
-sudo systemctl reset-failed
-
-
-sudo netstat -ltpn | grep 8080 2>&1 > /dev/null
-if [ $? -eq 0 ] ; then
-    sudo netstat -ltpn | grep 8080 | grep glassfish
-    if [ $? -eq 0 ] ; then
-      echo "Trying to stop payara app server."
-      sudo systemctl stop glassfish-domain1
-      
-      if [ $? -ne 0 ] ; then
-        echo "Tried to stop payara server on port 8080, but couldn't."
-        echo "Please stop the service running on port 8080 and try again".
-        echo ""
-        exit 3
-      fi
+    if [ "$DISTRO" == "Ubuntu" ] ; then
+	sudo apt update -y
+	sudo apt install openjdk-8-jre-headless -y
+    elif [ "$DISTRO" == "centos" ] ; then
+	sudo yum install java-1.8.0-openjdk-headless -y
+	sudo yum install wget -y
     else
-      echo "You have a service running on port 8080, needed by hopsworks. Please stop it, Hopsworks wants to run on port 8080."
-      echo "If you can't stop the service, you will need to edit this bash script and the cluster definition file: cluster-defns/${yml}"
-      echo "sudo netstat -ltpn | grep 8080"
-      echo ""
-      exit 2
-    fi
-fi    
-
-sudo netstat -ltpn | grep 4848 2>&1 > /dev/null
-if [ $? -eq 0 ] ; then
-    echo "You have a service running on port 4848, needed by hopsworks. Please stop it:"
-    echo "sudo netstat -ltpn | grep 4848"
-    echo ""
-    exit 2
-fi    
-
-sudo netstat -ltpn | grep 3306 2>&1 > /dev/null
-if [ $? -eq 0 ] ; then
-    echo "You have a mysql server running on port 3306, needed by hopsworks. Please stop it (or better still, uninstall it)."
-    echo "Maybe this will work to stop it: sudo systemctl stop mysqld"
-    echo "Maybe this will work to uninstall it: sudo apt-get purge mysqld"
-    exit 2
-fi    
-
-
-pushd .
-# 1. setup ssh to localhost to sudo account
-
-if [ ! -f ${HOME}/.ssh/id_rsa.pub ] ; then
-    echo "No ssh keypair found. "
-    echo "Generating a passwordless ssh keypair with ssh-keygen at ${HOME}/.ssh/id_rsa(.pub)"
-    ssh-keygen -b 2048 -f ${HOME}/.ssh/id_rsa -t rsa -q -N ''
-    if [ $? -ne 0 ] ; then
-	echo "Problem generating a passwordless ssh keypair with the following command:"
-	echo "ssh-keygen -b 2048 -f ${HOME}/.ssh/id_rsa -t rsa -q -N ''"
-	echo "Exiting with error."
-	exit 12
+	echo "Could not recognize Linux distro: $DISTRO"
+	exit_error
     fi
 fi
 
-public_key=$(cat ${HOME}/.ssh/id_rsa.pub)
-
-ssh -p $SSH_PORT -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${USERNAME}@localhost "echo 'authorized_keys already setup. ssh server running.'" 
-if [ $? -ne 0 ] ; then
-    echo "Enabling ssh into localhost (needed by Karamel)"
-    echo "Adding ${USERNAME} public key to ${HOME}/.ssh/authorized_keys"
-    cat ${HOME}/.ssh/id_rsa.pub >> ${HOME}/.ssh/authorized_keys
+if [ $GCP_NVME -eq 1 ] ; then
+   sudo mkdir -p /mnt/nvmeDisks/nvme0
+   sudo mkfs.ext4 -F /dev/nvme0n1
 fi
 
-# 2. check if openssh server installed
 
-echo "Check if openssh server installed and that ${USERNAME} can ssh without a password into ${USERNAME}@localhost"
-ssh -p $SSH_PORT -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${USERNAME}@localhost "echo 'ssh connected'" 
-
-if [ $? -ne 0 ] ; then
-    echo "Ssh server needs to be running on localhost. Starting one..."
-    sudo service ssh restart 
-    if [ $? -ne 0 ] ; then
-	echo "Installing ssh server."
-	sudo apt-get install openssh-server -y 
-	sleep 2
-        sudo service ssh status 
-        if [ $? -ne 0 ] ; then
-	    echo "Error: could not install/start a ssh server. Install an openssh-server (or some other ssh server) and re-run this install script."
-	    echo "Exiting..."
-	    exit 2
-	fi
-    fi
-    ssh -p $SSH_PORT -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${USERNAME}@localhost "echo 'hello'"
-    if [ $? -ne 0 ] ; then    
-      echo "Error: could not ssh to $USERNAME@localhost"
-      echo "You need to setup you machine so that $USERNAME can ssh to localhost"
-      echo "Exiting..."
-      exit 3
-    fi
-fi    
-
-#
-# Sanity Checks
-if [ -d ~/.berkshelf ] ; then
-    sudo chown -R $USERNAME ~/.berkshelf
-fi
-
-java -version | grep '1.8'
-if [ $? -ne 0 ] ; then
-    echo "No java version 8 found. Installing..."
-    sudo apt-get install openjdk-8-jre -y
-fi
-
-#
-# cleanup old cookbooks/installations
-#
-sudo rm -rf ${HOME}/.karamel/install
-sudo rm -rf ${HOME}/.karamel/cookbooks
-sudo rm -rf /tmp/chef-solo/cookbooks/*
-
-# 3. Download chefdk, karamel, and cluster.xml
-mkdir -p ./hops 
-cd hops
-echo "Downloading and installing Karamel"
-
-# ubuntu='14.04'
-# chef-solo --help 2>&1 > /dev/null
-# if [ $? -ne 0 ] ; then
-#     grep '16.04' /etc/issue
-#     if [ $? -ne 0 ] ; then
-#        ubuntu='16.04'
-#     fi
-#     grep '16.10' /etc/issue
-#     if [ $? -ne 0 ] ; then
-#        ubuntu='16.04'
-#     fi
-#     echo "Downloading chefdk for ubuntu version $ubuntu"    
-#     if [ ! -f chefdk_0.19.6-1_amd64.deb ] ; then
-# 	wget https://packages.chef.io/files/stable/chefdk/0.19.6/ubuntu/16.04/chefdk_0.19.6-1_amd64.deb
-# 	if [ $? -ne 0 ] ; then
-# 	    echo "Could not download chefdk. Exiting..."
-# 	    exit 4
-# 	fi
-#     fi
-#     sudo dpkg -i chefdk_0.19.6-1_amd64.deb
-#     if [ $? -ne 0 ] ; then
-# 	echo "Retrying to download chefdk"
-# 	rm -f chefdk_0.19.6-1_amd64.deb
-# 	wget https://packages.chef.io/files/stable/chefdk/0.19.6/ubuntu/16.04/chefdk_0.19.6-1_amd64.deb
-# 	if [ $? -ne 0 ] ; then
-# 	    echo "Could not download chefdk. Exiting..."
-# 	    exit 4
-# 	fi
-#         sudo dpkg -i chefdk_0.19.6-1_amd64.deb
-#         if [ $? -ne 0 ] ; then	
-# 	   echo "Problem installing chefdk. Fix before re-running the script"
-#            exit 5
-# 	fi
-#     fi
-# fi
-
-if [ ! -f karamel-${KARAMEL_VERSION}.tgz ] ; then
-    wget http://www.karamel.io/sites/default/files/downloads/karamel-${KARAMEL_VERSION}.tgz
-    if [ $? -ne 0 ] ; then
-        echo "Could not download karamel. Exiting..."
-        exit 4
-    fi
-fi    
-tar zxf karamel-${KARAMEL_VERSION}.tgz 
-if [ $? -ne 0 ] ; then
-    sleep 2
-    echo "Problem unzipping karamel. Retrying..."
-    rm -f karamel-${KARAMEL_VERSION}.tgz
-    wget http://www.karamel.io/sites/default/files/downloads/karamel-${KARAMEL_VERSION}.tgz
-    if [ $? -ne 0 ] ; then
-        echo "Could not download karamel. Exiting..."
-        exit 4
-    fi
-    tar zxf karamel-${KARAMEL_VERSION}.tgz
-    if [ $? -ne 0 ] ; then
-	echo "Couldn't extract karamel. Exiting..."
-	exit 7
-    fi
-fi
-
-cd ..
-if [ ! -f ${yml} ] ; then
-    theFile=cluster-defns/${yml}
+if [ ! -d karamel-${KARAMEL_VERSION} ] ; then
+  wget http://www.karamel.io/sites/default/files/downloads/karamel-${KARAMEL_VERSION}.tgz
+  tar zxf karamel-${KARAMEL_VERSION}.tgz
 else
-    theFile=$yml
-fi    
-cp -f ${theFile} ${theFile}.bak 2>&1 > /dev/null
-sudo chown $USERNAME hops
-if [ ! -f ${theFile} ] ; then
-    wget https://raw.githubusercontent.com/hopshadoop/karamel-chef/master/${theFile} .
-    if [ $? -ne 0 ] ; then
-	echo "Could find ${theFile} locally. Failed to download the hopsworks cluster definition file ${theFile}. Exiting..."
-	exit 9
-    fi
-fi
-cp  ${theFile} hops
-  if [ $? -ne 0 ] ; then
-    echo "Could not copy the hopsworks cluster definition file in ${yml} to hops/. Exiting..."
-    exit 19
-  fi
-
-cd hops
-
-IP_ADDR="127.0.0.1"
-
-# NET_INTERFACE is set to the first active network interface
-
-if [ "$NET_INTERFACE" == "" ] ; then
-  NET_INTERFACE=$(ip -o link show | awk '{print $2,$9}' | grep UP | sed 's/: UP//' | sed 's/\n.*//')
-fi    
-
-if [ "$NET_INTERFACE" == "" ] ; then
-    echo "Error."
-    echo "Could not find an active network interface to install with."
-    echo "Is your network up?"
-    exit 12
-fi   
-
-echo "Using NET_INTERFACE: $NET_INTERFACE"
-
-#targetDir=$(printf "%q" $PWD)
-targetDir=/srv/hops
-
-if [ ! -d $targetDir ] ; then
-    sudo mkir $targetDir
-    sudo chown root $targetDir
-    sudo chmod 755 $targetDir
+  echo "Found karamel"
 fi
 
-echo "Install directory is $targetDir"
-
-owner=$(ls -ld . | awk '{print $3}')
-
-if [ "$owner" != "$USERNAME" ] ; then
-    echo "You are not owner of $PWD. Change owner from $owner to $USERNAME"
-    exit 12
+if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] ; then
+  worker_size
 fi    
 
-perl -pi -e "s/REPLACE_USERNAME/${USERNAME}/g" ${yml}
-if [ $? -ne 0 ] ; then
-    echo "Error. Couldn't edit the YML file to insert the username."
-    echo "Exiting..."
-    exit 1
+
+if [ $DRY_RUN -eq 0 ] ; then
+  cd karamel-${KARAMEL_VERSION}
+  nohup ./bin/karamel -headless &
+  echo "In a couple of mins, you can open your browser to access karamel at: ${ip}:9090/index.html"
 fi
 
-#myhostname=`hostname`
-#host_ip=$(getent hosts $myhostname | awk '{ print $1 }')
-#host_ip=$(ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1')
-
-
-perl -pi -e "s/REPLACE_HOSTNAME/${IP}/g" ${yml}
-if [ $? -ne 0 ] ; then
-    echo "Error. Couldn't edit the YML file to insert the username."
-    echo "Exiting..."
-    exit 1
-fi
-
-perl -pi -e "s/REPLACE_NET_IF/${NET_INTERFACE}/g" ${yml}
-if [ $? -ne 0 ] ; then
-    echo "Error. Couldn't edit the YML file to insert the network interface."
-    echo "Exiting..."
-    exit 1
-fi    
-perl -pi -e "s#REPLACE_INSTALL_DIRECTORY#${targetDir}#g" ${yml}
-if [ $? -ne 0 ] ; then
-    echo "Error. Couldn't edit the YML file to insert the install directory."
-    echo "Exiting..."
-    exit 1
-fi    
-perl -pi -e "s/REPLACE_GPU/${use_gpu}/g" ${yml}
-if [ $? -ne 0 ] ; then
-    echo "Error. Couldn't edit the YML file to insert the use_gpu decision."
-    echo "Exiting..."
-    exit 1
-fi    
-perl -pi -e "s/REPLACE_ENABLED_SERVICES/${enable_services}/g" ${yml}
-if [ $? -ne 0 ] ; then
-    echo "Error. Couldn't edit the YML file to insert the use_gpu decision."
-    echo "Exiting..."
-    exit 1
-fi    
-
-
-echo "Installing:\n $(cat ${yml})"
-
-# 5. Launch the cluster
-
-
-cd karamel-${KARAMEL_VERSION}
-if [ $? -ne 0 ] ; then
-    echo "Couldn't change directory to karamel-${KARAMEL_VERSION}"
-    exit 2
-fi
-
-echo "Launching Karamel to start the cluster."
-echo "You can track progress by opening your browser at: http://localhost:9090/index.html#"
-echo "Click on the 'Terminal->status' window to see the progress"
-./bin/karamel -headless -launch ../${yml} -server conf/dropwizard.yml $SUDO_PWD
-
-if [ $? -ne 0 ] ; then
-    echo "Problem installing with Karamel. Try re-running the installer script."
-    exit 10
-fi    
-
-
-if [ $NON_INTERACT -eq 0 ] ; then
-    google-chrome -new-tab http://127.0.0.1:8080/hopsworks
-fi
-
-echo "To start Hopsworks, open your browser at: http://127.0.0.1:8080/hopsworks"
-
-cd ..
