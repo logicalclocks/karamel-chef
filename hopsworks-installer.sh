@@ -27,7 +27,7 @@
 #                                                                                                 #
 ###################################################################################################
 
-YML_CLUSTER=cluster.yml
+yml=cluster-defns/hopsworks-installer.yml
 
 HOPSWORKS_VERSION=1.2
 KARAMEL_VERSION=0.6
@@ -42,7 +42,7 @@ DISTRO=
 WORKER_ID=0
 DRY_RUN=0
 CLEAN_INSTALL_DIR=0
-
+SUDO_PWD=
 INSTALL_LOCALHOST=1
 INSTALL_CLUSTER=2
 INSTALL_KARAMEL=3
@@ -420,7 +420,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
               yml=$1
               ;;
     -pwd|--password)
-	      SUDO_PWD= SUDO_PWD="-passwd $1"
+	      SUDO_PWD="-passwd $1"
 	      ;;
     *)
 	  exit_error "Unrecognized parameter: $1"
@@ -510,9 +510,25 @@ if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] ; then
 fi    
 
 
-if [ $DRY_RUN -eq 0 ] ; then
-  cd karamel-${KARAMEL_VERSION}
-  nohup ./bin/karamel -headless &
-  echo "In a couple of mins, you can open your browser to access karamel at: ${ip}:9090/index.html"
+
+if [ "$INSTALL_ACTION" == "$INSTALL_KARAMEL" ]  ; then
+    cd karamel-${KARAMEL_VERSION}
+    nohup ./bin/karamel -headless &
+    echo "In a couple of mins, you can open your browser to access karamel at: ${ip}:9090/index.html"
+else
+    cp -f $yml cluster.yml
+    GBS=$(expr $AVAILABLE_MEMORY - 2)
+    MEM=$(expr $GBS \* 1024)    
+    perl -pi -e "s/__MEM__/$MEM/" $yml
+    CPUS=$(expr $AVAILABLE_CPUS - 1)
+    perl -pi -e "s/__CPUS__/$CPUS/" $yml    
+    perl -pi -e "s/__VERSION__/$HOPSWORKS_VERSION/" $yml
+    perl -pi -e "s/__USER__/$USER/" $yml        
+  if [ $DRY_RUN -eq 0 ] 
+    cd karamel-${KARAMEL_VERSION}
+    nohup ./bin/karamel -headless -launch ../${yml} $SUDO_PWD &
+
+    echo "In a couple of mins, you can open your browser to access karamel at: ${ip}:9090/index.html"
+  fi
 fi
 

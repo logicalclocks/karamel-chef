@@ -1,0 +1,92 @@
+name: Hops
+baremetal:
+    username: __USER__
+
+cookbooks:
+  hopsworks:
+    github: logicalclocks/hopsworks-chef
+    branch: __VERSION__
+
+attrs:
+  install:
+    dir: /srv/hops
+  hops:
+    yarn:
+      vcores: __CPUS__
+      memory_mbs: __MEM__
+  rmappsecurity:
+      actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
+  alertmanager:
+    email:
+      to: sre@logicalclocks.com
+      from: hopsworks@logicalclocks.com
+      smtp_host: mail.hello.com
+  hopsworks:
+    featurestore_online: true
+    kagent_liveness:
+      enabled: true
+      threshold: "40s"
+  elastic:
+    opendistro_security:
+      jwt:
+        exp_ms: "1800000"
+      audit:
+        enable_rest: "true"
+        enable_transport: "false"
+      admin:
+        username: "admin"
+        password: "adminpass"
+      kibana:
+        username: "kibana"
+        password: "kibanapass"
+      logstash:
+        username: "logstash"
+        password: "logstashpass"
+      epipe:
+        username: "epipe"
+        password: "epipepass"
+      elastic_exporter:
+        username: "elasticexporter"
+        password: "elasticexporterpass"
+groups:
+  namenodes:
+    size: 1
+    baremetal:
+      ip: 10.0.2.15
+    recipes:
+      - kagent
+      - conda
+      - ndb::mgmd
+      - ndb::ndbd
+      - ndb::mysqld
+      - hops::ndb
+      - hops::rm
+      - hops::nn
+      - hops::jhs
+      - hadoop_spark::yarn
+      - hadoop_spark::historyserver
+      - hadoop_spark::certs
+      - flink::yarn
+      - flink::historyserver
+      - elastic
+      - livy
+      - kzookeeper
+      - kkafka
+      - epipe
+      - hopsworks
+      - hopsmonitor
+      - hopslog
+      - hopslog::_filebeat-spark
+      - hopslog::_filebeat-serving
+      - hopslog::_filebeat-kagent
+      - hopslog::_filebeat-beam
+      - hops::dn
+      - hops::nm
+      - tensorflow
+      - hive2
+      - hops_airflow
+      - hops_airflow::sqoop
+      - hopsmonitor::prometheus
+      - hopsmonitor::alertmanager
+      - hopsmonitor::node_exporter
+      - hopsmonitor::purge_telegraf
