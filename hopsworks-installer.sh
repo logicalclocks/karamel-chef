@@ -112,7 +112,7 @@ splash_screen()
   echo "You appear to have following setup on this host:"
   echo "* available memory: $AVAILABLE_MEMORY"
   echo "* available disk space (on '/' root partition): $AVAILABLE_DISK"
-  echo "* available disk space (on '/mnt' root partition): $AVAILABLE_DISK"  
+  echo "* available disk space (on '/mnt' partition): $AVAILABLE_MNT"  
   echo "* available CPUs: $AVAILABLE_CPUS"
   echo "* your ip is: $IP"
   echo "* installation user: $USER"
