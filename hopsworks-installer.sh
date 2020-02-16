@@ -207,12 +207,6 @@ install_action()
         read ACCEPT
         case $ACCEPT in
           1)
-            if [ $ROOTUSER -eq 1 ] ; then
-	       echo "" $ECHO_OUT
-	       echo "You cannot install a localhost cluster as 'root'." $ECHO_OUT
-	       exit_error "Run the installer again as a normal user to install a localhost cluster."
-	    fi
-
 	    INSTALL_ACTION=$INSTALL_LOCALHOST
             ;;
           2)
