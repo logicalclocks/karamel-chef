@@ -20,6 +20,8 @@ attrs:
       from: hopsworks@logicalclocks.com
       smtp_host: mail.hello.com
   hopsworks:
+    https:
+      port: 443
     featurestore_online: true
     kagent_liveness:
       enabled: true
