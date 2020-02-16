@@ -100,7 +100,7 @@ clear_screen_no_skipline()
 #######################################################################
 
 splash_screen() 
-{
+{   
   clear
   echo "" $ECHO_OUT
   echo "Karamel/Hopsworks Installer, Copyright(C) 2020 Logical Clocks AB. All rights reserved." $ECHO_OUT
@@ -117,6 +117,14 @@ splash_screen()
   echo "* your ip is: $IP"
   echo "* installation user: $USER"
   echo "* linux distro: $DISTRO"
+  hname=$(hostname -f)
+  strlen=${#hname}
+  if [ $strlen -gt 64 ] ; then
+      echo ""
+      echo "WARNING: hostname is longer 64 chars which can cause problems with OpenSSL: $hname"
+      echo ""
+  fi
+  
   pgrep mysql
   if [ $? -eq 0 ] ; then
       echo ""
