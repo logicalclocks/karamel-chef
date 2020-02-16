@@ -52,7 +52,7 @@ groups:
   namenodes:
     size: 1
     baremetal:
-      ip: 10.0.2.15
+      ip: __IP__
     recipes:
       - kagent
       - conda

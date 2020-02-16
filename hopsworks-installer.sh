@@ -37,7 +37,7 @@ SCRIPTNAME=`basename $0`
 AVAILABLE_MEMORY=$(free -g | grep Mem | awk '{ print $2 }')
 AVAILABLE_DISK=$(df -h | grep '/$' | awk '{ print $4 }')
 AVAILABLE_CPUS=$(cat /proc/cpuinfo | grep '^processor' | wc -l)
-ip=$(hostname -I | awk '{ print $1 }')
+IP=$(hostname -I | awk '{ print $1 }')
 DISTRO=
 WORKER_ID=0
 DRY_RUN=0
@@ -112,7 +112,7 @@ splash_screen()
   echo "* available memory: $AVAILABLE_MEMORY"
   echo "* available disk space (on '/' root partition): $AVAILABLE_DISK"
   echo "* available CPUs: $AVAILABLE_CPUS"
-  echo "* your ip is: $ip"
+  echo "* your ip is: $IP"
   echo "* installation user: $USER"
   echo "* linux distro: $DISTRO"
   
@@ -469,7 +469,7 @@ else
 fi    
 
 ssh -t -o StrictHostKeyChecking=no localhost "ls"
-ssh -t -o StrictHostKeyChecking=no $ip "ls"
+ssh -t -o StrictHostKeyChecking=no $IP "ls"
 
 which java
 if [ $? -ne 0 ] ; then
@@ -515,8 +515,11 @@ else
     perl -pi -e "s/__CPUS__/$CPUS/" cluster-defns/hopsworks-installer-active.yml
     perl -pi -e "s/__VERSION__/$HOPSWORKS_VERSION/" cluster-defns/hopsworks-installer-active.yml
     perl -pi -e "s/__USER__/$USER/" cluster-defns/hopsworks-installer-active.yml
+    perl -pi -e "s/__IP__/$IP/" cluster-defns/hopsworks-installer-active.yml    
   if [ $DRY_RUN -eq 0 ] ; then
     cd karamel-${KARAMEL_VERSION}
+    echo "Running command from ${PWD}:"
+    echo " nohup ./bin/karamel -headless -launch ../cluster-defns/hopsworks-installer-active.yml $SUDO_PWD &"
     nohup ./bin/karamel -headless -launch ../cluster-defns/hopsworks-installer-active.yml $SUDO_PWD &
     echo "In a couple of mins, you can open your browser to access karamel at: ${ip}:9090/index.html"
   fi
