@@ -507,6 +507,14 @@ if [ "$INSTALL_ACTION" == "$INSTALL_KARAMEL" ]  ; then
     nohup ./bin/karamel -headless &
     echo "In a couple of mins, you can open your browser to access karamel at: ${ip}:9090/index.html"
 else
+    sudo -n true
+    if [ $? -ne 0 ] ; then
+	echo "It appears you need a password for this sudo account: $USER"
+	echo ""
+        enter_string "Enter the sudo password for $USER:" 
+        SUDO_PWD="-pwd $ENTERED_STRING"
+    fi
+
     cp -f $yml cluster-defns/hopsworks-installer-active.yml
     GBS=$(expr $AVAILABLE_MEMORY - 2)
     MEM=$(expr $GBS \* 1024)    
