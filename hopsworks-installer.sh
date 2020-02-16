@@ -540,7 +540,7 @@ else
     if [ ! -d cluster-defns ] ; then
 	mkdir cluster-defns
 	cd cluster-defns
-	wget https://raw.githubusercontent.com/logicalclocks/karamel-chef/${HOPSWORKS_VERSION}/cluster-defns/hopsworks-installer.yml
+	wget https://raw.githubusercontent.com/logicalclocks/karamel-chef/master/cluster-defns/hopsworks-installer.yml
 	cd ..
     fi
     cp -f $yml cluster-defns/hopsworks-installer-active.yml
