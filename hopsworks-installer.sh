@@ -526,6 +526,7 @@ if [ $GCP_NVME -eq 1 ] ; then
    sudo mkfs.ext4 -F /dev/nvme0n1
 fi
 
+install_dir
 
 if [ ! -d karamel-${KARAMEL_VERSION} ] ; then
   wget http://www.karamel.io/sites/default/files/downloads/karamel-${KARAMEL_VERSION}.tgz
