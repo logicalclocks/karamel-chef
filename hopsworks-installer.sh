@@ -326,8 +326,6 @@ check_linux()
 
     UNAME=$(uname | tr \"[:upper:]\" \"[:lower:]\")
     # If Linux, try to determine specific distribution
-    echo \"name: $UNAME\"
-
     if [ \"$UNAME\" == \"linux\" ]; then
 	# If available, use LSB to identify distribution
 	if [ -f /etc/lsb-release -o -d /etc/lsb-release.d ]; then
@@ -456,7 +454,6 @@ check_linux
 check_userid
 
 if [ $NON_INTERACT -eq 0 ] ; then
-    clear_screen
     splash_screen  
     display_license
     accept_license  
@@ -531,4 +528,3 @@ else
     echo "In a couple of mins, you can open your browser to access karamel at: ${ip}:9090/index.html"
   fi
 fi
-
