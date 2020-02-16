@@ -36,6 +36,7 @@ NON_INTERACT=0
 SCRIPTNAME=`basename $0`
 AVAILABLE_MEMORY=$(free -g | grep Mem | awk '{ print $2 }')
 AVAILABLE_DISK=$(df -h | grep '/$' | awk '{ print $4 }')
+AVAILABLE_MNT=$(df -h | grep '/mnt$' | awk '{ print $4 }')
 AVAILABLE_CPUS=$(cat /proc/cpuinfo | grep '^processor' | wc -l)
 IP=$(hostname -I | awk '{ print $1 }')
 DISTRO=
@@ -111,6 +112,7 @@ splash_screen()
   echo "You appear to have following setup on this host:"
   echo "* available memory: $AVAILABLE_MEMORY"
   echo "* available disk space (on '/' root partition): $AVAILABLE_DISK"
+  echo "* available disk space (on '/mnt' root partition): $AVAILABLE_DISK"  
   echo "* available CPUs: $AVAILABLE_CPUS"
   echo "* your ip is: $IP"
   echo "* installation user: $USER"
@@ -330,6 +332,21 @@ worker_size()
    done
 }
 
+
+install_dir()
+{
+   root="${AVAILABLE_DISK//G}"
+   mnt="${AVAILABLE_MNT//G}"
+   if [ $mnt -gt $root ] ; then
+       sudo mkdir -p /mnt/hops
+       sudo rm -rf /srv/hops
+       sudo ln -s /mnt/hops /srv/hops
+   fi
+}
+
+
+
+
 # called if interrupt signal is handled
 TrapBreak() 
 {
@@ -476,8 +493,6 @@ if [ "$INSTALL_ACTION" == "$INSTALL_NVIDIA" ] ; then
    echo "Rebooting....."
    sudo reboot
 fi    
-
-
 
 if [ ! -e ~/.ssh/id_rsa.pub ] ; then
   cat /dev/zero | ssh-keygen -q -N ""
