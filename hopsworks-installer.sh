@@ -439,16 +439,6 @@ done
 # Catch signals and clean up temp files
 trap TrapBreak HUP INT TERM  
 
-
-if [ "$INSTALL_ACTION" == "$INSTALL_NVIDIA" ] ; then
-   sudo -- sh -c 'echo "blacklist nouveau
-     options nouveau modeset=0" > /etc/modprobe.d/blacklist-nouveau.conf'
-   sudo update-initramfs -u
-   echo "Rebooting....."
-   sudo reboot
-fi    
-
-
 check_linux
 
 check_userid
@@ -459,6 +449,18 @@ if [ $NON_INTERACT -eq 0 ] ; then
     accept_license  
     clear_screen
 fi
+
+install_action
+
+if [ "$INSTALL_ACTION" == "$INSTALL_NVIDIA" ] ; then
+   sudo -- sh -c 'echo "blacklist nouveau
+     options nouveau modeset=0" > /etc/modprobe.d/blacklist-nouveau.conf'
+   sudo update-initramfs -u
+   echo "Rebooting....."
+   sudo reboot
+fi    
+
+
 
 git checkout $HOPSWORKS_VERSION
 
@@ -506,25 +508,22 @@ if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] ; then
   worker_size
 fi    
 
-
-
 if [ "$INSTALL_ACTION" == "$INSTALL_KARAMEL" ]  ; then
     cd karamel-${KARAMEL_VERSION}
     nohup ./bin/karamel -headless &
     echo "In a couple of mins, you can open your browser to access karamel at: ${ip}:9090/index.html"
 else
-    cp -f $yml cluster.yml
+    cp -f $yml cluster-defns/hopsworks-installer-active.yml
     GBS=$(expr $AVAILABLE_MEMORY - 2)
     MEM=$(expr $GBS \* 1024)    
-    perl -pi -e "s/__MEM__/$MEM/" $yml
+    perl -pi -e "s/__MEM__/$MEM/" cluster-defns/hopsworks-installer-active.yml
     CPUS=$(expr $AVAILABLE_CPUS - 1)
-    perl -pi -e "s/__CPUS__/$CPUS/" $yml    
-    perl -pi -e "s/__VERSION__/$HOPSWORKS_VERSION/" $yml
-    perl -pi -e "s/__USER__/$USER/" $yml        
-  if [ $DRY_RUN -eq 0 ] 
+    perl -pi -e "s/__CPUS__/$CPUS/" cluster-defns/hopsworks-installer-active.yml
+    perl -pi -e "s/__VERSION__/$HOPSWORKS_VERSION/" cluster-defns/hopsworks-installer-active.yml
+    perl -pi -e "s/__USER__/$USER/" cluster-defns/hopsworks-installer-active.yml
+  if [ $DRY_RUN -eq 0 ] ; then
     cd karamel-${KARAMEL_VERSION}
-    nohup ./bin/karamel -headless -launch ../${yml} $SUDO_PWD &
-
+    nohup ./bin/karamel -headless -launch ../cluster-defns/hopsworks-installer-active.yml $SUDO_PWD &
     echo "In a couple of mins, you can open your browser to access karamel at: ${ip}:9090/index.html"
   fi
 fi
