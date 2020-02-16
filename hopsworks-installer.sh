@@ -510,9 +510,10 @@ else
     sudo -n true
     if [ $? -ne 0 ] ; then
 	echo "It appears you need a sudo password for this account."
-        enter_string "Enter the sudo password for $USER:"
-	stty -echo; read passwd; stty echo; echo
+        echo -n "Enter the sudo password for $USER: "
+	read -s passwd
         SUDO_PWD="-passwd $passwd"
+	echo ""
     fi
 
     cp -f $yml cluster-defns/hopsworks-installer-active.yml
