@@ -561,6 +561,10 @@ else
     echo ""
     echo "********************************************************************************************"
     echo "In a couple of mins, you can open your browser to check your installation: http://${IP}:9090/index.html"
+    echo ""
+    echo "If port 9090 isn't open on your VM for external traffic, you can tail the logs here:"
+    echo "tail -f karamel-${KARAMEL_VERSION}/nohup.lout"    
     echo "********************************************************************************************"    
+    cd ..
   fi
 fi
