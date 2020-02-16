@@ -6,7 +6,7 @@
 # http://www.gnu.org/licenses/gpl-3.0.txt                                                         #
 #                                                                                                 #
 #                                                                                                 #
-# Copyright (c) Logical Clocks, 2020.                                                             #
+# Copyright (c) Logical Clocks AB, 2020.                                                             #
 # All Rights Reserved.                                                                            #
 #                                                                                                 #
 ###################################################################################################
@@ -479,8 +479,6 @@ fi
 
 
 
-git checkout $HOPSWORKS_VERSION
-
 if [ ! -e ~/.ssh/id_rsa.pub ] ; then
   cat /dev/zero | ssh-keygen -q -N ""
   pushd .
@@ -539,6 +537,12 @@ else
 	echo ""
     fi
 
+    if [ ! -d cluster-defns ] ; then
+	mkdir cluster-defns
+	cd cluster-defns
+	wget https://raw.githubusercontent.com/logicalclocks/karamel-chef/${HOPSWORKS_VERSION}/cluster-defns/hopsworks-installer.yml
+	cd ..
+    fi
     cp -f $yml cluster-defns/hopsworks-installer-active.yml
     GBS=$(expr $AVAILABLE_MEMORY - 2)
     MEM=$(expr $GBS \* 1024)    
