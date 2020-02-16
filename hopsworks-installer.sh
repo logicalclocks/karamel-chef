@@ -509,10 +509,10 @@ if [ "$INSTALL_ACTION" == "$INSTALL_KARAMEL" ]  ; then
 else
     sudo -n true
     if [ $? -ne 0 ] ; then
-	echo "It appears you need a password for this sudo account: $USER"
-	echo ""
-        enter_string "Enter the sudo password for $USER:" 
-        SUDO_PWD="-pwd $ENTERED_STRING"
+	echo "It appears you need a sudo password for this account."
+        enter_string "Enter the sudo password for $USER:"
+	stty -echo; read passwd; stty echo; echo
+        SUDO_PWD="-passwd $passwd"
     fi
 
     cp -f $yml cluster-defns/hopsworks-installer-active.yml
