@@ -29,7 +29,7 @@
 
 yml=cluster-defns/hopsworks-installer.yml
 
-HOPSWORKS_VERSION=1.2
+HOPSWORKS_VERSION=karmel_installer
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
 NON_INTERACT=0
