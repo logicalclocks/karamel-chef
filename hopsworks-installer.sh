@@ -115,7 +115,30 @@ splash_screen()
   echo "* your ip is: $IP"
   echo "* installation user: $USER"
   echo "* linux distro: $DISTRO"
-  
+  pgrep mysql
+  if [ $? -eq 0 ] ; then
+      echo ""
+      echo "WARNING: A MySQL service is already running on this host. This could case installation problems."
+      echo ""
+  fi
+  pgrep glassfish-domain1
+  if [ $? -eq 0 ] ; then
+      echo ""
+      echo "WARNING: A Hopsworks server is already running on this host. This could case installation problems."
+      echo ""
+  fi
+  pgrep airflow
+  if [ $? -eq 0 ] ; then
+      echo ""
+      echo "WARNING: An Airflow server is already running on this host. This could case installation problems."
+      echo ""
+  fi
+  pgrep hadoop
+  if [ $? -eq 0 ] ; then
+      echo ""
+      echo "WARNING: A Hadoop server is already running on this host. This could case installation problems."
+      echo ""
+  fi
   clear_screen
 }
 
