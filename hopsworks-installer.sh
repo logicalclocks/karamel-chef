@@ -521,6 +521,10 @@ else
     echo "Running command from ${PWD}:"
     echo " nohup ./bin/karamel -headless -launch ../cluster-defns/hopsworks-installer-active.yml $SUDO_PWD &"
     nohup ./bin/karamel -headless -launch ../cluster-defns/hopsworks-installer-active.yml $SUDO_PWD &
-    echo "In a couple of mins, you can open your browser to access karamel at: ${ip}:9090/index.html"
+    echo ""
+    echo ""
+    echo "********************************************************************************************"
+    echo "In a couple of mins, you can open your browser to check your installation: http://${IP}:9090/index.html"
+    echo "********************************************************************************************"    
   fi
 fi

@@ -14,8 +14,6 @@ attrs:
     yarn:
       vcores: __CPUS__
       memory_mbs: __MEM__
-  rmappsecurity:
-      actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
   alertmanager:
     email:
       to: sre@logicalclocks.com
