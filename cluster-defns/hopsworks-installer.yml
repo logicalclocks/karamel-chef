@@ -1,24 +1,27 @@
-name: HopsworksVagrantSingleNode
+name: Hops
 baremetal:
-    username: vagrant
+    username: __USER__
 
 cookbooks:
   hopsworks:
     github: logicalclocks/hopsworks-chef
-    branch: karamel_installer
+    branch: __VERSION__
 
 attrs:
   install:
     dir: /srv/hops
   hops:
-    rmappsecurity:
-      actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
+    yarn:
+      vcores: __CPUS__
+      memory_mbs: __MEM__
   alertmanager:
     email:
       to: sre@logicalclocks.com
       from: hopsworks@logicalclocks.com
       smtp_host: mail.hello.com
   hopsworks:
+    https:
+      port: 443
     featurestore_online: true
     kagent_liveness:
       enabled: true
@@ -49,7 +52,7 @@ groups:
   namenodes:
     size: 1
     baremetal:
-      ip: 10.0.2.15
+      ip: __IP__
     recipes:
       - kagent
       - conda
