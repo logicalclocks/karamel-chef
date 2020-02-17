@@ -155,7 +155,6 @@ splash_screen()
 
 display_license()
 {
-  echo "Support is available at http://www.jiimdowling.info/ndbinstaller-trac/" $ECHO_OUT
   echo ""  $ECHO_OUT
   echo "This code is released under the GNU General Public License, Version 3, see:" $ECHO_OUT
   echo "http://www.gnu.org/licenses/gpl-3.0.txt" $ECHO_OUT
@@ -330,6 +329,16 @@ WORKER_ID=$((WORKER_ID+1))
 
 worker_size()
 {
+    # Edit this file: /etc/ssd/sshd_config
+    
+    #chmod 644 ~/.ssh/authorized_keys
+    #chmod 700 ~/.ssh
+    #RSAAuthentication yes
+    #PubkeyAuthentication yes
+    #AuthorizedKeysFile    .ssh/authorized_keys
+    #PasswordAuthentication no
+
+    
    printf 'Please enter the number of extra workers you want to add (default: 0): '
    read NUM_WORKERS
    i=0
