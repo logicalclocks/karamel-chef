@@ -11,6 +11,9 @@ attrs:
   install:
     dir: /srv/hops
   hops:
+  hops:
+    tls:
+      enabled: true
     yarn:
       vcores: __CPUS__
       memory_mbs: __MEM__
@@ -20,12 +23,24 @@ attrs:
       from: hopsworks@logicalclocks.com
       smtp_host: mail.hello.com
   hopsworks:
+    encryption_password: "__PWD___001"
+    master:
+      password: "__PWD___002"
+    admin:
+      user: "adminuser"
+        password: "__PWD___201"
     https:
       port: 443
     featurestore_online: true
+    requests_verify: false
+    application_certificate_validity_period: "6d"
     kagent_liveness:
       enabled: true
       threshold: "40s"
+  hive2:
+      mysql_password: "__PWD___203"
+  mysql:
+      password: "__PWD___202"      
   elastic:
     opendistro_security:
       jwt:
@@ -35,19 +50,19 @@ attrs:
         enable_transport: "false"
       admin:
         username: "admin"
-        password: "adminpass"
+        password: "__PWD___201"
       kibana:
         username: "kibana"
-        password: "kibanapass"
+        password: "__PWD___201"
       logstash:
         username: "logstash"
-        password: "logstashpass"
+        password: "__PWD___201"
       epipe:
         username: "epipe"
-        password: "epipepass"
+        password: "__PWD___201"
       elastic_exporter:
         username: "elasticexporter"
-        password: "elasticexporterpass"
+        password: "__PWD___201"
 groups:
   namenodes:
     size: 1

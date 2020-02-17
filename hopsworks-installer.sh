@@ -574,10 +574,12 @@ else
 	wget https://raw.githubusercontent.com/logicalclocks/karamel-chef/master/cluster-defns/hopsworks-installer.yml
 	cd ..
     fi
+    BASE_PWD=$(date | md5sum | head -c${1:-8})
     cp -f $yml cluster-defns/hopsworks-installer-active.yml
     GBS=$(expr $AVAILABLE_MEMORY - 2)
     MEM=$(expr $GBS \* 1024)    
     perl -pi -e "s/__MEM__/$MEM/" cluster-defns/hopsworks-installer-active.yml
+    perl -pi -e "s/__PWD__/$BASE_PWD/g" cluster-defns/hopsworks-installer-active.yml    
     CPUS=$(expr $AVAILABLE_CPUS - 1)
     perl -pi -e "s/__CPUS__/$CPUS/" cluster-defns/hopsworks-installer-active.yml
     perl -pi -e "s/__VERSION__/$HOPSWORKS_VERSION/" cluster-defns/hopsworks-installer-active.yml
