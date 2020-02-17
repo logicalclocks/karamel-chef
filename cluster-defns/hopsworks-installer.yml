@@ -28,7 +28,7 @@ attrs:
       password: "__PWD___002"
     admin:
       user: "adminuser"
-        password: "__PWD___201"
+      password: "__PWD___201"
     https:
       port: 443
     featurestore_online: true
