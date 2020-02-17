@@ -29,7 +29,8 @@
 
 yml=cluster-defns/hopsworks-installer.yml
 
-HOPSWORKS_VERSION=karamel_installer
+HOPSWORKS_VERSION=1.2.0
+HOPSWORKS_BRANCH=karamel_installer
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
 NON_INTERACT=0
@@ -48,7 +49,7 @@ INSTALL_LOCALHOST=1
 INSTALL_CLUSTER=2
 INSTALL_KARAMEL=3
 INSTALL_NVIDIA=4
-
+CLOUD=
 GCP_NVME=0
 
 # $1 = String describing error
@@ -271,6 +272,51 @@ install_action()
 	clear_screen
    fi
 }
+
+
+enter_cloud()
+{
+    if [ "$CLOUD" = "" ] ; then
+
+        echo "-------------------- Where are you installing Hopsworks? --------------------" $ECHO_OUT
+	echo "" $ECHO_OUT
+        echo "On what platform are you installing Hopsworks?" $ECHO_OUT
+	echo "" $ECHO_OUT
+	echo "(1) On-premises or private cloud." $ECHO_OUT
+	echo "" $ECHO_OUT
+	echo "(2) AWS." $ECHO_OUT
+	echo "" $ECHO_OUT
+	echo "(3) GCP." $ECHO_OUT
+	echo "" $ECHO_OUT
+	echo "(4) Azure." $ECHO_OUT
+	echo "" $ECHO_OUT
+	printf 'Please enter your choice '1', '2', '3', '4' :  '
+        read ACCEPT
+        case $ACCEPT in
+          1)
+	    CLOUD=
+            ;;
+          2)
+	    CLOUD="ec2"
+            ;;
+          3)
+   	    CLOUD="gcp"
+            ;;
+          4)
+       	    CLOUD="azure"
+            ;;
+          *)
+            echo "" $ECHO_OUT
+            echo "Invalid Choice: $ACCEPT" $ECHO_OUT
+            echo "Please enter your choice '1', '2', '3', '4'." $ECHO_OUT
+	    clear_screen
+            enter_cloud
+            ;;
+         esac
+	clear_screen
+   fi
+}
+
 
 add_worker()
 {
@@ -509,6 +555,8 @@ if [ "$INSTALL_ACTION" == "$INSTALL_NVIDIA" ] ; then
    sudo reboot
 fi    
 
+enter_cloud
+
 if [ ! -e ~/.ssh/id_rsa.pub ] ; then
   cat /dev/zero | ssh-keygen -q -N ""
   pushd .
@@ -574,15 +622,19 @@ else
 	wget https://raw.githubusercontent.com/logicalclocks/karamel-chef/master/cluster-defns/hopsworks-installer.yml
 	cd ..
     fi
+    DNS_IP=$(sudo cat /etc/resolv.conf | grep ^nameserver | awk '{ print $2 }' | tail -1)
     BASE_PWD=$(date | md5sum | head -c${1:-8})
     cp -f $yml cluster-defns/hopsworks-installer-active.yml
     GBS=$(expr $AVAILABLE_MEMORY - 2)
     MEM=$(expr $GBS \* 1024)    
+    perl -pi -e "s/__CLOUD__/$CLOUD/" cluster-defns/hopsworks-installer-active.yml
     perl -pi -e "s/__MEM__/$MEM/" cluster-defns/hopsworks-installer-active.yml
-    perl -pi -e "s/__PWD__/$BASE_PWD/g" cluster-defns/hopsworks-installer-active.yml    
+    perl -pi -e "s/__PWD__/$BASE_PWD/g" cluster-defns/hopsworks-installer-active.yml
+    perl -pi -e "s/__DNS_IP__/$DNS_IP/g" cluster-defns/hopsworks-installer-active.yml        
     CPUS=$(expr $AVAILABLE_CPUS - 1)
     perl -pi -e "s/__CPUS__/$CPUS/" cluster-defns/hopsworks-installer-active.yml
     perl -pi -e "s/__VERSION__/$HOPSWORKS_VERSION/" cluster-defns/hopsworks-installer-active.yml
+    perl -pi -e "s/__BRANCH__/$HOPSWORKS_BRANCH/" cluster-defns/hopsworks-installer-active.yml    
     perl -pi -e "s/__USER__/$USER/" cluster-defns/hopsworks-installer-active.yml
     perl -pi -e "s/__IP__/$IP/" cluster-defns/hopsworks-installer-active.yml    
   if [ $DRY_RUN -eq 0 ] ; then

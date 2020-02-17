@@ -5,12 +5,13 @@ baremetal:
 cookbooks:
   hopsworks:
     github: logicalclocks/hopsworks-chef
-    branch: __VERSION__
+    branch: __BRANCH__
 
 attrs:
+  download_url: https://hopsworks-distribution.s3-eu-west-1.amazonaws.com/__VERSION__
   install:
     dir: /srv/hops
-  hops:
+    cloud: __CLOUD__
   hops:
     tls:
       enabled: true
@@ -23,46 +24,46 @@ attrs:
       from: hopsworks@logicalclocks.com
       smtp_host: mail.hello.com
   hopsworks:
-    encryption_password: "__PWD___001"
+    encryption_password: __PWD___001
     master:
-      password: "__PWD___002"
+      password: __PWD___002
     admin:
-      user: "adminuser"
-      password: "__PWD___201"
+      user: adminuser
+      password: __PWD___201
     https:
       port: 443
     featurestore_online: true
     requests_verify: false
-    application_certificate_validity_period: "6d"
+    application_certificate_validity_period: 6d
     kagent_liveness:
       enabled: true
-      threshold: "40s"
+      threshold: 40s
   hive2:
-      mysql_password: "__PWD___203"
+      mysql_password: __PWD___203
   mysql:
-      password: "__PWD___202"      
+      password: __PWD___202      
   elastic:
     opendistro_security:
       jwt:
-        exp_ms: "1800000"
+        exp_ms: 1800000
       audit:
-        enable_rest: "true"
-        enable_transport: "false"
+        enable_rest: true
+        enable_transport: false
       admin:
-        username: "admin"
-        password: "__PWD___201"
+        username: admin
+        password: __PWD___201
       kibana:
-        username: "kibana"
-        password: "__PWD___201"
+        username: kibana
+        password: __PWD___201
       logstash:
-        username: "logstash"
-        password: "__PWD___201"
+        username: logstash
+        password: __PWD___201
       epipe:
-        username: "epipe"
-        password: "__PWD___201"
+        username: epipe
+        password: __PWD___201
       elastic_exporter:
-        username: "elasticexporter"
-        password: "__PWD___201"
+        username: elasticexporter
+        password: __PWD___201
 groups:
   namenodes:
     size: 1
