@@ -337,8 +337,6 @@ worker_size()
     #PubkeyAuthentication yes
     #AuthorizedKeysFile    .ssh/authorized_keys
     #PasswordAuthentication no
-
-    
    printf 'Please enter the number of extra workers you want to add (default: 0): '
    read NUM_WORKERS
    i=0
