@@ -557,16 +557,22 @@ fi
 
 enter_cloud
 
+# generate a pub/private keypair if none exists
 if [ ! -e ~/.ssh/id_rsa.pub ] ; then
   cat /dev/zero | ssh-keygen -q -N ""
+else
+  echo "Found id_rsa.pub"
+fi
+
+# Karamel needs to be able to ssh back into the host it is running on to install Hopsworks there
+pub=$(cat ~/.ssh/id_rsa.pub)
+grep $pub ~/.ssh/authorized_keys
+if [ $? -ne 0 ] ; then
   pushd .
   cd ~/.ssh
   cat id_rsa.pub >> authorized_keys
   popd
-else
-  echo "Found id_rsa.pub"
-fi    
-
+fi
 ssh -t -o StrictHostKeyChecking=no localhost "ls"
 ssh -t -o StrictHostKeyChecking=no $IP "ls"
 
