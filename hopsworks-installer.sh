@@ -29,7 +29,7 @@
 
 yml=cluster-defns/hopsworks-installer.yml
 
-HOPSWORKS_VERSION=1.2.0
+HOPSWORKS_VERSION=1.3.0-SNAPSHOT
 HOPSWORKS_BRANCH=karamel_installer
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
