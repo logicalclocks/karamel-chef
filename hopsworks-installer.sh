@@ -566,7 +566,7 @@ fi
 
 # Karamel needs to be able to ssh back into the host it is running on to install Hopsworks there
 pub=$(cat ~/.ssh/id_rsa.pub)
-grep $pub ~/.ssh/authorized_keys
+grep $pub ~/.ssh/authorized_keys 2> /dev/null
 if [ $? -ne 0 ] ; then
   pushd .
   cd ~/.ssh
