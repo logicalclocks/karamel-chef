@@ -130,24 +130,40 @@ splash_screen()
   if [ $? -eq 0 ] ; then
       echo ""
       echo "WARNING: A MySQL service is already running on this host. This could case installation problems."
+      echo -n "A service is running at this pid: "
+      pgrep mysql
       echo ""
   fi
   pgrep glassfish-domain1
   if [ $? -eq 0 ] ; then
       echo ""
       echo "WARNING: A Hopsworks server is already running on this host. This could case installation problems."
+      echo -n "A service is running at this pid: "
+      pgrep glassfish-domain1
       echo ""
   fi
   pgrep airflow
   if [ $? -eq 0 ] ; then
       echo ""
       echo "WARNING: An Airflow server is already running on this host. This could case installation problems."
+      echo -n "A service is running at this pid: "
+      pgrep airflow
       echo ""
   fi
   pgrep hadoop
   if [ $? -eq 0 ] ; then
       echo ""
       echo "WARNING: A Hadoop server is already running on this host. This could case installation problems."
+      echo -n "A service is running at this pid: "
+      pgrep hadoop
+      echo ""
+  fi
+  pgrep ndb
+  if [ $? -eq 0 ] ; then
+      echo ""
+      echo "WARNING: A MySQL Cluster (NDB) instance is already running on this host. This could case installation problems."
+      echo -n "A service is running at this pid: "
+      pgrep ndb
       echo ""
   fi
   clear_screen
@@ -398,7 +414,8 @@ install_dir()
 {
    root="${AVAILABLE_DISK//G}"
    mnt="${AVAILABLE_MNT//G}"
-   if [ $mnt -gt $root ] ; then
+   
+   if [ "$mnt" != "" ] && [ $mnt -gt $root ] ; then
        sudo mkdir -p /mnt/hops
        sudo rm -rf /srv/hops
        sudo ln -s /mnt/hops /srv/hops
@@ -572,11 +589,17 @@ if [ $? -ne 0 ] ; then
   cd ~/.ssh
   cat id_rsa.pub >> authorized_keys
   popd
-fi
-ssh -t -o StrictHostKeyChecking=no localhost "ls"
-ssh -t -o StrictHostKeyChecking=no $IP "ls"
+else
+  echo "Found id_rsa.pub"
+fi    
 
-which java
+ssh -t -o StrictHostKeyChecking=no localhost "ls" > /dev/null
+ssh -t -o StrictHostKeyChecking=no $IP "ls" > /dev/null
+if [ $? -ne 0 ] ; then
+    exit_error "Error: problem using ssh to connect to this host with ip: $IP"
+fi    
+
+which java > /dev/null
 if [ $? -ne 0 ] ; then
     if [ "$DISTRO" == "Ubuntu" ] ; then
 	sudo apt update -y
