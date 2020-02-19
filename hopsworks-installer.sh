@@ -39,6 +39,7 @@ AVAILABLE_MEMORY=$(free -g | grep Mem | awk '{ print $2 }')
 AVAILABLE_DISK=$(df -h | grep '/$' | awk '{ print $4 }')
 AVAILABLE_MNT=$(df -h | grep '/mnt$' | awk '{ print $4 }')
 AVAILABLE_CPUS=$(cat /proc/cpuinfo | grep '^processor' | wc -l)
+AVAILABLE_GPUS=$(nvidia-smi -L | wc -l)
 IP=$(hostname -I | awk '{ print $1 }')
 DISTRO=
 WORKER_ID=0
@@ -51,6 +52,20 @@ INSTALL_KARAMEL=3
 INSTALL_NVIDIA=4
 CLOUD=
 GCP_NVME=0
+RM_CLASS="hops:
+    yarn:"
+
+
+if [ $AVAILABLE_GPUS -gt 0 ] ; then
+RM_CLASS="cuda:
+    accept_nvidia_download_terms: true
+  hops:
+    capacity: 
+      resource_calculator_class: org.apache.hadoop.yarn.util.resource.DominantResourceCalculatorGPU
+    yarn:
+      gpus: '*'"
+  
+fi    
 
 # $1 = String describing error
 exit_error() 
@@ -115,6 +130,7 @@ splash_screen()
   echo "* available disk space (on '/' root partition): $AVAILABLE_DISK"
   echo "* available disk space (on '/mnt' partition): $AVAILABLE_MNT"  
   echo "* available CPUs: $AVAILABLE_CPUS"
+  echo "* available GPUS: $AVAILABLE_GPUS"  
   echo "* your ip is: $IP"
   echo "* installation user: $USER"
   echo "* linux distro: $DISTRO"
@@ -126,44 +142,44 @@ splash_screen()
       echo ""
   fi
   
-  pgrep mysql
+  pgrep mysql > /dev/null
   if [ $? -eq 0 ] ; then
       echo ""
       echo "WARNING: A MySQL service is already running on this host. This could case installation problems."
       echo -n "A service is running at this pid: "
-      pgrep mysql
+      pgrep mysql | tail -1
       echo ""
   fi
-  pgrep glassfish-domain1
+  pgrep glassfish-domain1 > /dev/null
   if [ $? -eq 0 ] ; then
       echo ""
       echo "WARNING: A Hopsworks server is already running on this host. This could case installation problems."
       echo -n "A service is running at this pid: "
-      pgrep glassfish-domain1
+      pgrep glassfish-domain1 | tail -1
       echo ""
   fi
-  pgrep airflow
+  pgrep airflow > /dev/null
   if [ $? -eq 0 ] ; then
       echo ""
       echo "WARNING: An Airflow server is already running on this host. This could case installation problems."
       echo -n "A service is running at this pid: "
-      pgrep airflow
+      pgrep airflow | tail -1
       echo ""
   fi
-  pgrep hadoop
+  pgrep hadoop > /dev/null
   if [ $? -eq 0 ] ; then
       echo ""
       echo "WARNING: A Hadoop server is already running on this host. This could case installation problems."
       echo -n "A service is running at this pid: "
-      pgrep hadoop
+      pgrep hadoop | tail -1
       echo ""
   fi
-  pgrep ndb
+  pgrep ndb > /dev/null
   if [ $? -eq 0 ] ; then
       echo ""
       echo "WARNING: A MySQL Cluster (NDB) instance is already running on this host. This could case installation problems."
       echo -n "A service is running at this pid: "
-      pgrep ndb
+      pgrep ndb | tail -1
       echo ""
   fi
   clear_screen
@@ -313,7 +329,7 @@ enter_cloud()
 	    CLOUD=
             ;;
           2)
-	    CLOUD="ec2"
+	    CLOUD="aws"
             ;;
           3)
    	    CLOUD="gcp"
@@ -339,7 +355,7 @@ add_worker()
    printf 'Please enter the number of workers you want to add (default: 0): '
    read WORKER_IP
 
-   ssh -t -o StrictHostKeyChecking=no $WORKER_IP "ls"
+   ssh -t -o StrictHostKeyChecking=no $WORKER_IP "whoami" > /dev/null
    if [ $? -ne 0 ] ; then
       echo "Failed to ssh using public into: ${USER}@${WORKER_IP}"
       echo "Cannot add worker node, as you need to be able to ssh into it using your public key"
@@ -576,37 +592,39 @@ enter_cloud
 
 # generate a pub/private keypair if none exists
 if [ ! -e ~/.ssh/id_rsa.pub ] ; then
-  cat /dev/zero | ssh-keygen -q -N ""
+  cat /dev/zero | ssh-keygen -q -N "" > /dev/null
 else
-  echo "Found id_rsa.pub"
+  echo "Found existing id_rsa.pub"
 fi
 
 # Karamel needs to be able to ssh back into the host it is running on to install Hopsworks there
 pub=$(cat ~/.ssh/id_rsa.pub)
-grep $pub ~/.ssh/authorized_keys 2> /dev/null
+grep "$pub" ~/.ssh/authorized_keys > /dev/null
 if [ $? -ne 0 ] ; then
   pushd .
   cd ~/.ssh
-  cat id_rsa.pub >> authorized_keys
+  cat id_rsa.pub >> authorized_keys > /dev/null
   popd
 else
-  echo "Found id_rsa.pub"
+  echo "Found existing entry in authorized_keys"
 fi    
 
-ssh -t -o StrictHostKeyChecking=no localhost "ls" > /dev/null
-ssh -t -o StrictHostKeyChecking=no $IP "ls" > /dev/null
+ssh -t -o StrictHostKeyChecking=no localhost "whoami" > /dev/null
+ssh -t -o StrictHostKeyChecking=no $IP "whoami" > /dev/null
 if [ $? -ne 0 ] ; then
     exit_error "Error: problem using ssh to connect to this host with ip: $IP"
 fi    
 
 which java > /dev/null
 if [ $? -ne 0 ] ; then
+    echo "Installing Java..."
+
     if [ "$DISTRO" == "Ubuntu" ] ; then
-	sudo apt update -y
-	sudo apt install openjdk-8-jre-headless -y
+	sudo apt update -y > /dev/null
+	sudo apt install openjdk-8-jre-headless -y > /dev/null
     elif [ "$DISTRO" == "centos" ] ; then
-	sudo yum install java-1.8.0-openjdk-headless -y
-	sudo yum install wget -y
+	sudo yum install java-1.8.0-openjdk-headless -y > /dev/null
+	sudo yum install wget -y > /dev/null
     else
 	echo "Could not recognize Linux distro: $DISTRO"
 	exit_error
@@ -621,8 +639,16 @@ fi
 install_dir
 
 if [ ! -d karamel-${KARAMEL_VERSION} ] ; then
-  wget http://www.karamel.io/sites/default/files/downloads/karamel-${KARAMEL_VERSION}.tgz
-  tar zxf karamel-${KARAMEL_VERSION}.tgz
+    echo "Installing Karamel..."
+    clear_screen    
+    wget http://www.karamel.io/sites/default/files/downloads/karamel-${KARAMEL_VERSION}.tgz
+    if [ $? -ne 0 ] ; then
+	exit_error "Problem downloading karamel"
+    fi
+    tar zxf karamel-${KARAMEL_VERSION}.tgz
+    if [ $? -ne 0 ] ; then
+	exit_error "Problem extracting karamel from archive"
+    fi
 else
   echo "Found karamel"
 fi
@@ -634,7 +660,10 @@ fi
 if [ "$INSTALL_ACTION" == "$INSTALL_KARAMEL" ]  ; then
     cd karamel-${KARAMEL_VERSION}
     nohup ./bin/karamel -headless &
-    echo "In a couple of mins, you can open your browser to access karamel at: ${ip}:9090/index.html"
+    echo "To access Karamel, open your browser at: "
+    echo ""
+    echo "http://${ip}:9090/index.html"
+    echo ""    
 else
     sudo -n true
     if [ $? -ne 0 ] ; then
@@ -648,7 +677,7 @@ else
     if [ ! -d cluster-defns ] ; then
 	mkdir cluster-defns
 	cd cluster-defns
-	wget https://raw.githubusercontent.com/logicalclocks/karamel-chef/master/cluster-defns/hopsworks-installer.yml
+	wget https://raw.githubusercontent.com/logicalclocks/karamel-chef/${HOPSWORKS_BRANCH}/cluster-defns/hopsworks-installer.yml
 	cd ..
     fi
     DNS_IP=$(sudo cat /etc/resolv.conf | grep ^nameserver | awk '{ print $2 }' | tail -1)
@@ -665,22 +694,24 @@ else
     perl -pi -e "s/__VERSION__/$HOPSWORKS_VERSION/" cluster-defns/hopsworks-installer-active.yml
     perl -pi -e "s/__BRANCH__/$HOPSWORKS_BRANCH/" cluster-defns/hopsworks-installer-active.yml    
     perl -pi -e "s/__USER__/$USER/" cluster-defns/hopsworks-installer-active.yml
-    perl -pi -e "s/__IP__/$IP/" cluster-defns/hopsworks-installer-active.yml    
+    perl -pi -e "s/__IP__/$IP/" cluster-defns/hopsworks-installer-active.yml
+    perl -pi -e "s/__RM_CLASS__/$RM_CLASS/" cluster-defns/hopsworks-installer-active.yml
   if [ $DRY_RUN -eq 0 ] ; then
     cd karamel-${KARAMEL_VERSION}
     echo "Running command from ${PWD}:"
     echo " nohup ./bin/karamel -headless -launch ../cluster-defns/hopsworks-installer-active.yml $SUDO_PWD &"
-    nohup ./bin/karamel -headless -launch ../cluster-defns/hopsworks-installer-active.yml $SUDO_PWD &
-    echo ""
+    nohup ./bin/karamel -headless -launch ../cluster-defns/hopsworks-installer-active.yml $SUDO_PWD 2>&1 > ../installation.log &
     echo ""
     echo "********************************************************************************************"
+    echo ""
     echo "In a couple of mins, you can open your browser to check your installation: http://${IP}:9090/index.html"
     echo ""
-    echo "If port 9090 isn't open on your VM for external traffic, you can tail the logs here:"
+    echo "Note: port 9090 must be open on your host for external traffic if you want to use your browser."
     echo ""
-    echo "tail -f karamel-${KARAMEL_VERSION}/nohup.out"
+    echo "You can also view the logs with this command:"
+    echo ""
+    echo "tail -f installation.log"
     echo ""    
-    echo "********************************************************************************************"    
     cd ..
   fi
 fi

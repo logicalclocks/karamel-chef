@@ -12,12 +12,13 @@ attrs:
   install:
     dir: /srv/hops
     cloud: __CLOUD__
-  hops:
-    tls:
-      enabled: true
-    yarn:
+  __RM_CLASS__
       vcores: __CPUS__
       memory_mbs: __MEM__
+    tls:
+      enabled: true      
+    rmappsecurity:
+      actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
   alertmanager:
     email:
       to: sre@logicalclocks.com
