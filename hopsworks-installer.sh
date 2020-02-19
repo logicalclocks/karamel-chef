@@ -337,7 +337,7 @@ enter_cloud()
         read ACCEPT
         case $ACCEPT in
           1)
-	    CLOUD=
+	    CLOUD="baremetal"
             ;;
           2)
 	    CLOUD="aws"
