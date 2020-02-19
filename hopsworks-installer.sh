@@ -39,7 +39,12 @@ AVAILABLE_MEMORY=$(free -g | grep Mem | awk '{ print $2 }')
 AVAILABLE_DISK=$(df -h | grep '/$' | awk '{ print $4 }')
 AVAILABLE_MNT=$(df -h | grep '/mnt$' | awk '{ print $4 }')
 AVAILABLE_CPUS=$(cat /proc/cpuinfo | grep '^processor' | wc -l)
-AVAILABLE_GPUS=$(nvidia-smi -L | wc -l)
+which nvidia-smi
+if [ $? -eq 0 ] ; then
+    AVAILABLE_GPUS=$(nvidia-smi -L | wc -l)
+else
+    AVAILABLE_GPUS=0
+fi    
 IP=$(hostname -I | awk '{ print $1 }')
 DISTRO=
 WORKER_ID=0
@@ -50,6 +55,7 @@ INSTALL_LOCALHOST=1
 INSTALL_CLUSTER=2
 INSTALL_KARAMEL=3
 INSTALL_NVIDIA=4
+PURGE_HOPSWORKS=5
 CLOUD=
 GCP_NVME=0
 RM_CLASS="hops:
@@ -268,6 +274,8 @@ install_action()
 	echo "" $ECHO_OUT
 	echo "(4) Install Nvidia drivers and reboot server." $ECHO_OUT
 	echo "" $ECHO_OUT
+	echo "(5) Purge (uninstall) Hopsworks from this host." $ECHO_OUT
+	echo "" $ECHO_OUT	
 	printf 'Please enter your choice '1', '2', '3', 'q' \(quit\), or 'h' \(help\) :  '
         read ACCEPT
         case $ACCEPT in
@@ -282,6 +290,9 @@ install_action()
             ;;
           4)
 	    INSTALL_ACTION=$INSTALL_NVIDIA
+            ;;
+          5)
+	    INSTALL_ACTION=$PURGE_HOPSWORKS
             ;;
           h | H)
 	  clear
@@ -500,6 +511,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      echo "                 'localhost' installs a localhost Hopsworks cluster"
 	      echo "                 'cluster' installs a multi-host Hopsworks cluster"
 	      echo "                 'karamel' installs and starts Karamel"
+	      echo "                 'purge' removes Hopsworks completely from this host"	      
 	      echo " [-cl|--clean]    removes the karamel installation"
 	      echo " [-dr|--dry-run]      does not run karamel, just generates YML file"
 	      echo " [--gcp-nvme]     mount NVMe disk on GCP node"	      
@@ -523,6 +535,9 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 		      ;;
 	         nvidia)
 		      INSTALL_ACTION=$INSTALL_NVIDIA
+		      ;;
+	         purge)
+		      INSTALL_ACTION=$PURGE_HOPSWORKS
 		      ;;
 		  *)
 		      echo "Could not recognise option: $1"
@@ -588,8 +603,29 @@ if [ "$INSTALL_ACTION" == "$INSTALL_NVIDIA" ] ; then
    sudo reboot
 fi    
 
-enter_cloud
+if [ "$INSTALL_ACTION" == "$PURGE_HOPSWORKS" ] ; then
+   
+   cd
+   echo "Shutting down services..."
+   if sudo test -f "/srv/hops/kagent/kagent/bin/shutdown-all-local-services.sh"  ; then
+     sudo /srv/hops/kagent/kagent/bin/shutdown-all-local-services.sh -f > /dev/null
+   fi
+   echo "Killing karamel..."
+   pkill java
+   echo "Removing karamel..."   
+   rm -rf karamel*
+   echo "Removing cookbooks..."   
+   sudo rm -rf .karamel   
+   sudo rm -rf /tmp/chef-solo/cookbooks
+   echo "Purging old installation..."      
+   sudo rm -rf /srv/hops/*
+   exit 0
+fi    
 
+if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST" ] ; then
+  enter_cloud
+fi
+  
 # generate a pub/private keypair if none exists
 if [ ! -e ~/.ssh/id_rsa.pub ] ; then
   cat /dev/zero | ssh-keygen -q -N "" > /dev/null
@@ -618,7 +654,7 @@ fi
 which java > /dev/null
 if [ $? -ne 0 ] ; then
     echo "Installing Java..."
-
+    clear_screen
     if [ "$DISTRO" == "Ubuntu" ] ; then
 	sudo apt update -y > /dev/null
 	sudo apt install openjdk-8-jre-headless -y > /dev/null
@@ -700,7 +736,7 @@ else
     cd karamel-${KARAMEL_VERSION}
     echo "Running command from ${PWD}:"
     echo " nohup ./bin/karamel -headless -launch ../cluster-defns/hopsworks-installer-active.yml $SUDO_PWD &"
-    nohup ./bin/karamel -headless -launch ../cluster-defns/hopsworks-installer-active.yml $SUDO_PWD 2>&1 > ../installation.log &
+    nohup ./bin/karamel -headless -launch ../cluster-defns/hopsworks-installer-active.yml $SUDO_PWD > ../installation.log &
     echo ""
     echo "********************************************************************************************"
     echo ""
