@@ -1,13 +1,13 @@
 package ['git', 'maven']
 
-# Clone Hopsworks
-git node['test']['hopsworks']['base_dir']  do
-  repository node['test']['hopsworks']['repo']
-  revision node['test']['hopsworks']['branch']
-  user "vagrant"
-  group "vagrant"
-  action :sync
-end
+# # Mv Hopsworks to base dir
+# git node['test']['hopsworks']['base_dir']  do
+#   repository node['test']['hopsworks']['repo']
+#   revision node['test']['hopsworks']['branch']
+#   user "vagrant"
+#   group "vagrant"
+#   action :sync
+# end
 
 # Create chef-solo cache dir
 directory '/tmp/chef-solo' do
@@ -54,8 +54,10 @@ when "debian"
   bash 'build-hopsworks' do
     user 'root'
     group 'root'
-    cwd node['test']['hopsworks']['base_dir']
+    # cwd node['test']['hopsworks']['base_dir']
     code <<-EOF
+      mv /tmp/hopsworks /home/vagrant/
+      cd #{node['test']['hopsworks']['base_dir']}
       mvn clean install -Pweb -Pcluster -Phops-site -Ptesting -DskipTests
       VERSION=$(mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec)
       mv hopsworks-ear/target/hopsworks-ear.ear /tmp/chef-solo/hopsworks-ear\:$VERSION-$VERSION.ear
@@ -72,7 +74,7 @@ when 'rhel'
     group 'root'
     cwd node['test']['hopsworks']['base_dir']
     code <<-EOF
-      mvn clean install -Pcluster -Phops-site -P-web -Ptesting -DskipTests
+      mvn clean install -DskipTests
       VERSION=$(mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec)
       mv hopsworks-ear/target/hopsworks-ear.ear /tmp/chef-solo/hopsworks-ear\:$VERSION-$VERSION.ear
       mv hopsworks-ca/target/hopsworks-ca.war /tmp/chef-solo/hopsworks-ca\:$VERSION-$VERSION.war

@@ -82,14 +82,10 @@ elastic_pass="#{node['elastic']['opendistro_security']['admin']['password']}"
 kibana_endpoint="#{node[:karamel][:default][:private_ips][0]}:#{node[:kibana][:port]}"
 
 case node['platform']
-when 'ubuntu'
+when 'centos'
   elastic_endpoint="#{node[:karamel][:default][:private_ips][2]}:#{node[:elastic][:port]}"
   my_ip = node[:karamel][:default][:private_ips][0]
   epipe_host = "#{node[:karamel][:default][:private_ips][1]}"
-when 'centos'
-  elastic_endpoint="#{node[:karamel][:default][:private_ips][0]}:#{node[:elastic][:port]}"
-  my_ip = node[:karamel][:default][:private_ips][0]
-  epipe_host = "#{node[:karamel][:default][:private_ips][0]}"
 end
 
 # Copy the environment configuration in the test directory
