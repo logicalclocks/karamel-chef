@@ -5,49 +5,66 @@ baremetal:
 cookbooks:
   hopsworks:
     github: logicalclocks/hopsworks-chef
-    branch: __VERSION__
+    branch: __BRANCH__
 
 attrs:
+  __DOWNLOAD__
   install:
     dir: /srv/hops
-  hops:
-    yarn:
+    cloud: __CLOUD__
+  __RM_CLASS__
       vcores: __CPUS__
       memory_mbs: __MEM__
+    tls:
+      enabled: __TLS__
+    rmappsecurity:
+      actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
   alertmanager:
     email:
       to: sre@logicalclocks.com
       from: hopsworks@logicalclocks.com
       smtp_host: mail.hello.com
   hopsworks:
+    encryption_password: __PWD___001
+    master:
+      password: __PWD___002
+    admin:
+      user: adminuser
+      password: __PWD___201
     https:
       port: 443
     featurestore_online: true
+    requests_verify: false
+    application_certificate_validity_period: 6d
     kagent_liveness:
       enabled: true
-      threshold: "40s"
+      threshold: 40s
+  hive2:
+      mysql_password: __PWD___203
+  mysql:
+      password: __PWD___202      
   elastic:
     opendistro_security:
       jwt:
-        exp_ms: "1800000"
+        exp_ms: 1800000
       audit:
-        enable_rest: "true"
-        enable_transport: "false"
+        enable_rest: true
+        enable_transport: false
       admin:
-        username: "admin"
-        password: "adminpass"
+        username: admin
+        password: __PWD___201
       kibana:
-        username: "kibana"
-        password: "kibanapass"
+        username: kibana
+        password: __PWD___201
       logstash:
-        username: "logstash"
-        password: "logstashpass"
+        username: logstash
+        password: __PWD___201
       epipe:
-        username: "epipe"
-        password: "epipepass"
+        username: epipe
+        password: __PWD___201
       elastic_exporter:
-        username: "elasticexporter"
-        password: "elasticexporterpass"
+        username: elasticexporter
+        password: __PWD___201
 groups:
   namenodes:
     size: 1
@@ -90,3 +107,4 @@ groups:
       - hopsmonitor::alertmanager
       - hopsmonitor::node_exporter
       - hopsmonitor::purge_telegraf
+      __ENTERPRISE_RECIPES__
