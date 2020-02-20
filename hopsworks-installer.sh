@@ -52,10 +52,14 @@ DRY_RUN=0
 CLEAN_INSTALL_DIR=0
 SUDO_PWD=
 INSTALL_LOCALHOST=1
-INSTALL_CLUSTER=2
+INSTALL_LOCALHOST_TLS=2
 INSTALL_KARAMEL=3
 INSTALL_NVIDIA=4
 PURGE_HOPSWORKS=5
+INSTALL_CLUSTER=6
+TLS="false"
+
+
 CLOUD=
 GCP_NVME=0
 RM_CLASS="hops:
@@ -268,7 +272,7 @@ install_action()
 	echo "" $ECHO_OUT
 	echo "(1) Setup a Hopsworks cluster on only this host." $ECHO_OUT
 	echo "" $ECHO_OUT
-	echo "(2) Setup a Hopsworks cluster using more than 1 host." $ECHO_OUT
+	echo "(2) Setup a Hopsworks cluster on only this host with TLS enabled." $ECHO_OUT
 	echo "" $ECHO_OUT
 	echo "(3) Install and start Karamel." $ECHO_OUT
 	echo "" $ECHO_OUT
@@ -283,7 +287,7 @@ install_action()
 	    INSTALL_ACTION=$INSTALL_LOCALHOST
             ;;
           2)
-	    INSTALL_ACTION=$INSTALL_CLUSTER
+	    INSTALL_ACTION=$INSTALL_LOCALHOST_TLS
             ;;
           3)
 	    INSTALL_ACTION=$INSTALL_KARAMEL
@@ -337,7 +341,7 @@ enter_cloud()
         read ACCEPT
         case $ACCEPT in
           1)
-	    CLOUD="baremetal"
+	    CLOUD="on-premises"
             ;;
           2)
 	    CLOUD="aws"
@@ -509,7 +513,8 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      echo " [-h|--help]      help for ndbinstaller.sh" $ECHO_OUT
 	      echo " [-i|--install-action localhost|cluster|karamel] " $ECHO_OUT
 	      echo "                 'localhost' installs a localhost Hopsworks cluster"
-	      echo "                 'cluster' installs a multi-host Hopsworks cluster"
+	      echo "                 'localhost-tls' installs a localhost Hopsworks cluster with TLS enabled"	      
+#	      echo "                 'cluster' installs a multi-host Hopsworks cluster"
 	      echo "                 'karamel' installs and starts Karamel"
 	      echo "                 'purge' removes Hopsworks completely from this host"	      
 	      echo " [-cl|--clean]    removes the karamel installation"
@@ -526,6 +531,9 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      case $1 in
 		 localhost)
 		      INSTALL_ACTION=$INSTALL_LOCALHOST
+  		      ;;
+		 localhost-tls)
+		      INSTALL_ACTION=$INSTALL_LOCALHOST_TLS
   		      ;;
 		 cluster)
 		      INSTALL_ACTION=$INSTALL_CLUSTER
@@ -553,6 +561,26 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
     -gn|--gcp-nvme)
 	      GCP_NVME=1
 	      ;;
+    -c|--cloud)
+	      shift
+	      case $1 in
+		 on-premises)
+		      CLOUD="on-premises"
+  		      ;;
+		 gcp)
+		      CLOUD="gcp"
+  		      ;;
+		 aws)
+		      CLOUD="awsp"
+		      ;;
+	         azure)
+		      CLOUD="azure"
+		      ;;
+		  *)
+		      echo "Could not recognise option: $1"
+		      exit_error "Failed."
+		 esac
+	       ;;
     -ni|--non-interactive)
 	      NON_INTERACT=1
 	      ;;
@@ -693,6 +721,12 @@ if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] ; then
   worker_size
 fi    
 
+if [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST_TLS" ] ; then
+  TLS="true"
+fi    
+
+
+
 if [ "$INSTALL_ACTION" == "$INSTALL_KARAMEL" ]  ; then
     cd karamel-${KARAMEL_VERSION}
     nohup ./bin/karamel -headless &
@@ -732,6 +766,7 @@ else
     perl -pi -e "s/__USER__/$USER/" cluster-defns/hopsworks-installer-active.yml
     perl -pi -e "s/__IP__/$IP/" cluster-defns/hopsworks-installer-active.yml
     perl -pi -e "s/__RM_CLASS__/$RM_CLASS/" cluster-defns/hopsworks-installer-active.yml
+    perl -pi -e "s/__TLS__/$TLS/" cluster-defns/hopsworks-installer-active.yml    
   if [ $DRY_RUN -eq 0 ] ; then
     cd karamel-${KARAMEL_VERSION}
     echo "Running command from ${PWD}:"
