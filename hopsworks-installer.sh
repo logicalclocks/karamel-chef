@@ -27,8 +27,6 @@
 #                                                                                                 #
 ###################################################################################################
 
-yml=cluster-defns/hopsworks-installer.yml
-
 HOPSWORKS_VERSION=1.3.0-SNAPSHOT
 HOPSWORKS_BRANCH=karamel_installer
 KARAMEL_VERSION=0.6
@@ -39,12 +37,7 @@ AVAILABLE_MEMORY=$(free -g | grep Mem | awk '{ print $2 }')
 AVAILABLE_DISK=$(df -h | grep '/$' | awk '{ print $4 }')
 AVAILABLE_MNT=$(df -h | grep '/mnt$' | awk '{ print $4 }')
 AVAILABLE_CPUS=$(cat /proc/cpuinfo | grep '^processor' | wc -l)
-which nvidia-smi
-if [ $? -eq 0 ] ; then
-    AVAILABLE_GPUS=$(nvidia-smi -L | wc -l)
-else
-    AVAILABLE_GPUS=0
-fi    
+AVAILABLE_GPUS=$(lspci | grep -i nvidia | wc -l)
 IP=$(hostname -I | awk '{ print $1 }')
 HOSTNAME=$(hostname -f)
 DISTRO=
@@ -67,6 +60,8 @@ RM_CLASS=
 ENTERPRISE=0
 DOWNLOAD=
 ENTERPRISE_RECIPES=
+INPUT_YML="cluster-defns/hopsworks-installer.yml"
+YML_FILE="cluster-defns/hopsworks-installer-active.yml"
 
 unset_gpus()
 {
@@ -79,18 +74,13 @@ unset_gpus
 set_gpus()
 {
 RM_CLASS="cuda:
-    accept_nvidia_download_terms: true
-  hops:
-    capacity: 
-      resource_calculator_class: org.apache.hadoop.yarn.util.resource.DominantResourceCalculatorGPU
-    yarn:
-      gpus: '*'"
+        accept_nvidia_download_terms: true
+      hops:
+        capacity: 
+          resource_calculator_class: org.apache.hadoop.yarn.util.resource.DominantResourceCalculatorGPU
+        yarn:
+          gpus: '*'"
 }
-
-
-if [ $AVAILABLE_GPUS -gt 0 ] ; then
-   set_gpus  
-fi    
 
 # $1 = String describing error
 exit_error() 
@@ -98,9 +88,9 @@ exit_error()
   #CleanUpTempFiles
 
   echo "" $ECHO_OUT
-  echo "Error number: $1" $ECHO_OUT
-  echo "Exiting $PRODUCT $VERSION installer." $ECHO_OUT
-  echo "" $ECHO_OUT
+  echo "Error number: $1"
+  echo "Exiting $PRODUCT $VERSION installer."
+  echo ""
   exit 1
 }
 
@@ -108,7 +98,7 @@ exit_error()
 # caller reads $ENTERED_STRING global variable for result
 enter_string() 
 {
-     echo "$1" $ECHO_OUT
+     echo "$1"
      read ENTERED_STRING
 }
 
@@ -119,8 +109,8 @@ enter_string()
 clear_screen()
 {
  if [ $NON_INTERACT -eq 0 ] ; then
-   echo "" $ECHO_OUT
-   echo "Press ENTER to continue" $ECHO_OUT
+   echo ""
+   echo "Press ENTER to continue"
    read cont < /dev/tty
  fi 
  clear
@@ -129,7 +119,7 @@ clear_screen()
 clear_screen_no_skipline()
 {
  if [ $NON_INTERACT -eq 0 ] ; then
-    echo "Press ENTER to continue" $ECHO_OUT
+    echo "Press ENTER to continue"
     read cont < /dev/tty
  fi 
  clear
@@ -143,13 +133,13 @@ clear_screen_no_skipline()
 splash_screen() 
 {   
   clear
-  echo "" $ECHO_OUT
-  echo "Karamel/Hopsworks Installer, Copyright(C) 2020 Logical Clocks AB. All rights reserved." $ECHO_OUT
-  echo "" $ECHO_OUT
-  echo "This program can install Karamel/Chef and/or Hopsworks." $ECHO_OUT
-  echo "" $ECHO_OUT
-  echo "To cancel installation at any time, press CONTROL-C"  $ECHO_OUT
-  echo "" $ECHO_OUT  
+  echo ""
+  echo "Karamel/Hopsworks Installer, Copyright(C) 2020 Logical Clocks AB. All rights reserved."
+  echo ""
+  echo "This program can install Karamel/Chef and/or Hopsworks."
+  echo ""
+  echo "To cancel installation at any time, press CONTROL-C" 
+  echo ""  
   echo "You appear to have following setup on this host:"
   echo "* available memory: $AVAILABLE_MEMORY"
   echo "* available disk space (on '/' root partition): $AVAILABLE_DISK"
@@ -177,8 +167,12 @@ splash_screen()
       echo "WARNING: Reverse DNS does not work on this host. If you enable 'TLS', it will not work."
       echo "Hostname: $HOSTNAME"
       echo "Reverse Hostname: $reverse_hostname"
+      echo ""
       echo "Azure: you have to add your VM to a 'Private DNS Zone' to make reverse-DNS work correctly for local IPs."
       echo "https://docs.microsoft.com/en-us/azure/dns/private-dns-getstarted-portal"
+      echo "Azure instructions: when you have added a private DNS zone, you need to set the hostame to the private DNS zone"
+      echo "  > hostname DNS_NAME"
+      echo ""
       echo "On-premises: you have to configure your networking to make reverse-DNS work correctly."
       echo ""
   fi
@@ -230,23 +224,23 @@ splash_screen()
 
 display_license()
 {
-  echo ""  $ECHO_OUT
-  echo "This code is released under the GNU General Public License, Version 3, see:" $ECHO_OUT
-  echo "http://www.gnu.org/licenses/gpl-3.0.txt" $ECHO_OUT
-  echo "" $ECHO_OUT
-  echo "Copyright(C) 2020 Logical Clocks AB. All rights reserved." $ECHO_OUT
-  echo "Logical Clocks AB is furnishing this item "as is". Logical Clocks AB does not provide any" $ECHO_OUT
-  echo "warranty of the item whatsoever, whether express, implied, or statutory," $ECHO_OUT
-  echo "including, but not limited to, any warranty of merchantability or fitness" $ECHO_OUT
-  echo "for a particular purpose or any warranty that the contents of the item will" $ECHO_OUT
-  echo "be error-free. In no respect shall Logical Clocks AB incur any liability for any" $ECHO_OUT 
-  echo "damages, including, but limited to, direct, indirect, special, or consequential" $ECHO_OUT
-  echo "damages arising out of, resulting from, or any way connected to the use of the" $ECHO_OUT
-  echo "item, whether or not based upon warranty, contract, tort, or otherwise; " $ECHO_OUT 
-  echo "whether or not injury was sustained by persons or property or otherwise;" $ECHO_OUT
-  echo "and whether or not loss was sustained from, or arose out of, the results of," $ECHO_OUT
-  echo "the item, or any services that may be provided by Logical Clocks AB." $ECHO_OUT
-  echo "" $ECHO_OUT
+  echo "" 
+  echo "This code is released under the GNU General Public License, Version 3, see:"
+  echo "http://www.gnu.org/licenses/gpl-3.0.txt"
+  echo ""
+  echo "Copyright(C) 2020 Logical Clocks AB. All rights reserved."
+  echo "Logical Clocks AB is furnishing this item "as is". Logical Clocks AB does not provide any"
+  echo "warranty of the item whatsoever, whether express, implied, or statutory,"
+  echo "including, but not limited to, any warranty of merchantability or fitness"
+  echo "for a particular purpose or any warranty that the contents of the item will"
+  echo "be error-free. In no respect shall Logical Clocks AB incur any liability for any" 
+  echo "damages, including, but limited to, direct, indirect, special, or consequential"
+  echo "damages arising out of, resulting from, or any way connected to the use of the"
+  echo "item, whether or not based upon warranty, contract, tort, or otherwise; " 
+  echo "whether or not injury was sustained by persons or property or otherwise;"
+  echo "and whether or not loss was sustained from, or arose out of, the results of,"
+  echo "the item, or any services that may be provided by Logical Clocks AB."
+  echo ""
   printf 'Do you accept these terms and conditions? [ yes or no ] '
 }
   
@@ -257,12 +251,12 @@ accept_license ()
       yes | Yes | YES)
         ;;
 	no | No | NO)
-        echo "" $ECHO_OUT
+        echo ""
         exit 0
         ;;
       *)
-        echo "" $ECHO_OUT
-        echo "Please enter either 'yes' or 'no'." $ECHO_OUT
+        echo ""
+        echo "Please enter either 'yes' or 'no'."
 	printf 'Do you accept these terms and conditions? [ yes or no ] '
         accept_license
       ;;
@@ -298,24 +292,24 @@ install_action()
 {
     if [ "$INSTALL_ACTION" = "" ] ; then
 
-        echo "-------------------- Installation Options --------------------" $ECHO_OUT
-	echo "" $ECHO_OUT
-        echo "What would you like to do?" $ECHO_OUT
-	echo "" $ECHO_OUT
-	echo "(1) Install a single-host Hopsworks cluster." $ECHO_OUT
-	echo "" $ECHO_OUT
-	echo "(2) Install a single-host Hopsworks cluster with TLS enabled." $ECHO_OUT
-	echo "" $ECHO_OUT
-	echo "(3) Install a multi-host Hopsworks cluster with TLS enabled." $ECHO_OUT
-	echo "" $ECHO_OUT
-	echo "(4) Install a multi-host Enterprise Hopsworks cluster." $ECHO_OUT 
-	echo "" $ECHO_OUT
-	echo "(5) Install and start Karamel." $ECHO_OUT
-	echo "" $ECHO_OUT
-	echo "(6) Install Nvidia drivers and reboot server." $ECHO_OUT
-	echo "" $ECHO_OUT
-	echo "(7) Purge (uninstall) Hopsworks from this host." $ECHO_OUT
-	echo "" $ECHO_OUT	
+        echo "-------------------- Installation Options --------------------"
+	echo ""
+        echo "What would you like to do?"
+	echo ""
+	echo "(1) Install a single-host Hopsworks cluster."
+	echo ""
+	echo "(2) Install a single-host Hopsworks cluster with TLS enabled."
+	echo ""
+	echo "(3) Install a multi-host Hopsworks cluster with TLS enabled."
+	echo ""
+	echo "(4) Install an Enterprise Hopsworks cluster." 
+	echo ""
+	echo "(5) Install and start Karamel."
+	echo ""
+	echo "(6) Install Nvidia drivers and reboot server."
+	echo ""
+	echo "(7) Purge (uninstall) Hopsworks from this host."
+	echo ""	
 	printf 'Please enter your choice '1', '2', '3', 'q' \(quit\), or 'h' \(help\) :  '
         read ACCEPT
         case $ACCEPT in
@@ -358,9 +352,9 @@ install_action()
           exit_error
           ;;
           *)
-            echo "" $ECHO_OUT
-            echo "Invalid Choice: $ACCEPT" $ECHO_OUT
-            echo "Please enter your choice '1', '2', '3', '4', 'q', or 'h'." $ECHO_OUT
+            echo ""
+            echo "Invalid Choice: $ACCEPT"
+            echo "Please enter your choice '1', '2', '3', '4', 'q', or 'h'."
 	    clear_screen
             install_action
             ;;
@@ -374,18 +368,18 @@ enter_cloud()
 {
     if [ "$CLOUD" = "" ] ; then
 
-        echo "-------------------- Where are you installing Hopsworks? --------------------" $ECHO_OUT
-	echo "" $ECHO_OUT
-        echo "On what platform are you installing Hopsworks?" $ECHO_OUT
-	echo "" $ECHO_OUT
-	echo "(1) On-premises or private cloud." $ECHO_OUT
-	echo "" $ECHO_OUT
-	echo "(2) AWS." $ECHO_OUT
-	echo "" $ECHO_OUT
-	echo "(3) GCP." $ECHO_OUT
-	echo "" $ECHO_OUT
-	echo "(4) Azure." $ECHO_OUT
-	echo "" $ECHO_OUT
+        echo "-------------------- Where are you installing Hopsworks? --------------------"
+	echo ""
+        echo "On what platform are you installing Hopsworks?"
+	echo ""
+	echo "(1) On-premises or private cloud."
+	echo ""
+	echo "(2) AWS."
+	echo ""
+	echo "(3) GCP."
+	echo ""
+	echo "(4) Azure."
+	echo ""
 	printf 'Please enter your choice '1', '2', '3', '4' :  '
         read ACCEPT
         case $ACCEPT in
@@ -402,9 +396,9 @@ enter_cloud()
        	    CLOUD="azure"
             ;;
           *)
-            echo "" $ECHO_OUT
-            echo "Invalid Choice: $ACCEPT" $ECHO_OUT
-            echo "Please enter your choice '1', '2', '3', '4'." $ECHO_OUT
+            echo ""
+            echo "Invalid Choice: $ACCEPT"
+            echo "Please enter your choice '1', '2', '3', '4'."
 	    clear_screen
             enter_cloud
             ;;
@@ -444,18 +438,29 @@ add_worker()
       exit_error
    fi
 
+   WORKER_MEM=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "free -g | grep Mem | awk '{ print \$2 }'")
+   WORKER_DISK=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "df -h | grep '/\$' | awk '{ print \$4 }'") 
+   WORKER_CPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "cat /proc/cpuinfo | grep '^processor' | wc -l")
+
+   echo "Amount of disk space available on root partition ('/'): $WORKER_DISK"
+   echo "Amount of memory available on worker: $WORKER_MEM"
    printf 'Please enter the amout of memory (in GB) in this worker to be used (GB): '
    read GBS
 
    MBS=$(expr $GBS \* 1024)
-   printf 'Please enter the number of CPUs in this worker to be used:'
+   echo "Amount of CPUs available on worker: $WORKER_CPUS"
+   printf 'Please enter the number of CPUs in this worker to be used: '
    read CPUS
 
-   WORKER_GPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "nvidia-smi -L | wcount -l")
-   if [ "$WORKER_GPUS" != "" ] && [ $WORKER_GPUS -gt 0 ] ; then
-       echo ""
-       echo "Number of GPUs found on worker host: $WORKER_GPUS"
-       printf 'Do you want these GPUs to be used by this worker (y/n):'
+   WORKER_GPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "lspci | grep -i nvidia | wc -l")
+   if [ "$WORKER_GPUS" == "" ] ; then
+     WORKER_GPUS=0
+   fi
+   echo ""
+   echo "Number of GPUs found on worker: $WORKER_GPUS"
+   echo ""
+   if [[ "$WORKER_GPUS" > "0" ]] ; then
+       printf 'Do you want all of the GPUs to be used by this worker (y/n):'
        read ACCEPT
        if [ "$ACCEPT" == "y" ] || [ "$ACCEPT" == "yes" ] ; then
 	   echo "$WORKER_GPUS will be used on this worker."
@@ -463,9 +468,11 @@ add_worker()
 	   echo "$The GPUs will not be used on this worker."
 	   WORKER_GPUS=0
        fi
+   else
+       echo "No worker GPUs available"
    fi
 
-   if [ $WORKER_GPUS -gt 0 ] ; then
+   if [[ "$WORKER_GPUS" > "0" ]] ; then
        set_gpus
    else
        unset_gpus
@@ -492,17 +499,14 @@ echo "
       - hopslog::_filebeat-beam
       - tensorflow
       - hopsmonitor::node_exporter
-
-
-" >> $YML_CLUSTER $ECHO_OUT
+" >> $YML_FILE
 
 if [ $? -ne 0 ] ; then
- echo "" $ECHO_OUT
- echo "Failure: could not add a worker to the yml cnf file: $YML_CLUSTER" $ECHO_OUT
+ echo ""
+ echo "Failure: could not add a worker to the yml file."
  exit_error
 fi
 WORKER_ID=$((WORKER_ID+1))
-clear_screen
 }
 
 
@@ -518,11 +522,15 @@ worker_size()
     #PasswordAuthentication no
    printf 'Please enter the number of extra workers you want to add (default: 0): '
    read NUM_WORKERS
+   if [ "$NUM_WORKERS" = "" ] ; then
+       NUM_WORKERS=0
+   fi
    i=0
-   while $i -lt $NUM_WORKERS
+   while [ $i -lt $NUM_WORKERS ] ;
    do
       add_worker
       i=$((i+1))
+      clear_screen      
    done
 }
 
@@ -593,19 +601,21 @@ check_userid()
 while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
   case "$1" in
     -h|--help|-help)
-	      echo "" $ECHO_OUT
-	      echo "You can install Karamel asa normal user." $ECHO_OUT
+	      echo ""
+	      echo "You can install Karamel asa normal user."
               echo "usage: [sudo] ./$SCRIPTNAME "
-	      echo " [-h|--help]      help message" $ECHO_OUT
-	      echo " [-i|--install-action localhost|cluster|karamel] " $ECHO_OUT
+	      echo " [-h|--help]      help message"
+	      echo " [-i|--install-action localhost|cluster|karamel] "
 	      echo "                 'localhost' installs a localhost Hopsworks cluster"
 	      echo "                 'localhost-tls' installs a localhost Hopsworks cluster with TLS enabled"	      
-#	      echo "                 'cluster' installs a multi-host Hopsworks cluster"
+	      echo "                 'cluster' installs a multi-host Hopsworks cluster"
+	      echo "                 'enterprise' installs a multi-host Hopsworks cluster"	      
 	      echo "                 'karamel' installs and starts Karamel"
 	      echo "                 'purge' removes Hopsworks completely from this host"	      
 	      echo " [-cl|--clean]    removes the karamel installation"
 	      echo " [-dr|--dry-run]      does not run karamel, just generates YML file"
 	      echo " [--gcp-nvme]     mount NVMe disk on GCP node"
+	      echo " [-c|--cloud     on-premises|gcp|aws|azure]"
 	      echo " [-ni|--non-interactive)]"
 	      echo "                  skip license/terms acceptance and all confirmation screens."
 	      echo "" 
@@ -623,6 +633,10 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
   		      ;;
 		 cluster)
 		      INSTALL_ACTION=$INSTALL_CLUSTER
+		      ;;
+		 enterprise)
+		      INSTALL_ACTION=$INSTALL_CLUSTER
+                      ENTERPRISE=1
 		      ;;
 	         karamel)
 		      INSTALL_ACTION=$INSTALL_KARAMEL
@@ -705,8 +719,8 @@ if [ $NON_INTERACT -eq 0 ] ; then
     display_license
     accept_license  
     clear_screen
-    enter_email
-    clear_screen
+#    enter_email
+#    clear_screen
 fi
 
 install_action
@@ -718,6 +732,10 @@ if [ "$INSTALL_ACTION" == "$INSTALL_NVIDIA" ] ; then
    echo "Rebooting....."
    sudo reboot
 fi    
+if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST_TLS" ]  ; then
+    enter_cloud
+    cp -f $INPUT_YML $YML_FILE    
+fi
 
 if [ "$INSTALL_ACTION" == "$PURGE_HOPSWORKS" ] ; then
    
@@ -738,10 +756,6 @@ if [ "$INSTALL_ACTION" == "$PURGE_HOPSWORKS" ] ; then
    exit 0
 fi    
 
-if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST_TLS" ]  ; then
-  enter_cloud
-fi
-  
 # generate a pub/private keypair if none exists
 if [ ! -e ~/.ssh/id_rsa.pub ] ; then
   cat /dev/zero | ssh-keygen -q -N "" > /dev/null
@@ -790,6 +804,16 @@ fi
 
 install_dir
 
+if [ ! -d cluster-defns ] ; then
+    mkdir cluster-defns
+fi
+if [ ! -e $INPUT_YML ] ; then
+    cd cluster-defns
+    wget https://raw.githubusercontent.com/logicalclocks/karamel-chef/${HOPSWORKS_BRANCH}/$INPUT_YML
+    cd ..
+fi
+
+
 if [ ! -d karamel-${KARAMEL_VERSION} ] ; then
     echo "Installing Karamel..."
     clear_screen    
@@ -833,39 +857,51 @@ else
 	echo ""
     fi
 
-    if [ ! -d cluster-defns ] ; then
-	mkdir cluster-defns
-	cd cluster-defns
-	wget https://raw.githubusercontent.com/logicalclocks/karamel-chef/${HOPSWORKS_BRANCH}/cluster-defns/hopsworks-installer.yml
-	cd ..
-    fi
+    if [ $AVAILABLE_GPUS -gt 0 ] ; then
+      RM_CLASS="cuda:
+    accept_nvidia_download_terms: true
+  hops:nnn
+    capacity: 
+      resource_calculator_class: org.apache.hadoop.yarn.util.resource.DominantResourceCalculatorGPU
+    yarn:
+      gpus: '*'"
+    else
+      unset_gpus	
+    fi    
+
+
     DNS_IP=$(sudo cat /etc/resolv.conf | grep ^nameserver | awk '{ print $2 }' | tail -1)
     BASE_PWD=$(date | md5sum | head -c${1:-8})
-    cp -f $yml cluster-defns/hopsworks-installer-active.yml
     GBS=$(expr $AVAILABLE_MEMORY - 2)
     MEM=$(expr $GBS \* 1024)    
-    perl -pi -e "s/__CLOUD__/$CLOUD/" cluster-defns/hopsworks-installer-active.yml
-    perl -pi -e "s/__MEM__/$MEM/" cluster-defns/hopsworks-installer-active.yml
-    perl -pi -e "s/__PWD__/$BASE_PWD/g" cluster-defns/hopsworks-installer-active.yml
-    perl -pi -e "s/__DNS_IP__/$DNS_IP/g" cluster-defns/hopsworks-installer-active.yml        
+    perl -pi -e "s/__CLOUD__/$CLOUD/" $YML_FILE
+    perl -pi -e "s/__MEM__/$MEM/" $YML_FILE
+    perl -pi -e "s/__PWD__/$BASE_PWD/g" $YML_FILE
+    perl -pi -e "s/__DNS_IP__/$DNS_IP/g" $YML_FILE        
     CPUS=$(expr $AVAILABLE_CPUS - 1)
-    perl -pi -e "s/__CPUS__/$CPUS/" cluster-defns/hopsworks-installer-active.yml
-    perl -pi -e "s/__VERSION__/$HOPSWORKS_VERSION/" cluster-defns/hopsworks-installer-active.yml
-    perl -pi -e "s/__BRANCH__/$HOPSWORKS_BRANCH/" cluster-defns/hopsworks-installer-active.yml    
-    perl -pi -e "s/__USER__/$USER/" cluster-defns/hopsworks-installer-active.yml
-    perl -pi -e "s/__IP__/$IP/" cluster-defns/hopsworks-installer-active.yml
-    perl -pi -e "s/__RM_CLASS__/$RM_CLASS/" cluster-defns/hopsworks-installer-active.yml
-    perl -pi -e "s/__TLS__/$TLS/" cluster-defns/hopsworks-installer-active.yml
+    perl -pi -e "s/__CPUS__/$CPUS/" $YML_FILE
+    perl -pi -e "s/__VERSION__/$HOPSWORKS_VERSION/" $YML_FILE
+    perl -pi -e "s/__BRANCH__/$HOPSWORKS_BRANCH/" $YML_FILE    
+    perl -pi -e "s/__USER__/$USER/" $YML_FILE
+    perl -pi -e "s/__IP__/$IP/" $YML_FILE
+    perl -pi -e "s/__RM_CLASS__/$RM_CLASS/" $YML_FILE
+    perl -pi -e "s/__TLS__/$TLS/" $YML_FILE
     if [ $ENTERPRISE -eq 1 ] ; then
 	echo ""
         echo -n "Enter the URL to download the Enterprise Binaries from: "
-	read download_url
-        DOWNLOAD="download_url: https://hopsworks-distribution.s3-eu-west-1.amazonaws.com/$HOPSWORKS_VERSION
+	read DOWNLOAD_URL
+	DOWNLOAD_URL=${DOWNLOAD_URL//\./\\\.}
+	DOWNLOAD_URL=${DOWNLOAD_URL//\//\\\/}	
+        echo ""
+        echo "Download url is: $DOWNLOAD_URL"
+        echo ""	
+	#DNS_IP=$(printf "%q" "$DNS_IP")
+	DNS_IP=${DNS_IP//\./\\\.}
+        DOWNLOAD="download_url: $DOWNLOAD_URL
   kube-hops:
     pki:
      verify_hopsworks_cert: false
     fallback_dns: $DNS_IP
-
 "
         ENTERPRISE_RECIPES="- kube-hops::hopsworks
       - kube-hops::ca
@@ -875,14 +911,14 @@ else
       - kube-hops::node
 "
     fi
-    perl -pi -e "s/__DOWNLOAD__/$DOWNLOAD/" cluster-defns/hopsworks-installer-active.yml
-    perl -pi -e "s/__ENTERPRISE_RECIPES__/$ENTERPRISE_RECIPES/" cluster-defns/hopsworks-installer-active.yml
+    perl -pi -e "s/__DOWNLOAD__/$DOWNLOAD/" $YML_FILE
+    perl -pi -e "s/__ENTERPRISE_RECIPES__/$ENTERPRISE_RECIPES/" $YML_FILE
     
   if [ $DRY_RUN -eq 0 ] ; then
     cd karamel-${KARAMEL_VERSION}
     echo "Running command from ${PWD}:"
-    echo "   nohup ./bin/karamel -headless -launch ../cluster-defns/hopsworks-installer-active.yml $SUDO_PWD > ../installation.log &"
-    nohup ./bin/karamel -headless -launch ../cluster-defns/hopsworks-installer-active.yml $SUDO_PWD > ../installation.log &
+    echo "   nohup ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log &"
+    nohup ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log &
     echo ""
     echo "********************************************************************************************"
     echo ""
