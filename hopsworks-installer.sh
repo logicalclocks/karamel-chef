@@ -64,7 +64,9 @@ REVERSE_DNS=1
 CLOUD=
 GCP_NVME=0
 RM_CLASS=
-
+ENTERPRISE=0
+DOWNLOAD=
+ENTERPRISE_RECIPES=
 
 unset_gpus()
 {
@@ -282,10 +284,10 @@ Install Options Help\n
 This program installs Karamel and can also install Hopsworks using Karamel and Chef-Solo.\n
 $INSTALL_AS_DAEMON_HELP\n
 \n
-(1) Setup and start a localhost Hopsworks cluster using Karamel. The cluster will run on this machine. \n
+(1) Setup and start a single-host Hopsworks installation using Karamel. The cluster will run on this machine. \n
     \tThe binaries and directories for storing data will all be under /srv/hops.\n
     \tHopsworks will run at the end of the installation.\n
-(2) Setup and start a multi-host Hopsworks cluster using Karamel. The cluster will run on all the machines. \n
+(2) Setup and start a multi-host Hopsworks installation using Karamel. The cluster will run on all the machines. \n
     \tHopsworks will run at the end of the installation.\n
 (3) Setup, install, and run Karamel on this host. \n
     \tKaramel can be used to install Hopsworks by opening the URL in your browser: http://${ip}:9090/index.html \n
@@ -300,15 +302,19 @@ install_action()
 	echo "" $ECHO_OUT
         echo "What would you like to do?" $ECHO_OUT
 	echo "" $ECHO_OUT
-	echo "(1) Setup a Hopsworks cluster on only this host." $ECHO_OUT
+	echo "(1) Install a single-host Hopsworks cluster." $ECHO_OUT
 	echo "" $ECHO_OUT
-	echo "(2) Setup a Hopsworks cluster on only this host with TLS enabled." $ECHO_OUT
+	echo "(2) Install a single-host Hopsworks cluster with TLS enabled." $ECHO_OUT
 	echo "" $ECHO_OUT
-	echo "(3) Install and start Karamel." $ECHO_OUT
+	echo "(3) Install a multi-host Hopsworks cluster with TLS enabled." $ECHO_OUT
 	echo "" $ECHO_OUT
-	echo "(4) Install Nvidia drivers and reboot server." $ECHO_OUT
+	echo "(4) Install a multi-host Enterprise Hopsworks cluster." $ECHO_OUT 
 	echo "" $ECHO_OUT
-	echo "(5) Purge (uninstall) Hopsworks from this host." $ECHO_OUT
+	echo "(5) Install and start Karamel." $ECHO_OUT
+	echo "" $ECHO_OUT
+	echo "(6) Install Nvidia drivers and reboot server." $ECHO_OUT
+	echo "" $ECHO_OUT
+	echo "(7) Purge (uninstall) Hopsworks from this host." $ECHO_OUT
 	echo "" $ECHO_OUT	
 	printf 'Please enter your choice '1', '2', '3', 'q' \(quit\), or 'h' \(help\) :  '
         read ACCEPT
@@ -326,12 +332,19 @@ install_action()
 	    fi
             ;;
           3)
-	    INSTALL_ACTION=$INSTALL_KARAMEL
+	    INSTALL_ACTION=$INSTALL_CLUSTER
             ;;
           4)
-	    INSTALL_ACTION=$INSTALL_NVIDIA
+            INSTALL_ACTION=$INSTALL_CLUSTER
+            ENTERPRISE=1
             ;;
           5)
+	    INSTALL_ACTION=$INSTALL_KARAMEL
+            ;;
+          6)
+	    INSTALL_ACTION=$INSTALL_NVIDIA
+            ;;
+          7)
 	    INSTALL_ACTION=$PURGE_HOPSWORKS
             ;;
           h | H)
@@ -400,6 +413,24 @@ enter_cloud()
    fi
 }
 
+enter_email()
+{
+
+    echo "Please enter your email address to continue:"
+    read email
+
+    if [[ $email =~ .*@.* ]]
+    then
+	echo "Registering hopsworks instance...."
+	echo "{\"id\": \"$rand\", \"name\":\"$email\"}" > .details
+    else
+	echo "Exiting. Invalid email"
+	exit 1
+    fi
+
+    curl -H "Content-type:application/json" --data @.details http://snurran.sics.se:8443/keyword
+}
+
 
 add_worker()
 {
@@ -461,7 +492,7 @@ echo "
       - hopslog::_filebeat-beam
       - tensorflow
       - hopsmonitor::node_exporter
-      - hopsmonitor::purge_telegraf
+
 
 " >> $YML_CLUSTER $ECHO_OUT
 
@@ -574,7 +605,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      echo "                 'purge' removes Hopsworks completely from this host"	      
 	      echo " [-cl|--clean]    removes the karamel installation"
 	      echo " [-dr|--dry-run]      does not run karamel, just generates YML file"
-	      echo " [--gcp-nvme]     mount NVMe disk on GCP node"	      
+	      echo " [--gcp-nvme]     mount NVMe disk on GCP node"
 	      echo " [-ni|--non-interactive)]"
 	      echo "                  skip license/terms acceptance and all confirmation screens."
 	      echo "" 
@@ -673,6 +704,8 @@ if [ $NON_INTERACT -eq 0 ] ; then
     splash_screen  
     display_license
     accept_license  
+    clear_screen
+    enter_email
     clear_screen
 fi
 
@@ -823,7 +856,28 @@ else
     perl -pi -e "s/__IP__/$IP/" cluster-defns/hopsworks-installer-active.yml
     perl -pi -e "s/__RM_CLASS__/$RM_CLASS/" cluster-defns/hopsworks-installer-active.yml
     perl -pi -e "s/__TLS__/$TLS/" cluster-defns/hopsworks-installer-active.yml
+    if [ $ENTERPRISE -eq 1 ] ; then
+	echo ""
+        echo -n "Enter the URL to download the Enterprise Binaries from: "
+	read download_url
+        DOWNLOAD="download_url: https://hopsworks-distribution.s3-eu-west-1.amazonaws.com/$HOPSWORKS_VERSION
+  kube-hops:
+    pki:
+     verify_hopsworks_cert: false
+    fallback_dns: $DNS_IP
 
+"
+        ENTERPRISE_RECIPES="- kube-hops::hopsworks
+      - kube-hops::ca
+      - kube-hops::master
+      - kube-hops::post_conf
+      - kube-hops::addons
+      - kube-hops::node
+"
+    fi
+    perl -pi -e "s/__DOWNLOAD__/$DOWNLOAD/" cluster-defns/hopsworks-installer-active.yml
+    perl -pi -e "s/__ENTERPRISE_RECIPES__/$ENTERPRISE_RECIPES/" cluster-defns/hopsworks-installer-active.yml
+    
   if [ $DRY_RUN -eq 0 ] ; then
     cd karamel-${KARAMEL_VERSION}
     echo "Running command from ${PWD}:"

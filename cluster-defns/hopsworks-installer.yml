@@ -8,7 +8,7 @@ cookbooks:
     branch: __BRANCH__
 
 attrs:
-  #download_url: https://hopsworks-distribution.s3-eu-west-1.amazonaws.com/__VERSION__
+  __DOWNLOAD__
   install:
     dir: /srv/hops
     cloud: __CLOUD__
@@ -107,3 +107,4 @@ groups:
       - hopsmonitor::alertmanager
       - hopsmonitor::node_exporter
       - hopsmonitor::purge_telegraf
+      __ENTERPRISE_RECIPES__
