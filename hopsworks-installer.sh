@@ -46,6 +46,7 @@ else
     AVAILABLE_GPUS=0
 fi    
 IP=$(hostname -I | awk '{ print $1 }')
+HOSTNAME=$(hostname -f)
 DISTRO=
 WORKER_ID=0
 DRY_RUN=0
@@ -58,15 +59,23 @@ INSTALL_NVIDIA=4
 PURGE_HOPSWORKS=5
 INSTALL_CLUSTER=6
 TLS="false"
-
+REVERSE_DNS=1
 
 CLOUD=
 GCP_NVME=0
+RM_CLASS=
+
+
+unset_gpus()
+{
 RM_CLASS="hops:
     yarn:"
+}
+unset_gpus
 
 
-if [ $AVAILABLE_GPUS -gt 0 ] ; then
+set_gpus()
+{
 RM_CLASS="cuda:
     accept_nvidia_download_terms: true
   hops:
@@ -74,7 +83,11 @@ RM_CLASS="cuda:
       resource_calculator_class: org.apache.hadoop.yarn.util.resource.DominantResourceCalculatorGPU
     yarn:
       gpus: '*'"
-  
+}
+
+
+if [ $AVAILABLE_GPUS -gt 0 ] ; then
+   set_gpus  
 fi    
 
 # $1 = String describing error
@@ -144,13 +157,30 @@ splash_screen()
   echo "* your ip is: $IP"
   echo "* installation user: $USER"
   echo "* linux distro: $DISTRO"
-  hname=$(hostname -f)
-  strlen=${#hname}
+
+  strlen=${#HOSTNAME}
   if [ $strlen -gt 64 ] ; then
       echo ""
-      echo "WARNING: hostname is longer 64 chars which can cause problems with OpenSSL: $hname"
+      echo "WARNING: hostname is longer 64 chars which can cause problems with OpenSSL: $HOSTNAME"
       echo ""
   fi
+
+  # If there are multiple FQDNs for this IP, return the last one (this works on Azure)
+  reverse_hostname=$(dig +noall +answer -x $IP | awk '{ print $5 }' | tail -1)
+  # stirp off trailing '.' chracter on the hostname returned
+  reverse_hostname=${reverse_hostname::-1}
+  if [ "$reverse_hostname" != "$HOSTNAME" ] ; then
+      REVERSE_DNS=0
+      echo ""
+      echo "WARNING: Reverse DNS does not work on this host. If you enable 'TLS', it will not work."
+      echo "Hostname: $HOSTNAME"
+      echo "Reverse Hostname: $reverse_hostname"
+      echo "Azure: you have to add your VM to a 'Private DNS Zone' to make reverse-DNS work correctly for local IPs."
+      echo "https://docs.microsoft.com/en-us/azure/dns/private-dns-getstarted-portal"
+      echo "On-premises: you have to configure your networking to make reverse-DNS work correctly."
+      echo ""
+  fi
+
   
   pgrep mysql > /dev/null
   if [ $? -eq 0 ] ; then
@@ -288,6 +318,12 @@ install_action()
             ;;
           2)
 	    INSTALL_ACTION=$INSTALL_LOCALHOST_TLS
+	    if [ $REVERSE_DNS -eq 0 ] ; then
+		echo ""
+		echo "Error: reverse DNS is not working. Cannot install TLS-enabled Hopsworks."
+		echo ""
+		exit_error 12 
+	    fi
             ;;
           3)
 	    INSTALL_ACTION=$INSTALL_KARAMEL
@@ -367,7 +403,7 @@ enter_cloud()
 
 add_worker()
 {
-   printf 'Please enter the number of workers you want to add (default: 0): '
+   printf 'Please enter the IP of the worker you want to add: '
    read WORKER_IP
 
    ssh -t -o StrictHostKeyChecking=no $WORKER_IP "whoami" > /dev/null
@@ -377,21 +413,39 @@ add_worker()
       exit_error
    fi
 
-   printf 'Please enter the amout of memory in this worker that is to be used by YARN in GBs: '
+   printf 'Please enter the amout of memory (in GB) in this worker to be used (GB): '
    read GBS
 
    MBS=$(expr $GBS \* 1024)
-   printf 'Please enter the number of CPUs in this worker to be used by YARN:'
+   printf 'Please enter the number of CPUs in this worker to be used:'
    read CPUS
-   
+
+   WORKER_GPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "nvidia-smi -L | wcount -l")
+   if [ "$WORKER_GPUS" != "" ] && [ $WORKER_GPUS -gt 0 ] ; then
+       echo ""
+       echo "Number of GPUs found on worker host: $WORKER_GPUS"
+       printf 'Do you want these GPUs to be used by this worker (y/n):'
+       read ACCEPT
+       if [ "$ACCEPT" == "y" ] || [ "$ACCEPT" == "yes" ] ; then
+	   echo "$WORKER_GPUS will be used on this worker."
+       else
+	   echo "$The GPUs will not be used on this worker."
+	   WORKER_GPUS=0
+       fi
+   fi
+
+   if [ $WORKER_GPUS -gt 0 ] ; then
+       set_gpus
+   else
+       unset_gpus
+   fi
 echo "  
   datanode${WORKER_ID}:
     size: 1
     baremetal:
       ip: ${WORKER_IP}
     attrs:
-      hops:
-        yarn:
+      $RM_CLASS
           vcores: $CPUS
           memory_mbs: $MBS
     recipes:
@@ -417,6 +471,7 @@ if [ $? -ne 0 ] ; then
  exit_error
 fi
 WORKER_ID=$((WORKER_ID+1))
+clear_screen
 }
 
 
@@ -510,7 +565,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      echo "" $ECHO_OUT
 	      echo "You can install Karamel asa normal user." $ECHO_OUT
               echo "usage: [sudo] ./$SCRIPTNAME "
-	      echo " [-h|--help]      help for ndbinstaller.sh" $ECHO_OUT
+	      echo " [-h|--help]      help message" $ECHO_OUT
 	      echo " [-i|--install-action localhost|cluster|karamel] " $ECHO_OUT
 	      echo "                 'localhost' installs a localhost Hopsworks cluster"
 	      echo "                 'localhost-tls' installs a localhost Hopsworks cluster with TLS enabled"	      
@@ -650,7 +705,7 @@ if [ "$INSTALL_ACTION" == "$PURGE_HOPSWORKS" ] ; then
    exit 0
 fi    
 
-if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST" ] ; then
+if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST_TLS" ]  ; then
   enter_cloud
 fi
   
@@ -684,11 +739,11 @@ if [ $? -ne 0 ] ; then
     echo "Installing Java..."
     clear_screen
     if [ "$DISTRO" == "Ubuntu" ] ; then
-	sudo apt update -y > /dev/null
-	sudo apt install openjdk-8-jre-headless -y > /dev/null
+	sudo apt update -y
+	sudo apt install openjdk-8-jre-headless -y
     elif [ "$DISTRO" == "centos" ] ; then
-	sudo yum install java-1.8.0-openjdk-headless -y > /dev/null
-	sudo yum install wget -y > /dev/null
+	sudo yum install java-1.8.0-openjdk-headless -y
+	sudo yum install wget -y 
     else
 	echo "Could not recognize Linux distro: $DISTRO"
 	exit_error
@@ -737,6 +792,7 @@ if [ "$INSTALL_ACTION" == "$INSTALL_KARAMEL" ]  ; then
 else
     sudo -n true
     if [ $? -ne 0 ] ; then
+	echo ""
 	echo "It appears you need a sudo password for this account."
         echo -n "Enter the sudo password for $USER: "
 	read -s passwd
@@ -766,11 +822,12 @@ else
     perl -pi -e "s/__USER__/$USER/" cluster-defns/hopsworks-installer-active.yml
     perl -pi -e "s/__IP__/$IP/" cluster-defns/hopsworks-installer-active.yml
     perl -pi -e "s/__RM_CLASS__/$RM_CLASS/" cluster-defns/hopsworks-installer-active.yml
-    perl -pi -e "s/__TLS__/$TLS/" cluster-defns/hopsworks-installer-active.yml    
+    perl -pi -e "s/__TLS__/$TLS/" cluster-defns/hopsworks-installer-active.yml
+
   if [ $DRY_RUN -eq 0 ] ; then
     cd karamel-${KARAMEL_VERSION}
     echo "Running command from ${PWD}:"
-    echo " nohup ./bin/karamel -headless -launch ../cluster-defns/hopsworks-installer-active.yml $SUDO_PWD &"
+    echo "   nohup ./bin/karamel -headless -launch ../cluster-defns/hopsworks-installer-active.yml $SUDO_PWD > ../installation.log &"
     nohup ./bin/karamel -headless -launch ../cluster-defns/hopsworks-installer-active.yml $SUDO_PWD > ../installation.log &
     echo ""
     echo "********************************************************************************************"
