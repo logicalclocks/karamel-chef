@@ -47,10 +47,11 @@ CLEAN_INSTALL_DIR=0
 SUDO_PWD=
 INSTALL_LOCALHOST=1
 INSTALL_LOCALHOST_TLS=2
-INSTALL_KARAMEL=3
-INSTALL_NVIDIA=4
-PURGE_HOPSWORKS=5
-INSTALL_CLUSTER=6
+INSTALL_CLUSTER=3
+INSTALL_KARAMEL=4
+INSTALL_NVIDIA=5
+PURGE_HOPSWORKS=7
+PURGE_HOPSWORKS_ALL_HOSTS=8
 TLS="false"
 REVERSE_DNS=1
 
@@ -310,7 +311,9 @@ install_action()
 	echo ""
 	echo "(7) Purge (uninstall) Hopsworks from this host."
 	echo ""	
-	printf 'Please enter your choice '1', '2', '3', 'q' \(quit\), or 'h' \(help\) :  '
+	echo "(8) Purge (uninstall) Hopsworks from ALL hosts."
+	echo ""	
+	printf 'Please enter your choice '1', '2', '3', '4', '5', '6', '7', '8',  'q' \(quit\), or 'h' \(help\) :  '
         read ACCEPT
         case $ACCEPT in
           1)
@@ -340,6 +343,9 @@ install_action()
             ;;
           7)
 	    INSTALL_ACTION=$PURGE_HOPSWORKS
+            ;;
+          8)
+	    INSTALL_ACTION=$PURGE_HOPSWORKS_ALL_HOSTS
             ;;
           h | H)
 	  clear
@@ -442,16 +448,28 @@ add_worker()
    WORKER_DISK=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "df -h | grep '/\$' | awk '{ print \$4 }'") 
    WORKER_CPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "cat /proc/cpuinfo | grep '^processor' | wc -l")
 
+   NUM_GBS=$(expr $AVAILABLE_MEMORY - 2)
+   NUM_CPUS=$(expr $AVAILABLE_CPUS - 1)
+   
    echo "Amount of disk space available on root partition ('/'): $WORKER_DISK"
    echo "Amount of memory available on worker: $WORKER_MEM"
-   printf 'Please enter the amout of memory (in GB) in this worker to be used (GB): '
+   printf 'Please enter the amout of memory in this worker to be used (GBs)'
+   echo -n ". Default is $NUM_GBS: "
    read GBS
-
+   if [ "$GBS" = "" ] ; then
+       GBS=$NUM_GBS
+   fi
+   
    MBS=$(expr $GBS \* 1024)
    echo "Amount of CPUs available on worker: $WORKER_CPUS"
-   printf 'Please enter the number of CPUs in this worker to be used: '
+   printf 'Please enter the number of CPUs in this worker to be used'
+   echo -n ". Default is $NUM_CPUS: "   
    read CPUS
+   if [ "$CPUS" = "" ] ; then
+       CPUS=$NUM_CPUS
+   fi
 
+   
    WORKER_GPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "lspci | grep -i nvidia | wc -l")
    if [ "$WORKER_GPUS" == "" ] ; then
      WORKER_GPUS=0
@@ -585,6 +603,22 @@ check_userid()
   fi
 }
 
+purge_local()
+{
+   echo "Shutting down services..."
+   if sudo test -f "/srv/hops/kagent/kagent/bin/shutdown-all-local-services.sh"  ; then
+     sudo /srv/hops/kagent/kagent/bin/shutdown-all-local-services.sh -f > /dev/null
+   fi
+   echo "Killing karamel..."
+   pkill java
+   echo "Removing karamel..."   
+   rm -rf ~/karamel*
+   echo "Removing cookbooks..."   
+   sudo rm -rf ~/.karamel   
+   sudo rm -rf /tmp/chef-solo/cookbooks
+   echo "Purging old installation..."      
+   sudo rm -rf /srv/hops/*   
+}
 
 ###################################################################################################
 ###################################################################################################
@@ -611,7 +645,8 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      echo "                 'cluster' installs a multi-host Hopsworks cluster"
 	      echo "                 'enterprise' installs a multi-host Hopsworks cluster"	      
 	      echo "                 'karamel' installs and starts Karamel"
-	      echo "                 'purge' removes Hopsworks completely from this host"	      
+	      echo "                 'purge' removes Hopsworks completely from this host"
+	      echo "                 'purge-all' removes Hopsworks completely from ALL hosts"	      
 	      echo " [-cl|--clean]    removes the karamel installation"
 	      echo " [-dr|--dry-run]      does not run karamel, just generates YML file"
 	      echo " [--gcp-nvme]     mount NVMe disk on GCP node"
@@ -646,6 +681,9 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 		      ;;
 	         purge)
 		      INSTALL_ACTION=$PURGE_HOPSWORKS
+		      ;;
+	         purge-all)
+		      INSTALL_ACTION=$PURGE_HOPSWORKS_ALL_HOSTS
 		      ;;
 		  *)
 		      echo "Could not recognise option: $1"
@@ -737,25 +775,33 @@ if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] || [ "$INSTALL_ACTION" == "$INSTA
     cp -f $INPUT_YML $YML_FILE    
 fi
 
-if [ "$INSTALL_ACTION" == "$PURGE_HOPSWORKS" ] ; then
-   
-   cd
-   echo "Shutting down services..."
-   if sudo test -f "/srv/hops/kagent/kagent/bin/shutdown-all-local-services.sh"  ; then
-     sudo /srv/hops/kagent/kagent/bin/shutdown-all-local-services.sh -f > /dev/null
-   fi
-   echo "Killing karamel..."
-   pkill java
-   echo "Removing karamel..."   
-   rm -rf karamel*
-   echo "Removing cookbooks..."   
-   sudo rm -rf .karamel   
-   sudo rm -rf /tmp/chef-solo/cookbooks
-   echo "Purging old installation..."      
-   sudo rm -rf /srv/hops/*
-   exit 0
-fi    
 
+if [ "$INSTALL_ACTION" == "$PURGE_HOPSWORKS_ALL_HOSTS" ] ; then   
+    IPS=$(grep 'ip:' hopsworks-installer-active.yml | awk '{ print $2 '})
+    cd							 
+    for ip in $IPS ; do
+	echo ""
+	echo "Purging on host: $ip"	
+	scp hopsworks-installer.sh ${ip}:
+	ssh $ip "./hopsworks-installer.sh -i purge -ni"
+	ssh $ip "rm -f hopsworks-installer.sh"	
+    done
+
+    # Only delete local files after other hosts
+    purge_local
+    
+    echo ""
+    echo "*********************************************"
+    echo "Finished cleaning all hosts."
+    echo "*********************************************"    
+    exit 0
+fi
+
+if [ "$INSTALL_ACTION" == "$PURGE_HOPSWORKS" ] ; then
+   purge_local
+   exit 0
+fi
+									 
 # generate a pub/private keypair if none exists
 if [ ! -e ~/.ssh/id_rsa.pub ] ; then
   cat /dev/zero | ssh-keygen -q -N "" > /dev/null
