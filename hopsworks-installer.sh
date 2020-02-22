@@ -28,7 +28,8 @@
 ###################################################################################################
 
 HOPSWORKS_VERSION=1.2.0
-HOPSWORKS_BRANCH=1.2-kube-azure
+HOPSWORKS_BRANCH=1.2
+CLUSTER_DEFINITION_BRANCH=karamel_installer
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
 NON_INTERACT=0
@@ -68,8 +69,9 @@ KUBE="false"
 
 which lspci > /dev/null
 if [ $? -ne 0 ] ; then
-   # this only happens on centos
-   sudo yum install pciutils -y
+    # this only happens on centos
+   echo "Installing pciutils ...."
+   sudo yum install pciutils -y > /dev/null
 fi    
 AVAILABLE_GPUS=$(sudo lspci | grep -i nvidia | wc -l)
 
@@ -168,12 +170,41 @@ splash_screen()
       echo ""
   fi
 
+  if [ $AVAILABLE_MEMORY -lt 29 ] ; then
+      echo ""
+      echo "WARNING: We recommend at least 32GB of RAM. Minimum is 16GB of Ram. You have $AVAILABLE_MEMORY GB of RAM"
+      echo ""
+  fi
+
+  space=${AVAILABLE_DISK::-1}
+  if [ $space -lt 60 ] && [ "$AVAILABLE_MNT" == "" ]; then
+      echo ""
+      echo "WARNING: We recommend at least 60GB of disk space on the root partition. Minimum is 50GB of available disk."
+      echo "You have $AVAILABLE_DISK space on '/', and no space on '/mnt'."
+      echo ""
+  fi
+  if [ "$AVAILABLE_MNT" != "" ] ; then
+      mnt=${AVAILABLE_MNT::-1}
+      if [ $space -lt 30 ] || [ $mnt < 50 ]; then
+      echo ""
+      echo "WARNING: We recommend at least 30GB of disk space on the root partition as well as at least 50GB on the /mnt partition."
+      echo "You have $AVAILABLE_DISK space on '/', and ${space}G on '/mnt'."
+      echo ""
+      fi
+  fi
+  if [ $AVAILABLE_CPUS -lt 4 ] ; then
+      echo ""
+      echo "WARNING: Hopsworks needs at least 4 CPUs to be able to run Spark applications."
+      echo ""
+  fi       
+  
   which dig > /dev/null
   if [ $? -ne 0 ] ; then
+    echo "Installing dig ..."
     if [ "$DISTRO" == "Ubuntu" ] ; then
-        sudo apt install dnsutils -y
+        sudo apt install dnsutils -y  > /dev/null
     elif [ "$DISTRO" == "centos" ] ; then      
-	sudo yum install bind-utils -y
+	sudo yum install bind-utils -y > /dev/null
     fi
   fi
   # If there are multiple FQDNs for this IP, return the last one (this works on Azure)
@@ -888,14 +919,15 @@ if [ ! -d cluster-defns ] ; then
 fi
 if [ ! -e $INPUT_YML ] ; then
     cd cluster-defns
-    wget https://raw.githubusercontent.com/logicalclocks/karamel-chef/${HOPSWORKS_BRANCH}/$INPUT_YML
+    wget https://raw.githubusercontent.com/logicalclocks/karamel-chef/${CLUSTER_DEFINITION_BRANCH}/$INPUT_YML
     cd ..
 fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST_TLS" ]  ; then
     clear_screen    
     enter_cloud
-    cp -f $INPUT_YML $YML_FILE    
+    cp -f $INPUT_YML $YML_FILE
+    exit
 fi
 
 
