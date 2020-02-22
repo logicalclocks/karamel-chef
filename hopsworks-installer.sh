@@ -525,10 +525,17 @@ add_worker()
        CPUS=$NUM_CPUS
    fi
 
-
    if [ "$DISTRO" == "centos" ] ; then
        ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo yum install pciutils -y"
    fi
+
+   if [ "$CLOUD" == "azure" ] ; then
+       echo ""
+       echo "On Azure, you need to add every worker to the same Private DNS Zone, and note the hostname you set in Azure."
+       printf 'Please enter that private DNS hostname for this worker:'
+       read PRIVATE_HOSTNAME
+       ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo hostname $PRIVATE_HOSTNAME"
+   fi       
    
    WORKER_GPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo lspci | grep -i nvidia | wc -l")
    if [ "$WORKER_GPUS" == "" ] ; then
@@ -933,6 +940,16 @@ if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] || [ "$INSTALL_ACTION" == "$INSTA
     cp -f $INPUT_YML $YML_FILE
 fi
 
+if [ "$CLOUD" == "azure" ] ; then
+    echo ""
+    echo "On Azure, you need to add every host in Hopsworks to the same Private DNS Zone, and note the hostname you set in Azure."
+    printf 'Please enter the private DNS hostname for this head node:'
+    read PRIVATE_HOSTNAME
+    sudo hostname $PRIVATE_HOSTNAME
+    clear_screen
+fi       
+
+
 
 if [ ! -d karamel-${KARAMEL_VERSION} ] ; then
     echo "Installing Karamel..."
@@ -1010,8 +1027,6 @@ else
 	read DOWNLOAD_URL
 	DOWNLOAD_URL=${DOWNLOAD_URL//\./\\\.}
 	DOWNLOAD_URL=${DOWNLOAD_URL//\//\\\/}	
-        echo ""
-        echo "Download url is: $DOWNLOAD_URL"
         echo ""	
 	#DNS_IP=$(printf "%q" "$DNS_IP")
 	DNS_IP=${DNS_IP//\./\\\.}
