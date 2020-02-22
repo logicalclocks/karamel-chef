@@ -37,7 +37,6 @@ AVAILABLE_MEMORY=$(free -g | grep Mem | awk '{ print $2 }')
 AVAILABLE_DISK=$(df -h | grep '/$' | awk '{ print $4 }')
 AVAILABLE_MNT=$(df -h | grep '/mnt$' | awk '{ print $4 }')
 AVAILABLE_CPUS=$(cat /proc/cpuinfo | grep '^processor' | wc -l)
-AVAILABLE_GPUS=$(lspci | grep -i nvidia | wc -l)
 IP=$(hostname -I | awk '{ print $1 }')
 HOSTNAME=$(hostname -f)
 DISTRO=
@@ -59,10 +58,21 @@ CLOUD=
 GCP_NVME=0
 RM_CLASS=
 ENTERPRISE=0
+KUBERNETES=0
 DOWNLOAD=
-ENTERPRISE_RECIPES=
+KUBERNETES_RECIPES=
 INPUT_YML="cluster-defns/hopsworks-installer.yml"
 YML_FILE="cluster-defns/hopsworks-installer-active.yml"
+ENTERPRISE_ATTRS=
+KUBE="false"
+
+which lspci > /dev/null
+if [ $? -ne 0 ] ; then
+   # this only happens on centos
+   sudo yum install pciutils -y
+fi    
+AVAILABLE_GPUS=$(sudo lspci | grep -i nvidia | wc -l)
+
 
 unset_gpus()
 {
@@ -158,6 +168,14 @@ splash_screen()
       echo ""
   fi
 
+  which dig > /dev/null
+  if [ $? -ne 0 ] ; then
+    if [ "$DISTRO" == "Ubuntu" ] ; then
+        sudo apt install dnsutils -y
+    elif [ "$DISTRO" == "centos" ] ; then      
+	sudo yum install bind-utils -y
+    fi
+  fi
   # If there are multiple FQDNs for this IP, return the last one (this works on Azure)
   reverse_hostname=$(dig +noall +answer -x $IP | awk '{ print $5 }' | tail -1)
   # stirp off trailing '.' chracter on the hostname returned
@@ -291,7 +309,7 @@ $INSTALL_AS_DAEMON_HELP\n
 
 install_action()
 {
-    if [ "$INSTALL_ACTION" = "" ] ; then
+    if [ "$INSTALL_ACTION" == "" ] ; then
 
         echo "-------------------- Installation Options --------------------"
 	echo ""
@@ -305,15 +323,17 @@ install_action()
 	echo ""
 	echo "(4) Install an Enterprise Hopsworks cluster." 
 	echo ""
-	echo "(5) Install and start Karamel."
+	echo "(5) Install an Enterprise Hopsworks cluster with Kubernetes"
 	echo ""
-	echo "(6) Install Nvidia drivers and reboot server."
+	echo "(6) Install and start Karamel."
 	echo ""
-	echo "(7) Purge (uninstall) Hopsworks from this host."
+	echo "(7) Install Nvidia drivers and reboot server."
+	echo ""
+	echo "(8) Purge (uninstall) Hopsworks from this host."
 	echo ""	
-	echo "(8) Purge (uninstall) Hopsworks from ALL hosts."
+	echo "(9) Purge (uninstall) Hopsworks from ALL hosts."
 	echo ""	
-	printf 'Please enter your choice '1', '2', '3', '4', '5', '6', '7', '8',  'q' \(quit\), or 'h' \(help\) :  '
+	printf 'Please enter your choice '1', '2', '3', '4', '5', '6', '7', '8', '9',  'q' \(quit\), or 'h' \(help\) :  '
         read ACCEPT
         case $ACCEPT in
           1)
@@ -336,15 +356,20 @@ install_action()
             ENTERPRISE=1
             ;;
           5)
-	    INSTALL_ACTION=$INSTALL_KARAMEL
+            INSTALL_ACTION=$INSTALL_CLUSTER
+            ENTERPRISE=1
+	    KUBERNETES=1
             ;;
           6)
-	    INSTALL_ACTION=$INSTALL_NVIDIA
+	    INSTALL_ACTION=$INSTALL_KARAMEL
             ;;
           7)
-	    INSTALL_ACTION=$PURGE_HOPSWORKS
+	    INSTALL_ACTION=$INSTALL_NVIDIA
             ;;
           8)
+	    INSTALL_ACTION=$PURGE_HOPSWORKS
+            ;;
+          9)
 	    INSTALL_ACTION=$PURGE_HOPSWORKS_ALL_HOSTS
             ;;
           h | H)
@@ -372,7 +397,7 @@ install_action()
 
 enter_cloud()
 {
-    if [ "$CLOUD" = "" ] ; then
+    if [ "$CLOUD" == "" ] ; then
 
         echo "-------------------- Where are you installing Hopsworks? --------------------"
 	echo ""
@@ -456,7 +481,7 @@ add_worker()
    printf 'Please enter the amout of memory in this worker to be used (GBs)'
    echo -n ". Default is $NUM_GBS: "
    read GBS
-   if [ "$GBS" = "" ] ; then
+   if [ "$GBS" == "" ] ; then
        GBS=$NUM_GBS
    fi
    
@@ -465,12 +490,16 @@ add_worker()
    printf 'Please enter the number of CPUs in this worker to be used'
    echo -n ". Default is $NUM_CPUS: "   
    read CPUS
-   if [ "$CPUS" = "" ] ; then
+   if [ "$CPUS" == "" ] ; then
        CPUS=$NUM_CPUS
    fi
 
+
+   if [ "$DISTRO" == "centos" ] ; then
+       ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo yum install pciutils -y"
+   fi
    
-   WORKER_GPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "lspci | grep -i nvidia | wc -l")
+   WORKER_GPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo lspci | grep -i nvidia | wc -l")
    if [ "$WORKER_GPUS" == "" ] ; then
      WORKER_GPUS=0
    fi
@@ -540,7 +569,7 @@ worker_size()
     #PasswordAuthentication no
    printf 'Please enter the number of extra workers you want to add (default: 0): '
    read NUM_WORKERS
-   if [ "$NUM_WORKERS" = "" ] ; then
+   if [ "$NUM_WORKERS" == "" ] ; then
        NUM_WORKERS=0
    fi
    i=0
@@ -598,7 +627,7 @@ check_userid()
 {
   # Check if user is root
   USERID=`id | sed -e 's/).*//; s/^.*(//;'`
-  if [ "X$USERID" = "Xroot" ]; then
+  if [ "X$USERID" == "Xroot" ]; then
     exit_error "This script only works for non-root users."
   fi
 }
@@ -672,6 +701,11 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 		 enterprise)
 		      INSTALL_ACTION=$INSTALL_CLUSTER
                       ENTERPRISE=1
+		      ;;
+		 kubernetes)
+		      INSTALL_ACTION=$INSTALL_CLUSTER
+                      ENTERPRISE=1
+                      KUBERNETES=1		      
 		      ;;
 	         karamel)
 		      INSTALL_ACTION=$INSTALL_KARAMEL
@@ -769,12 +803,7 @@ if [ "$INSTALL_ACTION" == "$INSTALL_NVIDIA" ] ; then
    sudo update-initramfs -u
    echo "Rebooting....."
    sudo reboot
-fi    
-if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST_TLS" ]  ; then
-    enter_cloud
-    cp -f $INPUT_YML $YML_FILE    
 fi
-
 
 if [ "$INSTALL_ACTION" == "$PURGE_HOPSWORKS_ALL_HOSTS" ] ; then   
     IPS=$(grep 'ip:' hopsworks-installer-active.yml | awk '{ print $2 '})
@@ -813,9 +842,13 @@ fi
 pub=$(cat ~/.ssh/id_rsa.pub)
 grep "$pub" ~/.ssh/authorized_keys > /dev/null
 if [ $? -ne 0 ] ; then
+  echo "Not currently able to ssh into this host. Updating authorized_keys"
   pushd .
   cd ~/.ssh
-  cat id_rsa.pub >> authorized_keys > /dev/null
+  cat id_rsa.pub >> authorized_keys 
+  if [ $? -ne 0 ] ; then
+      echo "Problem updating .ssh/authorized_keys file. Could not add .ssh/id_rsa.pub to authorized_keys file."
+  fi
   popd
 else
   echo "Found existing entry in authorized_keys"
@@ -859,6 +892,12 @@ if [ ! -e $INPUT_YML ] ; then
     cd ..
 fi
 
+if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST_TLS" ]  ; then
+    clear_screen    
+    enter_cloud
+    cp -f $INPUT_YML $YML_FILE    
+fi
+
 
 if [ ! -d karamel-${KARAMEL_VERSION} ] ; then
     echo "Installing Karamel..."
@@ -881,9 +920,7 @@ fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST_TLS" ] ; then
   TLS="true"
-fi    
-
-
+fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_KARAMEL" ]  ; then
     cd karamel-${KARAMEL_VERSION}
@@ -943,22 +980,33 @@ else
         echo ""	
 	#DNS_IP=$(printf "%q" "$DNS_IP")
 	DNS_IP=${DNS_IP//\./\\\.}
-        DOWNLOAD="download_url: $DOWNLOAD_URL
+	if [ $KUBERNETES -eq 1 ] ; then
+	  KUBE="true"
+          DOWNLOAD="download_url: $DOWNLOAD_URL
   kube-hops:
     pki:
      verify_hopsworks_cert: false
     fallback_dns: $DNS_IP
 "
-        ENTERPRISE_RECIPES="- kube-hops::hopsworks
+          KUBERNETES_RECIPES="- kube-hops::hopsworks
       - kube-hops::ca
       - kube-hops::master
       - kube-hops::post_conf
       - kube-hops::addons
       - kube-hops::node
-"
+"	  
+	else
+          DOWNLOAD="download_url: $DOWNLOAD_URL"	    
+	fi
+        ENTERPRISE_ATTRS="enterprise:
+      install: true
+      download_url: $DOWNLOAD_URL"
+
     fi
+    perl -pi -e "s/__ENTERPRISE__/$ENTERPRISE_ATTRS/" $YML_FILE
     perl -pi -e "s/__DOWNLOAD__/$DOWNLOAD/" $YML_FILE
-    perl -pi -e "s/__ENTERPRISE_RECIPES__/$ENTERPRISE_RECIPES/" $YML_FILE
+    perl -pi -e "s/__KUBERNETES_RECIPES__/$KUBERNETES_RECIPES/" $YML_FILE
+    perl -pi -e "s/__KUBE__/$KUBE/" $YML_FILE
     
   if [ $DRY_RUN -eq 0 ] ; then
     cd karamel-${KARAMEL_VERSION}
