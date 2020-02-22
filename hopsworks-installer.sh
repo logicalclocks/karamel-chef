@@ -927,7 +927,6 @@ if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] || [ "$INSTALL_ACTION" == "$INSTA
     clear_screen    
     enter_cloud
     cp -f $INPUT_YML $YML_FILE
-    exit
 fi
 
 
