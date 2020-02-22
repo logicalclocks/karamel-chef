@@ -544,7 +544,7 @@ add_worker()
 	   echo "$WORKER_GPUS will be used on this worker."
 	   if [ "$DISTRO" == "centos" ] ; then
              echo "Installing kernel-devel on worker.."
-	     ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo yum install \"kernel-devel-uname-r == $(uname -r)\" -y"
+	     ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo yum install \"kernel-devel-uname-r == $(uname -r)\" -y" > /dev/null
 	   fi
        else
 	   echo "$The GPUs will not be used on this worker."

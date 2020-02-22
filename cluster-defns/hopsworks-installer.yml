@@ -22,7 +22,7 @@ attrs:
     rmappsecurity:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
   kagent:
-    python_conda_versions 3.6
+    python_conda_versions: 3.6
   alertmanager:
     email:
       to: sre@logicalclocks.com
