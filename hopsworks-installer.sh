@@ -538,10 +538,14 @@ add_worker()
    echo "Number of GPUs found on worker: $WORKER_GPUS"
    echo ""
    if [[ "$WORKER_GPUS" > "0" ]] ; then
-       printf 'Do you want all of the GPUs to be used by this worker (y/n):'
+       printf 'Do you want all of the GPUs to be used by this worker (y/n (default y):'
        read ACCEPT
-       if [ "$ACCEPT" == "y" ] || [ "$ACCEPT" == "yes" ] ; then
+       if [ "$ACCEPT" == "y" ] || [ "$ACCEPT" == "yes" ] || [ "$ACCEPT" == "" ] ; then
 	   echo "$WORKER_GPUS will be used on this worker."
+	   if [ "$DISTRO" == "centos" ] ; then
+             echo "Installing kernel-devel on worker.."
+	     ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo yum install \"kernel-devel-uname-r == $(uname -r)\" -y"
+	   fi
        else
 	   echo "$The GPUs will not be used on this worker."
 	   WORKER_GPUS=0
