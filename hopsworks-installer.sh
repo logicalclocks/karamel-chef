@@ -501,7 +501,9 @@ add_worker()
    WORKER_MEM=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "free -g | grep Mem | awk '{ print \$2 }'")
    WORKER_DISK=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "df -h | grep '/\$' | awk '{ print \$4 }'") 
    WORKER_CPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "cat /proc/cpuinfo | grep '^processor' | wc -l")
+   
 
+   
    NUM_GBS=$(expr $AVAILABLE_MEMORY - 2)
    NUM_CPUS=$(expr $AVAILABLE_CPUS - 1)
    
@@ -528,10 +530,19 @@ add_worker()
    fi
 
    if [ "$CLOUD" == "azure" ] ; then
+       NSLOOKUP=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "nslookup $WORKER_IP")
+       SUSPECTED_HOSTNAME=$(echo $NSLOOKUP | grep name | awk {' print $4 '})
+       SUSPECTED_HOSTNAME=${SUSPECTED_HOSTNAME::-1}
        echo ""
        echo "On Azure, you need to add every worker to the same Private DNS Zone, and note the hostname you set in Azure."
-       printf 'Please enter that private DNS hostname for this worker:'
+       echo "We suspect the private DNS hostname is:"
+       echo "    $SUSPECTED_HOSTNAME"
+       echo ""
+       printf 'Please enter the private DNS hostname for this worker (default: $SUSPECTED_HOSTNAME):'
        read PRIVATE_HOSTNAME
+       if [ "$PRIVATE_HOSTNAME" == "" ] ; then
+	   PRIVATE_HOSTNAME=$SUSPECTED_HOSTNAME
+       fi
        ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo hostname $PRIVATE_HOSTNAME"
    fi       
    
@@ -939,10 +950,18 @@ if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] || [ "$INSTALL_ACTION" == "$INSTA
 fi
 
 if [ "$CLOUD" == "azure" ] ; then
+    NSLOOKUP=$(nslookup $IP | grep name | awk {' print $4 '})
+    SUSPECTED_HOSTNAME=${NSLOOKUP::-1}
     echo ""
-    echo "On Azure, you need to add every host in Hopsworks to the same Private DNS Zone, and note the hostname you set in Azure."
-    printf 'Please enter the private DNS hostname for this head node:'
+    echo "On Azure, you need to add every host to the same Private DNS Zone, and note the hostname you set in Azure."
+    echo "We suspect the private DNS hostname is:"
+    echo "    $SUSPECTED_HOSTNAME"
+    echo ""
+    printf 'Please enter the private DNS hostname for this head node (default: $SUSPECTED_HOSTNAME): '
     read PRIVATE_HOSTNAME
+    if [ "$PRIVATE_HOSTNAME" == "" ] ; then
+      PRIVATE_HOSTNAME=$SUSPECTED_HOSTNAME
+    fi
     sudo hostname $PRIVATE_HOSTNAME
     clear_screen
 fi       
