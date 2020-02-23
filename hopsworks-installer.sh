@@ -527,14 +527,15 @@ add_worker()
 
    if [ "$CLOUD" == "azure" ] ; then
        NSLOOKUP=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "nslookup $WORKER_IP")
-       SUSPECTED_HOSTNAME=$(echo $NSLOOKUP | grep name | awk {' print $4 '})
+       SUSPECTED_HOSTNAME=$(echo $NSLOOKUP | grep name | awk {' print $4 '} | tail -1)
        SUSPECTED_HOSTNAME=${SUSPECTED_HOSTNAME::-1}
        echo ""
        echo "On Azure, you need to add every worker to the same Private DNS Zone, and note the hostname you set in Azure."
        echo "We suspect the private DNS hostname is:"
        echo "    $SUSPECTED_HOSTNAME"
        echo ""
-       printf 'Please enter the private DNS hostname for this worker (default: $SUSPECTED_HOSTNAME):'
+       printf 'Please enter the private DNS hostname for this worker (default:'
+       echo -n " $SUSPECTED_HOSTNAME):"
        read PRIVATE_HOSTNAME
        if [ "$PRIVATE_HOSTNAME" == "" ] ; then
 	   PRIVATE_HOSTNAME=$SUSPECTED_HOSTNAME
@@ -946,14 +947,16 @@ if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] || [ "$INSTALL_ACTION" == "$INSTA
 fi
 
 if [ "$CLOUD" == "azure" ] ; then
-    NSLOOKUP=$(nslookup $IP | grep name | awk {' print $4 '})
+    NSLOOKUP=$(nslookup $IP | grep name | awk {' print $4 '} | tail -1)
     SUSPECTED_HOSTNAME=${NSLOOKUP::-1}
     echo ""
     echo "On Azure, you need to add every host to the same Private DNS Zone, and note the hostname you set in Azure."
     echo "We suspect the private DNS hostname is:"
     echo "    $SUSPECTED_HOSTNAME"
     echo ""
-    printf 'Please enter the private DNS hostname for this head node (default: $SUSPECTED_HOSTNAME): '
+    printf 'Please enter the private DNS hostname for this head node (default:'
+    echo -n " $SUSPECTED_HOSTNAME):"
+
     read PRIVATE_HOSTNAME
     if [ "$PRIVATE_HOSTNAME" == "" ] ; then
       PRIVATE_HOSTNAME=$SUSPECTED_HOSTNAME
