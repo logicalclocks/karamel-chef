@@ -5,7 +5,7 @@ baremetal:
 cookbooks:
   hopsworks:
     github: logicalclocks/hopsworks-chef
-    branch: karamel_installer
+    branch: master
 
 attrs:
   install:
