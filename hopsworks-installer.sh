@@ -28,7 +28,8 @@
 ###################################################################################################
 
 HOPSWORKS_VERSION=1.2.0
-HOPSWORKS_BRANCH=1.2-kube-azure
+HOPSWORKS_BRANCH=1.2
+CLUSTER_DEFINITION_BRANCH=master
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
 NON_INTERACT=0
@@ -47,10 +48,11 @@ CLEAN_INSTALL_DIR=0
 SUDO_PWD=
 INSTALL_LOCALHOST=1
 INSTALL_LOCALHOST_TLS=2
-INSTALL_KARAMEL=3
-INSTALL_NVIDIA=4
-PURGE_HOPSWORKS=5
-INSTALL_CLUSTER=6
+INSTALL_CLUSTER=3
+INSTALL_KARAMEL=4
+INSTALL_NVIDIA=5
+PURGE_HOPSWORKS=7
+PURGE_HOPSWORKS_ALL_HOSTS=8
 TLS="false"
 REVERSE_DNS=1
 
@@ -58,10 +60,21 @@ CLOUD=
 GCP_NVME=0
 RM_CLASS=
 ENTERPRISE=0
+KUBERNETES=0
 DOWNLOAD=
-ENTERPRISE_RECIPES=
+KUBERNETES_RECIPES=
 INPUT_YML="cluster-defns/hopsworks-installer.yml"
 YML_FILE="cluster-defns/hopsworks-installer-active.yml"
+ENTERPRISE_ATTRS=
+KUBE="false"
+
+which lspci > /dev/null
+if [ $? -ne 0 ] ; then
+    # this only happens on centos
+   echo "Installing pciutils ...."
+   sudo yum install pciutils -y > /dev/null
+fi    
+AVAILABLE_GPUS=$(sudo lspci | grep -i nvidia | wc -l)
 
 unset_gpus()
 {
@@ -157,6 +170,43 @@ splash_screen()
       echo ""
   fi
 
+  if [ $AVAILABLE_MEMORY -lt 29 ] ; then
+      echo ""
+      echo "WARNING: We recommend at least 32GB of RAM. Minimum is 16GB of Ram. You have $AVAILABLE_MEMORY GB of RAM"
+      echo ""
+  fi
+
+  space=${AVAILABLE_DISK::-1}
+  if [ $space -lt 60 ] && [ "$AVAILABLE_MNT" == "" ]; then
+      echo ""
+      echo "WARNING: We recommend at least 60GB of disk space on the root partition. Minimum is 50GB of available disk."
+      echo "You have $AVAILABLE_DISK space on '/', and no space on '/mnt'."
+      echo ""
+  fi
+  if [ "$AVAILABLE_MNT" != "" ] ; then
+      mnt=${AVAILABLE_MNT::-1}
+      if [ $space -lt 30 ] || [ $mnt < 50 ]; then
+      echo ""
+      echo "WARNING: We recommend at least 30GB of disk space on the root partition as well as at least 50GB on the /mnt partition."
+      echo "You have $AVAILABLE_DISK space on '/', and ${space}G on '/mnt'."
+      echo ""
+      fi
+  fi
+  if [ $AVAILABLE_CPUS -lt 4 ] ; then
+      echo ""
+      echo "WARNING: Hopsworks needs at least 4 CPUs to be able to run Spark applications."
+      echo ""
+  fi       
+  
+  which dig > /dev/null
+  if [ $? -ne 0 ] ; then
+    echo "Installing dig ..."
+    if [ "$DISTRO" == "Ubuntu" ] ; then
+        sudo apt install dnsutils -y  > /dev/null
+    elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then      
+	sudo yum install bind-utils -y > /dev/null
+    fi
+  fi
   # If there are multiple FQDNs for this IP, return the last one (this works on Azure)
   reverse_hostname=$(dig +noall +answer -x $IP | awk '{ print $5 }' | tail -1)
   # stirp off trailing '.' chracter on the hostname returned
@@ -168,16 +218,13 @@ splash_screen()
       echo "Hostname: $HOSTNAME"
       echo "Reverse Hostname: $reverse_hostname"
       echo ""
-      echo "Azure: you have to add your VM to a 'Private DNS Zone' to make reverse-DNS work correctly for local IPs."
+      echo "Azure: if you have already added this VM to a 'Private DNS Zone', then contineu. This script will make reverse-DNS work correctly for local IPs."
       echo "https://docs.microsoft.com/en-us/azure/dns/private-dns-getstarted-portal"
-      echo "Azure instructions: when you have added a private DNS zone, you need to set the hostame to the private DNS zone"
-      echo "  > hostname DNS_NAME"
       echo ""
       echo "On-premises: you have to configure your networking to make reverse-DNS work correctly."
       echo ""
   fi
 
-  
   pgrep mysql > /dev/null
   if [ $? -eq 0 ] ; then
       echo ""
@@ -290,7 +337,7 @@ $INSTALL_AS_DAEMON_HELP\n
 
 install_action()
 {
-    if [ "$INSTALL_ACTION" = "" ] ; then
+    if [ "$INSTALL_ACTION" == "" ] ; then
 
         echo "-------------------- Installation Options --------------------"
 	echo ""
@@ -304,13 +351,17 @@ install_action()
 	echo ""
 	echo "(4) Install an Enterprise Hopsworks cluster." 
 	echo ""
-	echo "(5) Install and start Karamel."
+	echo "(5) Install an Enterprise Hopsworks cluster with Kubernetes"
 	echo ""
-	echo "(6) Install Nvidia drivers and reboot server."
+	echo "(6) Install and start Karamel."
 	echo ""
-	echo "(7) Purge (uninstall) Hopsworks from this host."
+	echo "(7) Install Nvidia drivers and reboot server."
+	echo ""
+	echo "(8) Purge (uninstall) Hopsworks from this host."
 	echo ""	
-	printf 'Please enter your choice '1', '2', '3', 'q' \(quit\), or 'h' \(help\) :  '
+	echo "(9) Purge (uninstall) Hopsworks from ALL hosts."
+	echo ""	
+	printf 'Please enter your choice '1', '2', '3', '4', '5', '6', '7', '8', '9',  'q' \(quit\), or 'h' \(help\) :  '
         read ACCEPT
         case $ACCEPT in
           1)
@@ -333,13 +384,21 @@ install_action()
             ENTERPRISE=1
             ;;
           5)
-	    INSTALL_ACTION=$INSTALL_KARAMEL
+            INSTALL_ACTION=$INSTALL_CLUSTER
+            ENTERPRISE=1
+	    KUBERNETES=1
             ;;
           6)
-	    INSTALL_ACTION=$INSTALL_NVIDIA
+	    INSTALL_ACTION=$INSTALL_KARAMEL
             ;;
           7)
+	    INSTALL_ACTION=$INSTALL_NVIDIA
+            ;;
+          8)
 	    INSTALL_ACTION=$PURGE_HOPSWORKS
+            ;;
+          9)
+	    INSTALL_ACTION=$PURGE_HOPSWORKS_ALL_HOSTS
             ;;
           h | H)
 	  clear
@@ -366,8 +425,7 @@ install_action()
 
 enter_cloud()
 {
-    if [ "$CLOUD" = "" ] ; then
-
+    if [ "$CLOUD" == "" ] ; then
         echo "-------------------- Where are you installing Hopsworks? --------------------"
 	echo ""
         echo "On what platform are you installing Hopsworks?"
@@ -442,17 +500,49 @@ add_worker()
    WORKER_DISK=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "df -h | grep '/\$' | awk '{ print \$4 }'") 
    WORKER_CPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "cat /proc/cpuinfo | grep '^processor' | wc -l")
 
+   NUM_GBS=$(expr $AVAILABLE_MEMORY - 2)
+   NUM_CPUS=$(expr $AVAILABLE_CPUS - 1)
+   
    echo "Amount of disk space available on root partition ('/'): $WORKER_DISK"
    echo "Amount of memory available on worker: $WORKER_MEM"
-   printf 'Please enter the amout of memory (in GB) in this worker to be used (GB): '
+   printf 'Please enter the amout of memory in this worker to be used (GBs)'
+   echo -n ". Default is $NUM_GBS: "
    read GBS
-
+   if [ "$GBS" == "" ] ; then
+       GBS=$NUM_GBS
+   fi
+   
    MBS=$(expr $GBS \* 1024)
    echo "Amount of CPUs available on worker: $WORKER_CPUS"
-   printf 'Please enter the number of CPUs in this worker to be used: '
+   printf 'Please enter the number of CPUs in this worker to be used'
+   echo -n ". Default is $NUM_CPUS: "   
    read CPUS
+   if [ "$CPUS" == "" ] ; then
+       CPUS=$NUM_CPUS
+   fi
 
-   WORKER_GPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "lspci | grep -i nvidia | wc -l")
+   if [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
+       ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo yum install pciutils -y"
+   fi
+
+   if [ "$CLOUD" == "azure" ] ; then
+       NSLOOKUP=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "nslookup $WORKER_IP")
+       SUSPECTED_HOSTNAME=$(echo $NSLOOKUP | grep name | awk {' print $4 '})
+       SUSPECTED_HOSTNAME=${SUSPECTED_HOSTNAME::-1}
+       echo ""
+       echo "On Azure, you need to add every worker to the same Private DNS Zone, and note the hostname you set in Azure."
+       echo "We suspect the private DNS hostname is:"
+       echo "    $SUSPECTED_HOSTNAME"
+       echo ""
+       printf 'Please enter the private DNS hostname for this worker (default: $SUSPECTED_HOSTNAME):'
+       read PRIVATE_HOSTNAME
+       if [ "$PRIVATE_HOSTNAME" == "" ] ; then
+	   PRIVATE_HOSTNAME=$SUSPECTED_HOSTNAME
+       fi
+       ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo hostname $PRIVATE_HOSTNAME"
+   fi       
+   
+   WORKER_GPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo lspci | grep -i nvidia | wc -l")
    if [ "$WORKER_GPUS" == "" ] ; then
      WORKER_GPUS=0
    fi
@@ -460,10 +550,14 @@ add_worker()
    echo "Number of GPUs found on worker: $WORKER_GPUS"
    echo ""
    if [[ "$WORKER_GPUS" > "0" ]] ; then
-       printf 'Do you want all of the GPUs to be used by this worker (y/n):'
+       printf 'Do you want all of the GPUs to be used by this worker (y/n (default y):'
        read ACCEPT
-       if [ "$ACCEPT" == "y" ] || [ "$ACCEPT" == "yes" ] ; then
+       if [ "$ACCEPT" == "y" ] || [ "$ACCEPT" == "yes" ] || [ "$ACCEPT" == "" ] ; then
 	   echo "$WORKER_GPUS will be used on this worker."
+	   # if [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
+           #   echo "Installing kernel-devel on worker.."
+	   #   ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo yum install \"kernel-devel-uname-r == $(uname -r)\" -y" > /dev/null
+	   # fi
        else
 	   echo "$The GPUs will not be used on this worker."
 	   WORKER_GPUS=0
@@ -522,7 +616,7 @@ worker_size()
     #PasswordAuthentication no
    printf 'Please enter the number of extra workers you want to add (default: 0): '
    read NUM_WORKERS
-   if [ "$NUM_WORKERS" = "" ] ; then
+   if [ "$NUM_WORKERS" == "" ] ; then
        NUM_WORKERS=0
    fi
    i=0
@@ -580,11 +674,27 @@ check_userid()
 {
   # Check if user is root
   USERID=`id | sed -e 's/).*//; s/^.*(//;'`
-  if [ "X$USERID" = "Xroot" ]; then
+  if [ "X$USERID" == "Xroot" ]; then
     exit_error "This script only works for non-root users."
   fi
 }
 
+purge_local()
+{
+   echo "Shutting down services..."
+   if sudo test -f "/srv/hops/kagent/kagent/bin/shutdown-all-local-services.sh"  ; then
+     sudo /srv/hops/kagent/kagent/bin/shutdown-all-local-services.sh -f > /dev/null
+   fi
+   echo "Killing karamel..."
+   pkill java
+   echo "Removing karamel..."   
+   rm -rf ~/karamel*
+   echo "Removing cookbooks..."   
+   sudo rm -rf ~/.karamel   
+   sudo rm -rf /tmp/chef-solo/cookbooks
+   echo "Purging old installation..."      
+   sudo rm -rf /srv/hops/*   
+}
 
 ###################################################################################################
 ###################################################################################################
@@ -611,7 +721,8 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      echo "                 'cluster' installs a multi-host Hopsworks cluster"
 	      echo "                 'enterprise' installs a multi-host Hopsworks cluster"	      
 	      echo "                 'karamel' installs and starts Karamel"
-	      echo "                 'purge' removes Hopsworks completely from this host"	      
+	      echo "                 'purge' removes Hopsworks completely from this host"
+	      echo "                 'purge-all' removes Hopsworks completely from ALL hosts"	      
 	      echo " [-cl|--clean]    removes the karamel installation"
 	      echo " [-dr|--dry-run]      does not run karamel, just generates YML file"
 	      echo " [--gcp-nvme]     mount NVMe disk on GCP node"
@@ -638,6 +749,11 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 		      INSTALL_ACTION=$INSTALL_CLUSTER
                       ENTERPRISE=1
 		      ;;
+		 kubernetes)
+		      INSTALL_ACTION=$INSTALL_CLUSTER
+                      ENTERPRISE=1
+                      KUBERNETES=1		      
+		      ;;
 	         karamel)
 		      INSTALL_ACTION=$INSTALL_KARAMEL
 		      ;;
@@ -646,6 +762,9 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 		      ;;
 	         purge)
 		      INSTALL_ACTION=$PURGE_HOPSWORKS
+		      ;;
+	         purge-all)
+		      INSTALL_ACTION=$PURGE_HOPSWORKS_ALL_HOSTS
 		      ;;
 		  *)
 		      echo "Could not recognise option: $1"
@@ -731,31 +850,34 @@ if [ "$INSTALL_ACTION" == "$INSTALL_NVIDIA" ] ; then
    sudo update-initramfs -u
    echo "Rebooting....."
    sudo reboot
-fi    
-if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST_TLS" ]  ; then
-    enter_cloud
-    cp -f $INPUT_YML $YML_FILE    
+fi
+
+if [ "$INSTALL_ACTION" == "$PURGE_HOPSWORKS_ALL_HOSTS" ] ; then   
+    IPS=$(grep 'ip:' hopsworks-installer-active.yml | awk '{ print $2 '})
+    cd							 
+    for ip in $IPS ; do
+	echo ""
+	echo "Purging on host: $ip"	
+	scp hopsworks-installer.sh ${ip}:
+	ssh $ip "./hopsworks-installer.sh -i purge -ni"
+	ssh $ip "rm -f hopsworks-installer.sh"	
+    done
+
+    # Only delete local files after other hosts
+    purge_local
+    
+    echo ""
+    echo "*********************************************"
+    echo "Finished cleaning all hosts."
+    echo "*********************************************"    
+    exit 0
 fi
 
 if [ "$INSTALL_ACTION" == "$PURGE_HOPSWORKS" ] ; then
-   
-   cd
-   echo "Shutting down services..."
-   if sudo test -f "/srv/hops/kagent/kagent/bin/shutdown-all-local-services.sh"  ; then
-     sudo /srv/hops/kagent/kagent/bin/shutdown-all-local-services.sh -f > /dev/null
-   fi
-   echo "Killing karamel..."
-   pkill java
-   echo "Removing karamel..."   
-   rm -rf karamel*
-   echo "Removing cookbooks..."   
-   sudo rm -rf .karamel   
-   sudo rm -rf /tmp/chef-solo/cookbooks
-   echo "Purging old installation..."      
-   sudo rm -rf /srv/hops/*
+   purge_local
    exit 0
-fi    
-
+fi
+									 
 # generate a pub/private keypair if none exists
 if [ ! -e ~/.ssh/id_rsa.pub ] ; then
   cat /dev/zero | ssh-keygen -q -N "" > /dev/null
@@ -767,9 +889,13 @@ fi
 pub=$(cat ~/.ssh/id_rsa.pub)
 grep "$pub" ~/.ssh/authorized_keys > /dev/null
 if [ $? -ne 0 ] ; then
+  echo "Not currently able to ssh into this host. Updating authorized_keys"
   pushd .
   cd ~/.ssh
-  cat id_rsa.pub >> authorized_keys > /dev/null
+  cat id_rsa.pub >> authorized_keys 
+  if [ $? -ne 0 ] ; then
+      echo "Problem updating .ssh/authorized_keys file. Could not add .ssh/id_rsa.pub to authorized_keys file."
+  fi
   popd
 else
   echo "Found existing entry in authorized_keys"
@@ -788,7 +914,7 @@ if [ $? -ne 0 ] ; then
     if [ "$DISTRO" == "Ubuntu" ] ; then
 	sudo apt update -y
 	sudo apt install openjdk-8-jre-headless -y
-    elif [ "$DISTRO" == "centos" ] ; then
+    elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
 	sudo yum install java-1.8.0-openjdk-headless -y
 	sudo yum install wget -y 
     else
@@ -809,9 +935,32 @@ if [ ! -d cluster-defns ] ; then
 fi
 if [ ! -e $INPUT_YML ] ; then
     cd cluster-defns
-    wget https://raw.githubusercontent.com/logicalclocks/karamel-chef/${HOPSWORKS_BRANCH}/$INPUT_YML
+    wget https://raw.githubusercontent.com/logicalclocks/karamel-chef/${CLUSTER_DEFINITION_BRANCH}/$INPUT_YML
     cd ..
 fi
+
+if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST_TLS" ]  ; then
+    clear_screen    
+    enter_cloud
+    cp -f $INPUT_YML $YML_FILE
+fi
+
+if [ "$CLOUD" == "azure" ] ; then
+    NSLOOKUP=$(nslookup $IP | grep name | awk {' print $4 '})
+    SUSPECTED_HOSTNAME=${NSLOOKUP::-1}
+    echo ""
+    echo "On Azure, you need to add every host to the same Private DNS Zone, and note the hostname you set in Azure."
+    echo "We suspect the private DNS hostname is:"
+    echo "    $SUSPECTED_HOSTNAME"
+    echo ""
+    printf 'Please enter the private DNS hostname for this head node (default: $SUSPECTED_HOSTNAME): '
+    read PRIVATE_HOSTNAME
+    if [ "$PRIVATE_HOSTNAME" == "" ] ; then
+      PRIVATE_HOSTNAME=$SUSPECTED_HOSTNAME
+    fi
+    sudo hostname $PRIVATE_HOSTNAME
+    clear_screen
+fi       
 
 
 if [ ! -d karamel-${KARAMEL_VERSION} ] ; then
@@ -835,9 +984,7 @@ fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST_TLS" ] ; then
   TLS="true"
-fi    
-
-
+fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_KARAMEL" ]  ; then
     cd karamel-${KARAMEL_VERSION}
@@ -892,27 +1039,36 @@ else
 	read DOWNLOAD_URL
 	DOWNLOAD_URL=${DOWNLOAD_URL//\./\\\.}
 	DOWNLOAD_URL=${DOWNLOAD_URL//\//\\\/}	
-        echo ""
-        echo "Download url is: $DOWNLOAD_URL"
         echo ""	
 	#DNS_IP=$(printf "%q" "$DNS_IP")
 	DNS_IP=${DNS_IP//\./\\\.}
-        DOWNLOAD="download_url: $DOWNLOAD_URL
+	if [ $KUBERNETES -eq 1 ] ; then
+	  KUBE="true"
+          DOWNLOAD="download_url: $DOWNLOAD_URL
   kube-hops:
     pki:
      verify_hopsworks_cert: false
     fallback_dns: $DNS_IP
 "
-        ENTERPRISE_RECIPES="- kube-hops::hopsworks
+          KUBERNETES_RECIPES="- kube-hops::hopsworks
       - kube-hops::ca
       - kube-hops::master
       - kube-hops::post_conf
       - kube-hops::addons
       - kube-hops::node
-"
+"	  
+	else
+          DOWNLOAD="download_url: $DOWNLOAD_URL"	    
+	fi
+        ENTERPRISE_ATTRS="enterprise:
+      install: true
+      download_url: $DOWNLOAD_URL"
+
     fi
+    perl -pi -e "s/__ENTERPRISE__/$ENTERPRISE_ATTRS/" $YML_FILE
     perl -pi -e "s/__DOWNLOAD__/$DOWNLOAD/" $YML_FILE
-    perl -pi -e "s/__ENTERPRISE_RECIPES__/$ENTERPRISE_RECIPES/" $YML_FILE
+    perl -pi -e "s/__KUBERNETES_RECIPES__/$KUBERNETES_RECIPES/" $YML_FILE
+    perl -pi -e "s/__KUBE__/$KUBE/" $YML_FILE
     
   if [ $DRY_RUN -eq 0 ] ; then
     cd karamel-${KARAMEL_VERSION}

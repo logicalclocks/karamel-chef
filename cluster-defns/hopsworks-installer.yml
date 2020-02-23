@@ -12,6 +12,8 @@ attrs:
   install:
     dir: /srv/hops
     cloud: __CLOUD__
+    kubernetes: __KUBE__
+    __ENTERPRISE__
   __RM_CLASS__
       vcores: __CPUS__
       memory_mbs: __MEM__
@@ -19,6 +21,8 @@ attrs:
       enabled: __TLS__
     rmappsecurity:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
+  kagent:
+    python_conda_versions: 3.6
   alertmanager:
     email:
       to: sre@logicalclocks.com
@@ -107,4 +111,5 @@ groups:
       - hopsmonitor::alertmanager
       - hopsmonitor::node_exporter
       - hopsmonitor::purge_telegraf
-      __ENTERPRISE_RECIPES__
+      __KUBERNETES_RECIPES__
+
