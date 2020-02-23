@@ -1,6 +1,19 @@
 case node['platform']
 when 'ubuntu'
   package ['bundler', 'firefox', 'libappindicator3-1', 'fonts-liberation', 'libxss1', 'xdg-utils']
+  # We are going to install ruby 2.5 using RVM (Ruby version manage)
+  bash "install_ruby_25" do
+    user "root"
+    group "root"
+    code <<-EOH
+      # https://linuxize.com/post/how-to-install-ruby-on-ubuntu-18-04/
+      gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
+      curl -sSL https://get.rvm.io | bash -s stable
+      source /etc/profile.d/rvm.sh
+      rvm install 2.5.1
+      rvm use 2.5.1 --default
+    EOH
+  end
 
   remote_file '/tmp/google-chrome.deb' do
     source 'https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb'
@@ -21,24 +34,18 @@ when 'ubuntu'
   end
 
 when 'centos'
-  # Centos comes with a pre world-war-1 version of ruby
-  # We are going to install ruby 2.4 using RVM (Ruby version manage)
-  # which, of course, is not in the repo.
-  bash "install_ruby_24" do
+  # We are going to install ruby 2.5 using RVM (Ruby version manage)
+  bash "install_ruby_25" do
     user "root"
     group "root"
     code <<-EOH
-      yum install gcc-c++ patch readline readline-devel zlib zlib-devel libyaml-devel libffi-devel openssl-devel make bzip2 autoconf automake libtool bison iconv-devel sqlite-devel
-      gpg2 --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
-      curl -sSL https://rvm.io/mpapis.asc | sudo gpg2 --import -
-      curl -sSL https://rvm.io/pkuczynski.asc | sudo gpg2 --import -
+      # https://linuxize.com/post/how-to-install-ruby-on-centos-7/
+      yum install curl gpg gcc gcc-c++ make patch autoconf automake bison libffi-devel libtool patch readline-devel sqlite-devel zlib-devel openssl-devel
+      gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
       curl -sSL https://get.rvm.io | bash -s stable
       source /etc/profile.d/rvm.sh
-      rvm reload
-      rvm install 2.4.1
-      # The stackoverflowing is strong in this script
-      rvm @global
-      gem uninstall rubygems-bundler
+      rvm install 2.5.1
+      rvm use 2.5.1 --default
     EOH
   end
 end
@@ -94,7 +101,7 @@ when 'ubuntu'
     ignore_failure true
     cwd node['test']['hopsworks']['test_dir']
     timeout node['karamel']['test_timeout']
-    environment ({'PATH' => "#{ENV['PATH']}:/home/vagrant/.gem/ruby/2.3.0/bin:/srv/hops/mysql/bin",
+    environment ({'PATH' => "#{ENV['PATH']}:/usr/bin/ruby2.5:/srv/hops/mysql/bin",
                   'LD_LIBRARY_PATH' => "#{ENV['LD_LIBRARY_PATH']}:/srv/hops/mysql/lib",
                   'JAVA_HOME' => "/usr/lib/jvm/default-java"})
     if node['test']['hopsworks']['it']
@@ -151,7 +158,7 @@ when 'centos'
     ignore_failure true
     timeout node['karamel']['test_timeout']
     cwd node['test']['hopsworks']['test_dir']
-    environment ({'PATH' => "/usr/local/rvm/gems/ruby-2.4.1/bin:/usr/local/rvm/gems/ruby-2.4.1@global/bin:/usr/local/rvm/rubies/ruby-2.4.1/bin:/usr/local/bin:/srv/hops/mysql/bin:#{ENV['PATH']}",
+    environment ({'PATH' => "/usr/local/rvm/gems/ruby-2.5.1/bin:/usr/local/rvm/gems/ruby-2.5.1@global/bin:/usr/local/rvm/rubies/ruby-2.5.1/bin:/usr/local/bin:/srv/hops/mysql/bin:#{ENV['PATH']}",
               'LD_LIBRARY_PATH' => "#{ENV['LD_LIBRARY_PATH']}:/srv/hops/mysql/lib",
               'HOME' => "/home/vagrant",
               'JAVA_HOME' => "/usr/lib/jvm/java"})

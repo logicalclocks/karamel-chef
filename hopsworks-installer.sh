@@ -29,7 +29,7 @@
 
 HOPSWORKS_VERSION=1.2.0
 HOPSWORKS_BRANCH=1.2
-CLUSTER_DEFINITION_BRANCH=karamel_installer
+CLUSTER_DEFINITION_BRANCH=master
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
 NON_INTERACT=0
@@ -38,6 +38,7 @@ AVAILABLE_MEMORY=$(free -g | grep Mem | awk '{ print $2 }')
 AVAILABLE_DISK=$(df -h | grep '/$' | awk '{ print $4 }')
 AVAILABLE_MNT=$(df -h | grep '/mnt$' | awk '{ print $4 }')
 AVAILABLE_CPUS=$(cat /proc/cpuinfo | grep '^processor' | wc -l)
+AVAILABLE_GPUS=$(lspci | grep -i nvidia | wc -l)
 IP=$(hostname -I | awk '{ print $1 }')
 HOSTNAME=$(hostname -f)
 DISTRO=
@@ -74,7 +75,6 @@ if [ $? -ne 0 ] ; then
    sudo yum install pciutils -y > /dev/null
 fi    
 AVAILABLE_GPUS=$(sudo lspci | grep -i nvidia | wc -l)
-
 
 unset_gpus()
 {
@@ -225,7 +225,6 @@ splash_screen()
       echo ""
   fi
 
-  
   pgrep mysql > /dev/null
   if [ $? -eq 0 ] ; then
       echo ""
@@ -427,7 +426,6 @@ install_action()
 enter_cloud()
 {
     if [ "$CLOUD" == "" ] ; then
-
         echo "-------------------- Where are you installing Hopsworks? --------------------"
 	echo ""
         echo "On what platform are you installing Hopsworks?"
@@ -501,9 +499,7 @@ add_worker()
    WORKER_MEM=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "free -g | grep Mem | awk '{ print \$2 }'")
    WORKER_DISK=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "df -h | grep '/\$' | awk '{ print \$4 }'") 
    WORKER_CPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "cat /proc/cpuinfo | grep '^processor' | wc -l")
-   
 
-   
    NUM_GBS=$(expr $AVAILABLE_MEMORY - 2)
    NUM_CPUS=$(expr $AVAILABLE_CPUS - 1)
    
@@ -965,7 +961,6 @@ if [ "$CLOUD" == "azure" ] ; then
     sudo hostname $PRIVATE_HOSTNAME
     clear_screen
 fi       
-
 
 
 if [ ! -d karamel-${KARAMEL_VERSION} ] ; then

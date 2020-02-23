@@ -112,4 +112,4 @@ groups:
       - hopsmonitor::node_exporter
       - hopsmonitor::purge_telegraf
       __KUBERNETES_RECIPES__
-      
+
