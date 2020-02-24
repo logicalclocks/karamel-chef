@@ -493,7 +493,14 @@ add_worker()
    if [ $? -ne 0 ] ; then
       echo "Failed to ssh using public into: ${USER}@${WORKER_IP}"
       echo "Cannot add worker node, as you need to be able to ssh into it using your public key"
-      exit_error
+      echo ""
+      echo ""
+      echo -n "You can setup passwordless SSH to setup to ${USER}@${WORKER_IP} by entering the password."
+      echo "Running ssh-copy-id.... "
+      ssh-copy-id -i ${HOME}/.ssh/id_rsa.pub ${USER}@${WORKER_IP}
+      if [ $? -ne 0 ] ; then
+          exit_error "Problem setting up passwordless SSH to ${USER}@${WORKER_IP}"
+      fi
    fi
 
    WORKER_MEM=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "free -g | grep Mem | awk '{ print \$2 }'")
@@ -1010,7 +1017,7 @@ else
     if [ $AVAILABLE_GPUS -gt 0 ] ; then
       RM_CLASS="cuda:
     accept_nvidia_download_terms: true
-  hops:nnn
+  hops:
     capacity: 
       resource_calculator_class: org.apache.hadoop.yarn.util.resource.DominantResourceCalculatorGPU
     yarn:
