@@ -208,7 +208,7 @@ splash_screen()
     fi
   fi
   # If there are multiple FQDNs for this IP, return the last one (this works on Azure)
-  reverse_hostname=$(dig +noall +answer -x $IP | awk '{ print $5 }' | tail -1)
+  reverse_hostname=$(dig +noall +answer -x $IP | awk '{ print $5 }' | sort -r | tail -1)
   # stirp off trailing '.' chracter on the hostname returned
   reverse_hostname=${reverse_hostname::-1}
   if [ "$reverse_hostname" != "$HOSTNAME" ] ; then
@@ -527,7 +527,7 @@ add_worker()
 
    if [ "$CLOUD" == "azure" ] ; then
        NSLOOKUP=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "nslookup $WORKER_IP")
-       SUSPECTED_HOSTNAME=$(echo $NSLOOKUP | grep name | awk {' print $4 '} | tail -1)
+       SUSPECTED_HOSTNAME=$(echo $NSLOOKUP | grep name | awk {' print $4 '} | sort -r | tail -1)
        SUSPECTED_HOSTNAME=${SUSPECTED_HOSTNAME::-1}
        echo ""
        echo "On Azure, you need to add every worker to the same Private DNS Zone, and note the hostname you set in Azure."
@@ -947,7 +947,7 @@ if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] || [ "$INSTALL_ACTION" == "$INSTA
 fi
 
 if [ "$CLOUD" == "azure" ] ; then
-    NSLOOKUP=$(nslookup $IP | grep name | awk {' print $4 '} | tail -1)
+    NSLOOKUP=$(nslookup $IP | grep name | awk {' print $4 '} | sort -r | tail -1)
     SUSPECTED_HOSTNAME=${NSLOOKUP::-1}
     echo ""
     echo "On Azure, you need to add every host to the same Private DNS Zone, and note the hostname you set in Azure."
