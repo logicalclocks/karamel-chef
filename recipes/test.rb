@@ -5,6 +5,7 @@ when 'ubuntu'
   bash "install_ruby_25" do
     user "root"
     group "root"
+    retries 5
     code <<-EOH
       # https://linuxize.com/post/how-to-install-ruby-on-ubuntu-18-04/
       gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
@@ -38,9 +39,10 @@ when 'centos'
   bash "install_ruby_25" do
     user "root"
     group "root"
+    retries 5
     code <<-EOH
       # https://linuxize.com/post/how-to-install-ruby-on-centos-7/
-      yum install curl gpg gcc gcc-c++ make patch autoconf automake bison libffi-devel libtool patch readline-devel sqlite-devel zlib-devel openssl-devel
+      yum -y install curl gpg gcc gcc-c++ make patch autoconf automake bison libffi-devel libtool patch readline-devel sqlite-devel zlib-devel openssl-devel
       gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
       curl -sSL https://get.rvm.io | bash -s stable
       source /etc/profile.d/rvm.sh
