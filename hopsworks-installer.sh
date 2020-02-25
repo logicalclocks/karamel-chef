@@ -59,6 +59,7 @@ REVERSE_DNS=1
 CLOUD=
 GCP_NVME=0
 RM_CLASS=
+RM_WORKER=
 ENTERPRISE=0
 KUBERNETES=0
 DOWNLOAD=
@@ -494,7 +495,7 @@ add_worker()
       echo "Cannot add worker node, as you need to be able to ssh into it using your public key"
       echo ""
       echo ""
-      echo -n "You can setup passwordless SSH to setup to ${USER}@${WORKER_IP} by entering the password."
+      echo "You can setup passwordless SSH to setup to ${USER}@${WORKER_IP} by entering the password."
       echo "Running ssh-copy-id.... "
       ssh-copy-id -i ${HOME}/.ssh/id_rsa.pub ${USER}@${WORKER_IP}
       if [ $? -ne 0 ] ; then
@@ -510,9 +511,8 @@ add_worker()
    NUM_CPUS=$(expr $WORKER_CPUS - 1)
    
    echo "Amount of disk space available on root partition ('/'): $WORKER_DISK"
-   echo "Amount of memory available on worker: $WORKER_MEM"
-   printf 'Please enter the amout of memory in this worker to be used (GBs)'
-   echo -n ". Default is $WORKER_MEM: "
+   echo "Amount of memory available on this worker: $WORKER_MEM"
+   printf "Please enter the amout of memory in this worker to be used (GBs): "
    read GBS
    if [ "$GBS" == "" ] ; then
        GBS=$NUM_GBS
@@ -520,8 +520,7 @@ add_worker()
    
    MBS=$(expr $GBS \* 1024)
    echo "Amount of CPUs available on worker: $WORKER_CPUS"
-   printf 'Please enter the number of CPUs in this worker to be used'
-   echo -n ". Default is $WORKER_CPUS: "   
+   printf "Please enter the number of CPUs in this worker to be used: "   
    read CPUS
    if [ "$CPUS" == "" ] ; then
        CPUS=$NUM_CPUS
@@ -531,6 +530,10 @@ add_worker()
        ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo yum install pciutils -y"
    fi
 
+   WORKER_MNT=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo df -h | grep '/mnt' | awk '{ print $4 }'")
+   re='^[0-9]+$'
+
+   
    if [ "$CLOUD" == "azure" ] ; then
        NSLOOKUP=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "nslookup $WORKER_IP | grep name | grep -v 'internal.cloudapp.net'")
        SUSPECTED_HOSTNAME=$(echo $NSLOOKUP | awk {' print $4 '})
@@ -540,19 +543,30 @@ add_worker()
        echo "We suspect the private DNS hostname is:"
        echo "    $SUSPECTED_HOSTNAME"
        echo ""
-       printf 'Please enter the private DNS hostname for this worker (default:'
-       echo -n " $SUSPECTED_HOSTNAME):"
+       printf  "Please enter the private DNS hostname for this worker (default: $SUSPECTED_HOSTNAME): "
        read PRIVATE_HOSTNAME
        if [ "$PRIVATE_HOSTNAME" == "" ] ; then
 	   PRIVATE_HOSTNAME=$SUSPECTED_HOSTNAME
        fi
        ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo hostname $PRIVATE_HOSTNAME"
+
+
+       if [[ $WORKER_MNT =~ $re ]] ; then
+          ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo rm -rf /srv/hops; sudo mkdir -p /mnt/resource/hops; sudo ln -s /mnt/resource/hops /srv/hops"
+       fi
+   else
+       if [[ $WORKER_MNT =~ $re ]] ; then
+          ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo rm -rf /srv/hops; sudo mkdir -p /mnt/hops; sudo ln -s /mnt/hops /srv/hops"
+       fi
    fi       
    
    WORKER_GPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo lspci | grep -i nvidia | wc -l")
-   if [ "$WORKER_GPUS" == "" ] ; then
-     WORKER_GPUS=0
-   fi
+   echo "GPUs found on worker: $WORKER_GPUS"
+
+   # re='^[0-9]+$'
+   # if ! [[ $WORKER_GPUS =~ $re ]] ; then
+   #   WORKER_GPUS="0"
+   # fi
    echo ""
    echo "Number of GPUs found on worker: $WORKER_GPUS"
    echo ""
@@ -574,9 +588,16 @@ add_worker()
    fi
 
    if [[ "$WORKER_GPUS" > "0" ]] ; then
-       set_gpus
+      RM_WORKER="cuda:
+        accept_nvidia_download_terms: true
+      hops:
+        capacity: 
+          resource_calculator_class: org.apache.hadoop.yarn.util.resource.DominantResourceCalculatorGPU
+        yarn:
+          gpus: '*'"
    else
-       unset_gpus
+      RM_WORKER="hops:
+        yarn:"
    fi
 echo "  
   datanode${WORKER_ID}:
@@ -584,7 +605,7 @@ echo "
     baremetal:
       ip: ${WORKER_IP}
     attrs:
-      $RM_CLASS
+      $RM_WORKER
           vcores: $CPUS
           memory_mbs: $MBS
     recipes:
@@ -708,7 +729,7 @@ purge_local()
    sudo rm -rf ~/.karamel   
    sudo rm -rf /tmp/chef-solo/cookbooks
    echo "Purging old installation..."      
-   sudo rm -rf /srv/hops/*   
+   sudo rm -rf /srv/hops
 }
 
 ###################################################################################################
@@ -1015,7 +1036,7 @@ else
     if [ $? -ne 0 ] ; then
 	echo ""
 	echo "It appears you need a sudo password for this account."
-        echo -n "Enter the sudo password for $USER: "
+        echo "Enter the sudo password for $USER: "
 	read -s passwd
         SUDO_PWD="-passwd $passwd"
 	echo ""
@@ -1052,7 +1073,7 @@ else
     perl -pi -e "s/__TLS__/$TLS/" $YML_FILE
     if [ $ENTERPRISE -eq 1 ] ; then
 	echo ""
-        echo -n "Enter the URL to download the Enterprise Binaries from: "
+        printf "Enter the URL to download the Enterprise Binaries from: "
 	read DOWNLOAD_URL
 	DOWNLOAD_URL=${DOWNLOAD_URL//\./\\\.}
 	DOWNLOAD_URL=${DOWNLOAD_URL//\//\\\/}	
