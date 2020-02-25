@@ -36,9 +36,9 @@ NON_INTERACT=0
 SCRIPTNAME=`basename $0`
 AVAILABLE_MEMORY=$(free -g | grep Mem | awk '{ print $2 }')
 AVAILABLE_DISK=$(df -h | grep '/$' | awk '{ print $4 }')
-AVAILABLE_MNT=$(df -h | grep '/mnt$' | awk '{ print $4 }')
+# Azure mounts /mnt/resource - AWS/GCP mount /mnt
+AVAILABLE_MNT=$(df -h | grep '/mnt' | awk '{ print $4 }')
 AVAILABLE_CPUS=$(cat /proc/cpuinfo | grep '^processor' | wc -l)
-AVAILABLE_GPUS=$(lspci | grep -i nvidia | wc -l)
 IP=$(hostname -I | awk '{ print $1 }')
 HOSTNAME=$(hostname -f)
 DISTRO=
@@ -75,7 +75,6 @@ if [ $? -ne 0 ] ; then
    sudo yum install pciutils -y > /dev/null
 fi    
 AVAILABLE_GPUS=$(sudo lspci | grep -i nvidia | wc -l)
-
 unset_gpus()
 {
 RM_CLASS="hops:
@@ -156,7 +155,7 @@ splash_screen()
   echo "You appear to have following setup on this host:"
   echo "* available memory: $AVAILABLE_MEMORY"
   echo "* available disk space (on '/' root partition): $AVAILABLE_DISK"
-  echo "* available disk space (on '/mnt' partition): $AVAILABLE_MNT"  
+  echo "* available disk space (under '/mnt' partition): $AVAILABLE_MNT"  
   echo "* available CPUs: $AVAILABLE_CPUS"
   echo "* available GPUS: $AVAILABLE_GPUS"  
   echo "* your ip is: $IP"
@@ -507,13 +506,13 @@ add_worker()
    WORKER_DISK=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "df -h | grep '/\$' | awk '{ print \$4 }'") 
    WORKER_CPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "cat /proc/cpuinfo | grep '^processor' | wc -l")
 
-   NUM_GBS=$(expr $AVAILABLE_MEMORY - 2)
-   NUM_CPUS=$(expr $AVAILABLE_CPUS - 1)
+   NUM_GBS=$(expr $WORKER_MEM - 2)
+   NUM_CPUS=$(expr $WORKER_CPUS - 1)
    
    echo "Amount of disk space available on root partition ('/'): $WORKER_DISK"
    echo "Amount of memory available on worker: $WORKER_MEM"
    printf 'Please enter the amout of memory in this worker to be used (GBs)'
-   echo -n ". Default is $NUM_GBS: "
+   echo -n ". Default is $WORKER_MEM: "
    read GBS
    if [ "$GBS" == "" ] ; then
        GBS=$NUM_GBS
@@ -522,7 +521,7 @@ add_worker()
    MBS=$(expr $GBS \* 1024)
    echo "Amount of CPUs available on worker: $WORKER_CPUS"
    printf 'Please enter the number of CPUs in this worker to be used'
-   echo -n ". Default is $NUM_CPUS: "   
+   echo -n ". Default is $WORKER_CPUS: "   
    read CPUS
    if [ "$CPUS" == "" ] ; then
        CPUS=$NUM_CPUS
@@ -533,8 +532,8 @@ add_worker()
    fi
 
    if [ "$CLOUD" == "azure" ] ; then
-       NSLOOKUP=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "nslookup $WORKER_IP")
-       SUSPECTED_HOSTNAME=$(echo $NSLOOKUP | grep name | awk {' print $4 '} | grep -v 'internal.cloudapp.net')
+       NSLOOKUP=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "nslookup $WORKER_IP | grep name | grep -v 'internal.cloudapp.net'")
+       SUSPECTED_HOSTNAME=$(echo $NSLOOKUP | awk {' print $4 '})
        SUSPECTED_HOSTNAME=${SUSPECTED_HOSTNAME::-1}
        echo ""
        echo "On Azure, you need to add every worker to the same Private DNS Zone, and note the hostname you set in Azure."
@@ -643,9 +642,17 @@ install_dir()
    mnt="${AVAILABLE_MNT//G}"
    
    if [ "$mnt" != "" ] && [ $mnt -gt $root ] ; then
-       sudo mkdir -p /mnt/hops
-       sudo rm -rf /srv/hops
-       sudo ln -s /mnt/hops /srv/hops
+       # Azure mounts disks here: /mnt/reosurce
+       if [ "$CLOUD" == "azure" ] ; then
+	   sudo mkdir -p /mnt/resource/hops
+	   sudo rm -rf /srv/hops
+	   sudo ln -s /mnt/resource/hops /srv/hops
+       else
+       # AWS/GCP mount disks here: /mnt
+	   sudo mkdir -p /mnt/hops
+	   sudo rm -rf /srv/hops
+	   sudo ln -s /mnt/hops /srv/hops
+       fi
    fi
 }
 
