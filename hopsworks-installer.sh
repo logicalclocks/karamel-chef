@@ -490,7 +490,7 @@ update_worker_yml()
 {
   perl -pi -e "s/__WORKER_ID__/$WORKER_ID/" $tmpYml
   perl -pi -e "s/__WORKER_IP__/$WORKER_IP/" $tmpYml            
-  perl -pi -e "s/__MEM__/$MEM/" $tmpYml
+  perl -pi -e "s/__MBS__/$MBS/" $tmpYml
   perl -pi -e "s/__CPUS__/$CPUS/" $tmpYml
   cat $tmpYml >> $YML_FILE
 }
