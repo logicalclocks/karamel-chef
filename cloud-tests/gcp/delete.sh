@@ -18,14 +18,14 @@ if [ "$1" = "cpu" ] ; then
     . config.sh cpu.sh
     rm_instance
 elif [ "$1" = "gpu" ] ; then
-    . config.sh gpu.sh
+    . config.sh "gpu"
     rm_instance    
 elif [ "$1" = "cluster" ] ; then
-    . config.sh cpu.sh
+    . config.sh "cpu"
     rm_instance
-    . config.sh gpu.sh
+    . config.sh "gpu"
     rm_instance    
-    . config.sh cluster.sh
+    . config.sh "cluster"
     rm_instance
 else
     echo "Invalid argument."

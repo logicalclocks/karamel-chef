@@ -1146,7 +1146,7 @@ else
 	cd karamel-${KARAMEL_VERSION}
 	echo "Running command from ${PWD}:"
 	echo "   nohup ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log &"
-	nohup ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log &
+	nohup ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log 2>&1 &
 	clear_screen
 	echo ""
 	echo "***********************************************************************************************************"

@@ -8,6 +8,8 @@ if [ $# -lt 1 ] ; then
     exit 1
 fi
 
+set -e
+
 GPU=nvidia-tesla-p100
 NUM_GPUS=1
 ACCELERATOR=
@@ -34,7 +36,7 @@ elif [ "$MODE" == "cluster" ] ; then
     create
     . config.sh "gpu"
     ACCELERATOR="--accelerator=type=$GPU,count=$NUM_GPUS "
-    ./gpu.sh
+    create
     export NAME="clu"
 else
     echo "Bad argument."
