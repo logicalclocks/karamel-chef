@@ -63,19 +63,19 @@ RM_WORKER=
 ENTERPRISE=0
 KUBERNETES=0
 DOWNLOAD=
+ENTERPRISE_DOWNLOAD_URL=
 KUBERNETES_RECIPES=
 INPUT_YML="cluster-defns/hopsworks-installer.yml"
 YML_FILE="cluster-defns/hopsworks-installer-active.yml"
 ENTERPRISE_ATTRS=
 KUBE="false"
+WORKER_LIST=
+WORKER_IP=
+WORKER_DEFAULTS=
 
-which lspci > /dev/null
-if [ $? -ne 0 ] ; then
-    # this only happens on centos
-   echo "Installing pciutils ...."
-   sudo yum install pciutils -y > /dev/null
-fi    
-AVAILABLE_GPUS=$(sudo lspci | grep -i nvidia | wc -l)
+
+AVAILABLE_GPUS=
+
 unset_gpus()
 {
 RM_CLASS="hops:
@@ -483,12 +483,13 @@ enter_email()
     curl -H "Content-type:application/json" --data @.details http://snurran.sics.se:8443/keyword
 }
 
-
 add_worker()
 {
-   printf 'Please enter the IP of the worker you want to add: '
-   read WORKER_IP
-
+   if [ "$WORKER_DEFAULTS" != "true" ] ; then
+     printf 'Please enter the IP of the worker you want to add: '
+     read WORKER_IP
+   fi
+   
    ssh -t -o StrictHostKeyChecking=no $WORKER_IP "whoami" > /dev/null
    if [ $? -ne 0 ] ; then
       echo "Failed to ssh using public into: ${USER}@${WORKER_IP}"
@@ -503,27 +504,29 @@ add_worker()
       fi
    fi
 
-   WORKER_MEM=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "free -g | grep Mem | awk '{ print \$2 }'")
+   WORKER_MEM=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "free -m | grep Mem | awk '{ print \$2 }'")
    WORKER_DISK=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "df -h | grep '/\$' | awk '{ print \$4 }'") 
    WORKER_CPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "cat /proc/cpuinfo | grep '^processor' | wc -l")
 
    NUM_GBS=$(expr $WORKER_MEM - 2)
    NUM_CPUS=$(expr $WORKER_CPUS - 1)
+
+   MBS=$WORKER_MEM
    
    echo "Amount of disk space available on root partition ('/'): $WORKER_DISK"
-   echo "Amount of memory available on this worker: $WORKER_MEM"
-   printf "Please enter the amout of memory in this worker to be used (GBs): "
-   read GBS
-   if [ "$GBS" == "" ] ; then
-       GBS=$NUM_GBS
+   echo "Amount of memory available on this worker: $WORKER_MEM MBs"
+   if [ "$WORKER_DEFAULTS" != "true" ] ; then   
+       printf "Please enter the amout of memory in this worker to be used (GBs): "
+       read GBS
+       MBS=$(expr $GBS \* 1024)       
    fi
-   
-   MBS=$(expr $GBS \* 1024)
+
    echo "Amount of CPUs available on worker: $WORKER_CPUS"
-   printf "Please enter the number of CPUs in this worker to be used: "   
-   read CPUS
-   if [ "$CPUS" == "" ] ; then
-       CPUS=$NUM_CPUS
+
+   CPUS=$WORKER_CPUS
+   if [ "$WORKER_DEFAULTS" != "true" ] ; then
+       printf "Please enter the number of CPUs in this worker to be used: "   
+       read CPUS
    fi
 
    if [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
@@ -531,8 +534,8 @@ add_worker()
    fi
 
    WORKER_MNT=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo df -h | grep '/mnt' | awk '{ print $4 }'")
-   re='^[0-9]+$'
 
+   re='^[0-9]+$'
    
    if [ "$CLOUD" == "azure" ] ; then
        NSLOOKUP=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "nslookup $WORKER_IP | grep name | grep -v 'internal.cloudapp.net'")
@@ -543,9 +546,13 @@ add_worker()
        echo "We suspect the private DNS hostname is:"
        echo "    $SUSPECTED_HOSTNAME"
        echo ""
-       printf  "Please enter the private DNS hostname for this worker (default: $SUSPECTED_HOSTNAME): "
-       read PRIVATE_HOSTNAME
-       if [ "$PRIVATE_HOSTNAME" == "" ] ; then
+       if [ "$WORKER_DEFAULTS" != "true" ] ; then
+	   printf  "Please enter the private DNS hostname for this worker (default: $SUSPECTED_HOSTNAME): "
+	   read PRIVATE_HOSTNAME
+	   if [ "$PRIVATE_HOSTNAME" == "" ] ; then
+	       PRIVATE_HOSTNAME=$SUSPECTED_HOSTNAME
+	   fi
+       else
 	   PRIVATE_HOSTNAME=$SUSPECTED_HOSTNAME
        fi
        ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo hostname $PRIVATE_HOSTNAME"
@@ -571,18 +578,22 @@ add_worker()
    echo "Number of GPUs found on worker: $WORKER_GPUS"
    echo ""
    if [[ "$WORKER_GPUS" > "0" ]] ; then
-       printf 'Do you want all of the GPUs to be used by this worker (y/n (default y):'
-       read ACCEPT
-       if [ "$ACCEPT" == "y" ] || [ "$ACCEPT" == "yes" ] || [ "$ACCEPT" == "" ] ; then
-	   echo "$WORKER_GPUS will be used on this worker."
-	   # if [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
-           #   echo "Installing kernel-devel on worker.."
-	   #   ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo yum install \"kernel-devel-uname-r == $(uname -r)\" -y" > /dev/null
-	   # fi
-       else
-	   echo "$The GPUs will not be used on this worker."
-	   WORKER_GPUS=0
-       fi
+       if [ "$WORKER_DEFAULTS" != "true" ] ; then
+	   printf 'Do you want all of the GPUs to be used by this worker (y/n (default y):'
+	   read ACCEPT
+	   if [ "$ACCEPT" == "y" ] || [ "$ACCEPT" == "yes" ] || [ "$ACCEPT" == "" ] ; then
+	       echo "$WORKER_GPUS will be used on this worker."
+	       # if [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
+	       # 	   echo "Installing kernel-devel on worker.."
+	       # 	   ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo yum install \"kernel-devel-uname-r == $(uname -r)\" -y" > /dev/null
+	       # fi
+	   else
+	       echo "$The GPUs will not be used on this worker."
+	       WORKER_GPUS=0
+	   fi
+#       else
+#	   ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo yum install \"kernel-devel-uname-r == $(uname -r)\" -y" > /dev/null
+       fi	   
    else
        echo "No worker GPUs available"
    fi
@@ -747,8 +758,6 @@ purge_local()
 while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
   case "$1" in
     -h|--help|-help)
-	      echo ""
-	      echo "You can install Karamel asa normal user."
               echo "usage: [sudo] ./$SCRIPTNAME "
 	      echo " [-h|--help]      help message"
 	      echo " [-i|--install-action localhost|cluster|karamel] "
@@ -760,11 +769,12 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      echo "                 'purge' removes Hopsworks completely from this host"
 	      echo "                 'purge-all' removes Hopsworks completely from ALL hosts"	      
 	      echo " [-cl|--clean]    removes the karamel installation"
-	      echo " [-dr|--dry-run]      does not run karamel, just generates YML file"
+	      echo " [-dr|--dry-run]  does not run karamel, just generates YML file"
 	      echo " [--gcp-nvme]     mount NVMe disk on GCP node"
-	      echo " [-c|--cloud     on-premises|gcp|aws|azure]"
-	      echo " [-ni|--non-interactive)]"
-	      echo "                  skip license/terms acceptance and all confirmation screens."
+	      echo " [-c|--cloud      on-premises|gcp|aws|azure]"
+	      echo " [-w|--workers    IP1,IP2,...,IPN|none] install on workers with IPs in supplied list (or none). Uses default mem/cpu/gpus for the workers."
+	      echo " [-d|--download-binaries-url url] downloads enterprise binaries from this URL"
+	      echo " [-ni|--non-interactive)] skip license/terms acceptance and all confirmation screens."
 	      echo "" 
 	      exit 3
               break
@@ -810,6 +820,10 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
     -cl|--clean)
 	      CLEAN_INSTALL_DIR=1
 	      ;;
+    -d|--download-binaries-url)
+      	      shift	
+	      ENTERPRISE_DOWNLOAD_URL=$1
+	      ;;
     -dr|--dry-run)
 	      DRY_RUN=1
 	      ;;
@@ -839,6 +853,10 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
     -ni|--non-interactive)
 	      NON_INTERACT=1
 	      ;;
+    -w|--workers) 
+              shift
+              WORKER_LIST=$1
+              ;;
     -y|--yml) 
               shift
               yml=$1
@@ -880,6 +898,15 @@ fi
 
 install_action
 
+which lspci > /dev/null
+if [ $? -ne 0 ] ; then
+    # this only happens on centos
+   echo "Installing pciutils ...."
+   sudo yum install pciutils -y > /dev/null
+fi    
+AVAILABLE_GPUS=$(sudo lspci | grep -i nvidia | wc -l)
+
+
 if [ "$INSTALL_ACTION" == "$INSTALL_NVIDIA" ] ; then
    sudo -- sh -c 'echo "blacklist nouveau
      options nouveau modeset=0" > /etc/modprobe.d/blacklist-nouveau.conf'
@@ -889,7 +916,7 @@ if [ "$INSTALL_ACTION" == "$INSTALL_NVIDIA" ] ; then
 fi
 
 if [ "$INSTALL_ACTION" == "$PURGE_HOPSWORKS_ALL_HOSTS" ] ; then   
-    IPS=$(grep 'ip:' hopsworks-installer-active.yml | awk '{ print $2 '})
+    IPS=$(grep 'ip:' hopsworks-installer-active.yml | awk '{ print $2 }')
     cd							 
     for ip in $IPS ; do
 	echo ""
@@ -1017,7 +1044,19 @@ else
 fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] ; then
-  worker_size
+  if [ "$WORKER_LIST" == "" ] ; then
+      worker_size
+  else
+      if [ "$WORKER_LIST" != "none" ] ; then
+	  IFS=',' read -r -a workers <<< "$WORKER_LIST"
+	  WORKER_DEFAULTS="true"
+	  for worker in "${workers[@]}"
+	  do
+	      WORKER_IP=$worker
+	      add_worker
+	  done
+      fi
+  fi
 fi    
 
 if [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST_TLS" ] ; then
@@ -1043,7 +1082,12 @@ else
     fi
 
     if [ $AVAILABLE_GPUS -gt 0 ] ; then
-      RM_CLASS="cuda:
+	if [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
+            echo "Installing kernel-devel headers/libraries..."
+            sudo yum install kernel-devel-uname-r == $(uname -r) -y > /dev/null
+	fi
+	
+	RM_CLASS="cuda:
     accept_nvidia_download_terms: true
   hops:
     capacity: 
@@ -1051,7 +1095,7 @@ else
     yarn:
       gpus: '*'"
     else
-      unset_gpus	
+	unset_gpus	
     fi    
 
 
@@ -1072,23 +1116,27 @@ else
     perl -pi -e "s/__RM_CLASS__/$RM_CLASS/" $YML_FILE
     perl -pi -e "s/__TLS__/$TLS/" $YML_FILE
     if [ $ENTERPRISE -eq 1 ] ; then
-	echo ""
-        printf "Enter the URL to download the Enterprise Binaries from: "
-	read DOWNLOAD_URL
-	DOWNLOAD_URL=${DOWNLOAD_URL//\./\\\.}
-	DOWNLOAD_URL=${DOWNLOAD_URL//\//\\\/}	
+	if [ "$ENTERPRISE_DOWNLOAD_URL" = "" ] ; then
+	    echo ""
+            printf "Enter the URL to download the Enterprise Binaries from: "
+	    read ENTERPRISE_DOWNLOAD_URL
+        fi
+	# Escape URL
+        # printf -v ENTERPRISE_DOWNLOAD_URL "%q\n" "$ENTERPRISE_DOWNLOAD_URL"
+	ENTERPRISE_DOWNLOAD_URL=${ENTERPRISE_DOWNLOAD_URL//\./\\\.}
+	ENTERPRISE_DOWNLOAD_URL=${ENTERPRISE_DOWNLOAD_URL//\//\\\/}
         echo ""	
-	#DNS_IP=$(printf "%q" "$DNS_IP")
+	#printf -v DNS_IP "%q\n" "$DNS_IP"
 	DNS_IP=${DNS_IP//\./\\\.}
 	if [ $KUBERNETES -eq 1 ] ; then
-	  KUBE="true"
-          DOWNLOAD="download_url: $DOWNLOAD_URL
+	    KUBE="true"
+	    DOWNLOAD="download_url: $ENTERPRISE_DOWNLOAD_URL
   kube-hops:
     pki:
      verify_hopsworks_cert: false
     fallback_dns: $DNS_IP
 "
-          KUBERNETES_RECIPES="- kube-hops::hopsworks
+	    KUBERNETES_RECIPES="- kube-hops::hopsworks
       - kube-hops::ca
       - kube-hops::master
       - kube-hops::post_conf
@@ -1096,11 +1144,11 @@ else
       - kube-hops::node
 "	  
 	else
-          DOWNLOAD="download_url: $DOWNLOAD_URL"	    
+	    DOWNLOAD="download_url: $ENTERPRISE_DOWNLOAD_URL"	    
 	fi
         ENTERPRISE_ATTRS="enterprise:
       install: true
-      download_url: $DOWNLOAD_URL"
+      download_url: $ENTERPRISE_DOWNLOAD_URL"
 
     fi
     perl -pi -e "s/__ENTERPRISE__/$ENTERPRISE_ATTRS/" $YML_FILE
@@ -1108,22 +1156,33 @@ else
     perl -pi -e "s/__KUBERNETES_RECIPES__/$KUBERNETES_RECIPES/" $YML_FILE
     perl -pi -e "s/__KUBE__/$KUBE/" $YML_FILE
     
-  if [ $DRY_RUN -eq 0 ] ; then
-    cd karamel-${KARAMEL_VERSION}
-    echo "Running command from ${PWD}:"
-    echo "   nohup ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log &"
-    nohup ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log &
-    echo ""
-    echo "********************************************************************************************"
-    echo ""
-    echo "In a couple of mins, you can open your browser to check your installation: http://${IP}:9090/index.html"
-    echo ""
-    echo "Note: port 9090 must be open on your host for external traffic if you want to use your browser."
-    echo ""
-    echo "You can also view the logs with this command:"
-    echo ""
-    echo "tail -f installation.log"
-    echo ""    
-    cd ..
-  fi
+    if [ $DRY_RUN -eq 0 ] ; then
+	cd karamel-${KARAMEL_VERSION}
+	echo "Running command from ${PWD}:"
+	echo "   nohup ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log &"
+	nohup ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log &
+	clear_screen
+	echo ""
+	echo "***********************************************************************************************************"
+	echo ""
+	echo "Installation has started, but may take 1 hour or more.........."
+	echo ""	
+	echo "The Karamel installer UI will soon start at:  http://${IP}:9090/index.html"
+	echo "Note: port 9090 must be open for external traffic and Karamel will shutdown when installation finishes."
+	echo ""
+	echo "====================================================================="	
+	echo "Hopsworks will later be available at:"
+	echo ""
+	echo "https://${IP}/hopsworks"
+	echo ""
+	echo "====================================================================="
+	echo ""
+	echo "You can view the installation logs with this command:"
+	echo ""
+	echo "tail -f installation.log"
+	echo ""    
+	echo "***********************************************************************************************************"
+	cd ..
+    fi
 fi
+
