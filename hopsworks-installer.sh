@@ -66,6 +66,8 @@ DOWNLOAD=
 ENTERPRISE_DOWNLOAD_URL=
 KUBERNETES_RECIPES=
 INPUT_YML="cluster-defns/hopsworks-installer.yml"
+WORKER_YML="cluster-defns/hopsworks-worker.yml"
+WORKER_GPU_YML="cluster-defns/hopsworks-worker-gpu.yml"
 YML_FILE="cluster-defns/hopsworks-installer-active.yml"
 ENTERPRISE_ATTRS=
 KUBE="false"
@@ -484,163 +486,145 @@ enter_email()
     curl -H "Content-type:application/json" --data @.details http://snurran.sics.se:8443/keyword
 }
 
+update_worker_yml()
+{
+  perl -pi -e "s/__WORKER_ID__/$WORKER_ID/" $tmpYml
+  perl -pi -e "s/__WORKER_IP__/$WORKER_IP/" $tmpYml            
+  perl -pi -e "s/__MEM__/$MEM/" $tmpYml
+  perl -pi -e "s/__CPUS__/$CPUS/" $tmpYml
+  cat $tmpYml >> $YML_FILE
+}
+
 add_worker()
 {
-   if [ "$WORKER_DEFAULTS" != "true" ] ; then
-     printf 'Please enter the IP of the worker you want to add: '
-     read WORKER_IP
-   fi
-   
-   ssh -t -o StrictHostKeyChecking=no $WORKER_IP "whoami" > /dev/null
-   if [ $? -ne 0 ] ; then
-      echo "Failed to ssh using public into: ${USER}@${WORKER_IP}"
-      echo "Cannot add worker node, as you need to be able to ssh into it using your public key"
-      echo ""
-      echo ""
-      echo "You can setup passwordless SSH to setup to ${USER}@${WORKER_IP} by entering the password."
-      echo "Running ssh-copy-id.... "
-      ssh-copy-id -i ${HOME}/.ssh/id_rsa.pub ${USER}@${WORKER_IP}
-      if [ $? -ne 0 ] ; then
-          exit_error "Problem setting up passwordless SSH to ${USER}@${WORKER_IP}"
-      fi
-   fi
+    if [ "$WORKER_DEFAULTS" != "true" ] ; then
+	printf 'Please enter the IP of the worker you want to add: '
+	read WORKER_IP
+    fi
+    
+    ssh -t -o StrictHostKeyChecking=no $WORKER_IP "whoami" > /dev/null
+    if [ $? -ne 0 ] ; then
+	echo "Failed to ssh using public into: ${USER}@${WORKER_IP}"
+	echo "Cannot add worker node, as you need to be able to ssh into it using your public key"
+	echo ""
+	echo ""
+	echo "You can setup passwordless SSH to setup to ${USER}@${WORKER_IP} by entering the password."
+	echo "Running ssh-copy-id.... "
+	ssh-copy-id -i ${HOME}/.ssh/id_rsa.pub ${USER}@${WORKER_IP}
+	if [ $? -ne 0 ] ; then
+            exit_error "Problem setting up passwordless SSH to ${USER}@${WORKER_IP}"
+	fi
+    fi
 
-   WORKER_MEM=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "free -m | grep Mem | awk '{ print \$2 }'")
-   WORKER_DISK=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "df -h | grep '/\$' | awk '{ print \$4 }'") 
-   WORKER_CPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "cat /proc/cpuinfo | grep '^processor' | wc -l")
+    WORKER_MEM=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "free -m | grep Mem | awk '{ print \$2 }'")
+    WORKER_DISK=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "df -h | grep '/\$' | awk '{ print \$4 }'") 
+    WORKER_CPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "cat /proc/cpuinfo | grep '^processor' | wc -l")
 
-   NUM_GBS=$(expr $WORKER_MEM - 2)
-   NUM_CPUS=$(expr $WORKER_CPUS - 1)
+    NUM_GBS=$(expr $WORKER_MEM - 2)
+    NUM_CPUS=$(expr $WORKER_CPUS - 1)
 
-   MBS=$WORKER_MEM
-   
-   echo "Amount of disk space available on root partition ('/'): $WORKER_DISK"
-   echo "Amount of memory available on this worker: $WORKER_MEM MBs"
-   if [ "$WORKER_DEFAULTS" != "true" ] ; then   
-       printf "Please enter the amout of memory in this worker to be used (GBs): "
-       read GBS
-       MBS=$(expr $GBS \* 1024)       
-   fi
+    MBS=$WORKER_MEM
+    
+    echo "Amount of disk space available on root partition ('/'): $WORKER_DISK"
+    echo "Amount of memory available on this worker: $WORKER_MEM MBs"
+    if [ "$WORKER_DEFAULTS" != "true" ] ; then   
+	printf "Please enter the amout of memory in this worker to be used (GBs): "
+	read GBS
+	MBS=$(expr $GBS \* 1024)       
+    fi
 
-   echo "Amount of CPUs available on worker: $WORKER_CPUS"
+    echo "Amount of CPUs available on worker: $WORKER_CPUS"
 
-   CPUS=$WORKER_CPUS
-   if [ "$WORKER_DEFAULTS" != "true" ] ; then
-       printf "Please enter the number of CPUs in this worker to be used: "   
-       read CPUS
-   fi
+    CPUS=$WORKER_CPUS
+    if [ "$WORKER_DEFAULTS" != "true" ] ; then
+	printf "Please enter the number of CPUs in this worker to be used: "   
+	read CPUS
+    fi
 
-   if [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
-       ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo yum install pciutils -y"
-   fi
+    if [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
+	ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo yum install pciutils -y"
+    fi
 
-   WORKER_MNT=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo df -h | grep '/mnt' | awk '{ print $4 }'")
+    WORKER_MNT=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo df -h | grep '/mnt' | awk '{ print $4 }'")
 
-   re='^[0-9]+$'
-   
-   if [ "$CLOUD" == "azure" ] ; then
-       NSLOOKUP=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "nslookup $WORKER_IP | grep name | grep -v 'internal.cloudapp.net'")
-       SUSPECTED_HOSTNAME=$(echo $NSLOOKUP | awk {' print $4 '})
-       SUSPECTED_HOSTNAME=${SUSPECTED_HOSTNAME::-1}
-       echo ""
-       echo "On Azure, you need to add every worker to the same Private DNS Zone, and note the hostname you set in Azure."
-       echo "We suspect the private DNS hostname is:"
-       echo "    $SUSPECTED_HOSTNAME"
-       echo ""
-       if [ "$WORKER_DEFAULTS" != "true" ] ; then
-	   printf  "Please enter the private DNS hostname for this worker (default: $SUSPECTED_HOSTNAME): "
-	   read PRIVATE_HOSTNAME
-	   if [ "$PRIVATE_HOSTNAME" == "" ] ; then
-	       PRIVATE_HOSTNAME=$SUSPECTED_HOSTNAME
-	   fi
-       else
-	   PRIVATE_HOSTNAME=$SUSPECTED_HOSTNAME
-       fi
-       ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo hostname $PRIVATE_HOSTNAME"
+    re='^[0-9]+$'
+    
+    if [ "$CLOUD" == "azure" ] ; then
+	NSLOOKUP=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "nslookup $WORKER_IP | grep name | grep -v 'internal.cloudapp.net'")
+	SUSPECTED_HOSTNAME=$(echo $NSLOOKUP | awk {' print $4 '})
+	SUSPECTED_HOSTNAME=${SUSPECTED_HOSTNAME::-1}
+	echo ""
+	echo "On Azure, you need to add every worker to the same Private DNS Zone, and note the hostname you set in Azure."
+	echo "We suspect the private DNS hostname is:"
+	echo "    $SUSPECTED_HOSTNAME"
+	echo ""
+	if [ "$WORKER_DEFAULTS" != "true" ] ; then
+	    printf  "Please enter the private DNS hostname for this worker (default: $SUSPECTED_HOSTNAME): "
+	    read PRIVATE_HOSTNAME
+	    if [ "$PRIVATE_HOSTNAME" == "" ] ; then
+		PRIVATE_HOSTNAME=$SUSPECTED_HOSTNAME
+	    fi
+	else
+	    PRIVATE_HOSTNAME=$SUSPECTED_HOSTNAME
+	fi
+	ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo hostname $PRIVATE_HOSTNAME"
 
 
-       if [[ $WORKER_MNT =~ $re ]] ; then
-          ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo rm -rf /srv/hops; sudo mkdir -p /mnt/resource/hops; sudo ln -s /mnt/resource/hops /srv/hops"
-       fi
-   else
-       if [[ $WORKER_MNT =~ $re ]] ; then
-          ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo rm -rf /srv/hops; sudo mkdir -p /mnt/hops; sudo ln -s /mnt/hops /srv/hops"
-       fi
-   fi       
-   
-   WORKER_GPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo lspci | grep -i nvidia | wc -l")
-   echo "GPUs found on worker: $WORKER_GPUS"
+	if [[ $WORKER_MNT =~ $re ]] ; then
+            ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo rm -rf /srv/hops; sudo mkdir -p /mnt/resource/hops; sudo ln -s /mnt/resource/hops /srv/hops"
+	fi
+    else
+	if [[ $WORKER_MNT =~ $re ]] ; then
+            ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo rm -rf /srv/hops; sudo mkdir -p /mnt/hops; sudo ln -s /mnt/hops /srv/hops"
+	fi
+    fi       
+    
+    WORKER_GPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo lspci | grep -i nvidia | wc -l")
+    echo "GPUs found on worker: $WORKER_GPUS"
 
-   # re='^[0-9]+$'
-   # if ! [[ $WORKER_GPUS =~ $re ]] ; then
-   #   WORKER_GPUS="0"
-   # fi
-   echo ""
-   echo "Number of GPUs found on worker: $WORKER_GPUS"
-   echo ""
-   if [[ "$WORKER_GPUS" > "0" ]] ; then
-       if [ "$WORKER_DEFAULTS" != "true" ] ; then
-	   printf 'Do you want all of the GPUs to be used by this worker (y/n (default y):'
-	   read ACCEPT
-	   if [ "$ACCEPT" == "y" ] || [ "$ACCEPT" == "yes" ] || [ "$ACCEPT" == "" ] ; then
-	       echo "$WORKER_GPUS will be used on this worker."
-	       # if [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
-	       # 	   echo "Installing kernel-devel on worker.."
-	       # 	   ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo yum install \"kernel-devel-uname-r == $(uname -r)\" -y" > /dev/null
-	       # fi
-	   else
-	       echo "$The GPUs will not be used on this worker."
-	       WORKER_GPUS=0
-	   fi
-#       else
-#	   ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo yum install \"kernel-devel-uname-r == $(uname -r)\" -y" > /dev/null
-       fi	   
-   else
-       echo "No worker GPUs available"
-   fi
+    # re='^[0-9]+$'
+    # if ! [[ $WORKER_GPUS =~ $re ]] ; then
+    #   WORKER_GPUS="0"
+    # fi
+    echo ""
+    echo "Number of GPUs found on worker: $WORKER_GPUS"
+    echo ""
+    if [[ "$WORKER_GPUS" > "0" ]] ; then
+	if [ "$WORKER_DEFAULTS" != "true" ] ; then
+	    printf 'Do you want all of the GPUs to be used by this worker (y/n (default y):'
+	    read ACCEPT
+	    if [ "$ACCEPT" == "y" ] || [ "$ACCEPT" == "yes" ] || [ "$ACCEPT" == "" ] ; then
+		echo "$WORKER_GPUS will be used on this worker."
+		# if [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
+		# 	   echo "Installing kernel-devel on worker.."
+		# 	   ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo yum install \"kernel-devel-uname-r == $(uname -r)\" -y" > /dev/null
+		# fi
+	    else
+		echo "$The GPUs will not be used on this worker."
+		WORKER_GPUS=0
+	    fi
+	    #       else
+	    #	   ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo yum install \"kernel-devel-uname-r == $(uname -r)\" -y" > /dev/null
+	fi	   
+    else
+	echo "No worker GPUs available"
+    fi
 
-   if [[ "$WORKER_GPUS" > "0" ]] ; then
-      RM_WORKER="cuda:
-        accept_nvidia_download_terms: true
-      hops:
-        capacity: 
-          resource_calculator_class: org.apache.hadoop.yarn.util.resource.DominantResourceCalculatorGPU
-        yarn:
-          gpus: '*'"
-   else
-      RM_WORKER="hops:
-        yarn:"
-   fi
-echo "  
-  datanode${WORKER_ID}:
-    size: 1
-    baremetal:
-      ip: ${WORKER_IP}
-    attrs:
-      $RM_WORKER
-          vcores: $CPUS
-          memory_mbs: $MBS
-    recipes:
-      - kagent
-      - conda
-      - hops::dn
-      - hops::nm
-      - hadoop_spark::yarn
-      - hadoop_spark::certs
-      - flink::yarn
-      - hopslog::_filebeat-spark
-      - hopslog::_filebeat-kagent
-      - hopslog::_filebeat-beam
-      - tensorflow
-      - hopsmonitor::node_exporter
-" >> $YML_FILE
+    tmpYml="cluster-defns/.worker.yml"
+    if [[ "$WORKER_GPUS" > "0" ]] ; then
+	cat $WORKER_GPU_YML > $tmpYml
+	update_worker_yml
+    else
+	cat $WORKER_YML > $tmpYml
+	update_worker_yml
+    fi
 
-if [ $? -ne 0 ] ; then
- echo ""
- echo "Failure: could not add a worker to the yml file."
- exit_error
-fi
-WORKER_ID=$((WORKER_ID+1))
+    if [ $? -ne 0 ] ; then
+	echo ""
+	echo "Failure: could not add a worker to the yml file."
+	exit_error
+    fi
+    WORKER_ID=$((WORKER_ID+1))
 }
 
 
@@ -997,11 +981,12 @@ install_dir
 if [ ! -d cluster-defns ] ; then
     mkdir cluster-defns
 fi
-if [ ! -e $INPUT_YML ] ; then
-    cd cluster-defns
-    wget https://raw.githubusercontent.com/logicalclocks/karamel-chef/${CLUSTER_DEFINITION_BRANCH}/$INPUT_YML
-    cd ..
-fi
+cd cluster-defns
+# Don't overwrite the YML files, so that users can customize them 
+wget -nc https://raw.githubusercontent.com/logicalclocks/karamel-chef/${CLUSTER_DEFINITION_BRANCH}/$INPUT_YML
+wget -nc https://raw.githubusercontent.com/logicalclocks/karamel-chef/${CLUSTER_DEFINITION_BRANCH}/$WORKER_YML
+wget -nc https://raw.githubusercontent.com/logicalclocks/karamel-chef/${CLUSTER_DEFINITION_BRANCH}/$WORKER_GPU_YML
+cd ..
 
 if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST_TLS" ]  ; then
     clear_screen    

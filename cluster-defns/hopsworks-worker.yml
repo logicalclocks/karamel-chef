@@ -1,0 +1,22 @@
+  datanode__WORKER_ID__:
+    size: 1
+    baremetal:
+      ip: __WORKER_IP__
+    attrs:
+      hops:
+        yarn:
+          vcores: __CPUS__
+          memory_mbs: __MBS__
+    recipes:
+      - kagent
+      - conda
+      - hops::dn
+      - hops::nm
+      - hadoop_spark::yarn
+      - hadoop_spark::certs
+      - flink::yarn
+      - hopslog::_filebeat-spark
+      - hopslog::_filebeat-kagent
+      - hopslog::_filebeat-beam
+      - tensorflow
+      - hopsmonitor::node_exporter

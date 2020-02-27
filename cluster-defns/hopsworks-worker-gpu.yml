@@ -1,0 +1,27 @@
+  datanode__WORKER_ID__:
+    size: 1
+    baremetal:
+      ip: __WORKER_IP__
+    attrs:
+      cuda:
+        accept_nvidia_download_terms: true
+      hops:
+        capacity: 
+          resource_calculator_class: org.apache.hadoop.yarn.util.resource.DominantResourceCalculatorGPU
+        yarn:
+          gpus: '*'
+          vcores: __CPUS__
+          memory_mbs: __MBS__
+    recipes:
+      - kagent
+      - conda
+      - hops::dn
+      - hops::nm
+      - hadoop_spark::yarn
+      - hadoop_spark::certs
+      - flink::yarn
+      - hopslog::_filebeat-spark
+      - hopslog::_filebeat-kagent
+      - hopslog::_filebeat-beam
+      - tensorflow
+      - hopsmonitor::node_exporter
