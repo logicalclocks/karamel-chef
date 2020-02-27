@@ -1014,7 +1014,7 @@ fi
 if [ ! -d karamel-${KARAMEL_VERSION} ] ; then
     echo "Installing Karamel..."
     clear_screen    
-    wget http://www.karamel.io/sites/default/files/downloads/karamel-${KARAMEL_VERSION}.tgz
+    wget -nc http://www.karamel.io/sites/default/files/downloads/karamel-${KARAMEL_VERSION}.tgz
     if [ $? -ne 0 ] ; then
 	exit_error "Problem downloading karamel"
     fi
