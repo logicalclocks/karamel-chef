@@ -20,11 +20,12 @@ error_download_url()
 host_ip=
 test_ssh()
 {
-    ssh -t -o StrictHostKeyChecking=no $host_ip "pwd"
-    if [ $? -ne 0 ] ; then
-	echo "	ssh-keygen -f \"/home/$USER/.ssh/known_hosts\" -R $host_ip"
-	ssh-keygen -f "/home/$USER/.ssh/known_hosts" -R $host_ip
-    fi    
+   ssh-keygen -f "/home/$USER/.ssh/known_hosts" -R $host_ip    
+    # ssh -t -o StrictHostKeyChecking=no $host_ip "pwd"
+    # if [ $? -ne 0 ] ; then
+    # 	echo "	ssh-keygen -f \"/home/$USER/.ssh/known_hosts\" -R $host_ip"
+    # 	ssh-keygen -f "/home/$USER/.ssh/known_hosts" -R $host_ip
+    # fi    
 }    
 
 if [ "$DOWNLOAD_URL" == "" ] ; then
@@ -109,7 +110,8 @@ if [ "$1" = "cluster" ] ; then
     ssh -t -o StrictHostKeyChecking=no $IP "if [ ! -e ~/.ssh/id_rsa.pub ] ; then cat /dev/zero | ssh-keygen -q -N \"\" ; fi"
     pubkey=$(ssh -t -o StrictHostKeyChecking=no $IP "cat ~/.ssh/id_rsa.pub")
 
-    echo "$pubkey" > .pubkey.pub
+    keyfile=".pubkey.pub"
+    echo "$pubkey" > $keyfile
     echo ""
     echo "Public key for head node is:"
     echo "$pubkey"
@@ -117,13 +119,12 @@ if [ "$1" = "cluster" ] ; then
 
     host_ip=$CPU
     test_ssh
-    target=$CPU
     host_ip=$GPU
     test_ssh
     
     WORKERS="-w ${PRIVATE_CPU},${PRIVATE_GPU}"
 
-    ssh-copy-id -o StrictHostKeyChecking=no -i .pubkey.pub $CPU > /dev/null
+    ssh-copy-id -o StrictHostKeyChecking=no -f -i $keyfile $CPU
     ssh -t -o StrictHostKeyChecking=no $IP "ssh -t -o StrictHostKeyChecking=no $PRIVATE_CPU \"pwd\""
     if [ $? -ne 0 ] ; then
 	echo ""
@@ -135,7 +136,7 @@ if [ "$1" = "cluster" ] ; then
 	echo "Success: SSH from $IP to $CPU_PRIVATE"
     fi
 
-    ssh-copy-id -o StrictHostKeyChecking=no -i .pubkey.pub $GPU > /dev/null
+    ssh-copy-id -o StrictHostKeyChecking=no -f -i $keyfile $GPU
     ssh -t -o StrictHostKeyChecking=no $IP "ssh -t -o StrictHostKeyChecking=no $PRIVATE_GPU \"pwd\""
     if [ $? -ne 0 ] ; then
 	echo ""
@@ -154,14 +155,16 @@ echo ""
 echo "Running installer on $IP :"
 echo "./hopsworks-installer.sh -i enterprise -ni -c gcp -d $DOWNLOAD_URL $WORKERS"
 echo ""
-ssh -t -o StrictHostKeyChecking=no $IP "./hopsworks-installer.sh -i enterprise -ni -c gcp -d $DOWNLOAD_URL $WORKERS"
+ssh -t -o StrictHostKeyChecking=no $IP "nohup /home/$USER/hopsworks-installer.sh -i enterprise -ni -c gcp -d $DOWNLOAD_URL $WORKERS &"
 
 if [ $? -ne 0 ] ; then
     echo "Problem running installer. Exiting..."
     exit 2
 fi    
 
-echo ""
-echo "Installation finished. Hopsworks will start running at:"
-echo "https://${IP}/hopsworks"
-echo ""
+echo "****************************************"
+echo "*                                      *"
+echo "*Public IP access to Hopsworks at:     *"
+echo "*    https://${IP}/hopsworks           *"
+echo "*                                      *"
+echo "****************************************"
