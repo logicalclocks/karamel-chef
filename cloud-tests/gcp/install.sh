@@ -155,13 +155,11 @@ echo ""
 echo "Running installer on $IP :"
 echo "./hopsworks-installer.sh -i enterprise -ni -c gcp -d $DOWNLOAD_URL $WORKERS"
 echo ""
-ssh -t -o StrictHostKeyChecking=no $IP "nohup /home/$USER/hopsworks-installer.sh -i enterprise -ni -c gcp -d $DOWNLOAD_URL $WORKERS &"
+ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i enterprise -ni -c gcp -d $DOWNLOAD_URL $WORKERS"
 if [ $? -ne 0 ] ; then
     echo "Problem running installer. Exiting..."
     exit 2
 fi
-
-ssh -t -o StrictHostKeyChecking=no $IP "cd karamel-0.6 ; nohup ./bin/karamel -headless -launch ../cluster-defns/hopsworks-installer-active.yml > ../installation.log &"
 
 echo "****************************************"
 echo "*                                      *"
