@@ -77,7 +77,9 @@ AVAILABLE_GPUS=
 
 unset_gpus()
 {
-RM_CLASS="hops:
+RM_CLASS="cuda:
+    skip_test: true
+  hops:
     yarn:"
 }
 unset_gpus
