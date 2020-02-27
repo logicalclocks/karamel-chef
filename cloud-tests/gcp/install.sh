@@ -18,14 +18,9 @@ error_download_url()
 }
 
 host_ip=
-test_ssh()
+clear_known_hosts()
 {
    ssh-keygen -f "/home/$USER/.ssh/known_hosts" -R $host_ip    
-    # ssh -t -o StrictHostKeyChecking=no $host_ip "pwd"
-    # if [ $? -ne 0 ] ; then
-    # 	echo "	ssh-keygen -f \"/home/$USER/.ssh/known_hosts\" -R $host_ip"
-    # 	ssh-keygen -f "/home/$USER/.ssh/known_hosts" -R $host_ip
-    # fi    
 }    
 
 if [ "$DOWNLOAD_URL" == "" ] ; then
@@ -91,7 +86,7 @@ echo -e "Gpu node.\t Public IP: $GPU \t Private IP: $PRIVATE_GPU"
     
 
 host_ip=$IP
-test_ssh
+clear_known_hosts
 
 if [[ "$IMAGE" == *"centos"* ]]; then
     ssh -t -o StrictHostKeyChecking=no $IP "sudo yum install wget -y > /dev/null"
@@ -118,9 +113,9 @@ if [ "$1" = "cluster" ] ; then
     echo ""
 
     host_ip=$CPU
-    test_ssh
+    clear_known_hosts
     host_ip=$GPU
-    test_ssh
+    clear_known_hosts
     
     WORKERS="-w ${PRIVATE_CPU},${PRIVATE_GPU}"
 
