@@ -580,11 +580,14 @@ add_worker()
     fi       
     
     WORKER_GPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo lspci | grep -i nvidia | wc -l")
+    # strip carriage return '\r' from variable to make it a number
+    WORKER_GPUS=$(echo $WORKER_GPUS|tr -d '\r')
+    
 
     echo ""
     echo "Number of GPUs found on worker: $WORKER_GPUS"
     echo ""
-    if [ $WORKER_GPUS -gt 0 ] ; then
+    if [ "$WORKER_GPUS" -gt "0" ] ; then
 	if [ "$WORKER_DEFAULTS" != "true" ] ; then
 	    printf 'Do you want all of the GPUs to be used by this worker (y/n (default y):'
 	    read ACCEPT
@@ -606,7 +609,7 @@ add_worker()
     fi
 
     tmpYml="cluster-defns/.worker.yml"
-    if [ $WORKER_GPUS -gt 0 ] ; then
+    if [ "$WORKER_GPUS" -gt "0" ] ; then
 	echo "GPU Worker YML"
 	cat $WORKER_GPU_YML > $tmpYml
 	update_worker_yml
