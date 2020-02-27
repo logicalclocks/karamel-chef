@@ -745,7 +745,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
     -h|--help|-help)
               echo "usage: [sudo] ./$SCRIPTNAME "
 	      echo " [-h|--help]      help message"
-	      echo " [-i|--install-action localhost|cluster|karamel] "
+	      echo " [-i|--install-action localhost|localhost-tls|cluster|enterprise|karamel|purge|purge-all] "
 	      echo "                 'localhost' installs a localhost Hopsworks cluster"
 	      echo "                 'localhost-tls' installs a localhost Hopsworks cluster with TLS enabled"	      
 	      echo "                 'cluster' installs a multi-host Hopsworks cluster"

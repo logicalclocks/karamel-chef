@@ -1,11 +1,16 @@
 #!/bin/bash
 
-if [ $# -lt 1 ] ; then
+help()
+{
     echo ""
-    echo "Usage: $0 cpu|gpu|cluster [skip-create]"
+    echo "Usage: $0 cpu|gpu|cluster [skip-create] [cluster]"
     echo "Create a VM or a cluster and install Hopsworks on it."
     echo ""    
     exit 1
+}
+
+if [ $# -lt 1 ] ; then
+    help
 fi
 
 error_download_url()
@@ -16,7 +21,7 @@ error_download_url()
     echo ""    
     exit
 }
-
+HOPSWORKS_VERSION=enterprise
 host_ip=
 clear_known_hosts()
 {
@@ -42,14 +47,16 @@ elif [ "$1" = "gpu" ] ; then
 elif [ "$1" = "cluster" ] ; then
     job="cluster"
 else
-    echo "Invalid argument: $1"
-    echo "Usage: $0 cpu|gpu|cluster [skip-create]"
-    exit 1
+    help
 fi
 
 . config.sh $job
 
 IP=$(gcloud compute instances list | grep $NAME | awk '{ print $5 }')
+
+if [ "$2" == "cluster" ] || [ "$3" == "cluster" ] ; then
+   HOPSWORKS_VERSION=cluster
+fi
 
 if [ ! "$2" == "skip-create" ] ; then
     if [ "$IP" != "" ] ; then
@@ -148,9 +155,8 @@ else
 fi    
 echo ""
 echo "Running installer on $IP :"
-echo "./hopsworks-installer.sh -i enterprise -ni -c gcp -d $DOWNLOAD_URL $WORKERS"
 echo ""
-ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i enterprise -ni -c gcp -d $DOWNLOAD_URL $WORKERS"
+ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i $HOPSWORKS_VERSION -ni -c gcp -d $DOWNLOAD_URL $WORKERS"
 
 if [ $? -ne 0 ] ; then
     echo "Problem running installer. Exiting..."
@@ -159,9 +165,10 @@ fi
 
 ssh -t -o StrictHostKeyChecking=no $IP "cd karamel-0.6 && nohup ./bin/karamel -headless -launch ../cluster-defns/hopsworks-installer-active.yml  > ../installation.log 2>&1 &"
 
+echo ""
 echo "****************************************"
 echo "*                                      *"
 echo "* Public IP access to Hopsworks at:    *"
-echo "*    https://${IP}/hopsworks           *"
+echo "*   https://${IP}/hopsworks      *"
 echo "*                                      *"
 echo "****************************************"
