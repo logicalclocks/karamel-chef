@@ -3,7 +3,7 @@
 help()
 {
     echo ""
-    echo "Usage: $0 cpu|gpu|cluster [skip-create] [cluster]"
+    echo "Usage: $0 cpu|gpu|cluster [skip-create] [community]"
     echo "Create a VM or a cluster and install Hopsworks on it."
     echo ""    
     exit 1
@@ -54,7 +54,7 @@ fi
 
 IP=$(gcloud compute instances list | grep $NAME | awk '{ print $5 }')
 
-if [ "$2" == "cluster" ] || [ "$3" == "cluster" ] ; then
+if [ "$2" == "community" ] || [ "$3" == "community" ] ; then
    HOPSWORKS_VERSION=cluster
 fi
 
