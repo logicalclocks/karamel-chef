@@ -70,7 +70,7 @@ attrs:
         username: elasticexporter
         password: __PWD___201
 groups:
-  namenodes:
+  metaserver:
     size: 1
     baremetal:
       ip: __IP__
