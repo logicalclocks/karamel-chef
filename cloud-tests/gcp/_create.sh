@@ -1,17 +1,22 @@
 #!/bin/bash
 
-if [ $# -lt 1 ] ; then
+help()
+{
     echo ""
-    echo "Usage: $0 cpu|gpu|cluster"
+    echo "Usage: $0 cpu|gpu|cluster|[benchmark num_cpus num_gpus]"
     echo "Create a VM or a cluster."
     echo ""    
     exit 1
+}
+
+if [ $# -lt 1 ] ; then
+    help
 fi
 
 set -e
 
 GPU=nvidia-tesla-p100
-NUM_GPUS=1
+NUM_GPUS_PER_VM=1
 ACCELERATOR=
 
 
@@ -28,16 +33,40 @@ MODE=$1
 if [ "$MODE" == "cpu" ] ; then
   create
 elif [ "$MODE" == "gpu" ] ; then
-    ACCELERATOR="--accelerator=type=$GPU,count=$NUM_GPUS "
+    ACCELERATOR="--accelerator=type=$GPU,count=$NUM_GPUS_PER_VM "
     create
 elif [ "$MODE" == "cluster" ] ; then
     create
     . config.sh "cpu"
     create
     . config.sh "gpu"
-    ACCELERATOR="--accelerator=type=$GPU,count=$NUM_GPUS "
+    ACCELERATOR="--accelerator=type=$GPU,count=$NUM_GPUS_PER_VM "
     create
     export NAME="clu"
+elif [ "$MODE" == "benchmark" ] ; then
+    if [ $# -lt 3 ] ; then
+	help
+    fi
+    CPUS=$2
+    GPUS=$3
+
+    create
+    
+    for i in {1..${CPUS}} ;
+    do
+       . config.sh "cp${i}"
+       create
+    done
+
+    for i in {1..${GPUS}} ;
+    do
+	. config.sh "gp${i}"
+	ACCELERATOR="--accelerator=type=$GPU,count=$NUM_GPUS_PER_VM "
+	create
+    done
+    export NAME="clu"
+    echo $CPUS > .cpus
+    echo $GPUS > .gpus
 else
     echo "Bad argument."
     echo ""
