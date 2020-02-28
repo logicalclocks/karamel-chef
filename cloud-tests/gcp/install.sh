@@ -177,7 +177,7 @@ if [ $? -ne 0 ] ; then
     exit 2
 fi
 
-ssh -t -o StrictHostKeyChecking=no $IP "cd karamel-0.6 && nohup ./bin/karamel -headless -launch ../cluster-defns/hopsworks-installer-active.yml  > ../installation.log 2>&1 &"
+#ssh -t -o StrictHostKeyChecking=no $IP "cd karamel-0.6 && nohup ./bin/karamel -headless -launch ../cluster-defns/hopsworks-installer-active.yml  > ../installation.log 2>&1 &"
 
 echo ""
 echo "****************************************"

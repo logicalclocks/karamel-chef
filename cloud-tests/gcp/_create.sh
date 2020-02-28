@@ -31,11 +31,13 @@ MODE=$1
 . config.sh $MODE
 
 if [ "$MODE" == "cpu" ] ; then
-  create
+    ACCELERATOR=""
+    create
 elif [ "$MODE" == "gpu" ] ; then
     ACCELERATOR="--accelerator=type=$GPU,count=$NUM_GPUS_PER_VM "
     create
 elif [ "$MODE" == "cluster" ] ; then
+    ACCELERATOR=""    
     create
     . config.sh "cpu"
     create
@@ -52,15 +54,18 @@ elif [ "$MODE" == "benchmark" ] ; then
 
     create
     
-    for i in {1..${CPUS}} ;
+    for i in $(seq 1 ${CPUS}) ;
     do
-       . config.sh "cp${i}"
+	n="cp$i"
+	. config.sh $n
+       ACCELERATOR=""
        create
     done
 
-    for i in {1..${GPUS}} ;
+    for i in $(seq 1 ${GPUS}) ;
     do
-	. config.sh "gp${i}"
+	n="gp$i"
+	. config.sh $n
 	ACCELERATOR="--accelerator=type=$GPU,count=$NUM_GPUS_PER_VM "
 	create
     done

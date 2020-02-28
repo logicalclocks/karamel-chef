@@ -1051,7 +1051,7 @@ fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_KARAMEL" ]  ; then
     cd karamel-${KARAMEL_VERSION}
-    nohup ./bin/karamel -headless &
+    setsid ./bin/karamel -headless &
     echo "To access Karamel, open your browser at: "
     echo ""
     echo "http://${ip}:9090/index.html"
@@ -1145,8 +1145,8 @@ else
     if [ $DRY_RUN -eq 0 ] ; then
 	cd karamel-${KARAMEL_VERSION}
 	echo "Running command from ${PWD}:"
-	echo "   nohup ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log &"
-	nohup ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log 2>&1 &
+	echo "   setsid ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log 2>&1 &"
+	setsid ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log 2>&1 &
 	clear_screen
 	echo ""
 	echo "***********************************************************************************************************"
