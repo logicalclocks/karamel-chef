@@ -3,6 +3,8 @@
     baremetal:
       ip: __WORKER_IP__
     attrs:
+      cuda:
+        accept_nvidia_download_terms: false
       hops:
         yarn:
           vcores: __CPUS__

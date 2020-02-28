@@ -21,6 +21,24 @@ error_download_url()
     echo ""    
     exit
 }
+
+get_ips()
+{
+    IP=$(gcloud compute instances list | grep $NAME | awk '{ print $5 }')
+    PRIVATE_IP=$(gcloud compute instances list | grep $NAME | awk '{ print $4 }')
+    echo -e "Head node.\t Public IP: $IP \t Private IP: $PRIVATE_IP"
+
+    CPU=$(gcloud compute instances list | grep "cpu" | awk '{ print $5 }')
+    PRIVATE_CPU=$(gcloud compute instances list | grep "cpu" | awk '{ print $4 }')
+    echo -e "Cpu node.\t Public IP: $CPU \t Private IP: $PRIVATE_CPU"
+
+
+    GPU=$(gcloud compute instances list | grep "gpu" | awk '{ print $5 }')
+    PRIVATE_GPU=$(gcloud compute instances list | grep "gpu" | awk '{ print $4 }')
+    echo -e "Gpu node.\t Public IP: $GPU \t Private IP: $PRIVATE_GPU"
+}    
+
+
 HOPSWORKS_VERSION=enterprise
 host_ip=
 clear_known_hosts()
@@ -78,19 +96,15 @@ echo "gcloud compute instances list ...."
 echo ""
 
 
-IP=$(gcloud compute instances list | grep $NAME | awk '{ print $5 }')
-PRIVATE_IP=$(gcloud compute instances list | grep $NAME | awk '{ print $4 }')
-echo -e "Head node.\t Public IP: $IP \t Private IP: $PRIVATE_IP"
+if [ "$job" == "cluster" ] ; then # wait for all VMs to have started
 
-CPU=$(gcloud compute instances list | grep "cpu" | awk '{ print $5 }')
-PRIVATE_CPU=$(gcloud compute instances list | grep "cpu" | awk '{ print $4 }')
-echo -e "Cpu node.\t Public IP: $CPU \t Private IP: $PRIVATE_CPU"
+    while [[ "$IP" == "" ]] || [[ "$CPU" == "" ]] || [[ "$GPU" == "" ]] ; do
+	get_ips
+    done
+else
+    get_ips
+fi    
 
-
-GPU=$(gcloud compute instances list | grep "gpu" | awk '{ print $5 }')
-PRIVATE_GPU=$(gcloud compute instances list | grep "gpu" | awk '{ print $4 }')
-echo -e "Gpu node.\t Public IP: $GPU \t Private IP: $PRIVATE_GPU"
-    
 
 host_ip=$IP
 clear_known_hosts
