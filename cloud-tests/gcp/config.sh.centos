@@ -5,8 +5,8 @@ NAME=${script:0:3}
 
 
 GCP_USER=$USER
-PROJECT=hazel-charter-222806
-#PROJECT=dpe-cloud-mle
+#PROJECT=hazel-charter-222806
+PROJECT=dpe-cloud-mle
 ZONE=us-east1-b
 REGION=us-east1
 
