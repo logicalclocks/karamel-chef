@@ -58,7 +58,7 @@ REVERSE_DNS=1
 
 CLOUD=
 GCP_NVME=0
-RM_CLASS="yarn:"
+YARN="yarn:"
 RM_WORKER=
 ENTERPRISE=0
 KUBERNETES=0
@@ -1054,10 +1054,10 @@ else
 	fi
     fi
     if [ $AVAILABLE_GPUS -gt 0 ] || [ $HAS_GPUS -eq 1 ] ; then
-	RM_CLASS="capacity: 
-        resource_calculator_class: org.apache.hadoop.yarn.util.resource.DominantResourceCalculatorGPU
-      yarn:
-        gpus: '*'"
+	YARN="capacity: 
+      resource_calculator_class: org.apache.hadoop.yarn.util.resource.DominantResourceCalculatorGPU
+    yarn:
+      gpus: '*'"
     fi    
 
 
@@ -1075,7 +1075,7 @@ else
     perl -pi -e "s/__BRANCH__/$HOPSWORKS_BRANCH/" $YML_FILE    
     perl -pi -e "s/__USER__/$USER/" $YML_FILE
     perl -pi -e "s/__IP__/$IP/" $YML_FILE
-    perl -pi -e "s/__RM_CLASS__/$RM_CLASS/" $YML_FILE
+    perl -pi -e "s/__YARN__/$YARN/" $YML_FILE
     perl -pi -e "s/__TLS__/$TLS/" $YML_FILE
     if [ $ENTERPRISE -eq 1 ] ; then
 	if [ "$ENTERPRISE_DOWNLOAD_URL" = "" ] ; then
