@@ -1056,7 +1056,7 @@ else
 	fi
     fi
     if [ $AVAILABLE_GPUS -gt 0 ] || [ $HAS_GPUS -eq 1 ] ; then
-	CUDA="  cuda:
+	CUDA="cuda:
     accept_nvidia_download_terms: true"
 	YARN="capacity: 
       resource_calculator_class: org.apache.hadoop.yarn.util.resource.DominantResourceCalculatorGPU
