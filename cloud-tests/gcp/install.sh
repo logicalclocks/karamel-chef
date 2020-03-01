@@ -71,7 +71,9 @@ fi
 IP=$(gcloud compute instances list | grep $NAME | awk '{ print $5 }')
 
 if [ "$2" == "community" ] || [ "$3" == "community" ] ; then
-   HOPSWORKS_VERSION=cluster
+    HOPSWORKS_VERSION=cluster
+else
+    HOPSWORKS_VERSION=enterprise    
 fi
 
 if [ ! "$2" == "skip-create" ] ; then
@@ -108,12 +110,13 @@ host_ip=$IP
 clear_known_hosts
 
 if [[ "$IMAGE" == *"centos"* ]]; then
+    echo "ssh -t -o StrictHostKeyChecking=no $IP \"sudo yum install wget -y > /dev/null\""
     ssh -t -o StrictHostKeyChecking=no $IP "sudo yum install wget -y > /dev/null"
 fi    
 
 
 echo "Installing installer on $IP"
-ssh -t -o StrictHostKeyChecking=no $IP "wget -nc ${CLUSTER_DEFN_BRANCH}/hopsworks-installer.sh && chmod +x hopsworks-installer.sh"
+ssh -t -o StrictHostKeyChecking=no $IP "wget -nc ${BRANCH}/hopsworks-installer.sh && chmod +x hopsworks-installer.sh"
 
 if [ $? -ne 0 ] ; then
     echo "Problem installing installer. Exiting..."
@@ -166,8 +169,7 @@ else
     WORKERS="-w none"
 fi    
 echo ""
-echo "Running installer on $IP :"
-echo ""
+echo "ssh -t -o StrictHostKeyChecking=no $IP \"/home/$USER/hopsworks-installer.sh -i $HOPSWORKS_VERSION -ni -c gcp -d $DOWNLOAD_URL $WORKERS\""
 ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i $HOPSWORKS_VERSION -ni -c gcp -d $DOWNLOAD_URL $WORKERS"
 
 if [ $? -ne 0 ] ; then
@@ -175,7 +177,7 @@ if [ $? -ne 0 ] ; then
     exit 2
 fi
 
-#ssh -t -o StrictHostKeyChecking=no $IP "cd karamel-0.6 && nohup ./bin/karamel -headless -launch ../cluster-defns/hopsworks-installer-active.yml  > ../installation.log 2>&1 &"
+ssh -t -o StrictHostKeyChecking=no $IP "cd karamel-0.6 && setsid ./bin/karamel -headless -launch ../cluster-defns/hopsworks-installer-active.yml  > ../installation.log 2>&1 &"
 
 echo ""
 echo "****************************************"

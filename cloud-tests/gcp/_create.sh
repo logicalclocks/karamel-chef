@@ -20,14 +20,27 @@ NUM_GPUS_PER_VM=1
 ACCELERATOR=
 
 
+#cloud beta compute --project=dpe-cloud-mle instances create cpu-1 --zone=us-east1-b --machine-type=n1-standard-8 --subnet=default --network-tier=PREMIUM --metadata=ssh-keys=jdowling:ssh-rsa\ AAAAB3NzaC1yc2EAAAADAQABAAABAQDNu9JIl6T31Mqi7xuAq/bRElzWEcrdtFAV8/Tu7UGBOp8ivLtjWATCaO\+zYgGHle4jj346fK3qKgSohdpaAV\+/eCLfsw35o2K6AEUBJ9St7vbgftRv719CyITEh1RSsiJwaoVaRWKGMaM2\+qec2FLGl0SMZBihT02YdvRVavR3YoBCUJfXLZrkxfq1KV0i5jtuawR\+dtVQ0hjS\+K4r8AV2jQPJin75m4RqEoeGwLZO0BGjm96/haHoC9LXZLIj3udUd3wQa4wPBVacAwGhF/2a2IDGWUpRXDOY6/zG02JT2Lnxw0glJ0sWEpPUu3cbGFg14rOFiU\+eU0H9HDq3p3gP\ jdowling@snurran --maintenance-policy=TERMINATE --no-service-account --no-scopes --tags=karamel,http-server,https-server --image=centos-7-v20200205 --image-project=centos-cloud --boot-disk-size=80GB --boot-disk-type=pd-ssd --boot-disk-device-name=cpu-1 --reservation-affinity=any
 create()
 {
-    gcloud compute --project=$PROJECT instances create $NAME --zone=$ZONE --machine-type=$MACHINE_TYPE --subnet=$SUBNET --network-tier=$NETWORK_TIER --maintenance-policy=$MAINTENANCE_POLICY $SERVICE_ACCOUNT --no-scopes $ACCELERATOR --tags=$TAGS --image=$IMAGE --image-project=$IMAGE_PROJECT --boot-disk-size=$BOOT_SIZE --boot-disk-type=$BOOT_DISK --boot-disk-device-name=$NAME --reservation-affinity=$RESERVATION_AFFINITY $SHIELD --metadata=ssh-keys="$ESCAPED_SSH_KEY"
+echo "gcloud compute --project=$PROJECT instances create $NAME --zone=$ZONE --machine-type=$MACHINE_TYPE --subnet=$SUBNET --network-tier=$NETWORK_TIER --maintenance-policy=$MAINTENANCE_POLICY $SERVICE_ACCOUNT --no-scopes $ACCELERATOR --tags=$TAGS --image=$IMAGE --image-project=$IMAGE_PROJECT --boot-disk-size=$BOOT_SIZE --boot-disk-type=$BOOT_DISK --boot-disk-device-name=$NAME --reservation-affinity=$RESERVATION_AFFINITY --metadata=ssh-keys=$ESCAPED_SSH_KEY"
+    
+    gcloud compute --project=$PROJECT instances create $NAME --zone=$ZONE --machine-type=$MACHINE_TYPE --subnet=$SUBNET --network-tier=$NETWORK_TIER --maintenance-policy=$MAINTENANCE_POLICY $SERVICE_ACCOUNT --no-scopes $ACCELERATOR --tags=$TAGS --image=$IMAGE --image-project=$IMAGE_PROJECT --boot-disk-size=$BOOT_SIZE --boot-disk-type=$BOOT_DISK --boot-disk-device-name=$NAME --reservation-affinity=$RESERVATION_AFFINITY --metadata=ssh-keys="$ESCAPED_SSH_KEY"
+    #$SHIELD
 }
 
 nvidia_drivers_ubuntu()
 {
+    GPU_IP=$(gcloud compute instances list | grep "gpu" | awk '{ print $5 }')
 
+    if [[ "$IMAGE" == *"centos"* ]]; then
+	ssh -t -o StrictHostKeyChecking=no $GPU_IP "sudo yum install wget -y > /dev/null"
+    fi    
+
+    
+    ssh -t -o StrictHostKeyChecking=no $GPU_IP "wget -nc ${CLUSTER_DEFN_BRANCH}/hopsworks-installer.sh && chmod +x hopsworks-installer.sh"
+
+    ssh -t -o StrictHostKeyChecking=no $GPU_IP "/home/$USER/hopsworks-installer.sh -i cpu -ni -c gcp"
 }
 
 MODE=$1
@@ -49,9 +62,7 @@ elif [ "$MODE" == "cluster" ] ; then
     ACCELERATOR="--accelerator=type=$GPU,count=$NUM_GPUS_PER_VM "
     create
     if [ "$IMAGE_PROJECT" == "ubuntu-os-cloud" ] ; then
-	gpu_ip=$(gcloud compute instances list | grep -E 'gp[0-9]{1,4}' | awk '{ print $5 }')
-        ssh -t -o StrictHostKeyChecking=no $IP "wget -nc ${CLUSTER_DEFNS_BRANCH}/hopsworks-installer.sh && chmod +x hopsworks-installer.sh"
-        ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i gpu -ni -c gcp"	
+	nvidia_drivers_ubuntu
     fi
     
     export NAME="clu"
@@ -90,3 +101,9 @@ else
     echo ""    
     exit 2
 fi	    
+
+
+echo ""
+echo "Waiting for notes to join...."
+sleep 10
+echo ""

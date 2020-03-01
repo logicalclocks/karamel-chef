@@ -6,8 +6,6 @@
       cuda:
         accept_nvidia_download_terms: true
       hops:
-        capacity: 
-          resource_calculator_class: org.apache.hadoop.yarn.util.resource.DominantResourceCalculatorGPU
         yarn:
           gpus: '*'
           vcores: __CPUS__

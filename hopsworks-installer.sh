@@ -58,7 +58,8 @@ REVERSE_DNS=1
 
 CLOUD=
 GCP_NVME=0
-RM_CLASS=
+RM_CLASS="hops:
+    yarn:"
 RM_WORKER=
 ENTERPRISE=0
 KUBERNETES=0
@@ -74,29 +75,8 @@ KUBE="false"
 WORKER_LIST=
 WORKER_IP=
 WORKER_DEFAULTS=
-
+HAS_GPUS=0
 AVAILABLE_GPUS=
-
-unset_gpus()
-{
-#cuda:
-#    skip_test: true    
-RM_CLASS="hops:
-    yarn:"
-}
-unset_gpus
-
-
-set_gpus()
-{
-RM_CLASS="cuda:
-        accept_nvidia_download_terms: true
-      hops:
-        capacity: 
-          resource_calculator_class: org.apache.hadoop.yarn.util.resource.DominantResourceCalculatorGPU
-        yarn:
-          gpus: '*'"
-}
 
 # $1 = String describing error
 exit_error() 
@@ -588,6 +568,7 @@ add_worker()
     echo "Number of GPUs found on worker: $WORKER_GPUS"
     echo ""
     if [ "$WORKER_GPUS" -gt "0" ] ; then
+	HAS_GPUS=1
 	if [ "$WORKER_DEFAULTS" != "true" ] ; then
 	    printf 'Do you want all of the GPUs to be used by this worker (y/n (default y):'
 	    read ACCEPT
@@ -1067,21 +1048,18 @@ else
 	echo ""
     fi
 
-    if [ $AVAILABLE_GPUS -gt 0 ] ; then
+    if [ $AVAILABLE_GPUS -gt 0 ]; then
 	if [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
             echo "Installing kernel-devel headers/libraries..."
             sudo yum install kernel-devel-uname-r == $(uname -r) -y > /dev/null
 	fi
-	
-	RM_CLASS="cuda:
-    accept_nvidia_download_terms: true
-  hops:
+    fi
+    if [ $AVAILABLE_GPUS -gt 0 ] || [ $HAS_GPUS -eq 1 ] ; then
+	RM_CLASS="hops:
     capacity: 
       resource_calculator_class: org.apache.hadoop.yarn.util.resource.DominantResourceCalculatorGPU
     yarn:
       gpus: '*'"
-    else
-	unset_gpus	
     fi    
 
 
