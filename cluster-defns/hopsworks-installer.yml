@@ -16,13 +16,11 @@ attrs:
     __ENTERPRISE__
     hops:
       tls:
-        enabled: true
+        enabled: __TLS__
       cgroups: true
-  __RM_CLASS__
+      __RM_CLASS__
       vcores: __CPUS__
       memory_mbs: __MEM__
-    tls:
-      enabled: __TLS__
     rmappsecurity:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
   kagent:

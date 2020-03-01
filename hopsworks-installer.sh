@@ -58,7 +58,7 @@ REVERSE_DNS=1
 
 CLOUD=
 GCP_NVME=0
-RM_CLASS="    yarn:"
+RM_CLASS="yarn:"
 RM_WORKER=
 ENTERPRISE=0
 KUBERNETES=0
@@ -1054,10 +1054,10 @@ else
 	fi
     fi
     if [ $AVAILABLE_GPUS -gt 0 ] || [ $HAS_GPUS -eq 1 ] ; then
-	RM_CLASS="    capacity: 
-      resource_calculator_class: org.apache.hadoop.yarn.util.resource.DominantResourceCalculatorGPU
-    yarn:
-      gpus: '*'"
+	RM_CLASS="capacity: 
+        resource_calculator_class: org.apache.hadoop.yarn.util.resource.DominantResourceCalculatorGPU
+      yarn:
+        gpus: '*'"
     fi    
 
 
