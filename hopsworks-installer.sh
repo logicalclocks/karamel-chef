@@ -29,7 +29,7 @@
 
 HOPSWORKS_VERSION=1.2.0
 HOPSWORKS_BRANCH=1.2
-CLUSTER_DEFINITION_BRANCH=installer_improvements
+CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/installer_improvements
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
 NON_INTERACT=0
@@ -58,8 +58,7 @@ REVERSE_DNS=1
 
 CLOUD=
 GCP_NVME=0
-RM_CLASS="hops:
-    yarn:"
+RM_CLASS="    yarn:"
 RM_WORKER=
 ENTERPRISE=0
 KUBERNETES=0
@@ -964,9 +963,9 @@ if [ ! -d cluster-defns ] ; then
 fi
 cd cluster-defns
 # Don't overwrite the YML files, so that users can customize them 
-wget -nc https://raw.githubusercontent.com/logicalclocks/karamel-chef/${CLUSTER_DEFINITION_BRANCH}/$INPUT_YML
-wget -nc https://raw.githubusercontent.com/logicalclocks/karamel-chef/${CLUSTER_DEFINITION_BRANCH}/$WORKER_YML
-wget -nc https://raw.githubusercontent.com/logicalclocks/karamel-chef/${CLUSTER_DEFINITION_BRANCH}/$WORKER_GPU_YML
+wget -nc ${CLUSTER_DEFINITION_BRANCH}/$INPUT_YML
+wget -nc ${CLUSTER_DEFINITION_BRANCH}/$WORKER_YML
+wget -nc ${CLUSTER_DEFINITION_BRANCH}/$WORKER_GPU_YML
 cd ..
 
 if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST_TLS" ]  ; then
@@ -1055,8 +1054,7 @@ else
 	fi
     fi
     if [ $AVAILABLE_GPUS -gt 0 ] || [ $HAS_GPUS -eq 1 ] ; then
-	RM_CLASS="hops:
-    capacity: 
+	RM_CLASS="    capacity: 
       resource_calculator_class: org.apache.hadoop.yarn.util.resource.DominantResourceCalculatorGPU
     yarn:
       gpus: '*'"
