@@ -76,6 +76,8 @@ WORKER_IP=
 WORKER_DEFAULTS=
 HAS_GPUS=0
 AVAILABLE_GPUS=
+CUDA=
+
 
 # $1 = String describing error
 exit_error() 
@@ -1054,6 +1056,8 @@ else
 	fi
     fi
     if [ $AVAILABLE_GPUS -gt 0 ] || [ $HAS_GPUS -eq 1 ] ; then
+	CUDA="  cuda:
+    accept_nvidia_download_terms: true"
 	YARN="capacity: 
       resource_calculator_class: org.apache.hadoop.yarn.util.resource.DominantResourceCalculatorGPU
     yarn:
@@ -1077,6 +1081,7 @@ else
     perl -pi -e "s/__IP__/$IP/" $YML_FILE
     perl -pi -e "s/__YARN__/$YARN/" $YML_FILE
     perl -pi -e "s/__TLS__/$TLS/" $YML_FILE
+    perl -pi -e "s/__CUDA__/$CUDA/" $YML_FILE    
     if [ $ENTERPRISE -eq 1 ] ; then
 	if [ "$ENTERPRISE_DOWNLOAD_URL" = "" ] ; then
 	    echo ""
