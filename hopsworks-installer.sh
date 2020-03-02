@@ -6,7 +6,7 @@
 # http://www.gnu.org/licenses/gpl-3.0.txt                                                         #
 #                                                                                                 #
 #                                                                                                 #
-# Copyright (c) Logical Clocks AB, 2020.                                                             #
+# Copyright (c) Logical Clocks AB, 2020.                                                          #
 # All Rights Reserved.                                                                            #
 #                                                                                                 #
 ###################################################################################################
@@ -297,11 +297,6 @@ accept_license ()
 
 get_install_option_help()
 {
-  if [ $ROOTUSER -eq 1 ] ; then
-    INSTALL_AS_DAEMON_HELP="You are installing cluster as root user. Karamel will run as a root process in 'nohup' mode."
-  else
-    INSTALL_AS_DAEMON_HELP="You are installing cluster as normal (non-root) user. Karamel will run as a user-level process in 'nohup' mode."
-  fi
 
 INSTALL_OPTION_HELP="
 Install Options Help\n
@@ -1055,9 +1050,13 @@ else
             sudo yum install kernel-devel-uname-r == $(uname -r) -y > /dev/null
 	fi
     fi
-    if [ $AVAILABLE_GPUS -gt 0 ] || [ $HAS_GPUS -eq 1 ] ; then
-	CUDA="cuda:
+
+    if [ $AVAILABLE_GPUS -gt 0 ] ; then
+	    CUDA="cuda:
     accept_nvidia_download_terms: true"
+    fi
+    
+    if [ $HAS_GPUS -eq 1 ] ; then
 	YARN="capacity: 
       resource_calculator_class: org.apache.hadoop.yarn.util.resource.DominantResourceCalculatorGPU
     yarn:

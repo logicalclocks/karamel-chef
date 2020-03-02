@@ -2,28 +2,37 @@
 
 . config.sh
 
-groups=$(az group list | grep \"name\" | awk '{ print $2 }' | head -1)
-groups=${groups::-2}
-groups=${groups:1}
+groups=$(az group list | grep \"name\" | awk '{ print $2 }' | sed -s 's/\"//g' | sed -e 's/,//')
 
+#echo "Resource Groups: $groups"
 
-echo "$groups"
+if [[ "$groups" =~ "$RESOURCE_GROUP" ]]; then
+    echo "Found existing ResourceGroup: $RESOURCE_GROUP"    
+else
+    echo "Creating ResourceGroup: $RESOURCE_GROUP"
+    az group create --name $RESOURCE_GROUP --location $LOCATION
+fi
 
+vns=$(az network vnet list -g $RESOURCE_GROUP | grep "^    \"name\":" | awk '{ print $2 }' | sed -s 's/\"//g' | sed -e 's/,//')
 
-#echo "Enter the Resource Group name:"
-#read resourceGroupName
-echo "Enter the location (i.e. centralus):"
-read location
-az group create --name $RESOURCE_GROUP --location $LOCATION
+if [[ "$vms" =~ "$VIRTUAL_NETWORK" ]]; then
+  echo "Found virtual networks in resource group $RESOURCE_GROUP  : $vns"
+else
+  az network vnet create -g $RESOURCE_GROUP -n $VIRTUAL_NETWORK --address-prefixes $ADDRESS_PREFIXES --subnet-name $SUBNET --subnet-prefixes $SUBNET_PREFIXES --location $LOCATION
+fi
 
+dns=$(az network private-dns zone list -g $RESOURCE_GROUP -n $DNS_PRIVATE_ZONE  | grep "^    \"name\":" | awk '{ print $2 }' | sed -s 's/\"//g' | sed -e 's/,//')
 
-echo "Creating virtual network"
-az network vnet create --name $VIRTUAL_NETWORK  --resource-group $RESOURCE_GROUP  --subnet-name $SUBNET    --location $LOCATION   --address-prefix 10.1.0.0/16  --subnet-name $SUBNET \
-   --subnet-prefixes  10.1.0.0/24
+if [[ "$dns" =~ "$DNS_PRIVATE_ZONE" ]]; then
+  echo "Found DNS private zones in resource group $RESOURCE_GROUP  : $dns"
+else
+  az network private-dns zone create -g $RESOURCE_GROUP -n $DNS_PRIVATE_ZONE --location $LOCATION
+fi
+
 
 
 # https://docs.microsoft.com/bs-cyrl-ba/azure/dns/private-dns-getstarted-cli
-az network private-dns zone create -g $RESOURCE_GROUP -n $DNS_PRIVATE_ZONE
+
 
 # -e true for automatic hostname registration
 az network private-dns link vnet create -g $RESOURCE_GROUP -n MyDNSLink -z $DNS_PRIVATE_ZONE -v $VIRTUAL_NETWORK -e true
