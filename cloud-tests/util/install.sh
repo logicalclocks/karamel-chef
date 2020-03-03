@@ -44,6 +44,10 @@ get_ips()
     echo -e "Gpu node.\t Public IP: $GPU \t Private IP: $PRIVATE_GPU"
 }    
 
+###################################################################
+#   MAIN                                                          #
+###################################################################
+
 host_ip=
 clear_known_hosts()
 {
@@ -51,8 +55,6 @@ clear_known_hosts()
 }    
 
 get_ips
-
-exit
 
 if [ "$DOWNLOAD_URL" == "" ] ; then
     if [ -e env.sh ] ; then
