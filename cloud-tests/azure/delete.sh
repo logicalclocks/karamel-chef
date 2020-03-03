@@ -1,5 +1,5 @@
 #!/bin/bash
 
-. config.sh
+. config.sh $1
 
-az group delete --name $RESOURCE_GROUP
+az vm delete --name $NAME

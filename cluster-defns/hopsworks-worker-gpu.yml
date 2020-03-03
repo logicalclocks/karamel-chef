@@ -23,3 +23,5 @@
       - hopslog::_filebeat-beam
       - tensorflow
       - hopsmonitor::node_exporter
+      - livy::install
+      
