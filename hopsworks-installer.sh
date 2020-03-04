@@ -201,10 +201,9 @@ splash_screen()
       echo "WARNING: Reverse DNS does not work on this host. If you enable 'TLS', it will not work."
       echo "Hostname: $HOSTNAME"
       echo "Reverse Hostname: $reverse_hostname"
-      echo ""
-      echo "Azure: if you have already added this VM to a 'Private DNS Zone', then contineu. This script will make reverse-DNS work correctly for local IPs."
-      echo "https://docs.microsoft.com/en-us/azure/dns/private-dns-getstarted-portal"
-      echo ""
+      echo "Azure Installatione: please continue, we will try and fix this during the installation."
+#      echo "https://docs.microsoft.com/en-us/azure/dns/private-dns-getstarted-portal"
+#      echo ""
       echo "On-premises: you have to configure your networking to make reverse-DNS work correctly."
       echo ""
   fi
@@ -348,12 +347,6 @@ install_action()
             ;;
           2)
 	    INSTALL_ACTION=$INSTALL_LOCALHOST_TLS
-	    if [ $REVERSE_DNS -eq 0 ] ; then
-		echo ""
-		echo "Error: reverse DNS is not working. Cannot install TLS-enabled Hopsworks."
-		echo ""
-		exit_error 12 
-	    fi
             ;;
           3)
 	    INSTALL_ACTION=$INSTALL_CLUSTER
@@ -1137,11 +1130,11 @@ else
 	echo "Note: port 9090 must be open for external traffic and Karamel will shutdown when installation finishes."
 	echo ""
 	echo "====================================================================="	
-	echo "Hopsworks will later be available at:"
-	echo ""
-	echo "https://${IP}/hopsworks"
-	echo ""
-	echo "====================================================================="
+	# echo "Hopsworks will later be available at:"
+	# echo ""
+	# echo "https://${IP}/hopsworks"
+	# echo ""
+	# echo "====================================================================="
 	echo ""
 	echo "You can view the installation logs with this command:"
 	echo ""

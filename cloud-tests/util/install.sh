@@ -24,35 +24,37 @@ error_download_url()
 
 get_ips()
 {
-    IP=$(./_list_public.sh clu)
-    PRIVATE_IP=$(./_list_private.sh clu)    
-    # IP=$(gcloud compute instances list | grep $NAME | awk '{ print $5 }')
-    # PRIVATE_IP=$(gcloud compute instances list | grep $NAME | awk '{ print $4 }')
+    IP=$(./_list_public.sh cluster)
+    PRIVATE_IP=$(./_list_private.sh cluster)    
     echo -e "Head node.\t Public IP: $IP \t Private IP: $PRIVATE_IP"
 
     CPU=$(./_list_public.sh cpu)
     PRIVATE_CPU=$(./_list_private.sh cpu)
-#    CPU=$(gcloud compute instances list | grep "cpu" | awk '{ print $5 }')
-#    PRIVATE_CPU=$(gcloud compute instances list | grep "cpu" | awk '{ print $4 }')
     echo -e "Cpu node.\t Public IP: $CPU \t Private IP: $PRIVATE_CPU"
 
 
     GPU=$(./_list_public.sh gpu)
     PRIVATE_GPU=$(./_list_private.sh gpu)
-#    GPU=$(gcloud compute instances list | grep "gpu" | awk '{ print $5 }')
-#    PRIVATE_GPU=$(gcloud compute instances list | grep "gpu" | awk '{ print $4 }')
     echo -e "Gpu node.\t Public IP: $GPU \t Private IP: $PRIVATE_GPU"
+}    
+
+clear_known_hosts()
+{
+   echo "   ssh-keygen -R $host_ip -f /home/$USER/.ssh/known_host"
+   ssh-keygen -R $host_ip -f /home/$USER/.ssh/known_hosts 
 }    
 
 ###################################################################
 #   MAIN                                                          #
 ###################################################################
 
+if [ "$1" != "cpu" ] && [ "$1" != "gpu" ] && [ "$1" != "cluster" ] ; then
+    help
+    exit 3
+fi
+
 host_ip=
-clear_known_hosts()
-{
-   ssh-keygen -f "/home/$USER/.ssh/known_hosts" -R $host_ip    
-}    
+. config.sh $1
 
 get_ips
 
@@ -68,20 +70,9 @@ if [ "$DOWNLOAD_URL" == "" ] ; then
 fi    
 
 
-if [ "$1" = "cpu" ] ; then
-    job="cpu"
-elif [ "$1" = "gpu" ] ; then
-    job="gpu"
-elif [ "$1" = "cluster" ] ; then
-    job="cluster"
-else
-    help
-fi
+IP=$(./_list_public.sh $1)
 
-. config.sh $job
-
-IP=$(./_list_public.sh $NAME)
-#IP=$(gcloud compute instances list | grep $NAME | awk '{ print $5 }')
+echo "Found IP: $IP for $NAME"
 
 if [ "$2" == "community" ] || [ "$3" == "community" ] ; then
     HOPSWORKS_VERSION=cluster
@@ -98,26 +89,10 @@ if [ ! "$2" == "skip-create" ] ; then
     echo ""
     echo "Creating VM(s) ...."
     echo ""    
-    ./_create.sh $job
+    ./_create.sh $1
 else
     echo "Skipping VM creation...."
 fi	
-
-
-echo ""
-echo "gcloud compute instances list ...."
-echo ""
-
-
-if [ "$job" == "cluster" ] ; then # wait for all VMs to have started
-
-    while [[ "$IP" == "" ]] || [[ "$CPU" == "" ]] || [[ "$GPU" == "" ]] ; do
-	get_ips
-    done
-else
-    get_ips
-fi    
-
 
 host_ip=$IP
 clear_known_hosts
