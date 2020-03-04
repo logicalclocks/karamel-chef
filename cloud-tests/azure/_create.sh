@@ -26,7 +26,6 @@ echo "  az vm create -n $NAME -g $RESOURCE_GROUP \
    --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET --accelerated-networking $ACCELERATED_NETWORKING \
    --size $VM_SIZE -l $LOCATION --zone $ZONE \
    --ssh-key-value /home/$USER/.ssh/id_rsa.pub "
-#--public-ip-address-dns-name MyUniqueDnsName \
 
   az vm create -n $NAME -g $RESOURCE_GROUP \
    --image $IMAGE --data-disk-sizes-gb $DATA_DISK_SIZES_GB --os-disk-size-gb $OS_DISK_SIZE_GB --size Standard_DS2_v2 \
@@ -34,8 +33,6 @@ echo "  az vm create -n $NAME -g $RESOURCE_GROUP \
    --size $VM_SIZE -l $LOCATION --zone $ZONE \
    --ssh-key-value /home/$USER/.ssh/id_rsa.pub \
    --accelerated-networking $ACCELERATED_NETWORKING 
-#   --ssh-key-values $ESCAPED_SSH_KEYq
-  # --boot-diagnostics-storage 
 }
 
 nvidia_drivers_ubuntu()
