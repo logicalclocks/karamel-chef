@@ -15,3 +15,4 @@ Vagrantfile
 cluster.yml
 
 .idea
+cloud-tests/gcp/env.sh
