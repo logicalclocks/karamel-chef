@@ -17,14 +17,13 @@ set -e
 
 GPU=nvidia-tesla-p100
 NUM_GPUS_PER_VM=1
-ACCELERATOR=
 
 create()
 {
   az vm create -n $NAME -g $RESOURCE_GROUP \
    --image $IMAGE --data-disk-sizes-gb $DATA_DISK_SIZES_GB --os-disk-size-gb $OS_DISK_SIZE_GB \
    --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
-   --size $VM_SIZE -l $LOCATION --zone $ZONE $ACCELERATOR \
+   --size $VM_SIZE -l $LOCATION --zone $ZONE \
    --ssh-key-value /home/$USER/.ssh/id_rsa.pub    
 #   --priority $PRIORITY --max-price 0.06 \
 }
@@ -44,10 +43,9 @@ MODE=$1
 . config.sh $MODE
 
 if [ "$MODE" == "cpu" ] ; then
-    ACCELERATOR=""
     create
 elif [ "$MODE" == "gpu" ] ; then
-    ACCELERATOR="--accelerator=type=$GPU,count=$NUM_GPUS_PER_VM "
+    VM_SIZE=Standard_NC6_v2
     create
 elif [ "$MODE" == "cluster" ] ; then
     ACCELERATOR=""    
@@ -55,8 +53,7 @@ elif [ "$MODE" == "cluster" ] ; then
     . config.sh "cpu"
     create
     . config.sh "gpu"
-
-    #ACCELERATOR="--accelerator=type=$GPU,count=$NUM_GPUS_PER_VM "
+    VM_SIZE=Standard_NC6_v2
     create
     if [ "$IMAGE_PROJECT" == "ubuntu-os-cloud" ] ; then
 	nvidia_drivers_ubuntu
