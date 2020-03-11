@@ -56,8 +56,6 @@ fi
 host_ip=
 . config.sh $1
 
-get_ips
-
 if [ "$DOWNLOAD_URL" == "" ] ; then
     if [ -e env.sh ] ; then
 	. env.sh
@@ -70,10 +68,6 @@ if [ "$DOWNLOAD_URL" == "" ] ; then
 fi    
 
 
-IP=$(./_list_public.sh $1)
-
-echo "Found IP: $IP for $NAME"
-
 if [ "$2" == "community" ] || [ "$3" == "community" ] ; then
     HOPSWORKS_VERSION=cluster
 else
@@ -81,6 +75,7 @@ else
 fi
 
 if [ ! "$2" == "skip-create" ] ; then
+    IP=$(./_list_public.sh $1)    
     if [ "$IP" != "" ] ; then
 	echo "VM already created and running at: $IP"
 	echo "Exiting..."
@@ -93,6 +88,11 @@ if [ ! "$2" == "skip-create" ] ; then
 else
     echo "Skipping VM creation...."
 fi	
+
+get_ips
+
+IP=$(./_list_public.sh $1)
+echo "IP: $IP for $NAME"
 
 host_ip=$IP
 clear_known_hosts
@@ -158,14 +158,12 @@ else
 fi    
 echo ""
 echo "ssh -t -o StrictHostKeyChecking=no $IP \"/home/$USER/hopsworks-installer.sh -i $HOPSWORKS_VERSION -ni -c gcp -d $DOWNLOAD_URL $WORKERS\""
-ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i $HOPSWORKS_VERSION -ni -c gcp -d $DOWNLOAD_URL $WORKERS"
+ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i $HOPSWORKS_VERSION -ni -c gcp -d $DOWNLOAD_URL $WORKERS && sleep 5"
 
 if [ $? -ne 0 ] ; then
     echo "Problem running installer. Exiting..."
     exit 2
 fi
-
-ssh -t -o StrictHostKeyChecking=no $IP "cd karamel-0.6 && setsid ./bin/karamel -headless -launch ../cluster-defns/hopsworks-installer-active.yml  > ../installation.log 2>&1 &"
 
 echo ""
 echo "****************************************"

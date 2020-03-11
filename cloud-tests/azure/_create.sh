@@ -21,18 +21,12 @@ ACCELERATOR=
 
 create()
 {
-echo "  az vm create -n $NAME -g $RESOURCE_GROUP \
-   --image $IMAGE --data-disk-sizes-gb $DATA_DISK_SIZES_GB --os-disk-size-gb $OS_DISK_SIZE_GB --size Standard_DS2_v2 \
-   --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET --accelerated-networking $ACCELERATED_NETWORKING \
-   --size $VM_SIZE -l $LOCATION --zone $ZONE \
-   --ssh-key-value /home/$USER/.ssh/id_rsa.pub "
-
   az vm create -n $NAME -g $RESOURCE_GROUP \
-   --image $IMAGE --data-disk-sizes-gb $DATA_DISK_SIZES_GB --os-disk-size-gb $OS_DISK_SIZE_GB --size Standard_DS2_v2 \
+   --image $IMAGE --data-disk-sizes-gb $DATA_DISK_SIZES_GB --os-disk-size-gb $OS_DISK_SIZE_GB \
    --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
-   --size $VM_SIZE -l $LOCATION --zone $ZONE \
-   --ssh-key-value /home/$USER/.ssh/id_rsa.pub \
-   --accelerated-networking $ACCELERATED_NETWORKING 
+   --size $VM_SIZE -l $LOCATION --zone $ZONE $ACCELERATOR \
+   --ssh-key-value /home/$USER/.ssh/id_rsa.pub    
+#   --priority $PRIORITY --max-price 0.06 \
 }
 
 nvidia_drivers_ubuntu()
@@ -49,9 +43,6 @@ MODE=$1
 
 . config.sh $MODE
 
-create
-exit
-
 if [ "$MODE" == "cpu" ] ; then
     ACCELERATOR=""
     create
@@ -64,12 +55,11 @@ elif [ "$MODE" == "cluster" ] ; then
     . config.sh "cpu"
     create
     . config.sh "gpu"
-    ACCELERATOR="--accelerator=type=$GPU,count=$NUM_GPUS_PER_VM "
+    #ACCELERATOR="--accelerator=type=$GPU,count=$NUM_GPUS_PER_VM "
     create
     if [ "$IMAGE_PROJECT" == "ubuntu-os-cloud" ] ; then
 	nvidia_drivers_ubuntu
     fi
-    
     export NAME="clu"
 elif [ "$MODE" == "benchmark" ] ; then
     if [ $# -lt 3 ] ; then
@@ -110,5 +100,5 @@ fi
 
 echo ""
 echo "Waiting for notes to join...."
-sleep 10
+sleep 60
 echo ""

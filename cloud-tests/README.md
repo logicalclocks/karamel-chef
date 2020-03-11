@@ -30,7 +30,7 @@ Creating VMs and Installing Hopsworks
 Note: to use the Enterprise version of Hopsworks, you need to:
 
 export DOWNLOAD_URL=https://path/to/enterprise/binaries
-or write a file with the name '.env.sh' in the same directory, containing the above line: 'export DOWNLOAD_URL ...'.
+or write a file with the name 'env.sh' in the same directory, containing the above line: 'export DOWNLOAD_URL ...'.
 
 
 Install Hopsworks Enterprise on a single VM:

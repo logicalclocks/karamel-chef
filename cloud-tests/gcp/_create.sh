@@ -104,6 +104,6 @@ fi
 
 
 echo ""
-echo "Waiting for notes to join...."
+echo "Waiting for nodes to join...."
 sleep 10
 echo ""
