@@ -56,17 +56,7 @@ fi
 host_ip=
 . config.sh $1
 
-if [ "$DOWNLOAD_URL" == "" ] ; then
-    if [ -e env.sh ] ; then
-	. env.sh
-        if [ "$DOWNLOAD_URL" == "" ] ; then
-	    error_download_url
-	fi
-    else
-	error_download_url
-    fi
-fi    
-
+get_ips
 
 if [ "$2" == "community" ] || [ "$3" == "community" ] ; then
     HOPSWORKS_VERSION=cluster

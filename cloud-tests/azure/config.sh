@@ -14,7 +14,6 @@ VM_HEAD=hd
 VM_WORKER=cpu
 VM_GPU=gpu
 
-#VM_SIZE=Standard_D4s_v3
 VM_SIZE=Standard_D4s_v3
 
 IMAGE=UbuntuLTS
@@ -33,6 +32,5 @@ ZONE=3
 RAW_SSH_KEY="${USER}:$(cat /home/$USER/.ssh/id_rsa.pub)"
 #printf -v ESCAPED_SSH_KEY "%q\n" "$RAW_SSH_KEY"
 ESCAPED_SSH_KEY="$RAW_SSH_KEY"
-
 PRIORITY=spot
 PRICE=0.06

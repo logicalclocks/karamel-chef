@@ -55,6 +55,7 @@ elif [ "$MODE" == "cluster" ] ; then
     . config.sh "cpu"
     create
     . config.sh "gpu"
+
     #ACCELERATOR="--accelerator=type=$GPU,count=$NUM_GPUS_PER_VM "
     create
     if [ "$IMAGE_PROJECT" == "ubuntu-os-cloud" ] ; then
@@ -100,5 +101,5 @@ fi
 
 echo ""
 echo "Waiting for notes to join...."
-sleep 60
+sleep 10
 echo ""

@@ -20,7 +20,7 @@ cd gcp
 Azure:
 cd azure
 
-Then, your cloud environment:
+Then, run this script to setup your cloud environment:
 ./setup.sh
 
 
