@@ -5,7 +5,8 @@ if [ "$1" == "-h" ] ; then
     exit 1
 fi
 
-row=$(gcloud compute instances list | grep $1)
+. config.sh $1
+row=$(gcloud compute instances list | grep $NAME)
 echo $row | awk '{ print $4 }'
 
 

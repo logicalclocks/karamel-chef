@@ -17,23 +17,32 @@ set -e
 
 GPU=nvidia-tesla-p100
 NUM_GPUS_PER_VM=1
-ACCELERATOR=
 
 create()
 {
-echo "  az vm create -n $NAME -g $RESOURCE_GROUP \
-   --image $IMAGE --data-disk-sizes-gb $DATA_DISK_SIZES_GB --os-disk-size-gb $OS_DISK_SIZE_GB --size Standard_DS2_v2 \
-   --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET --accelerated-networking $ACCELERATED_NETWORKING \
-   --size $VM_SIZE -l $LOCATION --zone $ZONE \
-   --ssh-key-value /home/$USER/.ssh/id_rsa.pub "
-
   az vm create -n $NAME -g $RESOURCE_GROUP \
-   --image $IMAGE --data-disk-sizes-gb $DATA_DISK_SIZES_GB --os-disk-size-gb $OS_DISK_SIZE_GB --size Standard_DS2_v2 \
+   --image $IMAGE --data-disk-sizes-gb $DATA_DISK_SIZES_GB --os-disk-size-gb $OS_DISK_SIZE_GB \
    --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
    --size $VM_SIZE -l $LOCATION --zone $ZONE \
-   --ssh-key-value /home/$USER/.ssh/id_rsa.pub \
-   --accelerated-networking $ACCELERATED_NETWORKING 
+   --ssh-key-value /home/$USER/.ssh/id_rsa.pub    
+  #   --priority $PRIORITY --max-price 0.06 \
 }
+
+create_gpu()
+{
+  GPU_ZONE=
+  if [ "$ACCELERATOR_ZONE" != "" ] ; then
+     GPU_ZONE="--zone $ACCELERATOR_ZONE"
+  fi
+  az vm create -n $NAME -g $RESOURCE_GROUP \
+   --image $IMAGE --data-disk-sizes-gb $DATA_DISK_SIZES_GB --os-disk-size-gb $OS_DISK_SIZE_GB \
+   --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
+   --size $ACCELERATOR_VM -l $LOCATION $GPU_ZONE \
+   --ssh-key-value /home/$USER/.ssh/id_rsa.pub    
+  #   --priority $PRIORITY --max-price 0.06 \
+ #--zone $ZONE \  
+}
+
 
 nvidia_drivers_ubuntu()
 {
@@ -49,27 +58,19 @@ MODE=$1
 
 . config.sh $MODE
 
-create
-exit
-
 if [ "$MODE" == "cpu" ] ; then
-    ACCELERATOR=""
     create
 elif [ "$MODE" == "gpu" ] ; then
-    ACCELERATOR="--accelerator=type=$GPU,count=$NUM_GPUS_PER_VM "
-    create
+    create_gpu
 elif [ "$MODE" == "cluster" ] ; then
-    ACCELERATOR=""    
     create
     . config.sh "cpu"
     create
     . config.sh "gpu"
-    ACCELERATOR="--accelerator=type=$GPU,count=$NUM_GPUS_PER_VM "
-    create
+    create_gpu
     if [ "$IMAGE_PROJECT" == "ubuntu-os-cloud" ] ; then
 	nvidia_drivers_ubuntu
     fi
-    
     export NAME="clu"
 elif [ "$MODE" == "benchmark" ] ; then
     if [ $# -lt 3 ] ; then
@@ -84,7 +85,6 @@ elif [ "$MODE" == "benchmark" ] ; then
     do
 	n="cp$i"
 	. config.sh $n
-       ACCELERATOR=""
        create
     done
 
@@ -92,8 +92,7 @@ elif [ "$MODE" == "benchmark" ] ; then
     do
 	n="gp$i"
 	. config.sh $n
-	ACCELERATOR="--accelerator=type=$GPU,count=$NUM_GPUS_PER_VM "
-	create
+	create_gpu
     done
     export NAME="clu"
     echo $CPUS > .cpus
