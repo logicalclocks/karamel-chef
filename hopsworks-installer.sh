@@ -842,6 +842,15 @@ check_linux
 
 check_userid
 
+which lspci > /dev/null
+if [ $? -ne 0 ] ; then
+    # this only happens on centos
+   echo "Installing pciutils ...."
+   sudo yum install pciutils -y > /dev/null
+fi    
+AVAILABLE_GPUS=$(sudo lspci | grep -i nvidia | wc -l)
+
+
 if [ $NON_INTERACT -eq 0 ] ; then
     splash_screen  
     display_license
@@ -852,15 +861,6 @@ if [ $NON_INTERACT -eq 0 ] ; then
 fi
 
 install_action
-
-which lspci > /dev/null
-if [ $? -ne 0 ] ; then
-    # this only happens on centos
-   echo "Installing pciutils ...."
-   sudo yum install pciutils -y > /dev/null
-fi    
-AVAILABLE_GPUS=$(sudo lspci | grep -i nvidia | wc -l)
-
 
 if [ "$INSTALL_ACTION" == "$INSTALL_NVIDIA" ] ; then
    sudo -- sh -c 'echo "blacklist nouveau
