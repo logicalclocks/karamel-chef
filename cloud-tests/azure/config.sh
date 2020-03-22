@@ -19,7 +19,7 @@ VM_WORKER=cpu
 VM_GPU=gpu
 
 VM_SIZE=Standard_D4s_v3
-ACCELERATOR_VM=NV6_Promo
+ACCELERATOR_VM=Standard_NV6_Promo
 
 IMAGE=UbuntuLTS
 

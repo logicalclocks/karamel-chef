@@ -101,6 +101,8 @@ if [ $? -ne 0 ] ; then
     exit 1
 fi    
 
+az vm open-port --port 443 --resource-group $RESOURCE_GROUP -name $NAME
+
 if [ "$1" = "cluster" ] ; then
     ssh -t -o StrictHostKeyChecking=no $IP "if [ ! -e ~/.ssh/id_rsa.pub ] ; then cat /dev/zero | ssh-keygen -q -N \"\" ; fi"
     pubkey=$(ssh -t -o StrictHostKeyChecking=no $IP "cat ~/.ssh/id_rsa.pub")

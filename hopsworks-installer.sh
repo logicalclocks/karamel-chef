@@ -36,8 +36,10 @@ NON_INTERACT=0
 SCRIPTNAME=`basename $0`
 AVAILABLE_MEMORY=$(free -g | grep Mem | awk '{ print $2 }')
 AVAILABLE_DISK=$(df -h | grep '/$' | awk '{ print $4 }')
+AVAILABLE_DISK=${AVAILABLE_DISK%.*}
 # Azure mounts /mnt/resource - AWS/GCP mount /mnt
 AVAILABLE_MNT=$(df -h | grep '/mnt' | awk '{ print $4 }')
+AVAILABLE_MNT=${AVAILABLE_MNT%.*}
 AVAILABLE_CPUS=$(cat /proc/cpuinfo | grep '^processor' | wc -l)
 IP=$(hostname -I | awk '{ print $1 }')
 HOSTNAME=$(hostname -f)
@@ -160,7 +162,11 @@ splash_screen()
       echo ""
   fi
 
-  space=${AVAILABLE_DISK::-1}
+  if [[ "$AVAILABLE_DISK" == *"G"* ]]; then  
+      space=${AVAILABLE_DISK::-1}
+  else
+      space=${AVAILABLE_DISK}
+  fi
   if [ $space -lt 60 ] && [ "$AVAILABLE_MNT" == "" ]; then
       echo ""
       echo "WARNING: We recommend at least 60GB of disk space on the root partition. Minimum is 50GB of available disk."
@@ -168,11 +174,16 @@ splash_screen()
       echo ""
   fi
   if [ "$AVAILABLE_MNT" != "" ] ; then
-      mnt=${AVAILABLE_MNT::-1}
+      if [[ "$AVAILABLE_MNT" == *"G"* ]]; then  
+	  mnt=${AVAILABLE_MNT::-1}
+      else
+	  mnt=${AVAILABLE_MNT}
+      fi
+      
       if [ $space -lt 30 ] || [ $mnt < 50 ]; then
       echo ""
       echo "WARNING: We recommend at least 30GB of disk space on the root partition as well as at least 50GB on the /mnt partition."
-      echo "You have $AVAILABLE_DISK space on '/', and ${space}G on '/mnt'."
+      echo "You have ${space}G space on '/', and ${mnt}G on '/mnt'."
       echo ""
       fi
   fi
@@ -1037,12 +1048,12 @@ else
 	echo ""
     fi
 
-    if [ $AVAILABLE_GPUS -gt 0 ]; then
-	if [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
-            echo "Installing kernel-devel headers/libraries..."
-            sudo yum install kernel-devel-uname-r == $(uname -r) -y > /dev/null
-	fi
-    fi
+    # if [ $AVAILABLE_GPUS -gt 0 ]; then
+    # 	if [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
+    #         echo "Installing kernel-devel headers/libraries..."
+    #         sudo yum install kernel-devel-uname-r == $(uname -r) -y > /dev/null
+    # 	fi
+    # fi
 
     if [ $AVAILABLE_GPUS -gt 0 ] ; then
 	    CUDA="cuda:
