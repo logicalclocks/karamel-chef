@@ -13,6 +13,7 @@ if [ $# -lt 1 ] ; then
     help
 fi
 
+
 error_download_url()
 {
     echo ""
@@ -61,7 +62,16 @@ get_ips
 if [ "$2" == "community" ] || [ "$3" == "community" ] ; then
     HOPSWORKS_VERSION=cluster
 else
-    HOPSWORKS_VERSION=enterprise    
+    HOPSWORKS_VERSION=enterprise
+    if [ "$DOWNLOAD_URL" == "" ] ; then
+	echo ""
+	echo "Error. You need to set the environment variable \$DOWNLOAD_URL to the URL for the enterprise binaries."
+	echo ""
+	echo "You can re-run this command with the 'community' switch to install community Hopsworks. For example: "
+	echo "./install gpu community"
+	echo ""	
+	exit 3
+    fi
 fi
 
 if [ ! "$2" == "skip-create" ] ; then
