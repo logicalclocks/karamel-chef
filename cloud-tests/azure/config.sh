@@ -2,6 +2,7 @@
 script=$1
 NAME=${script:0:2}
 BRANCH=$(grep ^HOPSWORKS_BRANCH ../../hopsworks-installer.sh | sed -e 's/HOPSWORKS_BRANCH=//g')
+CLUSTER_DEFINITION_BRANCH=$(grep ^HOPSWORKS_BRANCH ../../hopsworks-installer.sh | sed -e 's/CLUSTER_DEFINITION_BRANCH=//g')
 
 RESOURCE_GROUP=hopsworks
 LOCATION=westeurope
