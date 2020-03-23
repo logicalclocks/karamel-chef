@@ -147,14 +147,14 @@ if [ "$1" = "cluster" ] ; then
 else
     WORKERS="-w none"
 fi    
-echo ""
-echo "ssh -t -o StrictHostKeyChecking=no $IP \"/home/$USER/hopsworks-installer.sh -i $HOPSWORKS_VERSION -ni -c gcp -d $DOWNLOAD_URL $WORKERS\""
 
 DOWNLOAD=""
 if [ "$DOWNLOAD_URL" != "" ] ; then
   DOWNLOAD="-d $DOWNLOAD_URL"
 fi
-ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i $HOPSWORKS_VERSION -ni -c gcp -d $DOWNLOAD $WORKERS && sleep 5"
+echo
+echo "ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i $HOPSWORKS_VERSION -ni -c gcp $DOWNLOAD $WORKERS && sleep 5""
+ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i $HOPSWORKS_VERSION -ni -c gcp $DOWNLOAD $WORKERS && sleep 5"
 
 if [ $? -ne 0 ] ; then
     echo "Problem running installer. Exiting..."
