@@ -2,7 +2,7 @@
 
 script=$1
 NAME=${script:0:3}
-BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/installer_improvements/
+BRANCH="https://raw.githubusercontent.com/logicalclocks/karamel-chef/installer_improvements/"
 
 GCP_USER=$USER
 #PROJECT=hazel-charter-222806
@@ -32,7 +32,7 @@ RESERVATION_AFFINITY=any
 SHIELD=""
 
 MACHINE_TYPE=n1-standard-8
-IMAGE=centos-7-v20200209
+IMAGE=centos-7-v20200309
 IMAGE_PROJECT=centos-cloud
 
 if [ ! -e ~/.ssh/id_rsa.pub ] ; then

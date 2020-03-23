@@ -3,6 +3,7 @@
 
 declare -a CPU
 declare -a GPU
+
 declare -a PRIVATE_CPU
 declare -a PRIVATE_GPU
 HOPSWORKS_VERSION=enterprise
@@ -45,11 +46,11 @@ get_ips()
         echo -e "Cp${i} node.\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
     done
     
-    for i in $(seq 1 ${GPUS}) ;
+    for j in $(seq 1 ${GPUS}) ;
     do
-	GPU[$i]=$(gcloud compute instances list | grep "gp${i}" | awk '{ print $5 }')
-	PRIVATE_GPU[$i]=$(gcloud compute instances list | grep "gp${i}" | awk '{ print $4 }')
-        echo -e "Gp${i} node.\t Public IP: ${GPU[${i}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
+	GPU[$j]=$(gcloud compute instances list | grep "gp${j}" | awk '{ print $5 }')
+	PRIVATE_GPU[$j]=$(gcloud compute instances list | grep "gp${j}" | awk '{ print $4 }')
+        echo -e "GPU${j} node.\t Public IP: ${GPU[${j}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
     done
 }    
 
@@ -57,7 +58,8 @@ get_ips()
 host_ip=
 clear_known_hosts()
 {
-   ssh-keygen -f "/home/$USER/.ssh/known_hosts" -R $host_ip    
+   echo "   ssh-keygen -R $host_ip -f /home/$USER/.ssh/known_host"
+   ssh-keygen -R $host_ip -f "/home/$USER/.ssh/known_hosts" 
 }    
 
 if [ "$DOWNLOAD_URL" == "" ] ; then
@@ -161,12 +163,15 @@ do
     WORKERS="${WORKERS}${PRIVATE_CPU[${i}]},"
 done
 
+WORKERS=${WORKERS::-1}
 for i in $(seq 1 ${GPUS}) ;
 do
     host_ip=$GPU[${i}]}
+    echo "I think host_ip is ${GPU[$i]}"
+    echo "I think host_ip is ${GPU[${i}]}"
+    echo "All  hosts ${GPU[*]}"    
     clear_known_hosts
-
-    ssh-copy-id -o StrictHostKeyChecking=no -f -i $keyfile $GPU[${i}]}
+    ssh-copy-id -o StrictHostKeyChecking=no -f -i $keyfile ${GPU[${i}]}
     ssh -t -o StrictHostKeyChecking=no $IP "ssh -t -o StrictHostKeyChecking=no ${PRIVATE_GPU[${i}]} \"pwd\""
     if [ $? -ne 0 ] ; then
 	echo ""
@@ -178,11 +183,9 @@ do
 	echo "Success: SSH from $IP to ${PRIVATE_GPU[${i}]}"
     fi
 
-    WORKERS="${WORKERS}, ${PRIVATE_GPU[${i}]}"
+    WORKERS="${WORKERS},${PRIVATE_GPU[${i}]}"
 done
 
-WORKERS=${WORKERS::-1}
-								      
 echo ""
 echo "Running installer on $IP :"
 echo ""
