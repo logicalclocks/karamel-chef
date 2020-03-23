@@ -27,9 +27,8 @@
 #                                                                                                 #
 ###################################################################################################
 
-HOPSWORKS_VERSION=1.2.0
-HOPSWORKS_BRANCH=1.2
-CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/installer_improvements
+HOPSWORKS_BRANCH=master
+CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/moritz
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
 NON_INTERACT=0
@@ -1078,7 +1077,6 @@ else
     perl -pi -e "s/__DNS_IP__/$DNS_IP/g" $YML_FILE        
     CPUS=$(expr $AVAILABLE_CPUS - 1)
     perl -pi -e "s/__CPUS__/$CPUS/" $YML_FILE
-    perl -pi -e "s/__VERSION__/$HOPSWORKS_VERSION/" $YML_FILE
     perl -pi -e "s/__BRANCH__/$HOPSWORKS_BRANCH/" $YML_FILE    
     perl -pi -e "s/__USER__/$USER/" $YML_FILE
     perl -pi -e "s/__IP__/$IP/" $YML_FILE

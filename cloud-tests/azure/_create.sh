@@ -26,6 +26,7 @@ create()
    --size $VM_SIZE -l $LOCATION --zone $ZONE \
    --ssh-key-value /home/$USER/.ssh/id_rsa.pub    
   #   --priority $PRIORITY --max-price 0.06 \
+ az vm open-port --port 443 --resource-group $RESOURCE_GROUP -name $NAME  
 }
 
 create_gpu()
@@ -46,6 +47,8 @@ create_gpu()
    --size $ACCELERATOR_VM -l $LOCATION $GPU_ZONE \
    --ssh-key-value /home/$USER/.ssh/id_rsa.pub    
   #   --priority $PRIORITY --max-price 0.06 \
+
+  az vm open-port --port 443 --resource-group $RESOURCE_GROUP -name $NAME    
 }
 
 

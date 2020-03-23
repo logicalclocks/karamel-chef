@@ -1,7 +1,7 @@
 #!/bin/bash
 script=$1
 NAME=${script:0:2}
-BRANCH="https://raw.githubusercontent.com/logicalclocks/karamel-chef/installer_improvements/"
+BRANCH=$(grep ^HOPSWORKS_BRANCH ../../hopsworks-installer.sh | sed -e 's/HOPSWORKS_BRANCH=//g')
 
 RESOURCE_GROUP=hopsworks
 LOCATION=westeurope

@@ -2,7 +2,8 @@
 
 script=$1
 NAME=${script:0:3}
-BRANCH="https://raw.githubusercontent.com/logicalclocks/karamel-chef/installer_improvements/"
+BRANCH=$(grep ^HOPSWORKS_BRANCH ../../hopsworks-installer.sh | sed -e 's/HOPSWORKS_BRANCH=//g')
+
 
 GCP_USER=$USER
 #PROJECT=hazel-charter-222806
@@ -40,3 +41,7 @@ if [ ! -e ~/.ssh/id_rsa.pub ] ; then
     exit 1
 fi    
 
+
+if [ -e env.sh ] ; then
+  . env.sh
+fi    
