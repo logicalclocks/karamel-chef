@@ -56,3 +56,5 @@ groups:
       - hopsmonitor::telegraf
       - hive2
       - dela
+      - consul
+      - consul::master
