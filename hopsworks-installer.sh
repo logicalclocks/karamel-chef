@@ -28,7 +28,7 @@
 ###################################################################################################
 
 HOPSWORKS_BRANCH=master
-CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/moritz
+CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
 NON_INTERACT=0
@@ -905,51 +905,54 @@ if [ "$INSTALL_ACTION" == "$PURGE_HOPSWORKS" ] ; then
    purge_local
    exit 0
 fi
-									 
-# generate a pub/private keypair if none exists
-if [ ! -e ~/.ssh/id_rsa.pub ] ; then
-  cat /dev/zero | ssh-keygen -q -N "" > /dev/null
-else
-  echo "Found existing id_rsa.pub"
-fi
 
-# Karamel needs to be able to ssh back into the host it is running on to install Hopsworks there
-pub=$(cat ~/.ssh/id_rsa.pub)
-grep "$pub" ~/.ssh/authorized_keys > /dev/null
-if [ $? -ne 0 ] ; then
-  echo "Not currently able to ssh into this host. Updating authorized_keys"
-  pushd .
-  cd ~/.ssh
-  cat id_rsa.pub >> authorized_keys 
-  if [ $? -ne 0 ] ; then
-      echo "Problem updating .ssh/authorized_keys file. Could not add .ssh/id_rsa.pub to authorized_keys file."
-  fi
-  popd
-else
-  echo "Found existing entry in authorized_keys"
-fi    
-
-ssh -t -o StrictHostKeyChecking=no localhost "whoami" > /dev/null
-ssh -t -o StrictHostKeyChecking=no $IP "whoami" > /dev/null
-if [ $? -ne 0 ] ; then
-    exit_error "Error: problem using ssh to connect to this host with ip: $IP"
-fi    
-
-which java > /dev/null
-if [ $? -ne 0 ] ; then
-    echo "Installing Java..."
-    clear_screen
-    if [ "$DISTRO" == "Ubuntu" ] ; then
-	sudo apt update -y
-	sudo apt install openjdk-8-jre-headless -y
-    elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
-	sudo yum install java-1.8.0-openjdk-headless -y
-	sudo yum install wget -y 
+if [ $DRY_RUN -eq 0 ] ; then
+    # generate a pub/private keypair if none exists
+    if [ ! -e ~/.ssh/id_rsa.pub ] ; then
+	cat /dev/zero | ssh-keygen -q -N "" > /dev/null
     else
-	echo "Could not recognize Linux distro: $DISTRO"
-	exit_error
+	echo "Found existing id_rsa.pub"
+    fi
+
+    # Karamel needs to be able to ssh back into the host it is running on to install Hopsworks there
+    pub=$(cat ~/.ssh/id_rsa.pub)
+    grep "$pub" ~/.ssh/authorized_keys > /dev/null
+    if [ $? -ne 0 ] ; then
+	echo "Not currently able to ssh into this host. Updating authorized_keys"
+	pushd .
+	cd ~/.ssh
+	cat id_rsa.pub >> authorized_keys 
+	if [ $? -ne 0 ] ; then
+	    echo "Problem updating .ssh/authorized_keys file. Could not add .ssh/id_rsa.pub to authorized_keys file."
+	fi
+	popd
+    else
+	echo "Found existing entry in authorized_keys"
+    fi    
+
+    ssh -t -o StrictHostKeyChecking=no localhost "whoami" > /dev/null
+    ssh -t -o StrictHostKeyChecking=no $IP "whoami" > /dev/null
+    if [ $? -ne 0 ] ; then
+	exit_error "Error: problem using ssh to connect to this host with ip: $IP"
+    fi    
+
+    which java > /dev/null
+    if [ $? -ne 0 ] ; then
+	echo "Installing Java..."
+	clear_screen
+	if [ "$DISTRO" == "Ubuntu" ] ; then
+	    sudo apt update -y
+	    sudo apt install openjdk-8-jre-headless -y
+	elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
+	    sudo yum install java-1.8.0-openjdk-headless -y
+	    sudo yum install wget -y 
+	else
+	    echo "Could not recognize Linux distro: $DISTRO"
+	    exit_error
+	fi
     fi
 fi
+
 
 if [ $GCP_NVME -eq 1 ] ; then
    sudo mkdir -p /mnt/nvmeDisks/nvme0
@@ -993,20 +996,21 @@ if [ "$CLOUD" == "azure" ] ; then
     clear_screen
 fi       
 
-
-if [ ! -d karamel-${KARAMEL_VERSION} ] ; then
-    echo "Installing Karamel..."
-    clear_screen    
-    wget -nc http://www.karamel.io/sites/default/files/downloads/karamel-${KARAMEL_VERSION}.tgz
-    if [ $? -ne 0 ] ; then
-	exit_error "Problem downloading karamel"
+if [ $DRY_RUN -eq 0 ] ; then
+    if [ ! -d karamel-${KARAMEL_VERSION} ] ; then
+	echo "Installing Karamel..."
+	clear_screen    
+	wget -nc http://www.karamel.io/sites/default/files/downloads/karamel-${KARAMEL_VERSION}.tgz
+	if [ $? -ne 0 ] ; then
+	    exit_error "Problem downloading karamel"
+	fi
+	tar zxf karamel-${KARAMEL_VERSION}.tgz
+	if [ $? -ne 0 ] ; then
+	    exit_error "Problem extracting karamel from archive"
+	fi
+    else
+	echo "Found karamel"
     fi
-    tar zxf karamel-${KARAMEL_VERSION}.tgz
-    if [ $? -ne 0 ] ; then
-	exit_error "Problem extracting karamel from archive"
-    fi
-else
-  echo "Found karamel"
 fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] ; then
@@ -1046,13 +1050,6 @@ else
         SUDO_PWD="-passwd $passwd"
 	echo ""
     fi
-
-    # if [ $AVAILABLE_GPUS -gt 0 ]; then
-    # 	if [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
-    #         echo "Installing kernel-devel headers/libraries..."
-    #         sudo yum install kernel-devel-uname-r == $(uname -r) -y > /dev/null
-    # 	fi
-    # fi
 
     if [ $AVAILABLE_GPUS -gt 0 ] ; then
 	    CUDA="cuda:
