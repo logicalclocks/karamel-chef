@@ -26,6 +26,7 @@ create()
    --size $VM_SIZE -l $LOCATION --zone $ZONE \
    --ssh-key-value /home/$USER/.ssh/id_rsa.pub    
   #   --priority $PRIORITY --max-price 0.06 \
+ az vm open-port --port 443 --resource-group $RESOURCE_GROUP -name $NAME  
 }
 
 create_gpu()
@@ -34,13 +35,20 @@ create_gpu()
   if [ "$ACCELERATOR_ZONE" != "" ] ; then
      GPU_ZONE="--zone $ACCELERATOR_ZONE"
   fi
+  echo "  az vm create -n $NAME -g $RESOURCE_GROUP \
+   --image $IMAGE --data-disk-sizes-gb $DATA_DISK_SIZES_GB --os-disk-size-gb $OS_DISK_SIZE_GB \
+   --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
+   --size $ACCELERATOR_VM -l $LOCATION $GPU_ZONE \
+   --ssh-key-value /home/$USER/.ssh/id_rsa.pub"
+
   az vm create -n $NAME -g $RESOURCE_GROUP \
    --image $IMAGE --data-disk-sizes-gb $DATA_DISK_SIZES_GB --os-disk-size-gb $OS_DISK_SIZE_GB \
    --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
    --size $ACCELERATOR_VM -l $LOCATION $GPU_ZONE \
    --ssh-key-value /home/$USER/.ssh/id_rsa.pub    
   #   --priority $PRIORITY --max-price 0.06 \
- #--zone $ZONE \  
+
+  az vm open-port --port 443 --resource-group $RESOURCE_GROUP -name $NAME    
 }
 
 

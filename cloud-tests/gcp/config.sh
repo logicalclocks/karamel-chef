@@ -2,7 +2,8 @@
 
 script=$1
 NAME=${script:0:3}
-BRANCH="https://raw.githubusercontent.com/logicalclocks/karamel-chef/installer_improvements/"
+BRANCH=$(grep ^HOPSWORKS_BRANCH ../../hopsworks-installer.sh | sed -e 's/HOPSWORKS_BRANCH=//g')
+CLUSTER_DEFINITION_BRANCH=$(grep ^CLUSTER_DEFINITION_BRANCH ../../hopsworks-installer.sh | sed -e 's/CLUSTER_DEFINITION_BRANCH=//g')
 
 GCP_USER=$USER
 #PROJECT=hazel-charter-222806
@@ -32,7 +33,7 @@ RESERVATION_AFFINITY=any
 SHIELD=""
 
 MACHINE_TYPE=n1-standard-8
-IMAGE=centos-7-v20200205
+IMAGE=centos-7-v20200309
 IMAGE_PROJECT=centos-cloud
 
 if [ ! -e ~/.ssh/id_rsa.pub ] ; then
@@ -40,3 +41,7 @@ if [ ! -e ~/.ssh/id_rsa.pub ] ; then
     exit 1
 fi    
 
+
+if [ -e env.sh ] ; then
+  . env.sh
+fi    

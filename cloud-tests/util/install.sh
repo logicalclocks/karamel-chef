@@ -13,6 +13,7 @@ if [ $# -lt 1 ] ; then
     help
 fi
 
+
 error_download_url()
 {
     echo ""
@@ -61,7 +62,16 @@ get_ips
 if [ "$2" == "community" ] || [ "$3" == "community" ] ; then
     HOPSWORKS_VERSION=cluster
 else
-    HOPSWORKS_VERSION=enterprise    
+    HOPSWORKS_VERSION=enterprise
+    if [ "$DOWNLOAD_URL" == "" ] ; then
+	echo ""
+	echo "Error. You need to set the environment variable \$DOWNLOAD_URL to the URL for the enterprise binaries."
+	echo ""
+	echo "You can re-run this command with the 'community' switch to install community Hopsworks. For example: "
+	echo "./install gpu community"
+	echo ""	
+	exit 3
+    fi
 fi
 
 if [ ! "$2" == "skip-create" ] ; then
@@ -94,12 +104,13 @@ fi
 
 
 echo "Installing installer on $IP"
-ssh -t -o StrictHostKeyChecking=no $IP "wget -nc ${BRANCH}/hopsworks-installer.sh && chmod +x hopsworks-installer.sh"
+ssh -t -o StrictHostKeyChecking=no $IP "wget -nc ${CLUSTER_DEFINITION_BRANCH}/hopsworks-installer.sh && chmod +x hopsworks-installer.sh"
 
 if [ $? -ne 0 ] ; then
     echo "Problem installing installer. Exiting..."
     exit 1
 fi    
+
 
 if [ "$1" = "cluster" ] ; then
     ssh -t -o StrictHostKeyChecking=no $IP "if [ ! -e ~/.ssh/id_rsa.pub ] ; then cat /dev/zero | ssh-keygen -q -N \"\" ; fi"
@@ -146,9 +157,14 @@ if [ "$1" = "cluster" ] ; then
 else
     WORKERS="-w none"
 fi    
-echo ""
-echo "ssh -t -o StrictHostKeyChecking=no $IP \"/home/$USER/hopsworks-installer.sh -i $HOPSWORKS_VERSION -ni -c gcp -d $DOWNLOAD_URL $WORKERS\""
-ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i $HOPSWORKS_VERSION -ni -c gcp -d $DOWNLOAD_URL $WORKERS && sleep 5"
+
+DOWNLOAD=""
+if [ "$DOWNLOAD_URL" != "" ] ; then
+  DOWNLOAD="-d $DOWNLOAD_URL"
+fi
+echo
+echo "ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i $HOPSWORKS_VERSION -ni -c gcp $DOWNLOAD $WORKERS && sleep 5""
+ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i $HOPSWORKS_VERSION -ni -c gcp $DOWNLOAD $WORKERS && sleep 5"
 
 if [ $? -ne 0 ] ; then
     echo "Problem running installer. Exiting..."

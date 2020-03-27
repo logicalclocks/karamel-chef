@@ -19,13 +19,13 @@ if [ $# -lt 1 ] ; then
     check
 else    
     if [ "$1" == "-h" ] ; then
-	echo "Usage: $0 [benchmarking]"
+	echo "Usage: $0 [benchmark]"
 	exit 1
     fi
   echo  "Head: "
   gcloud compute instances list | grep ben | awk '{ print $4, $5 }'
   echo  "Compute: "  
-  gcloud compute instances list | grep -E 'cp[0-9]{1,4}' | awk '{ print $4, $5 }'
+  gcloud compute instances list | grep -E 'cp[0-9]{1,3}' | awk '{ print $4, $5 }'
   echo "GPU: "    
-  gcloud compute instances list | grep -E 'gp[0-9]{1,4}' | awk '{ print $4, $5 }'
+  gcloud compute instances list | grep -E 'gp[0-9]{1,3}' | awk '{ print $4, $5 }'
 fi

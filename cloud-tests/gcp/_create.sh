@@ -38,7 +38,7 @@ nvidia_drivers_ubuntu()
     fi    
 
     
-    ssh -t -o StrictHostKeyChecking=no $GPU_IP "wget -nc ${CLUSTER_DEFN_BRANCH}/hopsworks-installer.sh && chmod +x hopsworks-installer.sh"
+    ssh -t -o StrictHostKeyChecking=no $GPU_IP "wget -nc ${CLUSTER_DEFINITION_BRANCH}/hopsworks-installer.sh && chmod +x hopsworks-installer.sh"
 
     ssh -t -o StrictHostKeyChecking=no $GPU_IP "/home/$USER/hopsworks-installer.sh -i cpu -ni -c gcp"
 }
@@ -81,6 +81,7 @@ elif [ "$MODE" == "benchmark" ] ; then
 	. config.sh $n
        ACCELERATOR=""
        create
+       echo $i > .cpus
     done
 
     for i in $(seq 1 ${GPUS}) ;
@@ -89,6 +90,7 @@ elif [ "$MODE" == "benchmark" ] ; then
 	. config.sh $n
 	ACCELERATOR="--accelerator=type=$GPU,count=$NUM_GPUS_PER_VM "
 	create
+        echo $i > .gpus	
     done
     export NAME="clu"
     echo $CPUS > .cpus

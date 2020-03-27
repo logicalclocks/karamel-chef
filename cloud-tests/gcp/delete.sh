@@ -1,9 +1,19 @@
 #!/bin/bash
 
-if [ $# -ne 1 ] ; then
+
+help()
+{
     echo "Usage: $0 [cpu|gpu|cluster|benchmark]"
     echo "Delete an instance on GCP"
     exit 1
+}
+
+if [ "$1" == "-h" ] ; then
+   help
+fi
+
+if [ $# -ne 1 ] ; then
+   help
 fi    
 
 rm_instance()

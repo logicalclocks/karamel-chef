@@ -1,7 +1,8 @@
 #!/bin/bash
 script=$1
 NAME=${script:0:2}
-BRANCH="https://raw.githubusercontent.com/logicalclocks/karamel-chef/installer_improvements/"
+BRANCH=$(grep ^HOPSWORKS_BRANCH ../../hopsworks-installer.sh | sed -e 's/HOPSWORKS_BRANCH=//g')
+CLUSTER_DEFINITION_BRANCH=$(grep ^HOPSWORKS_BRANCH ../../hopsworks-installer.sh | sed -e 's/CLUSTER_DEFINITION_BRANCH=//g')
 
 RESOURCE_GROUP=hopsworks
 LOCATION=westeurope
@@ -19,7 +20,7 @@ VM_WORKER=cpu
 VM_GPU=gpu
 
 VM_SIZE=Standard_D4s_v3
-ACCELERATOR_VM=Standard_NV6
+ACCELERATOR_VM=Standard_NV6_Promo
 
 IMAGE=UbuntuLTS
 
