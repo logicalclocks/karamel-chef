@@ -20,6 +20,7 @@ depends 'conda'
 depends 'kzookeeper'
 depends 'elastic'
 depends 'hopslog'
+depends 'kkafka'
 
 depends 'java', '~> 7.0.0'
 depends 'magic_shell', '~> 1.0.0'
