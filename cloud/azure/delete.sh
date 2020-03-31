@@ -49,5 +49,6 @@ else
 fi
 
 echo ""
-echo "Finished deleting instance $NAME. Exiting..."
+echo "Deleting instance $NAME in the background (it will take a few mins)."
+echo "Run './list.sh' to check when it is finshed"
 echo ""

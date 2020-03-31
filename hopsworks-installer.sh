@@ -27,7 +27,7 @@
 #                                                                                                 #
 ###################################################################################################
 
-HOPSWORKS_BRANCH=master
+HOPSWORKS_BRANCH=1.2
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
