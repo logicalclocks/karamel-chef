@@ -13,6 +13,14 @@ issues_url       "https://github.com/hopshadoop/karamel-chef/issues"
   supports os
 end
 
+depends 'hops'
+depends 'kagent'
+depends 'ndb'
+depends 'conda'
+depends 'kzookeeper'
+depends 'elastic'
+depends 'hopslog'
+
 depends 'java', '~> 7.0.0'
 depends 'magic_shell', '~> 1.0.0'
 depends 'hostsfile', '~> 2.4.5'
