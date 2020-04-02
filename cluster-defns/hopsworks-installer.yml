@@ -22,6 +22,7 @@ attrs:
     __YARN__
       vcores: __CPUS__
       memory_mbs: __MEM__
+      detect-hardware-capabilities: false
     rmappsecurity:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
   kagent:
