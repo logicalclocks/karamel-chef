@@ -1,8 +1,11 @@
 #!/bin/bash
+
 script=$1
 NAME=${script:0:2}
 BRANCH=$(grep ^HOPSWORKS_BRANCH ../../hopsworks-installer.sh | sed -e 's/HOPSWORKS_BRANCH=//g')
-CLUSTER_DEFINITION_BRANCH=$(grep ^HOPSWORKS_BRANCH ../../hopsworks-installer.sh | sed -e 's/CLUSTER_DEFINITION_BRANCH=//g')
+CLUSTER_DEFINITION_BRANCH=$(grep ^CLUSTER_DEFINITION_BRANCH ../../hopsworks-installer.sh | sed -e 's/CLUSTER_DEFINITION_BRANCH=//g')
+
+CLOUD=azure
 
 RESOURCE_GROUP=hopsworks
 LOCATION=westeurope
@@ -38,3 +41,7 @@ RAW_SSH_KEY="${USER}:$(cat /home/$USER/.ssh/id_rsa.pub)"
 ESCAPED_SSH_KEY="$RAW_SSH_KEY"
 PRIORITY=spot
 PRICE=0.06
+
+if [ -e env.sh ] ; then
+  . env.sh
+fi    

@@ -1017,9 +1017,9 @@ if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] ; then
   if [ "$WORKER_LIST" == "" ] ; then
       worker_size
   else
+      WORKER_DEFAULTS="true"      
       if [ "$WORKER_LIST" != "none" ] ; then
 	  IFS=',' read -r -a workers <<< "$WORKER_LIST"
-	  WORKER_DEFAULTS="true"
 	  for worker in "${workers[@]}"
 	  do
 	      WORKER_IP=$worker

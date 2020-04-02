@@ -5,6 +5,7 @@ NAME=${script:0:3}
 BRANCH=$(grep ^HOPSWORKS_BRANCH ../../hopsworks-installer.sh | sed -e 's/HOPSWORKS_BRANCH=//g')
 CLUSTER_DEFINITION_BRANCH=$(grep ^CLUSTER_DEFINITION_BRANCH ../../hopsworks-installer.sh | sed -e 's/CLUSTER_DEFINITION_BRANCH=//g')
 
+CLOUD=gcp
 GCP_USER=$USER
 #PROJECT=hazel-charter-222806
 PROJECT=dpe-cloud-mle
