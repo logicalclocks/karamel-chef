@@ -1,17 +1,37 @@
 case node['platform']
 when 'ubuntu'
-  package ['bundler', 'firefox', 'libappindicator3-1', 'fonts-liberation', 'libxss1', 'xdg-utils']
+  package ['bundler', 'firefox', 'libappindicator3-1', 'fonts-liberation', 'libxss1', 'xdg-utils', 'libreadline-dev', 'zlib1g-dev']
   # We are going to install ruby 2.5 using RVM (Ruby version manage)
+  template "/tmp/rbenv_install.sh" do
+    source "rbenv_install.erb"
+    owner "vagrant"
+    group "vagrant"
+    mode 0755
+    variables({
+    })
+  end
+  template "/tmp/rbenv_check.sh" do
+    source "rbenv_check.erb"
+    owner "vagrant"
+    group "vagrant"
+    mode 0755
+    variables({
+    })
+  end
   bash "install_ruby_25" do
     user "root"
     group "root"
     retries 5
     code <<-EOH
       # https://linuxize.com/post/how-to-install-ruby-on-ubuntu-18-04/
-      curl -sL https://github.com/rbenv/rbenv-installer/raw/master/bin/rbenv-installer | bash -
+      # split the install script into install and check so it doesn't return error codes when partially installed
+      /tmp/rbenv_install.sh
+      #we don't source the .bashrc in here
+      export PATH="$HOME/.rbenv/bin:$PATH"
       echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bashrc
+      eval "$(rbenv init -)"
       echo 'eval "$(rbenv init -)"' >> ~/.bashrc
-      source ~/.bashrc
+      /tmp/rbenv_check.sh
       rbenv install 2.5.1
       rbenv global 2.5.1
     EOH
