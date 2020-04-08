@@ -47,7 +47,6 @@ create_gpu()
    --ssh-key-value /home/$USER/.ssh/id_rsa.pub    
   #   --priority $PRIORITY --max-price 0.06 \
 
-  az vm open-port --port 443 --resource-group $RESOURCE_GROUP -name $NAME    
 }
 
 
@@ -70,6 +69,7 @@ if [ "$MODE" == "cpu" ] ; then
     az vm open-port --port 443 --resource-group $RESOURCE_GROUP -name $NAME      
 elif [ "$MODE" == "gpu" ] ; then
     create_gpu
+    az vm open-port --port 443 --resource-group $RESOURCE_GROUP -name $NAME        
 elif [ "$MODE" == "cluster" ] ; then
     create
     . config.sh "cpu"
