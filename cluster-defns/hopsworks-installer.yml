@@ -4,7 +4,7 @@ baremetal:
 
 cookbooks:
   hopsworks:
-    github: __REPO__
+    github: __GITHUB__
     branch: __BRANCH__
 
 attrs:

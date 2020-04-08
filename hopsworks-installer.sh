@@ -149,7 +149,9 @@ splash_screen()
   echo "* your ip is: $IP"
   echo "* installation user: $USER"
   echo "* linux distro: $DISTRO"
-
+  echo "* cluster defn branch: $CLUSTER_DEFINITION_BRANCH"
+  echo "* hopsworks-chef branch: $HOPSWORKS_REPO/$HOPSWORKS_BRANCH"
+  
   strlen=${#HOSTNAME}
   if [ $strlen -gt 64 ] ; then
       echo ""
@@ -1077,7 +1079,7 @@ else
     perl -pi -e "s/__DNS_IP__/$DNS_IP/g" $YML_FILE        
     CPUS=$(expr $AVAILABLE_CPUS - 1)
     perl -pi -e "s/__CPUS__/$CPUS/" $YML_FILE
-    perl -pi -e "s/__REPO__/$HOPSWORKS_REPO/" $YML_FILE
+    perl -pi -e "s/__GITHUB__/$HOPSWORKS_REPO/" $YML_FILE
     perl -pi -e "s/__BRANCH__/$HOPSWORKS_BRANCH/" $YML_FILE    
     perl -pi -e "s/__USER__/$USER/" $YML_FILE
     perl -pi -e "s/__IP__/$IP/" $YML_FILE
