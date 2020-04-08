@@ -28,7 +28,7 @@
 ###################################################################################################
 
 HOPSWORKS_CHEF_GITHUB_BRANCH=logicalclocks/karamel-chef/master
-CLUSTER_DEFINITION_URL=https://raw.githubusercontent.com/logicalclocks/karamel-chef/azure_fixes
+CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/azure_fixes
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
 NON_INTERACT=0
@@ -968,9 +968,9 @@ if [ ! -d cluster-defns ] ; then
 fi
 cd cluster-defns
 # Don't overwrite the YML files, so that users can customize them 
-wget -nc ${CLUSTER_DEFINITION_URL}/$INPUT_YML 
-wget -nc ${CLUSTER_DEFINITION_URL}/$WORKER_YML
-wget -nc ${CLUSTER_DEFINITION_URL}/$WORKER_GPU_YML
+wget -nc ${CLUSTER_DEFINITION_BRANCH}/$INPUT_YML 
+wget -nc ${CLUSTER_DEFINITION_BRANCH}/$WORKER_YML
+wget -nc ${CLUSTER_DEFINITION_BRANCH}/$WORKER_GPU_YML
 cd ..
 
 if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST_TLS" ]  ; then
