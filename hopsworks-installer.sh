@@ -80,6 +80,8 @@ AVAILABLE_GPUS=
 CUDA=
 
 HOPSWORKS_REPO=$(dirname $HOPSWORKS_CHEF_GITHUB_BRANCH)
+# Escape all the forward slashes, otherwise 'perl -e' wont work
+HOPSWORKS_REPO=$(echo "$HOPSWORKS_REPO"  | sed 's/\//\\\//g')
 HOPSWORKS_BRANCH=$(basename $HOPSWORKS_CHEF_GITHUB_BRANCH)
 
 # $1 = String describing error
@@ -1078,7 +1080,7 @@ else
     perl -pi -e "s/__PWD__/$BASE_PWD/g" $YML_FILE
     perl -pi -e "s/__DNS_IP__/$DNS_IP/g" $YML_FILE        
     CPUS=$(expr $AVAILABLE_CPUS - 1)
-    perl -pi -e "s/__CPUS__/$CPUS/" $YML_FILE
+    perl -pi -e "s/__CPUS__/$CPUS/" $YML_FILE    
     perl -pi -e "s/__GITHUB__/$HOPSWORKS_REPO/" $YML_FILE
     perl -pi -e "s/__BRANCH__/$HOPSWORKS_BRANCH/" $YML_FILE    
     perl -pi -e "s/__USER__/$USER/" $YML_FILE
