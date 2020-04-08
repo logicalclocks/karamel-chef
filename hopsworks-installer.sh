@@ -27,8 +27,8 @@
 #                                                                                                 #
 ###################################################################################################
 
-HOPSWORKS_BRANCH=master
-CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef
+HOPSWORKS_CHEF_GITHUB_BRANCH=logicalclocks/hopsworks-chef/master
+CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/master
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
 NON_INTERACT=0
@@ -79,6 +79,10 @@ HAS_GPUS=0
 AVAILABLE_GPUS=
 CUDA=
 
+HOPSWORKS_REPO=$(dirname $HOPSWORKS_CHEF_GITHUB_BRANCH)
+# Escape all the forward slashes, otherwise 'perl -e' wont work
+HOPSWORKS_REPO=$(echo "$HOPSWORKS_REPO"  | sed 's/\//\\\//g')
+HOPSWORKS_BRANCH=$(basename $HOPSWORKS_CHEF_GITHUB_BRANCH)
 
 # $1 = String describing error
 exit_error() 
@@ -147,7 +151,9 @@ splash_screen()
   echo "* your ip is: $IP"
   echo "* installation user: $USER"
   echo "* linux distro: $DISTRO"
-
+  echo "* cluster defn branch: $CLUSTER_DEFINITION_BRANCH"
+  echo "* hopsworks-chef branch: $HOPSWORKS_REPO/$HOPSWORKS_BRANCH"
+  
   strlen=${#HOSTNAME}
   if [ $strlen -gt 64 ] ; then
       echo ""
@@ -966,9 +972,9 @@ if [ ! -d cluster-defns ] ; then
 fi
 cd cluster-defns
 # Don't overwrite the YML files, so that users can customize them 
-wget -nc ${CLUSTER_DEFINITION_BRANCH}/${HOPSWORKS_BRANCH}/$INPUT_YML
-wget -nc ${CLUSTER_DEFINITION_BRANCH}/${HOPSWORKS_BRANCH}/$WORKER_YML
-wget -nc ${CLUSTER_DEFINITION_BRANCH}/${HOPSWORKS_BRANCH}/$WORKER_GPU_YML
+wget -nc ${CLUSTER_DEFINITION_BRANCH}/$INPUT_YML 
+wget -nc ${CLUSTER_DEFINITION_BRANCH}/$WORKER_YML
+wget -nc ${CLUSTER_DEFINITION_BRANCH}/$WORKER_GPU_YML
 cd ..
 
 if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST_TLS" ]  ; then
@@ -985,10 +991,11 @@ if [ "$CLOUD" == "azure" ] ; then
     echo "We suspect the private DNS hostname is:"
     echo "    $SUSPECTED_HOSTNAME"
     echo ""
-    printf 'Please enter the private DNS hostname for this head node (default:'
-    echo -n " $SUSPECTED_HOSTNAME):"
-
-    read PRIVATE_HOSTNAME
+    if [ $NON_INTERACT -eq 0 ] ; then
+      printf 'Please enter the private DNS hostname for this head node (default:'
+      echo -n " $SUSPECTED_HOSTNAME):"
+      read PRIVATE_HOSTNAME
+    fi
     if [ "$PRIVATE_HOSTNAME" == "" ] ; then
       PRIVATE_HOSTNAME=$SUSPECTED_HOSTNAME
     fi
@@ -1073,7 +1080,8 @@ else
     perl -pi -e "s/__PWD__/$BASE_PWD/g" $YML_FILE
     perl -pi -e "s/__DNS_IP__/$DNS_IP/g" $YML_FILE        
     CPUS=$(expr $AVAILABLE_CPUS - 1)
-    perl -pi -e "s/__CPUS__/$CPUS/" $YML_FILE
+    perl -pi -e "s/__CPUS__/$CPUS/" $YML_FILE    
+    perl -pi -e "s/__GITHUB__/$HOPSWORKS_REPO/" $YML_FILE
     perl -pi -e "s/__BRANCH__/$HOPSWORKS_BRANCH/" $YML_FILE    
     perl -pi -e "s/__USER__/$USER/" $YML_FILE
     perl -pi -e "s/__IP__/$IP/" $YML_FILE

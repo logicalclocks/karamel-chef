@@ -58,7 +58,7 @@ nvidia_drivers_ubuntu()
     if [[ "$IMAGE" == *"centos"* ]]; then
 	ssh -t -o StrictHostKeyChecking=no $GPU_IP "sudo yum install wget -y > /dev/null"
     fi    
-    ssh -t -o StrictHostKeyChecking=no $GPU_IP "wget -nc ${CLUSTER_DEFN_BRANCH}/hopsworks-installer.sh && chmod +x hopsworks-installer.sh"
+    ssh -t -o StrictHostKeyChecking=no $GPU_IP "wget -nc ${CLUSTER_DEFINITION_BRANCH}/hopsworks-installer.sh && chmod +x hopsworks-installer.sh"
     ssh -t -o StrictHostKeyChecking=no $GPU_IP "/home/$USER/hopsworks-installer.sh -i nvidia -ni"
 }
 
