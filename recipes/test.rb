@@ -86,6 +86,11 @@ when 'centos'
   elastic_endpoint="#{node[:karamel][:default][:private_ips][2]}:#{node[:elastic][:port]}"
   my_ip = node[:karamel][:default][:private_ips][0]
   epipe_host = "#{node[:karamel][:default][:private_ips][1]}"
+  
+when 'ubuntu'
+elastic_endpoint="#{node[:karamel][:default][:private_ips][0]}:#{node[:elastic][:port]}"
+my_ip = node[:karamel][:default][:private_ips][0]
+epipe_host = "#{node[:karamel][:default][:private_ips][0]}"
 end
 
 # Copy the environment configuration in the test directory
