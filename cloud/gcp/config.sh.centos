@@ -2,9 +2,10 @@
 
 script=$1
 NAME=${script:0:3}
-BRANCH="https://github.com/logicalclocks/karamel-chef/blob/installer_improvements/"
+BRANCH=$(grep ^HOPSWORKS_CHEF_GITHUB_BRANCH ../../hopsworks-installer.sh | sed -e 's/HOPSWORKS_CHEF_GITHUB_BRANCH=//g')
+CLUSTER_DEFINITION_BRANCH=$(grep ^CLUSTER_DEFINITION_BRANCH ../../hopsworks-installer.sh | sed -e 's/CLUSTER_DEFINITION_BRANCH=//g')
 
-
+CLOUD=gcp
 GCP_USER=$USER
 #PROJECT=hazel-charter-222806
 PROJECT=dpe-cloud-mle
@@ -18,7 +19,9 @@ gcloud config set compute/region $REGION > /dev/null 2>&1
 BOOT_SIZE=80GB
 
 RAW_SSH_KEY="${USER}:$(cat /home/$USER/.ssh/id_rsa.pub)"
-printf -v ESCAPED_SSH_KEY "%q\n" "$RAW_SSH_KEY"
+#printf -v ESCAPED_SSH_KEY "%q\n" "$RAW_SSH_KEY"
+ESCAPED_SSH_KEY="$RAW_SSH_KEY"
+
 
 TAGS=karamel,http-server,https-server
 SUBNET=default
@@ -31,7 +34,7 @@ RESERVATION_AFFINITY=any
 SHIELD=""
 
 MACHINE_TYPE=n1-standard-8
-IMAGE=centos-7-v20200205
+IMAGE=centos-7-v20200309
 IMAGE_PROJECT=centos-cloud
 
 if [ ! -e ~/.ssh/id_rsa.pub ] ; then
@@ -39,4 +42,7 @@ if [ ! -e ~/.ssh/id_rsa.pub ] ; then
     exit 1
 fi    
 
-#gcloud beta compute --project=dpe-cloud-mle instances create hop --zone=us-central1-a --machine-type=n1-standard-8 --subnet=default --network-tier=PREMIUM --maintenance-policy=MIGRATE --no-service-account --no-scopes --tags=https-server --image=ubuntu-1604-xenial-v20200223 --image-project=ubuntu-os-cloud --boot-disk-size=100GB --boot-disk-type=pd-ssd --boot-disk-device-name=hop --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=any
+
+if [ -e env.sh ] ; then
+  . env.sh
+fi    

@@ -27,7 +27,7 @@
 #                                                                                                 #
 ###################################################################################################
 
-HOPSWORKS_CHEF_GITHUB_BRANCH=logicalclocks/karamel-chef/master
+HOPSWORKS_CHEF_GITHUB_BRANCH=logicalclocks/hopsworks-chef/master
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/azure_fixes
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
