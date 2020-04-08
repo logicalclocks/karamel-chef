@@ -4,7 +4,7 @@ baremetal:
 
 cookbooks:
   hopsworks:
-    github: logicalclocks/hopsworks-chef
+    github: __REPO__
     branch: __BRANCH__
 
 attrs:

@@ -27,8 +27,8 @@
 #                                                                                                 #
 ###################################################################################################
 
-HOPSWORKS_BRANCH=azure_fixes
-CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef
+HOPSWORKS_CHEF_GITHUB_BRANCH=logicalclocks/karamel-chef/master
+CLUSTER_DEFINITION_URL=https://raw.githubusercontent.com/logicalclocks/karamel-chef/azure_fixes
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
 NON_INTERACT=0
@@ -79,6 +79,8 @@ HAS_GPUS=0
 AVAILABLE_GPUS=
 CUDA=
 
+HOPSWORKS_REPO=$(dirname $HOPSWORKS_CHEF_GITHUB_BRANCH)
+HOPSWORKS_BRANCH=$(basename $HOPSWORKS_CHEF_GITHUB_BRANCH)
 
 # $1 = String describing error
 exit_error() 
@@ -966,9 +968,9 @@ if [ ! -d cluster-defns ] ; then
 fi
 cd cluster-defns
 # Don't overwrite the YML files, so that users can customize them 
-wget -nc ${CLUSTER_DEFINITION_BRANCH}/${HOPSWORKS_BRANCH}/$INPUT_YML
-wget -nc ${CLUSTER_DEFINITION_BRANCH}/${HOPSWORKS_BRANCH}/$WORKER_YML
-wget -nc ${CLUSTER_DEFINITION_BRANCH}/${HOPSWORKS_BRANCH}/$WORKER_GPU_YML
+wget -nc ${CLUSTER_DEFINITION_URL}/$INPUT_YML 
+wget -nc ${CLUSTER_DEFINITION_URL}/$WORKER_YML
+wget -nc ${CLUSTER_DEFINITION_URL}/$WORKER_GPU_YML
 cd ..
 
 if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST_TLS" ]  ; then
@@ -1075,6 +1077,7 @@ else
     perl -pi -e "s/__DNS_IP__/$DNS_IP/g" $YML_FILE        
     CPUS=$(expr $AVAILABLE_CPUS - 1)
     perl -pi -e "s/__CPUS__/$CPUS/" $YML_FILE
+    perl -pi -e "s/__REPO__/$HOPSWORKS_REPO/" $YML_FILE
     perl -pi -e "s/__BRANCH__/$HOPSWORKS_BRANCH/" $YML_FILE    
     perl -pi -e "s/__USER__/$USER/" $YML_FILE
     perl -pi -e "s/__IP__/$IP/" $YML_FILE
