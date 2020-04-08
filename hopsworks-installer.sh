@@ -985,10 +985,11 @@ if [ "$CLOUD" == "azure" ] ; then
     echo "We suspect the private DNS hostname is:"
     echo "    $SUSPECTED_HOSTNAME"
     echo ""
-    printf 'Please enter the private DNS hostname for this head node (default:'
-    echo -n " $SUSPECTED_HOSTNAME):"
-
-    read PRIVATE_HOSTNAME
+    if [ "$WORKER_DEFAULTS" != "true" ] ; then    
+      printf 'Please enter the private DNS hostname for this head node (default:'
+      echo -n " $SUSPECTED_HOSTNAME):"
+      read PRIVATE_HOSTNAME
+    fi
     if [ "$PRIVATE_HOSTNAME" == "" ] ; then
       PRIVATE_HOSTNAME=$SUSPECTED_HOSTNAME
     fi
