@@ -6,7 +6,7 @@ if [ "$1" == "-h" ] ; then
 fi
 
 . config.sh $1
-row=$(gcloud compute instances list | grep $NAME)
+row=$(gcloud compute instances list --filter="zone:($ZONE)" | grep $NAME)
 echo $row | awk '{ print $4 }'
 
 

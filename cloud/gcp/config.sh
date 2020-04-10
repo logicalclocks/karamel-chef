@@ -32,6 +32,8 @@ BOOT_DISK=pd-ssd
 RESERVATION_AFFINITY=any
 #SHIELD="--no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring"
 SHIELD=""
+GPU=nvidia-tesla-v100
+NUM_GPUS_PER_VM=1
 
 MACHINE_TYPE=n1-standard-8
 IMAGE=centos-7-v20200309
