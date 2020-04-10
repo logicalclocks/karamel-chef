@@ -32,8 +32,8 @@ error_download_url()
 
 get_ips()
 {
-    IP=$(gcloud compute instances list | grep $NAME | awk '{ print $5 }')
-    PRIVATE_IP=$(gcloud compute instances list | grep $NAME | awk '{ print $4 }')
+    IP=$(gcloud compute instances list --filter="zone:($ZONE)"  | grep $NAME | awk '{ print $5 }')
+    PRIVATE_IP=$(gcloud compute instances list --filter="zone:($ZONE)"  | grep $NAME | awk '{ print $4 }')
     echo -e "Head node.\t Public IP: $IP \t Private IP: $PRIVATE_IP"
 
 
@@ -41,15 +41,15 @@ get_ips()
     GPUS=$(cat .gpus)
     for i in $(seq 1 ${CPUS}) ;
     do
-	CPU[$i]=$(gcloud compute instances list | grep "cp${i}" | awk '{ print $5 }')
-	PRIVATE_CPU[$i]=$(gcloud compute instances list | grep "cp${i}" | awk '{ print $4 }')
+	CPU[$i]=$(gcloud compute instances list --filter="zone:($ZONE)"  | grep "cp${i}" | awk '{ print $5 }')
+	PRIVATE_CPU[$i]=$(gcloud compute instances list --filter="zone:($ZONE)"  | grep "cp${i}" | awk '{ print $4 }')
         echo -e "Cp${i} node.\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
     done
     
     for j in $(seq 1 ${GPUS}) ;
     do
-	GPU[$j]=$(gcloud compute instances list | grep "gp${j}" | awk '{ print $5 }')
-	PRIVATE_GPU[$j]=$(gcloud compute instances list | grep "gp${j}" | awk '{ print $4 }')
+	GPU[$j]=$(gcloud compute instances list --filter="zone:($ZONE)"  | grep "gp${j}" | awk '{ print $5 }')
+	PRIVATE_GPU[$j]=$(gcloud compute instances list --filter="zone:($ZONE)"  | grep "gp${j}" | awk '{ print $4 }')
         echo -e "GPU${j} node.\t Public IP: ${GPU[${j}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
     done
 }    
@@ -82,7 +82,7 @@ GPUS=$2
 
 . config.sh "benchmmark"
 
-IP=$(gcloud compute instances list | grep $NAME | awk '{ print $5 }')
+IP=$(gcloud compute instances list --filter="zone:($ZONE)"  | grep $NAME | awk '{ print $5 }')
 
 if [ "$3" == "community" ] || [ "$4" == "community" ] ; then
    HOPSWORKS_VERSION=cluster

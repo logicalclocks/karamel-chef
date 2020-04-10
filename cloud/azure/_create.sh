@@ -26,7 +26,6 @@ create()
    --size $VM_SIZE -l $LOCATION --zone $ZONE \
    --ssh-key-value /home/$USER/.ssh/id_rsa.pub    
   #   --priority $PRIORITY --max-price 0.06 \
- az vm open-port --port 443 --resource-group $RESOURCE_GROUP -name $NAME  
 }
 
 create_gpu()
@@ -48,7 +47,6 @@ create_gpu()
    --ssh-key-value /home/$USER/.ssh/id_rsa.pub    
   #   --priority $PRIORITY --max-price 0.06 \
 
-  az vm open-port --port 443 --resource-group $RESOURCE_GROUP -name $NAME    
 }
 
 
@@ -68,12 +66,15 @@ MODE=$1
 
 if [ "$MODE" == "cpu" ] ; then
     create
+    az vm open-port --port 443 --resource-group $RESOURCE_GROUP -name $NAME      
 elif [ "$MODE" == "gpu" ] ; then
     create_gpu
+    az vm open-port --port 443 --resource-group $RESOURCE_GROUP -name $NAME        
 elif [ "$MODE" == "cluster" ] ; then
     create
     . config.sh "cpu"
     create
+    az vm open-port --port 443 --resource-group $RESOURCE_GROUP -name $NAME     
     . config.sh "gpu"
     create_gpu
     if [ "$IMAGE_PROJECT" == "ubuntu-os-cloud" ] ; then

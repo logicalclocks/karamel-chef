@@ -9,8 +9,8 @@ CLOUD=gcp
 GCP_USER=$USER
 #PROJECT=hazel-charter-222806
 PROJECT=dpe-cloud-mle
-ZONE=us-east1-b
-REGION=us-east1
+ZONE=us-central1-a
+REGION=us-central1
 
 gcloud config set core/project $PROJECT > /dev/null 2>&1
 gcloud config set compute/zone $ZONE > /dev/null 2>&1
@@ -32,6 +32,8 @@ BOOT_DISK=pd-ssd
 RESERVATION_AFFINITY=any
 #SHIELD="--no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring"
 SHIELD=""
+GPU=nvidia-tesla-v100
+NUM_GPUS_PER_VM=1
 
 MACHINE_TYPE=n1-standard-8
 IMAGE=centos-7-v20200309
