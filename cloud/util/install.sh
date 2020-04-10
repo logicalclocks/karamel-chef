@@ -68,7 +68,9 @@ else
 	echo "Error. You need to set the environment variable \$DOWNLOAD_URL to the URL for the enterprise binaries."
 	echo ""
 	echo "You can re-run this command with the 'community' switch to install community Hopsworks. For example: "
-	echo "./install gpu community"
+	echo "./install.sh gpu community"
+	echo "or"
+	echo "./install.sh cpu community"	
 	echo ""	
 	exit 3
     fi
