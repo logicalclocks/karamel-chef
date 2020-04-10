@@ -27,7 +27,8 @@
 #                                                                                                 #
 ###################################################################################################
 
-HOPSWORKS_CHEF_GITHUB_BRANCH=logicalclocks/hopsworks-chef/master
+HOPSWORKS_REPO=logicalclocks/hopsworks-chef
+HOPSWORKS_BRANCH=master
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/master
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
@@ -78,11 +79,6 @@ WORKER_DEFAULTS=
 HAS_GPUS=0
 AVAILABLE_GPUS=
 CUDA=
-
-HOPSWORKS_REPO=$(dirname $HOPSWORKS_CHEF_GITHUB_BRANCH)
-# Escape all the forward slashes, otherwise 'perl -e' wont work
-HOPSWORKS_REPO=$(echo "$HOPSWORKS_REPO"  | sed 's/\//\\\//g')
-HOPSWORKS_BRANCH=$(basename $HOPSWORKS_CHEF_GITHUB_BRANCH)
 
 # $1 = String describing error
 exit_error() 
@@ -1080,7 +1076,9 @@ else
     perl -pi -e "s/__PWD__/$BASE_PWD/g" $YML_FILE
     perl -pi -e "s/__DNS_IP__/$DNS_IP/g" $YML_FILE        
     CPUS=$(expr $AVAILABLE_CPUS - 1)
-    perl -pi -e "s/__CPUS__/$CPUS/" $YML_FILE    
+    perl -pi -e "s/__CPUS__/$CPUS/" $YML_FILE
+    # escape slashes to use perl -e
+    HOPSWORKS_REPO=$(echo "$HOPSWORKS_REPO"  | sed 's/\//\\\//g')    
     perl -pi -e "s/__GITHUB__/$HOPSWORKS_REPO/" $YML_FILE
     perl -pi -e "s/__BRANCH__/$HOPSWORKS_BRANCH/" $YML_FILE    
     perl -pi -e "s/__USER__/$USER/" $YML_FILE
