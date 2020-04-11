@@ -21,10 +21,10 @@ directory '/tmp/chef-solo' do
 end
 
 #EE default flags
-ubuntu_build_flags = "-Premote-user-auth,noSeleniumTest,testing,web"
+ubuntu_build_flags = "-Premote-user-auth,testing,web"
 centos_build_flags = "-Pkube,jupyter-git,remote-user-auth,noSeleniumTest,testing"
 if node['build']['test']['community']
-  centos_build_flags = "-Pcluster -Phops-site -P-web -Ptesting"
+  centos_build_flags = "-Pcluster -Phops-site -P-web -Ptesting -PnoSeleniumTest"
   ubuntu_build_flags = "-Pweb -Pcluster -Phops-site -Ptesting"
 end
 
