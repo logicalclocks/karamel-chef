@@ -1,6 +1,6 @@
 case node['platform']
 when 'ubuntu'
-  package ['bundler', 'firefox', 'libappindicator3-1', 'fonts-liberation', 'libxss1', 'xdg-utils', 'libreadline-dev', 'zlib1g-dev']
+  package ['bundler', 'firefox', 'libappindicator3-1', 'fonts-liberation', 'libxss1', 'xdg-utils', 'libreadline-dev', 'zlib1g-dev', 'libgbm1', 'libnspr4', 'libnss3']
   # We are going to install ruby 2.5 using RVM (Ruby version manage)
   template "/tmp/rbenv_install.sh" do
     source "rbenv_install.erb"
