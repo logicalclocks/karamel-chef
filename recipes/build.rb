@@ -78,12 +78,29 @@ when "debian"
 when 'rhel'
   include_recipe "nodejs"
 
+  remote_file '/tmp/apache-maven-3.6.3-bin.tar.gz' do
+    source 'https://downloads.apache.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz'
+    owner 'root'
+    group 'root'
+    mode '0755'
+    action :create
+  end
+
+  bash 'extract-maven' do
+    user 'root'
+    group 'root'
+    code <<-EOF
+      tar xf /tmp/apache-maven-3.6.0-bin.tar.gz -C /opt
+      ln -s /opt/apache-maven-3.6.0 /opt/maven
+    EOF
+  end
+
   bash 'build-hopsworks' do
     user 'root'
     group 'root'
     cwd node['test']['hopsworks']['base_dir']
     code <<-EOF
-      mvn clean install #{centos_build_flags} -DskipTests
+      /opt/maven/bin/mvn clean install #{centos_build_flags} -DskipTests
       VERSION=$(mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec)
       mv hopsworks-ear/target/hopsworks-ear.ear /tmp/chef-solo/hopsworks-ear\:$VERSION-$VERSION.ear
       mv hopsworks-ca/target/hopsworks-ca.war /tmp/chef-solo/hopsworks-ca\:$VERSION-$VERSION.war
