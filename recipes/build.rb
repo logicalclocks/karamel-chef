@@ -90,8 +90,8 @@ when 'rhel'
     user 'root'
     group 'root'
     code <<-EOF
-      tar xf /tmp/apache-maven-3.6.0-bin.tar.gz -C /opt
-      ln -s /opt/apache-maven-3.6.0 /opt/maven
+      tar xf /tmp/apache-maven-3.6.3-bin.tar.gz -C /opt
+      ln -s /opt/apache-maven-3.6.3 /opt/maven
     EOF
   end
 
