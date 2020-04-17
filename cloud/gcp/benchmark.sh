@@ -120,7 +120,7 @@ fi
 
 
 echo "Installing installer on $IP"
-ssh -t -o StrictHostKeyChecking=no $IP "wget -nc https://raw.githubusercontent.com/logicalclocks/karamel-chef/installer_improvements/hopsworks-installer.sh && chmod +x hopsworks-installer.sh"
+ssh -t -o StrictHostKeyChecking=no $IP "wget -nc ${CLUSTER_DEFINITION_BRANCH}/hopsworks-installer.sh && chmod +x hopsworks-installer.sh"
 
 if [ $? -ne 0 ] ; then
     echo "Problem installing installer. Exiting..."
