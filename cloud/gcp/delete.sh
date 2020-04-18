@@ -38,20 +38,21 @@ elif [ "$1" = "cluster" ] ; then
     . config.sh "cluster"
     rm_instance
 elif [ "$1" = "benchmark" ] ; then
-    NAME="ben"
+    reg=${REGION/-/}
+    NAME="ben${reg}"
     rm_instance
 
     CPUS=$(cat .cpus)
     GPUS=$(cat .gpus)
     for i in $(seq 1 ${CPUS}) ;
     do
-        NAME="cp${i}"
+        NAME="cp${i}${reg}"
         rm_instance
     done
     
     for i in $(seq 1 ${GPUS}) ;
     do
-        NAME="gp${i}"
+        NAME="gp${i}${reg}"
         rm_instance
     done
 else

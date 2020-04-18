@@ -39,18 +39,21 @@ get_ips()
 
     CPUS=$(cat .cpus)
     GPUS=$(cat .gpus)
+
     for i in $(seq 1 ${CPUS}) ;
     do
-	CPU[$i]=$(gcloud compute instances list | grep "cp${i}" | awk '{ print $5 }')
-	PRIVATE_CPU[$i]=$(gcloud compute instances list | grep "cp${i}" | awk '{ print $4 }')
-        echo -e "Cp${i} node.\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
+        cpuid="cp${i}${REGION/-/}"
+	CPU[$i]=$(gcloud compute instances list | grep "$cpuid" | awk '{ print $5 }')
+	PRIVATE_CPU[$i]=$(gcloud compute instances list | grep "$cpuid" | awk '{ print $4 }')
+#        echo -e "Cp${i} node.\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
     done
     
     for j in $(seq 1 ${GPUS}) ;
     do
-	GPU[$j]=$(gcloud compute instances list | grep "gp${j}" | awk '{ print $5 }')
-	PRIVATE_GPU[$j]=$(gcloud compute instances list | grep "gp${j}" | awk '{ print $4 }')
-        echo -e "GPU${j} node.\t Public IP: ${GPU[${j}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
+        gpuid="cp${j}${REGION/-/}"	
+	GPU[$j]=$(gcloud compute instances list | grep "$gpuid" | awk '{ print $5 }')
+	PRIVATE_GPU[$j]=$(gcloud compute instances list | grep "$gpuid" | awk '{ print $4 }')
+#        echo -e "GPU${j} node.\t Public IP: ${GPU[${j}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
     done
 }    
 
@@ -134,7 +137,6 @@ if [ $? -ne 0 ] ; then
     echo "Problem installing installer. Exiting..."
     exit 1
 fi    
-
 
 ssh -t -o StrictHostKeyChecking=no $IP "if [ ! -e ~/.ssh/id_rsa.pub ] ; then cat /dev/zero | ssh-keygen -q -N \"\" ; fi"
 pubkey=$(ssh -t -o StrictHostKeyChecking=no $IP "cat ~/.ssh/id_rsa.pub")
