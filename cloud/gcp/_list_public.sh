@@ -7,7 +7,7 @@ fi
 
 . config.sh $1
 
-row=$(gcloud compute instances list --filter="zone:($ZONE)" | grep $NAME)
+row=$(gcloud compute instances list | grep $NAME)
 echo $row | awk '{ print $5 }'
 
 

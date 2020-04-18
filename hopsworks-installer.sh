@@ -1104,7 +1104,7 @@ else
 	    DOWNLOAD="download_url: $ENTERPRISE_DOWNLOAD_URL
   kube-hops:
     pki:
-     verify_hopsworks_cert: false
+      verify_hopsworks_cert: false
     fallback_dns: $DNS_IP
 "
 	    KUBERNETES_RECIPES="- kube-hops::hopsworks

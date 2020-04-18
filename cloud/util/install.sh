@@ -3,7 +3,7 @@
 help()
 {
     echo ""
-    echo "Usage: $0 cpu|gpu|cluster [skip-create] [community]"
+    echo "Usage: $0 cpu|gpu|cluster [skip-create] [community|kubernetes]"
     echo "Create a VM or a cluster and install Hopsworks on it."
     echo ""    
     exit 1
@@ -22,6 +22,22 @@ error_download_url()
     echo ""    
     exit
 }
+
+check_download_url()
+{
+    if [ "$DOWNLOAD_URL" == "" ] ; then
+	echo ""
+	echo "Error. You need to set the environment variable \$DOWNLOAD_URL to the URL for the enterprise binaries."
+	echo ""
+	echo "You can re-run this command with the 'community' switch to install community Hopsworks. For example: "
+	echo "./install.sh gpu community"
+	echo "or"
+	echo "./install.sh cpu community"	
+	echo ""	
+	exit 3
+    fi
+}
+
 
 get_ips()
 {
@@ -61,19 +77,37 @@ get_ips
 
 if [ "$2" == "community" ] || [ "$3" == "community" ] ; then
     HOPSWORKS_VERSION=cluster
+elif [ "$2" == "kubernetes" ] || [ "$3" == "kubernetes" ] ; then
+    HOPSWORKS_VERSION=kubernetes
+    check_download_url
+    if [[ ! $BRANCH =~ "-kube" ]] ; then
+      echo "Found branch: $BRANCH"
+      # check if this is a version branch, if yes update to the kube version of the branch.
+      branch_regex='^[1-9]+\.[1-9]+'
+      if [[ $BRANCH =~ $branch_regex ]] || [[ "$BRANCH" == "master" ]] ; then
+        escaped=${BRANCH//./\\.}
+        perl -pi -e "s/HOPSWORKS_BRANCH=$escaped/HOPSWORKS_BRANCH=${escaped}-kube/" ../../hopsworks-installer.sh
+        BRANCH=${BRANCH}-kube       
+      else
+	echo "Your hopsworks-chef branch, defined in hopsworks-installer.sh, does not appear to be a kubernetes branch: "
+	echo "$BRANCH"
+	echo "You can change the branch by changing in hopsworks-installer.sh line 31 'HOPSWORKS_BRANCH=...'"
+	echo "For example, to install kubernetes master branch, change hopsworks-installer.sh line 31 to 'HOPSWORKS_BRANCH=kube-master'"
+	echo ""
+        printf 'Do you want to install this branch anyway? (y/n (default y):'
+        read ACCEPT
+        if [ "$ACCEPT" == "y" ] || [ "$ACCEPT" == "yes" ] || [ "$ACCEPT" == "" ] ; then
+	    echo "Ok!"
+	else
+	    exit 3
+	fi
+      fi
+      echo "Installing branch: $BRANCH"      
+    fi
+
 else
     HOPSWORKS_VERSION=enterprise
-    if [ "$DOWNLOAD_URL" == "" ] ; then
-	echo ""
-	echo "Error. You need to set the environment variable \$DOWNLOAD_URL to the URL for the enterprise binaries."
-	echo ""
-	echo "You can re-run this command with the 'community' switch to install community Hopsworks. For example: "
-	echo "./install.sh gpu community"
-	echo "or"
-	echo "./install.sh cpu community"	
-	echo ""	
-	exit 3
-    fi
+    check_download_url
 fi
 
 if [ ! "$2" == "skip-create" ] ; then
@@ -106,7 +140,12 @@ fi
 
 
 echo "Installing installer on $IP"
-ssh -t -o StrictHostKeyChecking=no $IP "wget -nc ${CLUSTER_DEFINITION_BRANCH}/hopsworks-installer.sh && chmod +x hopsworks-installer.sh"
+#ssh -t -o StrictHostKeyChecking=no $IP "wget -nc ${CLUSTER_DEFINITION_BRANCH}/hopsworks-installer.sh && chmod +x hopsworks-installer.sh"
+scp -o StrictHostKeyChecking=no ../../hopsworks-installer.sh ${IP}:
+ssh -t -o StrictHostKeyChecking=no $IP "chmod +x hopsworks-installer.sh; mkdir -p cluster-defns"
+scp -o StrictHostKeyChecking=no ../../cluster-defns/hopsworks-installer.yml ${IP}:~/cluster-defns/
+scp -o StrictHostKeyChecking=no ../../cluster-defns/hopsworks-worker.yml ${IP}:~/cluster-defns/
+scp -o StrictHostKeyChecking=no ../../cluster-defns/hopsworks-worker-gpu.yml ${IP}:~/cluster-defns/
 
 if [ $? -ne 0 ] ; then
     echo "Problem installing installer. Exiting..."

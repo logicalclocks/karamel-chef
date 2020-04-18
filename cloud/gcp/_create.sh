@@ -31,7 +31,7 @@ create()
 
 nvidia_drivers_ubuntu()
 {
-    GPU_IP=$(gcloud compute instances list --filter="zone:($ZONE)" | grep "gpu" | awk '{ print $5 }')
+    GPU_IP=$(gcloud compute instances list | grep "gpu" | awk '{ print $5 }')
 
     if [[ "$IMAGE" == *"centos"* ]]; then
 	ssh -t -o StrictHostKeyChecking=no $GPU_IP "sudo yum install wget -y > /dev/null"
@@ -40,7 +40,7 @@ nvidia_drivers_ubuntu()
     
     ssh -t -o StrictHostKeyChecking=no $GPU_IP "wget -nc ${CLUSTER_DEFINITION_BRANCH}/hopsworks-installer.sh && chmod +x hopsworks-installer.sh"
 
-    ssh -t -o StrictHostKeyChecking=no $GPU_IP "/home/$USER/hopsworks-installer.sh -i cpu -ni -c gcp"
+    ssh -t -o StrictHostKeyChecking=no $GPU_IP "/home/$USER/hopsworks-installer.sh -i nvidia -ni -c gcp"
 }
 
 MODE=$1
