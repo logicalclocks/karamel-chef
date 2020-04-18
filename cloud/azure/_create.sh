@@ -26,6 +26,12 @@ create()
    --size $VM_SIZE -l $LOCATION --zone $ZONE \
    --ssh-key-value /home/$USER/.ssh/id_rsa.pub    
   #   --priority $PRIORITY --max-price 0.06 \
+
+
+  if [ $? -ne 0 ] ; then
+      echo "Problem creating VM. Exiting ..."
+      exit 12
+  fi
 }
 
 create_gpu()
@@ -47,6 +53,11 @@ create_gpu()
    --ssh-key-value /home/$USER/.ssh/id_rsa.pub    
   #   --priority $PRIORITY --max-price 0.06 \
 
+  if [ $? -ne 0 ] ; then
+      echo "Problem creating VM. Exiting ..."
+      exit 12
+  fi
+  
 }
 
 

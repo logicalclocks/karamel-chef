@@ -22,11 +22,16 @@ create()
 {
     gcloud compute --project=$PROJECT instances create $NAME --zone=$ZONE --machine-type=$MACHINE_TYPE --subnet=$SUBNET --network-tier=$NETWORK_TIER --maintenance-policy=$MAINTENANCE_POLICY $SERVICE_ACCOUNT --no-scopes $ACCELERATOR --tags=$TAGS --image=$IMAGE --image-project=$IMAGE_PROJECT --boot-disk-size=$BOOT_SIZE --boot-disk-type=$BOOT_DISK --boot-disk-device-name=$NAME --reservation-affinity=$RESERVATION_AFFINITY --metadata=ssh-keys="$ESCAPED_SSH_KEY"
     #$SHIELD
+  if [ $? -ne 0 ] ; then
+      echo "Problem creating VM. Exiting ..."
+      exit 12
+  fi
+
 }
 
 nvidia_drivers_ubuntu()
 {
-    GPU_IP=$(gcloud compute instances list --filter="zone:($ZONE)" | grep "gpu" | awk '{ print $5 }')
+    GPU_IP=$(gcloud compute instances list | grep "gpu" | awk '{ print $5 }')
 
     if [[ "$IMAGE" == *"centos"* ]]; then
 	ssh -t -o StrictHostKeyChecking=no $GPU_IP "sudo yum install wget -y > /dev/null"
@@ -35,7 +40,7 @@ nvidia_drivers_ubuntu()
     
     ssh -t -o StrictHostKeyChecking=no $GPU_IP "wget -nc ${CLUSTER_DEFINITION_BRANCH}/hopsworks-installer.sh && chmod +x hopsworks-installer.sh"
 
-    ssh -t -o StrictHostKeyChecking=no $GPU_IP "/home/$USER/hopsworks-installer.sh -i cpu -ni -c gcp"
+    ssh -t -o StrictHostKeyChecking=no $GPU_IP "/home/$USER/hopsworks-installer.sh -i nvidia -ni -c gcp"
 }
 
 MODE=$1
