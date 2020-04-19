@@ -18,16 +18,38 @@ error_download_url()
 {
     echo ""
     echo "Error. You need to export the following environment variable to run this script:"
-    echo "export DOWNLOAD_URL=https://path/to/hopsworks/enterprise/binaries"
+    echo "export ENTERPRISE_DOWNLOAD_URL=https://path/to/hopsworks/enterprise/binaries"
     echo ""    
     exit
 }
 
 check_download_url()
 {
-    if [ "$DOWNLOAD_URL" == "" ] ; then
+    if [ "$ENTERPRISE_DOWNLOAD_URL" == "" ] ; then
 	echo ""
-	echo "Error. You need to set the environment variable \$DOWNLOAD_URL to the URL for the enterprise binaries."
+	echo "Error. You need to set the environment variable \$ENTERPRISE_DOWNLOAD_URL to the URL for the enterprise binaries."
+	echo ""
+	echo "You can re-run this command with the 'community' switch to install community Hopsworks. For example: "
+	echo "./install.sh gpu community"
+	echo "or"
+	echo "./install.sh cpu community"	
+	echo ""	
+	exit 3
+    fi
+    if [ "$ENTERPRISE_USERNAME" == "" ] ; then    
+	echo ""
+	echo "Error. You need to set the environment variable \$ENTERPRISE_USERNAME to the username for the enterprise binaries."
+	echo ""
+	echo "You can re-run this command with the 'community' switch to install community Hopsworks. For example: "
+	echo "./install.sh gpu community"
+	echo "or"
+	echo "./install.sh cpu community"	
+	echo ""	
+	exit 3
+    fi
+    if [ "$ENTERPRISE_PASSWORD" == "" ] ; then    
+	echo ""
+	echo "Error. You need to set the environment variable \$ENTERPRISE_PASSWORD to the password for the enterprise binaries."
 	echo ""
 	echo "You can re-run this command with the 'community' switch to install community Hopsworks. For example: "
 	echo "./install.sh gpu community"
@@ -200,12 +222,18 @@ else
 fi    
 
 DOWNLOAD=""
-if [ "$DOWNLOAD_URL" != "" ] ; then
-  DOWNLOAD="-d $DOWNLOAD_URL"
+if [ "$ENTERPRISE_DOWNLOAD_URL" != "" ] ; then
+  DOWNLOAD="-d $ENTERPRISE_DOWNLOAD_URL "
+fi
+if [ "$ENTERPRISE_USERNAME" != "" ] ; then
+  DOWNLOAD_USERNAME="-du $ENTERPRISE_USERNAME "
+fi
+if [ "$ENTERPRISE_PASSWORD" != "" ] ; then
+  DOWNLOAD_PASSWORD="-dp $ENTERPRISE_PASSWORD "
 fi
 echo
-echo "ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i $HOPSWORKS_VERSION -ni -c $CLOUD $DOWNLOAD $WORKERS && sleep 5""
-ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i $HOPSWORKS_VERSION -ni -c $CLOUD $DOWNLOAD $WORKERS && sleep 5"
+echo "ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i $HOPSWORKS_VERSION -ni -c $CLOUD $DOWNLOAD $DOWNLOAD_USERNAME $DOWNLOAD_PASSWORD $WORKERS && sleep 5""
+ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i $HOPSWORKS_VERSION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}$WORKERS && sleep 5"
 
 if [ $? -ne 0 ] ; then
     echo "Problem running installer. Exiting..."

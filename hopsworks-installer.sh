@@ -28,7 +28,7 @@
 ###################################################################################################
 
 HOPSWORKS_REPO=logicalclocks/hopsworks-chef
-HOPSWORKS_BRANCH=master
+HOPSWORKS_BRANCH=master-kube
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/master
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
@@ -65,7 +65,6 @@ RM_WORKER=
 ENTERPRISE=0
 KUBERNETES=0
 DOWNLOAD=
-ENTERPRISE_DOWNLOAD_URL=
 KUBERNETES_RECIPES=
 INPUT_YML="cluster-defns/hopsworks-installer.yml"
 WORKER_YML="cluster-defns/hopsworks-worker.yml"
@@ -740,7 +739,9 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      echo " [--gcp-nvme]     mount NVMe disk on GCP node"
 	      echo " [-c|--cloud      on-premises|gcp|aws|azure]"
 	      echo " [-w|--workers    IP1,IP2,...,IPN|none] install on workers with IPs in supplied list (or none). Uses default mem/cpu/gpus for the workers."
-	      echo " [-d|--download-binaries-url url] downloads enterprise binaries from this URL"
+	      echo " [-d|--download-binaries-url url] downloads enterprise binaries from this URL."
+	      echo " [-du|--download-user username] Username for downloading enterprise binaries."
+	      echo " [-dp|--download-password password] Password for downloading enterprise binaries."	      
 	      echo " [-ni|--non-interactive)] skip license/terms acceptance and all confirmation screens."
 	      echo "" 
 	      exit 3
@@ -790,6 +791,14 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
     -d|--download-binaries-url)
       	      shift	
 	      ENTERPRISE_DOWNLOAD_URL=$1
+	      ;;
+    -du|--download-username)
+      	      shift	
+	      ENTERPRISE_USER=$1
+	      ;;
+    -dp|--download-password)
+      	      shift	
+	      ENTERPRISE_PASSWORD=$1
 	      ;;
     -dr|--dry-run)
 	      DRY_RUN=1
@@ -1092,6 +1101,16 @@ else
             printf "Enter the URL to download the Enterprise Binaries from: "
 	    read ENTERPRISE_DOWNLOAD_URL
         fi
+	if [ "$ENTERPRISE_USER" = "" ] ; then
+	    echo ""
+            printf "Enter the Enterprise URL username: "
+	    read ENTERPRISE_USER
+        fi
+	if [ "$ENTERPRISE_PASSWORD" = "" ] ; then
+	    echo ""
+            printf "Enter the Enterprise URL password: "
+	    read -s ENTERPRISE_PASSWORD
+        fi
 	# Escape URL
         # printf -v ENTERPRISE_DOWNLOAD_URL "%q\n" "$ENTERPRISE_DOWNLOAD_URL"
 	ENTERPRISE_DOWNLOAD_URL=${ENTERPRISE_DOWNLOAD_URL//\./\\\.}
@@ -1101,7 +1120,7 @@ else
 	DNS_IP=${DNS_IP//\./\\\.}
 	if [ $KUBERNETES -eq 1 ] ; then
 	    KUBE="true"
-	    DOWNLOAD="download_url: $ENTERPRISE_DOWNLOAD_URL
+	    DOWNLOAD="
   kube-hops:
     pki:
       verify_hopsworks_cert: false
@@ -1119,7 +1138,9 @@ else
 	fi
         ENTERPRISE_ATTRS="enterprise:
       install: true
-      download_url: $ENTERPRISE_DOWNLOAD_URL"
+      download_url: $ENTERPRISE_DOWNLOAD_URL
+      username: $ENTERPRISE_USER
+      password: $ENTERPRISE_PASSWORD"
 
     fi
     perl -pi -e "s/__ENTERPRISE__/$ENTERPRISE_ATTRS/" $YML_FILE
