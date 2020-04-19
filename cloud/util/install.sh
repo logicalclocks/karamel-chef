@@ -48,15 +48,9 @@ check_download_url()
 	exit 3
     fi
     if [ "$ENTERPRISE_PASSWORD" == "" ] ; then    
-	echo ""
-	echo "Error. You need to set the environment variable \$ENTERPRISE_PASSWORD to the password for the enterprise binaries."
-	echo ""
-	echo "You can re-run this command with the 'community' switch to install community Hopsworks. For example: "
-	echo "./install.sh gpu community"
-	echo "or"
-	echo "./install.sh cpu community"	
-	echo ""	
-	exit 3
+        echo ""
+        printf "Enter the Enterprise URL password: "
+        read -s ENTERPRISE_PASSWORD
     fi
 }
 
@@ -111,7 +105,7 @@ elif [ "$2" == "kubernetes" ] || [ "$3" == "kubernetes" ] ; then
         perl -pi -e "s/HOPSWORKS_BRANCH=$escaped/HOPSWORKS_BRANCH=${escaped}-kube/" ../../hopsworks-installer.sh
         BRANCH=${BRANCH}-kube       
       else
-	echo "Your hopsworks-chef branch, defined in hopsworks-installer.sh, does not appear to be a kubernetes branch: "
+	echo "Your hopsworks-chef branch, defined in hopsworks-installer.sh, does not appear to be a kubernetes branch: " # 
 	echo "$BRANCH"
 	echo "You can change the branch by changing in hopsworks-installer.sh line 31 'HOPSWORKS_BRANCH=...'"
 	echo "For example, to install kubernetes master branch, change hopsworks-installer.sh line 31 to 'HOPSWORKS_BRANCH=kube-master'"
