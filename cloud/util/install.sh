@@ -48,15 +48,9 @@ check_download_url()
 	exit 3
     fi
     if [ "$ENTERPRISE_PASSWORD" == "" ] ; then    
-	echo ""
-	echo "Error. You need to set the environment variable \$ENTERPRISE_PASSWORD to the password for the enterprise binaries."
-	echo ""
-	echo "You can re-run this command with the 'community' switch to install community Hopsworks. For example: "
-	echo "./install.sh gpu community"
-	echo "or"
-	echo "./install.sh cpu community"	
-	echo ""	
-	exit 3
+        echo ""
+        printf "Enter the Enterprise URL password: "
+        read -s ENTERPRISE_PASSWORD
     fi
 }
 
