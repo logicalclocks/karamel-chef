@@ -105,7 +105,7 @@ elif [ "$2" == "kubernetes" ] || [ "$3" == "kubernetes" ] ; then
         perl -pi -e "s/HOPSWORKS_BRANCH=$escaped/HOPSWORKS_BRANCH=${escaped}-kube/" ../../hopsworks-installer.sh
         BRANCH=${BRANCH}-kube       
       else
-	echo "Your hopsworks-chef branch, defined in hopsworks-installer.sh, does not appear to be a kubernetes branch: " # 
+	echo "Your hopsworks-chef branch, defined in hopsworks-installer.sh, does not appear to be a kubernetes branch: "
 	echo "$BRANCH"
 	echo "You can change the branch by changing in hopsworks-installer.sh line 31 'HOPSWORKS_BRANCH=...'"
 	echo "For example, to install kubernetes master branch, change hopsworks-installer.sh line 31 to 'HOPSWORKS_BRANCH=kube-master'"
