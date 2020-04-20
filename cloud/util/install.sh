@@ -101,8 +101,9 @@ elif [ "$2" == "kubernetes" ] || [ "$3" == "kubernetes" ] ; then
       # check if this is a version branch, if yes update to the kube version of the branch.
       branch_regex='^[1-9]+\.[1-9]+'
       if [[ $BRANCH =~ $branch_regex ]] || [[ "$BRANCH" == "master" ]] ; then
+	cp -f ../../hopsworks-installer.sh .hopsworks-installer.sh
         escaped=${BRANCH//./\\.}
-        perl -pi -e "s/HOPSWORKS_BRANCH=$escaped/HOPSWORKS_BRANCH=${escaped}-kube/" ../../hopsworks-installer.sh
+        perl -pi -e "s/HOPSWORKS_BRANCH=$escaped/HOPSWORKS_BRANCH=${escaped}-kube/" .hopsworks-installer.sh
         BRANCH=${BRANCH}-kube       
       else
 	echo "Your hopsworks-chef branch, defined in hopsworks-installer.sh, does not appear to be a kubernetes branch: "
@@ -157,7 +158,12 @@ fi
 
 echo "Installing installer on $IP"
 #ssh -t -o StrictHostKeyChecking=no $IP "wget -nc ${CLUSTER_DEFINITION_BRANCH}/hopsworks-installer.sh && chmod +x hopsworks-installer.sh"
-scp -o StrictHostKeyChecking=no ../../hopsworks-installer.sh ${IP}:
+if [ "$2" == "kubernetes" ] || [ "$3" == "kubernetes" ] ; then
+    scp -o StrictHostKeyChecking=no .hopsworks-installer.sh ${IP}:
+    rm .hopsworks-installer.sh
+else 
+    scp -o StrictHostKeyChecking=no ../../hopsworks-installer.sh ${IP}:
+fi    
 ssh -t -o StrictHostKeyChecking=no $IP "chmod +x hopsworks-installer.sh; mkdir -p cluster-defns"
 scp -o StrictHostKeyChecking=no ../../cluster-defns/hopsworks-installer.yml ${IP}:~/cluster-defns/
 scp -o StrictHostKeyChecking=no ../../cluster-defns/hopsworks-worker.yml ${IP}:~/cluster-defns/
