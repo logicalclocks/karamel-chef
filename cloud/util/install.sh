@@ -37,20 +37,25 @@ check_download_url()
 	exit 3
     fi
     if [ "$ENTERPRISE_USERNAME" == "" ] ; then    
-	echo ""
-	echo "Error. You need to set the environment variable \$ENTERPRISE_USERNAME to the username for the enterprise binaries."
-	echo ""
-	echo "You can re-run this command with the 'community' switch to install community Hopsworks. For example: "
-	echo "./install.sh gpu community"
-	echo "or"
-	echo "./install.sh cpu community"	
-	echo ""	
-	exit 3
+        echo ""
+        printf "Enter the username for downloading the Enterprise binaries: "
+        read ENTERPRISE_USERNAME
+        if [ "$ENTERPRISE_USERNAME" == "" ] ; then
+	    echo "Enterprise username cannot be empty"
+	    echo "Exiting."
+	    exit 3
+	fi
     fi
     if [ "$ENTERPRISE_PASSWORD" == "" ] ; then    
         echo ""
-        printf "Enter the Enterprise URL password: "
+        printf "Enter the password for the user ($ENTERPRISE_USERNAME): "
         read -s ENTERPRISE_PASSWORD
+	echo ""
+        if [ "$ENTERPRISE_PASSWORD" == "" ] ; then
+	    echo "The password cannot be empty"
+	    echo "Exiting."
+	    exit 3
+	fi
     fi
 }
 
@@ -150,7 +155,7 @@ echo "IP: $IP for $NAME"
 host_ip=$IP
 clear_known_hosts
 
-if [[ "$IMAGE" == *"centos"* ]]; then
+if [[ "$IMAGE" == *"centos"* ]] ; then
     echo "ssh -t -o StrictHostKeyChecking=no $IP \"sudo yum install wget -y > /dev/null\""
     ssh -t -o StrictHostKeyChecking=no $IP "sudo yum install wget -y > /dev/null"
 fi    
@@ -159,7 +164,7 @@ fi
 echo "Installing installer on $IP"
 #ssh -t -o StrictHostKeyChecking=no $IP "wget -nc ${CLUSTER_DEFINITION_BRANCH}/hopsworks-installer.sh && chmod +x hopsworks-installer.sh"
 if [ "$2" == "kubernetes" ] || [ "$3" == "kubernetes" ] ; then
-    scp -o StrictHostKeyChecking=no .hopsworks-installer.sh ${IP}:
+    scp -o StrictHostKeyChecking=no .hopsworks-installer.sh ${IP}:~/hopsworks-installer.sh
     rm .hopsworks-installer.sh
 else 
     scp -o StrictHostKeyChecking=no ../../hopsworks-installer.sh ${IP}:
@@ -175,7 +180,7 @@ if [ $? -ne 0 ] ; then
 fi    
 
 
-if [ "$1" = "cluster" ] ; then
+if [ "$1" == "cluster" ] ; then
     ssh -t -o StrictHostKeyChecking=no $IP "if [ ! -e ~/.ssh/id_rsa.pub ] ; then cat /dev/zero | ssh-keygen -q -N \"\" ; fi"
     pubkey=$(ssh -t -o StrictHostKeyChecking=no $IP "cat ~/.ssh/id_rsa.pub")
 
