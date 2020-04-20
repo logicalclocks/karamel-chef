@@ -37,20 +37,25 @@ check_download_url()
 	exit 3
     fi
     if [ "$ENTERPRISE_USERNAME" == "" ] ; then    
-	echo ""
-	echo "Error. You need to set the environment variable \$ENTERPRISE_USERNAME to the username for the enterprise binaries."
-	echo ""
-	echo "You can re-run this command with the 'community' switch to install community Hopsworks. For example: "
-	echo "./install.sh gpu community"
-	echo "or"
-	echo "./install.sh cpu community"	
-	echo ""	
-	exit 3
+        echo ""
+        printf "Enter the username for downloading the Enterprise binaries: "
+        read ENTERPRISE_USERNAME
+        if [ "$ENTERPRISE_USERNAME" == "" ] ; then
+	    echo "Enterprise username cannot be empty"
+	    echo "Exiting."
+	    exit 3
+	fi
     fi
     if [ "$ENTERPRISE_PASSWORD" == "" ] ; then    
         echo ""
-        printf "Enter the Enterprise URL password: "
+        printf "Enter the password for the user ($ENTERPRISE_USERNAME): "
         read -s ENTERPRISE_PASSWORD
+	echo ""
+        if [ "$ENTERPRISE_PASSWORD" == "" ] ; then
+	    echo "The password cannot be empty"
+	    echo "Exiting."
+	    exit 3
+	fi
     fi
 }
 
@@ -101,8 +106,9 @@ elif [ "$2" == "kubernetes" ] || [ "$3" == "kubernetes" ] ; then
       # check if this is a version branch, if yes update to the kube version of the branch.
       branch_regex='^[1-9]+\.[1-9]+'
       if [[ $BRANCH =~ $branch_regex ]] || [[ "$BRANCH" == "master" ]] ; then
+	cp -f ../../hopsworks-installer.sh .hopsworks-installer.sh
         escaped=${BRANCH//./\\.}
-        perl -pi -e "s/HOPSWORKS_BRANCH=$escaped/HOPSWORKS_BRANCH=${escaped}-kube/" ../../hopsworks-installer.sh
+        perl -pi -e "s/HOPSWORKS_BRANCH=$escaped/HOPSWORKS_BRANCH=${escaped}-kube/" .hopsworks-installer.sh
         BRANCH=${BRANCH}-kube       
       else
 	echo "Your hopsworks-chef branch, defined in hopsworks-installer.sh, does not appear to be a kubernetes branch: "
@@ -149,7 +155,7 @@ echo "IP: $IP for $NAME"
 host_ip=$IP
 clear_known_hosts
 
-if [[ "$IMAGE" == *"centos"* ]]; then
+if [[ "$IMAGE" == *"centos"* ]] ; then
     echo "ssh -t -o StrictHostKeyChecking=no $IP \"sudo yum install wget -y > /dev/null\""
     ssh -t -o StrictHostKeyChecking=no $IP "sudo yum install wget -y > /dev/null"
 fi    
@@ -157,7 +163,12 @@ fi
 
 echo "Installing installer on $IP"
 #ssh -t -o StrictHostKeyChecking=no $IP "wget -nc ${CLUSTER_DEFINITION_BRANCH}/hopsworks-installer.sh && chmod +x hopsworks-installer.sh"
-scp -o StrictHostKeyChecking=no ../../hopsworks-installer.sh ${IP}:
+if [ "$2" == "kubernetes" ] || [ "$3" == "kubernetes" ] ; then
+    scp -o StrictHostKeyChecking=no .hopsworks-installer.sh ${IP}:~/hopsworks-installer.sh
+    rm .hopsworks-installer.sh
+else 
+    scp -o StrictHostKeyChecking=no ../../hopsworks-installer.sh ${IP}:
+fi    
 ssh -t -o StrictHostKeyChecking=no $IP "chmod +x hopsworks-installer.sh; mkdir -p cluster-defns"
 scp -o StrictHostKeyChecking=no ../../cluster-defns/hopsworks-installer.yml ${IP}:~/cluster-defns/
 scp -o StrictHostKeyChecking=no ../../cluster-defns/hopsworks-worker.yml ${IP}:~/cluster-defns/
@@ -169,7 +180,7 @@ if [ $? -ne 0 ] ; then
 fi    
 
 
-if [ "$1" = "cluster" ] ; then
+if [ "$1" == "cluster" ] ; then
     ssh -t -o StrictHostKeyChecking=no $IP "if [ ! -e ~/.ssh/id_rsa.pub ] ; then cat /dev/zero | ssh-keygen -q -N \"\" ; fi"
     pubkey=$(ssh -t -o StrictHostKeyChecking=no $IP "cat ~/.ssh/id_rsa.pub")
 
