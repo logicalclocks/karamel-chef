@@ -21,6 +21,8 @@ attrs:
       to: sre@logicalclocks.com
       from: hopsworks@logicalclocks.com
       smtp_host: mail.hello.com
+  prometheus:
+    retention_time: "8h"
   hopsworks:
     featurestore_online: true
     kagent_liveness:
