@@ -1126,6 +1126,8 @@ else
     pki:
       verify_hopsworks_cert: false
     fallback_dns: $DNS_IP
+    master:
+      untaint: true
 "
 	    KUBERNETES_RECIPES="- kube-hops::hopsworks
       - kube-hops::ca
