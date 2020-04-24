@@ -90,6 +90,8 @@ else
 	else
 	    error_download_url
 	fi
+    else
+        DOWNLOAD_URL="-d $ENTERPRISE_DOWNLOAD_URL"	
     fi    
 fi
 
