@@ -7,6 +7,7 @@ declare -a GPU
 declare -a PRIVATE_CPU
 declare -a PRIVATE_GPU
 HOPSWORKS_VERSION=enterprise
+DOWNLOAD_URL=
 
 help()
 {
@@ -65,17 +66,6 @@ clear_known_hosts()
    ssh-keygen -R $host_ip -f "/home/$USER/.ssh/known_hosts" 
 }    
 
-if [ "$DOWNLOAD_URL" == "" ] ; then
-    if [ -e env.sh ] ; then
-	. env.sh
-        if [ "$DOWNLOAD_URL" == "" ] ; then
-	    error_download_url
-	fi
-    else
-	error_download_url
-    fi
-fi    
-
 
 if [ $# -lt 2 ] ; then
     help
@@ -88,7 +78,21 @@ GPUS=$2
 IP=$(gcloud compute instances list | grep $NAME | awk '{ print $5 }')
 
 if [ "$3" == "community" ] || [ "$4" == "community" ] ; then
-   HOPSWORKS_VERSION=cluster
+    HOPSWORKS_VERSION=cluster
+else
+    if [ "$ENTERPRISE_DOWNLOAD_URL" == "" ] ; then
+	if [ -e env.sh ] ; then
+	    . env.sh
+	    DOWNLOAD_URL="-d $ENTERPRISE_DOWNLOAD_URL"
+            if [ "$ENTERPRISE_DOWNLOAD_URL" == "" ] ; then
+		error_download_url
+	    fi
+	else
+	    error_download_url
+	fi
+    else
+        DOWNLOAD_URL="-d $ENTERPRISE_DOWNLOAD_URL"	
+    fi    
 fi
 
 if [ ! "$3" == "skip-create" ] ; then
@@ -199,8 +203,8 @@ done
 echo ""
 echo "Running installer on $IP :"
 echo ""
-echo "ssh -t -o StrictHostKeyChecking=no $IP \"/home/$USER/hopsworks-installer.sh -i $HOPSWORKS_VERSION -ni -c gcp -d $DOWNLOAD_URL $WORKERS\""
-ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i $HOPSWORKS_VERSION -ni -c gcp -d $DOWNLOAD_URL $WORKERS && sleep 5"
+echo "ssh -t -o StrictHostKeyChecking=no $IP \"/home/$USER/hopsworks-installer.sh -i $HOPSWORKS_VERSION -ni -c $CLOUD $DOWNLOAD_URL $WORKERS\""
+ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i $HOPSWORKS_VERSION -ni -c $CLOUD $DOWNLOAD_URL $WORKERS && sleep 5"
 
 if [ $? -ne 0 ] ; then
     echo "Problem running installer. Exiting..."
