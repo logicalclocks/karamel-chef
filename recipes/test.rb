@@ -133,13 +133,13 @@ when 'ubuntu'
   bash "unit_tests" do
     user "root"
     ignore_failure true
-    cwd node['test']['hopsworks']['test_dir_ut']
+    cwd node['test']['hopsworks']['base_dir']
     timeout node['karamel']['test_timeout']
     # Run hopsworks unit tests
     code <<-EOH
       set -e 
       mvn test
-      cp -r target/surefire-reports/ #{node['test']['hopsworks']['report_dir']}/ut
+      find . -name "*.xml" | grep "surefire-reports" | xargs cp -t #{node['test']['hopsworks']['report_dir']}/ut
     EOH
   end
 
