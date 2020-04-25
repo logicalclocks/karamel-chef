@@ -65,7 +65,7 @@ RM_WORKER=
 ENTERPRISE=0
 KUBERNETES=0
 DOWNLOAD=
-KUBERNETES_RECIPES=
+KUBERNETES_RECIPES=""
 INPUT_YML="cluster-defns/hopsworks-installer.yml"
 WORKER_YML="cluster-defns/hopsworks-worker.yml"
 WORKER_GPU_YML="cluster-defns/hopsworks-worker-gpu.yml"
@@ -963,15 +963,16 @@ if [ $DRY_RUN -eq 0 ] ; then
 	    exit_error
 	fi
     fi
+
+    if [ $GCP_NVME -eq 1 ] ; then
+	sudo mkdir -p /mnt/nvmeDisks/nvme0
+	sudo mkfs.ext4 -F /dev/nvme0n1
+    fi
+
+    install_dir    
 fi
 
 
-if [ $GCP_NVME -eq 1 ] ; then
-   sudo mkdir -p /mnt/nvmeDisks/nvme0
-   sudo mkfs.ext4 -F /dev/nvme0n1
-fi
-
-install_dir
 
 if [ ! -d cluster-defns ] ; then
     mkdir cluster-defns
@@ -1054,16 +1055,18 @@ if [ "$INSTALL_ACTION" == "$INSTALL_KARAMEL" ]  ; then
     echo "http://${ip}:9090/index.html"
     echo ""    
 else
-    sudo -n true
-    if [ $? -ne 0 ] ; then
-	echo ""
-	echo "It appears you need a sudo password for this account."
-        echo "Enter the sudo password for $USER: "
-	read -s passwd
-        SUDO_PWD="-passwd $passwd"
-	echo ""
+    if [ $DRY_RUN -eq 0 ] ; then
+	sudo -n true
+	if [ $? -ne 0 ] ; then
+	    echo ""
+	    echo "It appears you need a sudo password for this account."
+            echo "Enter the sudo password for $USER: "
+	    read -s passwd
+            SUDO_PWD="-passwd $passwd"
+	    echo ""
+	fi
     fi
-
+    
     if [ $AVAILABLE_GPUS -gt 0 ] ; then
 	    CUDA="cuda:
     accept_nvidia_download_terms: true"
@@ -1076,8 +1079,9 @@ else
       gpus: '*'"
     fi    
 
-
-    DNS_IP=$(sudo cat /etc/resolv.conf | grep ^nameserver | awk '{ print $2 }' | tail -1)
+    if [ $DRY_RUN -eq 0 ] ; then
+	DNS_IP=$(sudo cat /etc/resolv.conf | grep ^nameserver | awk '{ print $2 }' | tail -1)
+    fi
     BASE_PWD=$(date | md5sum | head -c${1:-8})
     GBS=$(expr $AVAILABLE_MEMORY - 2)
     MEM=$(expr $GBS \* 1024)    
@@ -1129,13 +1133,12 @@ else
     master:
       untaint: true
 "
-	    KUBERNETES_RECIPES="- kube-hops::hopsworks
+	    KUBERNETES_RECIPES="      - kube-hops::hopsworks
       - kube-hops::ca
       - kube-hops::master
       - kube-hops::post_conf
       - kube-hops::addons
-      - kube-hops::node
-"	  
+      - kube-hops::node"	  
 	else
 	    DOWNLOAD="download_url: $ENTERPRISE_DOWNLOAD_URL"	    
 	fi
