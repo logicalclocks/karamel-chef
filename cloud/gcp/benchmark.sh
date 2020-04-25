@@ -95,6 +95,8 @@ else
     fi    
 fi
 
+echo "Installing version: $HOPSWORKS_VERSION"
+
 if [ ! "$3" == "skip-create" ] ; then
     if [ "$IP" != "" ] ; then
 	echo "VM already created and running at: $IP"
@@ -127,15 +129,11 @@ fi
 
 
 echo "Installing installer on $IP"
-#ssh -t -o StrictHostKeyChecking=no $IP "wget -nc ${CLUSTER_DEFINITION_BRANCH}/hopsworks-installer.sh && chmod +x hopsworks-installer.sh"
 scp -o StrictHostKeyChecking=no ../../hopsworks-installer.sh ${IP}:
 ssh -t -o StrictHostKeyChecking=no $IP "chmod +x hopsworks-installer.sh; mkdir -p cluster-defns"
 scp -o StrictHostKeyChecking=no ../../cluster-defns/hopsworks-installer.yml ${IP}:~/cluster-defns/
 scp -o StrictHostKeyChecking=no ../../cluster-defns/hopsworks-worker.yml ${IP}:~/cluster-defns/
 scp -o StrictHostKeyChecking=no ../../cluster-defns/hopsworks-worker-gpu.yml ${IP}:~/cluster-defns/
-
-
-
 
 if [ $? -ne 0 ] ; then
     echo "Problem installing installer. Exiting..."

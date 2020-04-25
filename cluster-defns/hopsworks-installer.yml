@@ -119,5 +119,4 @@ groups:
       - hopsmonitor::purge_telegraf
       - consul
       - consul::master      
-      __KUBERNETES_RECIPES__
- 
+__KUBERNETES_RECIPES__

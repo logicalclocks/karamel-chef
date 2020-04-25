@@ -1,4 +1,4 @@
- worker__WORKER_ID__:
+  worker__WORKER_ID__:
     size: 1
     baremetal:
       ip: __WORKER_IP__
@@ -24,5 +24,4 @@
       - hopsmonitor::node_exporter
       - livy::install
       - consul
-      - consul::master      
- 
+      - consul::slave
