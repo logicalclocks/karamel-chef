@@ -130,6 +130,19 @@ end
 # Install dependencies and execute tests
 case node['platform']
 when 'ubuntu'
+  bash "unit_tests" do
+    user "root"
+    ignore_failure true
+    cwd node['test']['hopsworks']['base_dir']
+    timeout node['karamel']['test_timeout']
+    # Run hopsworks unit tests
+    code <<-EOH
+      set -e 
+      mvn test
+      find . -name "*.xml" | grep "surefire-reports" | xargs cp -t #{node['test']['hopsworks']['report_dir']}/ut
+    EOH
+  end
+
   bash "dependencies_tests" do
     user "root"
     ignore_failure true
