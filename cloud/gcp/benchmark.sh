@@ -33,9 +33,10 @@ error_download_url()
 
 get_ips()
 {
+    head="ben${REGION/-/}"
     IP=$(gcloud compute instances list | grep $NAME | awk '{ print $5 }')
     PRIVATE_IP=$(gcloud compute instances list | grep $NAME | awk '{ print $4 }')
-    echo -e "Head node.\t Public IP: $IP \t Private IP: $PRIVATE_IP"
+    echo -e "${head}\t Public IP: $IP \t Private IP: $PRIVATE_IP"
 
 
     CPUS=$(cat .cpus)
@@ -46,15 +47,15 @@ get_ips()
         cpuid="cp${i}${REGION/-/}"
 	CPU[$i]=$(gcloud compute instances list | grep "$cpuid" | awk '{ print $5 }')
 	PRIVATE_CPU[$i]=$(gcloud compute instances list | grep "$cpuid" | awk '{ print $4 }')
-#        echo -e "Cp${i} node.\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
+        echo -e "${cpuid}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
     done
     
     for j in $(seq 1 ${GPUS}) ;
     do
-        gpuid="cp${j}${REGION/-/}"	
+        gpuid="gp${j}${REGION/-/}"	
 	GPU[$j]=$(gcloud compute instances list | grep "$gpuid" | awk '{ print $5 }')
 	PRIVATE_GPU[$j]=$(gcloud compute instances list | grep "$gpuid" | awk '{ print $4 }')
-#        echo -e "GPU${j} node.\t Public IP: ${GPU[${j}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
+        echo -e "${gpuid}\t Public IP: ${GPU[${j}]} \t Private IP: ${PRIVATE_GPU[${j}]}"
     done
 }    
 
@@ -114,11 +115,6 @@ fi
 
 get_ips
 
-echo ""
-echo "gcloud compute instances list ...."
-echo ""
-
-
 host_ip=$IP
 clear_known_hosts
 
@@ -130,7 +126,7 @@ fi
 
 echo "Installing installer on $IP"
 scp -o StrictHostKeyChecking=no ../../hopsworks-installer.sh ${IP}:
-ssh -t -o StrictHostKeyChecking=no $IP "chmod +x hopsworks-installer.sh; mkdir -p cluster-defns"
+ssh -t -o StrictHostKeyChecking=no $IP "mkdir -p cluster-defns"
 scp -o StrictHostKeyChecking=no ../../cluster-defns/hopsworks-installer.yml ${IP}:~/cluster-defns/
 scp -o StrictHostKeyChecking=no ../../cluster-defns/hopsworks-worker.yml ${IP}:~/cluster-defns/
 scp -o StrictHostKeyChecking=no ../../cluster-defns/hopsworks-worker-gpu.yml ${IP}:~/cluster-defns/
@@ -175,7 +171,6 @@ do
     WORKERS="${WORKERS}${PRIVATE_CPU[${i}]},"
 done
 
-WORKERS=${WORKERS::-1}
 for i in $(seq 1 ${GPUS}) ;
 do
     host_ip=$GPU[${i}]}
@@ -195,13 +190,16 @@ do
 	echo "Success: SSH from $IP to ${PRIVATE_GPU[${i}]}"
     fi
 
-    WORKERS="${WORKERS},${PRIVATE_GPU[${i}]}"
+    WORKERS="${WORKERS}${PRIVATE_GPU[${i}]},"
 done
 
+WORKERS=${WORKERS::-1}
+		       
 echo ""
 echo "Running installer on $IP :"
 echo ""
 echo "ssh -t -o StrictHostKeyChecking=no $IP \"/home/$USER/hopsworks-installer.sh -i $HOPSWORKS_VERSION -ni -c $CLOUD $DOWNLOAD_URL $WORKERS\""
+
 ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i $HOPSWORKS_VERSION -ni -c $CLOUD $DOWNLOAD_URL $WORKERS && sleep 5"
 
 if [ $? -ne 0 ] ; then

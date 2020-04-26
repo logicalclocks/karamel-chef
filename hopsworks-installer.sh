@@ -1034,6 +1034,7 @@ if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] ; then
       WORKER_DEFAULTS="true"      
       if [ "$WORKER_LIST" != "none" ] ; then
 	  IFS=',' read -r -a workers <<< "$WORKER_LIST"
+	  echo "Workers:   ${workers[*]}"
 	  for worker in "${workers[@]}"
 	  do
 	      WORKER_IP=$worker
@@ -1159,7 +1160,6 @@ else
 	echo "Running command from ${PWD}:"
 	echo "   setsid ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log 2>&1 &"
 	setsid ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log 2>&1 &
-	clear_screen
 	echo ""
 	echo "***********************************************************************************************************"
 	echo ""
