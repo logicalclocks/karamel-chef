@@ -138,6 +138,7 @@ when 'ubuntu'
     # Run hopsworks unit tests
     code <<-EOH
       set -e 
+      mkdir -pm 777 #{node['test']['hopsworks']['report_dir']}/ut
       mvn test
       find . -name "*.xml" | grep "surefire-reports" | xargs cp -t #{node['test']['hopsworks']['report_dir']}/ut
     EOH
