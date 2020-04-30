@@ -945,11 +945,10 @@ if [ $NON_INTERACT -eq 0 ] ; then
     else
       KARAMEL_HTTP_PROXY="https_proxy=$PROXY"
     fi
+    clear_screen
 #    enter_email
 #    clear_screen
 fi
-
-    
 
 install_action
 
@@ -1119,7 +1118,7 @@ fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_KARAMEL" ]  ; then
     cd karamel-${KARAMEL_VERSION}
-    $KARAMEL_HTTP_PROXY setsid $KARAMEL_HTTPS_PROXY ./bin/karamel -headless &
+    $KARAMEL_HTTP_PROXY setsid ./bin/karamel -headless &
     echo "To access Karamel, open your browser at: "
     echo ""
     echo "http://${ip}:9090/index.html"
