@@ -27,6 +27,8 @@ attrs:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
   kagent:
     python_conda_versions: 3.6
+  maggy:
+    version: git+https://github.com/logicalclocks/maggy@master
   alertmanager:
     email:
       to: sre@logicalclocks.com
