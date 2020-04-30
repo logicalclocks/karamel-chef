@@ -8,8 +8,8 @@ check()
     echo -e "$job \t PUBLIC_IP: $PUBLIC_IP \t PRIVATE_IP: $PRIVATE_IP"
 }
 
-echo "Starting listing ..."
 . config.sh
+echo "Region: ${REGION}"
 
 if [ $# -lt 1 ] ; then
     job="cpu${REGION/-/}"
@@ -23,10 +23,12 @@ else
 	echo "Usage: $0 [benchmark]"
 	exit 1
     fi
+  reg="${REGION/-/}"    
   echo  "Head: "
-  gcloud compute instances list  | grep ben | awk '{ print $4, $5 }'
-  echo  "Compute: "  
-  gcloud compute instances list | grep -E 'cp[0-9]{1,3}' | awk '{ print $4, $5 }'
-  echo "GPU: "    
-  gcloud compute instances list | grep -E 'gp[0-9]{1,3}' | awk '{ print $4, $5 }'
+  ben="ben${reg}"    
+  gcloud compute instances list  | grep "$ben" | awk '{ print $4, $5 }'
+  echo  "Compute: "
+  gcloud compute instances list | grep -E "cp[0-9]{1,3}${reg}" | awk '{ print $4, $5 }'
+  echo "GPU: "
+  gcloud compute instances list | grep -E "gp[0-9]{1,3}#${reg}" | awk '{ print $4, $5 }'
 fi

@@ -79,6 +79,8 @@ HAS_GPUS=0
 AVAILABLE_GPUS=
 CUDA=
 
+KARAMEL_HTTP_PROXY=
+
 # $1 = String describing error
 exit_error() 
 {
@@ -404,6 +406,49 @@ install_action()
 	clear_screen
    fi
 }
+
+check_proxy()
+{
+   echo ""
+   printf "Is the host running this installer behind a http proxy (y/n)? (default: 'y') "
+   read ACCEPT
+   case $ACCEPT in
+       y|yes)
+	   # Just take the first http proxy set - https or http, not both https_proxy and http_proxy
+           printf "Enter the URL of the HTTP PROXY (hit return if there is only a HTTPS PROXY): "
+           read PROXY
+	   if [ "$PROXY" == "" ] ; then
+              printf "Enter the URL of the HTTPS PROXY: "
+              read PROXY
+	      KARAMEL_HTTP_PROXY="https_proxy=$PROXY"
+	   else
+              KARAMEL_HTTP_PROXY="http_proxy=$PROXY"
+	   fi
+
+	   echo "Your HTTP(S) Proxy is now set to: $PROXY"
+           printf "Does that look ok (y/n)? (default: 'y') "
+           read OK
+           case $OK in
+               y|yes)
+		 ;;
+              *)	   
+               clear_screen
+               check_proxy
+           esac
+	   ;;
+       n|no)
+           ;;
+       *)
+           echo ""
+           echo "Invalid Choice: $ACCEPT"
+           echo "Please enter your choice 'y' or 'yes' for yes, 'n' or 'no' for no: "
+	   clear_screen
+           check_proxy
+           ;;
+   esac
+   clear_screen
+}
+
 
 
 enter_cloud()
@@ -744,6 +789,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      echo " [-du|--download-user username] Username for downloading enterprise binaries."
 	      echo " [-dp|--download-password password] Password for downloading enterprise binaries."	      
 	      echo " [-ni|--non-interactive)] skip license/terms acceptance and all confirmation screens."
+	      echo " [-p|--http-proxy)] URL of the http(s) proxy server used to access the Internet"	      
 	      echo "" 
 	      exit 3
               break
@@ -830,6 +876,15 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
     -ni|--non-interactive)
 	      NON_INTERACT=1
 	      ;;
+    -p|--http-proxy)
+              shift
+              PROXY=$1
+	      if [[ "$PROXY" == *"https"* ]]; then
+		  https_proxy="$PROXY"
+	      else
+		  http_proxy="$PROXY"
+	      fi
+	      ;;
     -w|--workers) 
               shift
               WORKER_LIST=$1
@@ -877,6 +932,19 @@ if [ $NON_INTERACT -eq 0 ] ; then
     splash_screen  
     display_license
     accept_license  
+    clear_screen
+
+    # Check if a proxy server is needed to access the internet.
+    # If yes, set the http(s)_proxy environment variable when starting karamel
+    if [ "$http_proxy" == "" ] ; then
+	if [ "$https_proxy" == "" ] ; then
+	   check_proxy
+	else
+           KARAMEL_HTTP_PROXY="https_proxy=$PROXY"	    
+	fi
+    else
+      KARAMEL_HTTP_PROXY="https_proxy=$PROXY"
+    fi
     clear_screen
 #    enter_email
 #    clear_screen
@@ -1050,7 +1118,7 @@ fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_KARAMEL" ]  ; then
     cd karamel-${KARAMEL_VERSION}
-    setsid ./bin/karamel -headless &
+    $KARAMEL_HTTP_PROXY setsid ./bin/karamel -headless &
     echo "To access Karamel, open your browser at: "
     echo ""
     echo "http://${ip}:9090/index.html"
@@ -1158,8 +1226,8 @@ else
     if [ $DRY_RUN -eq 0 ] ; then
 	cd karamel-${KARAMEL_VERSION}
 	echo "Running command from ${PWD}:"
-	echo "   setsid ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log 2>&1 &"
-	setsid ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log 2>&1 &
+	echo "  $KARAMEL_HTTP_PROXY setsid ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log 2>&1 &"
+	$KARAMEL_HTTP_PROXY setsid ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log 2>&1 &
 	echo ""
 	echo "***********************************************************************************************************"
 	echo ""
