@@ -27,8 +27,8 @@
 #                                                                                                 #
 ###################################################################################################
 
-HOPSWORKS_REPO=robzor92/hopsworks-chef
-HOPSWORKS_BRANCH=1.2-kube-zenuity
+HOPSWORKS_REPO=logicalclocks/hopsworks-chef
+HOPSWORKS_BRANCH=master
 # broken_kernel_devel
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/master
 KARAMEL_VERSION=0.6
