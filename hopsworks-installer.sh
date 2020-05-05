@@ -27,8 +27,9 @@
 #                                                                                                 #
 ###################################################################################################
 
-HOPSWORKS_REPO=logicalclocks/hopsworks-chef
-HOPSWORKS_BRANCH=master
+HOPSWORKS_REPO=robzor92/hopsworks-chef
+HOPSWORKS_BRANCH=1.2-kube-zenuity
+# broken_kernel_devel
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/master
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
@@ -60,7 +61,8 @@ REVERSE_DNS=1
 
 CLOUD=
 GCP_NVME=0
-YARN="yarn:"
+YARN="yarn:
+      cgroups_strict_resource_usage: 'false'"
 RM_WORKER=
 ENTERPRISE=0
 KUBERNETES=0
@@ -420,9 +422,9 @@ check_proxy()
 	   if [ "$PROXY" == "" ] ; then
               printf "Enter the URL of the HTTPS PROXY: "
               read PROXY
-	      KARAMEL_HTTP_PROXY="https_proxy=$PROXY"
+	      KARAMEL_HTTP_PROXY="export https_proxy=$PROXY"
 	   else
-              KARAMEL_HTTP_PROXY="http_proxy=$PROXY"
+              KARAMEL_HTTP_PROXY="export http_proxy=$PROXY"
 	   fi
 
 	   echo "Your HTTP(S) Proxy is now set to: $PROXY"
@@ -785,11 +787,14 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      echo " [--gcp-nvme]     mount NVMe disk on GCP node"
 	      echo " [-c|--cloud      on-premises|gcp|aws|azure]"
 	      echo " [-w|--workers    IP1,IP2,...,IPN|none] install on workers with IPs in supplied list (or none). Uses default mem/cpu/gpus for the workers."
-	      echo " [-d|--download-binaries-url url] downloads enterprise binaries from this URL."
+	      echo " [-d|--download-enterprise-url url] downloads enterprise binaries from this URL."
+	      echo " [-dc|--download-url] downloads binaries from this URL."
 	      echo " [-du|--download-user username] Username for downloading enterprise binaries."
 	      echo " [-dp|--download-password password] Password for downloading enterprise binaries."	      
 	      echo " [-ni|--non-interactive)] skip license/terms acceptance and all confirmation screens."
-	      echo " [-p|--http-proxy)] URL of the http(s) proxy server used to access the Internet"	      
+	      echo " [-p|--http-proxy)] URL of the http(s) proxy server used to access the Internet"
+	      echo " [-pwd|--password] sudo password for user running chef recipes."
+	      echo " [-y|--yml] yaml file to run Karamel against."	      
 	      echo "" 
 	      exit 3
               break
@@ -835,9 +840,13 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
     -cl|--clean)
 	      CLEAN_INSTALL_DIR=1
 	      ;;
-    -d|--download-binaries-url)
+    -d|--download-enterprise-url)
       	      shift	
 	      ENTERPRISE_DOWNLOAD_URL=$1
+	      ;;
+    -dc|--download-url)
+      	      shift	
+	      DOWNLOAD_URL=$1
 	      ;;
     -du|--download-username)
       	      shift	
@@ -940,10 +949,10 @@ if [ $NON_INTERACT -eq 0 ] ; then
 	if [ "$https_proxy" == "" ] ; then
 	   check_proxy
 	else
-           KARAMEL_HTTP_PROXY="https_proxy=$PROXY"	    
+           KARAMEL_HTTP_PROXY="export https_proxy=$PROXY"	    
 	fi
     else
-      KARAMEL_HTTP_PROXY="https_proxy=$PROXY"
+      KARAMEL_HTTP_PROXY="export https_proxy=$PROXY"
     fi
     clear_screen
 #    enter_email
@@ -1118,7 +1127,8 @@ fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_KARAMEL" ]  ; then
     cd karamel-${KARAMEL_VERSION}
-    $KARAMEL_HTTP_PROXY setsid ./bin/karamel -headless &
+    $KARAMEL_HTTP_PROXY
+    setsid ./bin/karamel -headless &
     echo "To access Karamel, open your browser at: "
     echo ""
     echo "http://${ip}:9090/index.html"
@@ -1145,6 +1155,7 @@ else
 	YARN="capacity: 
       resource_calculator_class: org.apache.hadoop.yarn.util.resource.DominantResourceCalculatorGPU
     yarn:
+      cgroups_strict_resource_usage: 'false'
       gpus: '*'"
     fi    
 
@@ -1168,7 +1179,12 @@ else
     perl -pi -e "s/__IP__/$IP/" $YML_FILE
     perl -pi -e "s/__YARN__/$YARN/" $YML_FILE
     perl -pi -e "s/__TLS__/$TLS/" $YML_FILE
-    perl -pi -e "s/__CUDA__/$CUDA/" $YML_FILE    
+    perl -pi -e "s/__CUDA__/$CUDA/" $YML_FILE
+
+    if [ "$DOWNLOAD_URL" != "" ] ; then
+       DOWNLOAD="download_url: $DOWNLOAD_URL"	    
+    fi
+    
     if [ $ENTERPRISE -eq 1 ] ; then
 	if [ "$ENTERPRISE_DOWNLOAD_URL" = "" ] ; then
 	    echo ""
@@ -1186,7 +1202,6 @@ else
 	    read -s ENTERPRISE_PASSWORD
         fi
 	# Escape URL
-        # printf -v ENTERPRISE_DOWNLOAD_URL "%q\n" "$ENTERPRISE_DOWNLOAD_URL"
 	ENTERPRISE_DOWNLOAD_URL=${ENTERPRISE_DOWNLOAD_URL//\./\\\.}
 	ENTERPRISE_DOWNLOAD_URL=${ENTERPRISE_DOWNLOAD_URL//\//\\\/}
         echo ""	
@@ -1194,7 +1209,7 @@ else
 	DNS_IP=${DNS_IP//\./\\\.}
 	if [ $KUBERNETES -eq 1 ] ; then
 	    KUBE="true"
-	    DOWNLOAD="
+	    DOWNLOAD="$DOWNLOAD
   kube-hops:
     pki:
       verify_hopsworks_cert: false
@@ -1208,8 +1223,6 @@ else
       - kube-hops::post_conf
       - kube-hops::addons
       - kube-hops::node"	  
-	else
-	    DOWNLOAD="download_url: $ENTERPRISE_DOWNLOAD_URL"	    
 	fi
         ENTERPRISE_ATTRS="enterprise:
       install: true
@@ -1226,8 +1239,10 @@ else
     if [ $DRY_RUN -eq 0 ] ; then
 	cd karamel-${KARAMEL_VERSION}
 	echo "Running command from ${PWD}:"
-	echo "  $KARAMEL_HTTP_PROXY setsid ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log 2>&1 &"
-	$KARAMEL_HTTP_PROXY setsid ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log 2>&1 &
+	echo "$KARAMEL_HTTP_PROXY "
+	echo "setsid ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log 2>&1 &"
+	$KARAMEL_HTTP_PROXY
+	setsid ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log 2>&1 &
 	echo ""
 	echo "***********************************************************************************************************"
 	echo ""

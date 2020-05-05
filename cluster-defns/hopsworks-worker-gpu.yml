@@ -2,28 +2,6 @@
     size: 1
     baremetal:
       ip: __WORKER_IP__
-    attrs:
-      cuda:
-        accept_nvidia_download_terms: true
-      hops:
-        yarn:
-          gpus: '*'
-          vcores: __CPUS__
-          memory_mbs: __MBS__
     recipes:
-      - kagent
-      - conda
-      - hops::dn
-      - hops::nm
-      - hadoop_spark::yarn
-      - hadoop_spark::certs
-      - flink::yarn
-      - hopslog::_filebeat-spark
-      - hopslog::_filebeat-kagent
-      - hopslog::_filebeat-beam
-      - tensorflow
-      - hopsmonitor::node_exporter
-      - livy::install
-      - consul
-      - consul::slave
- 
+      - ndb::mysqld
+      - ndb::ndbd

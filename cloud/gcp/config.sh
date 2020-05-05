@@ -16,7 +16,8 @@ CLUSTER_DEFINITION_BRANCH=$(grep ^CLUSTER_DEFINITION_BRANCH ../../hopsworks-inst
 CLOUD=gcp
 GCP_USER=$USER
 #PROJECT=hazel-charter-222806
-PROJECT=dpe-cloud-mle
+#PROJECT=dpe-cloud-mle
+PROJECT=hops-20
 
 gcloud config set core/project $PROJECT > /dev/null 2>&1
 gcloud config set compute/zone $ZONE > /dev/null 2>&1
@@ -29,7 +30,7 @@ RAW_SSH_KEY="${USER}:$(cat /home/$USER/.ssh/id_rsa.pub)"
 ESCAPED_SSH_KEY="$RAW_SSH_KEY"
 
 
-TAGS=karamel,http-server,https-server
+TAGS=http-server,https-server,karamel
 SUBNET=default
 NETWORK_TIER=PREMIUM
 MAINTENANCE_POLICY=TERMINATE
@@ -44,10 +45,10 @@ NUM_GPUS_PER_VM=1
 
 MACHINE_TYPE=n1-standard-8
 #MACHINE_TYPE=n1-standard-16
-#IMAGE=centos-7-v20200309
-#IMAGE_PROJECT=centos-cloud
-IMAGE=ubuntu-1804-bionic-v20200414
-IMAGE_PROJECT=ubuntu-os-cloud
+IMAGE=centos-7-v20200429
+IMAGE_PROJECT=centos-cloud
+#IMAGE=ubuntu-1804-bionic-v20200414
+#IMAGE_PROJECT=ubuntu-os-cloud
 
 if [ ! -e ~/.ssh/id_rsa.pub ] ; then
     echo "You do not a ssh keypair in ~/.ssh/id_rsa.pub"

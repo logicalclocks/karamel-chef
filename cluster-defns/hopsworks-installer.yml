@@ -25,17 +25,20 @@ attrs:
       detect-hardware-capabilities: false
     rmappsecurity:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
+  maggy:
+    version: "git+git://github.com/logicalclocks/maggy@master"
   kagent:
     python_conda_versions: 3.6
-#  maggy:
-#    version: git+https://github.com/logicalclocks/maggy@master
+  conda:
+    hops-util-py:
+      install-mode: "git"
+      branch: "zenuity"
+      repo: "robzor92"
   alertmanager:
     email:
       to: sre@logicalclocks.com
       from: hopsworks@logicalclocks.com
       smtp_host: mail.hello.com
-  prometheus:
-    retention_time: "8h"
   hopsworks:
     encryption_password: __PWD___001
     master:
@@ -122,3 +125,4 @@ groups:
       - consul
       - consul::master      
 __KUBERNETES_RECIPES__
+

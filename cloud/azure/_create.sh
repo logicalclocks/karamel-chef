@@ -20,6 +20,12 @@ NUM_GPUS_PER_VM=1
 
 create()
 {
+ echo " az vm create -n $NAME -g $RESOURCE_GROUP \
+   --image $IMAGE --data-disk-sizes-gb $DATA_DISK_SIZES_GB --os-disk-size-gb $OS_DISK_SIZE_GB \
+   --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
+   --size $VM_SIZE -l $LOCATION --zone $ZONE \
+   --ssh-key-value /home/$USER/.ssh/id_rsa.pub"
+    
   az vm create -n $NAME -g $RESOURCE_GROUP \
    --image $IMAGE --data-disk-sizes-gb $DATA_DISK_SIZES_GB --os-disk-size-gb $OS_DISK_SIZE_GB \
    --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
@@ -77,15 +83,15 @@ MODE=$1
 
 if [ "$MODE" == "cpu" ] ; then
     create
-    az vm open-port --port 443 --resource-group $RESOURCE_GROUP -name $NAME      
+    az vm open-port --port 443 --resource-group $RESOURCE_GROUP -n $NAME      
 elif [ "$MODE" == "gpu" ] ; then
     create_gpu
-    az vm open-port --port 443 --resource-group $RESOURCE_GROUP -name $NAME        
+    az vm open-port --port 443 --resource-group $RESOURCE_GROUP -n $NAME        
 elif [ "$MODE" == "cluster" ] ; then
     create
+    az vm open-port --port 443 --resource-group $RESOURCE_GROUP -n $NAME    
     . config.sh "cpu"
     create
-    az vm open-port --port 443 --resource-group $RESOURCE_GROUP -name $NAME     
     . config.sh "gpu"
     create_gpu
     if [ "$IMAGE_PROJECT" == "ubuntu-os-cloud" ] ; then
@@ -118,16 +124,17 @@ elif [ "$MODE" == "benchmark" ] ; then
     echo $CPUS > .cpus
     echo $GPUS > .gpus
 else
-    echo "Bad argument."
-    echo ""
-    echo "Usage: $0 cpu|gpu|cluster"
-    echo "Create a VM or a cluster."
-    echo ""    
-    exit 2
+    create
+    # echo "Bad argument."
+    # echo ""
+    # echo "Usage: $0 cpu|gpu|cluster"
+    # echo "Create a VM or a cluster."
+    # echo ""    
+#    exit 2
 fi	    
 
 
 echo ""
 echo "Waiting for notes to join...."
-sleep 10
+sleep 20
 echo ""
