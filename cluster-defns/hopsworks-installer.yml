@@ -25,15 +25,15 @@ attrs:
       detect-hardware-capabilities: false
     rmappsecurity:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
-  maggy:
-    version: "git+git://github.com/logicalclocks/maggy@master"
+#  maggy:
+#    version: "git+git://github.com/logicalclocks/maggy@master"
   kagent:
     python_conda_versions: 3.6
-  conda:
-    hops-util-py:
-      install-mode: "git"
-      branch: "zenuity"
-      repo: "robzor92"
+#  conda:
+#    hops-util-py:
+#      install-mode: "git"
+#      branch: "acme"
+#      repo: "robzor92"
   alertmanager:
     email:
       to: sre@logicalclocks.com
