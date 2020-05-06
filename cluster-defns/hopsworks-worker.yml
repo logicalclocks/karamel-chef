@@ -23,5 +23,4 @@
       - tensorflow
       - hopsmonitor::node_exporter
       - livy::install
-      - consul
       - consul::slave
