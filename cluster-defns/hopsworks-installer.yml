@@ -119,6 +119,5 @@ groups:
       - hopsmonitor::alertmanager
       - hopsmonitor::node_exporter
       - hopsmonitor::purge_telegraf
-      - consul
       - consul::master      
 __KUBERNETES_RECIPES__
