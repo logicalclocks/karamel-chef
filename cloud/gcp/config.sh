@@ -2,10 +2,10 @@
 
 #ZONE=us-central1-a
 #REGION=us-central1
-ZONE=us-east1-c
-REGION=us-east1
-#ZONE=europe-west1-d
-#REGION=europe-west1
+#ZONE=us-east1-c
+#REGION=us-east1
+ZONE=europe-west1-d
+REGION=europe-west1
 
 script=$1
 NAME=${script:0:3}${REGION/-/}
@@ -43,8 +43,8 @@ SHIELD=""
 GPU=nvidia-tesla-p100
 NUM_GPUS_PER_VM=1
 
-MACHINE_TYPE=n1-standard-8
-#MACHINE_TYPE=n1-standard-16
+#MACHINE_TYPE=n1-standard-8
+MACHINE_TYPE=n1-standard-16
 IMAGE=centos-7-v20200429
 IMAGE_PROJECT=centos-cloud
 #IMAGE=ubuntu-1804-bionic-v20200414

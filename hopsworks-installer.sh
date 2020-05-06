@@ -29,7 +29,6 @@
 
 HOPSWORKS_REPO=logicalclocks/hopsworks-chef
 HOPSWORKS_BRANCH=master
-# broken_kernel_devel
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/master
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
@@ -412,7 +411,7 @@ install_action()
 check_proxy()
 {
    echo ""
-   printf "Is the host running this installer behind a http proxy (y/n)? (default: 'y') "
+   printf "Is the host running this installer behind a http proxy (y/n)? "
    read ACCEPT
    case $ACCEPT in
        y|yes)
@@ -448,7 +447,6 @@ check_proxy()
            check_proxy
            ;;
    esac
-   clear_screen
 }
 
 
