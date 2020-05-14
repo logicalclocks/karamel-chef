@@ -18,7 +18,6 @@ attrs:
   hops:
     tls:
       enabled: __TLS__
-    cgroups: true
     __YARN__
       vcores: __CPUS__
       memory_mbs: __MEM__
