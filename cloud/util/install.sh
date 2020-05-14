@@ -105,7 +105,8 @@ elif [ "$2" == "kubernetes" ] || [ "$3" == "kubernetes" ] ; then
       echo "Found branch: $BRANCH"
       # check if this is a version branch, if yes update to the kube version of the branch.
       branch_regex='^[1-9]+\.[1-9]+'
-      if [[ $BRANCH =~ $branch_regex ]] || [[ "$BRANCH" == "master" ]] ; then
+      #      if [[ $BRANCH =~ $branch_regex ]] || [[ "$BRANCH" == "master" ]] ; then
+      if [[ $BRANCH =~ $branch_regex ]] ; then      
 	cp -f ../../hopsworks-installer.sh .hopsworks-installer.sh
         escaped=${BRANCH//./\\.}
         perl -pi -e "s/HOPSWORKS_BRANCH=$escaped/HOPSWORKS_BRANCH=${escaped}-kube/" .hopsworks-installer.sh
