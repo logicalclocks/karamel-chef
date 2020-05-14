@@ -33,10 +33,6 @@ attrs:
 #      install-mode: "git"
 #      branch: "acme"
 #      repo: "robzor92"
-#  hopsworks:
-#    war_url: http://snurran.sics.se/hops/hopsworks/1.2.0/hopsworks-web-dev.war
-#    ca_url: http://snurran.sics.se/hops/hopsworks/1.2.0/hopsworks-ca-dev.war    
-#    ear_url: http://snurran.sics.se/hops/hopsworks/1.2.0/hopsworks-ear-dev.ear
 #  ndb:
 #    nvme:
 #      disks: "/dev/nvme0n1 /dev/nvme0n1"
@@ -50,7 +46,12 @@ attrs:
       to: sre@logicalclocks.com
       from: hopsworks@logicalclocks.com
       smtp_host: mail.hello.com
+  prometheus:
+      retention_time: "8h"
   hopsworks:
+#    war_url: http://snurran.sics.se/hops/hopsworks/1.2.0/hopsworks-web-dev.war
+#    ca_url: http://snurran.sics.se/hops/hopsworks/1.2.0/hopsworks-ca-dev.war    
+#    ear_url: http://snurran.sics.se/hops/hopsworks/1.2.0/hopsworks-ear-dev.ear
     encryption_password: __PWD___001
     master:
       password: __PWD___002
