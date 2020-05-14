@@ -124,9 +124,10 @@ elif [ "$2" == "kubernetes" ] || [ "$3" == "kubernetes" ] ; then
 	    exit 3
 	fi
       fi
-      echo "Installing branch: $BRANCH"      
+      echo "Installing branch: $BRANCH"
+    else
+      cp -f ../../hopsworks-installer.sh .hopsworks-installer.sh
     fi
-
 else
     HOPSWORKS_VERSION=enterprise
     check_download_url
@@ -143,6 +144,12 @@ if [ ! "$2" == "skip-create" ] ; then
     echo "Creating VM(s) ...."
     echo ""    
     ./_create.sh $1
+    if [ $? -ne 0 ] ; then
+	echo ""	
+	echo "Problem creating a VM. Exiting....."
+	echo ""
+        exit 12
+    fi
 else
     echo "Skipping VM creation...."
 fi	
@@ -254,3 +261,4 @@ echo "*                                      *"
 echo "* View installation progress:          *"
 echo " ssh ${IP} \"tail -f installation.log\"   "
 echo "****************************************"
+

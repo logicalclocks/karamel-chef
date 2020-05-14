@@ -2,10 +2,10 @@
 
 #ZONE=us-central1-a
 #REGION=us-central1
-ZONE=us-east1-c
-REGION=us-east1
-#ZONE=europe-west1-d
-#REGION=europe-west1
+#ZONE=us-east1-c
+#REGION=us-east1
+ZONE=europe-west1-d
+REGION=europe-west1
 
 script=$1
 NAME=${script:0:3}${REGION/-/}
@@ -16,7 +16,8 @@ CLUSTER_DEFINITION_BRANCH=$(grep ^CLUSTER_DEFINITION_BRANCH ../../hopsworks-inst
 CLOUD=gcp
 GCP_USER=$USER
 #PROJECT=hazel-charter-222806
-PROJECT=dpe-cloud-mle
+#PROJECT=dpe-cloud-mle
+PROJECT=hops-20
 
 gcloud config set core/project $PROJECT > /dev/null 2>&1
 gcloud config set compute/zone $ZONE > /dev/null 2>&1
@@ -29,7 +30,7 @@ RAW_SSH_KEY="${USER}:$(cat /home/$USER/.ssh/id_rsa.pub)"
 ESCAPED_SSH_KEY="$RAW_SSH_KEY"
 
 
-TAGS=karamel,http-server,https-server
+TAGS=http-server,https-server,karamel
 SUBNET=default
 NETWORK_TIER=PREMIUM
 MAINTENANCE_POLICY=TERMINATE
@@ -42,12 +43,26 @@ SHIELD=""
 GPU=nvidia-tesla-p100
 NUM_GPUS_PER_VM=1
 
-MACHINE_TYPE=n1-standard-8
-#MACHINE_TYPE=n1-standard-16
-#IMAGE=centos-7-v20200309
-#IMAGE_PROJECT=centos-cloud
-IMAGE=ubuntu-1804-bionic-v20200414
-IMAGE_PROJECT=ubuntu-os-cloud
+#DEFAULT_TYPE=n1-standard-8
+DEFAULT_TYPE=n1-standard-16
+if [ "$NAME" == "cpu" ] ; then
+   MACHINE_TYPE=$DEFAULT_TYPE
+elif [ "$NAME" == "gpu" ] ; then
+   MACHINE_TYPE=$DEFAULT_TYPE    
+elif [ "$NAME" == "clu" ] || [ "$NAME" == "cluster" ] ; then
+   MACHINE_TYPE=$DEFAULT_TYPE
+else
+   MACHINE_TYPE=$DEFAULT_TYPE    
+fi    
+
+IMAGE=centos-7-v20200429
+IMAGE_PROJECT=centos-cloud
+#IMAGE=ubuntu-1804-bionic-v20200414
+#IMAGE_PROJECT=ubuntu-os-cloud
+
+LOCAL_DISK=
+# add many local NVMe disks with multiple entries
+#LOCAL_DISK="--local-ssd=interface=NVME --local-ssd=interface=NVME "
 
 if [ ! -e ~/.ssh/id_rsa.pub ] ; then
     echo "You do not a ssh keypair in ~/.ssh/id_rsa.pub"

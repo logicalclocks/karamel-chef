@@ -25,17 +25,32 @@ attrs:
       detect-hardware-capabilities: false
     rmappsecurity:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
+#  maggy:
+#    version: "git+git://github.com/logicalclocks/maggy@master"
   kagent:
     python_conda_versions: 3.6
-#  maggy:
-#    version: git+https://github.com/logicalclocks/maggy@master
+#  conda:
+#    hops-util-py:
+#      install-mode: "git"
+#      branch: "acme"
+#      repo: "robzor92"
+#  hopsworks:
+#    war_url: http://snurran.sics.se/hops/hopsworks/1.2.0/hopsworks-web-dev.war
+#    ca_url: http://snurran.sics.se/hops/hopsworks/1.2.0/hopsworks-ca-dev.war    
+#    ear_url: http://snurran.sics.se/hops/hopsworks/1.2.0/hopsworks-ear-dev.ear
+#  ndb:
+#    nvme:
+#      disks: "/dev/nvme0n1 /dev/nvme0n1"
+#      format: true
+#      logfile_size: 100000M
+#      undofile_size: 1000M
+#    NoOfReplicas: 2
+#    DataMemory: 8192
   alertmanager:
     email:
       to: sre@logicalclocks.com
       from: hopsworks@logicalclocks.com
       smtp_host: mail.hello.com
-  prometheus:
-    retention_time: "8h"
   hopsworks:
     encryption_password: __PWD___001
     master:
@@ -121,3 +136,4 @@ groups:
       - hopsmonitor::purge_telegraf
       - consul::master      
 __KUBERNETES_RECIPES__
+
