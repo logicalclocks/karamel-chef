@@ -1,5 +1,12 @@
-
 Vagrant.configure("2") do |config|
+
+   common = <<-SCRIPT
+          sudo parted /dev/sda resizepart 2 100%
+          sudo pvresize /dev/sda2
+          sudo lvextend -l +100%FREE /dev/centos/root
+          sudo xfs_growfs /dev/centos/root
+   SCRIPT
+   config.disksize.size = "100GB"
 
    config.ssh.insert_key = false
    config.vm.box = "bento/centos-7.7"
@@ -64,6 +71,7 @@ Vagrant.configure("2") do |config|
       v.customize ["modifyvm", :id, "--cpus", "6"]
     end
 
+    config.vm.provision :shell, :inline => common
     config.vm.provision :chef_solo do |chef|
         chef.version = "13.4.19"
         chef.cookbooks_path = "cookbooks"

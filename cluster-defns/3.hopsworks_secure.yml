@@ -94,7 +94,6 @@ groups:
       - hopsmonitor::node_exporter
       - hopsmonitor::purge_telegraf
       - elastic
-      - consul
       - consul::master
   datanode1:
     size: 1
@@ -123,7 +122,6 @@ groups:
       - hopsmonitor::node_exporter
       - hopsmonitor::purge_telegraf
       - elastic
-      - consul
       - consul::slave
   datanode2:
     size: 1
@@ -148,5 +146,4 @@ groups:
       - tensorflow
       - hopsmonitor::node_exporter
       - hopsmonitor::purge_telegraf
-      - consul
       - consul::slave

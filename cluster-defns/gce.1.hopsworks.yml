@@ -90,5 +90,4 @@ groups:
       - hopsmonitor::alertmanager
       - hopsmonitor::node_exporter
       - hopsmonitor::purge_telegraf
-      - consul
       - consul::master
