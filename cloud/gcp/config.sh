@@ -2,10 +2,10 @@
 
 #ZONE=us-central1-a
 #REGION=us-central1
-ZONE=us-east1-c
-REGION=us-east1
-#ZONE=europe-west1-d
-#REGION=europe-west1
+#ZONE=us-east1-c
+#REGION=us-east1
+ZONE=europe-west1-d
+REGION=europe-west1
 
 script=$1
 NAME=${script:0:3}${REGION/-/}
