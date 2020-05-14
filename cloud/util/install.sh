@@ -261,3 +261,4 @@ echo "*                                      *"
 echo "* View installation progress:          *"
 echo " ssh ${IP} \"tail -f installation.log\"   "
 echo "****************************************"
+

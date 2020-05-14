@@ -59,7 +59,9 @@ TLS="false"
 REVERSE_DNS=1
 
 CLOUD=
-GCP_NVME=0
+#GCP_NVME=0
+#NUM_GCP_NVME_DRIVES_PER_WORKER=0
+
 YARN="yarn:
       cgroups_strict_resource_usage: 'false'"
 RM_WORKER=
@@ -782,7 +784,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      echo "                 'purge-all' removes Hopsworks completely from ALL hosts"	      
 	      echo " [-cl|--clean]    removes the karamel installation"
 	      echo " [-dr|--dry-run]  does not run karamel, just generates YML file"
-	      echo " [--gcp-nvme]     mount NVMe disk on GCP node"
+#	      echo " [--gcp-nvme 0-9  number of NVMe disks to mount on worker nodes"
 	      echo " [-c|--cloud      on-premises|gcp|aws|azure]"
 	      echo " [-w|--workers    IP1,IP2,...,IPN|none] install on workers with IPs in supplied list (or none). Uses default mem/cpu/gpus for the workers."
 	      echo " [-d|--download-enterprise-url url] downloads enterprise binaries from this URL."
@@ -790,9 +792,9 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      echo " [-du|--download-user username] Username for downloading enterprise binaries."
 	      echo " [-dp|--download-password password] Password for downloading enterprise binaries."	      
 	      echo " [-ni|--non-interactive)] skip license/terms acceptance and all confirmation screens."
-	      echo " [-p|--http-proxy)] URL of the http(s) proxy server used to access the Internet"
-	      echo " [-pwd|--password] sudo password for user running chef recipes."
-	      echo " [-y|--yml] yaml file to run Karamel against."	      
+	      echo " [-p|--http-proxy) url] URL of the http(s) proxy server used to access the Internet"
+	      echo " [-pwd|--password password] sudo password for user running chef recipes."
+	      echo " [-y|--yml yaml_file] yaml file to run Karamel against."	      
 	      echo "" 
 	      exit 3
               break
@@ -857,9 +859,10 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
     -dr|--dry-run)
 	      DRY_RUN=1
 	      ;;
-    -gn|--gcp-nvme)
-	      GCP_NVME=1
-	      ;;
+    # -gn|--gcp-nvme)
+    # 	      NUM_GCP_NVME_DRIVES_PER_WORKER=$1
+    # 	      GCP_NVME=1
+    # 	      ;;
     -c|--cloud)
 	      shift
 	      case $1 in
@@ -1039,10 +1042,13 @@ if [ $DRY_RUN -eq 0 ] ; then
 	fi
     fi
 
-    if [ $GCP_NVME -eq 1 ] ; then
-	sudo mkdir -p /mnt/nvmeDisks/nvme0
-	sudo mkfs.ext4 -F /dev/nvme0n1
-    fi
+    # if [ $GCP_NVME -eq 1 ] ; then
+    #     for (( i=1; i<=${NUM_GCP_NVME_DRIVES_PER_WORKER}; i++ ))		  
+    #     do
+    # 	  sudo mkdir -p /mnt/nvmeDisks/nvme${i}
+    #       sudo mkfs.ext4 -F /dev/nvme0n${i}
+    #     done
+    # fi
 
     install_dir    
 fi

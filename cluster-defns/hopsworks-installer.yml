@@ -34,6 +34,18 @@ attrs:
 #      install-mode: "git"
 #      branch: "acme"
 #      repo: "robzor92"
+#  hopsworks:
+#    war_url: http://snurran.sics.se/hops/hopsworks/1.2.0/hopsworks-web-dev.war
+#    ca_url: http://snurran.sics.se/hops/hopsworks/1.2.0/hopsworks-ca-dev.war    
+#    ear_url: http://snurran.sics.se/hops/hopsworks/1.2.0/hopsworks-ear-dev.ear
+#  ndb:
+#    nvme:
+#      disks: "/dev/nvme0n1 /dev/nvme0n1"
+#      format: true
+#      logfile_size: 100000M
+#      undofile_size: 1000M
+#    NoOfReplicas: 2
+#    DataMemory: 8192
   alertmanager:
     email:
       to: sre@logicalclocks.com
