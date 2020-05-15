@@ -12,7 +12,7 @@ DOWNLOAD_URL=
 help()
 {
     echo ""
-    echo "Usage: $0 num_cpus num_gpus [skip-create] [community]"
+    echo "Usage: $0 num_cpus num_gpus [skip-create] [community|kubernetes]"
     echo "Create a VM or a cluster and install Hopsworks on it."
     echo ""    
     exit 1
@@ -59,6 +59,41 @@ get_ips()
     done
 }    
 
+check_download_url()
+{
+    if [ "$ENTERPRISE_DOWNLOAD_URL" == "" ] ; then
+	echo ""
+	echo "Error. You need to set the environment variable \$ENTERPRISE_DOWNLOAD_URL to the URL for the enterprise binaries."
+	echo ""
+	echo "You can re-run this command with the 'community' switch to install community Hopsworks. For example: "
+	echo "./install.sh gpu community"
+	echo "or"
+	echo "./install.sh cpu community"	
+	echo ""	
+	exit 3
+    fi
+    if [ "$ENTERPRISE_USERNAME" == "" ] ; then    
+        echo ""
+        printf "Enter the username for downloading the Enterprise binaries: "
+        read ENTERPRISE_USERNAME
+        if [ "$ENTERPRISE_USERNAME" == "" ] ; then
+	    echo "Enterprise username cannot be empty"
+	    echo "Exiting."
+	    exit 3
+	fi
+    fi
+    if [ "$ENTERPRISE_PASSWORD" == "" ] ; then    
+        echo ""
+        printf "Enter the password for the user ($ENTERPRISE_USERNAME): "
+        read -s ENTERPRISE_PASSWORD
+	echo ""
+        if [ "$ENTERPRISE_PASSWORD" == "" ] ; then
+	    echo "The password cannot be empty"
+	    echo "Exiting."
+	    exit 3
+	fi
+    fi
+}
 
 host_ip=
 clear_known_hosts()
@@ -78,8 +113,39 @@ GPUS=$2
 
 IP=$(gcloud compute instances list | grep $NAME | awk '{ print $5 }')
 
-if [ "$3" == "community" ] || [ "$4" == "community" ] ; then
+
+if [ "$4" == "community" ] || [ "$3" == "community" ] ; then
     HOPSWORKS_VERSION=cluster
+elif [ "$4" == "kubernetes" ] || [ "$3" == "kubernetes" ] ; then
+    HOPSWORKS_VERSION=kubernetes
+    check_download_url
+    if [[ ! $BRANCH =~ "-kube" ]] ; then
+      echo "Found branch: $BRANCH"
+      # check if this is a version branch, if yes update to the kube version of the branch.
+      branch_regex='^[1-9]+\.[1-9]+'
+      if [[ $BRANCH =~ $branch_regex ]] ; then      
+	cp -f ../../hopsworks-installer.sh .hopsworks-installer.sh
+        escaped=${BRANCH//./\\.}
+        perl -pi -e "s/HOPSWORKS_BRANCH=$escaped/HOPSWORKS_BRANCH=${escaped}-kube/" .hopsworks-installer.sh
+        BRANCH=${BRANCH}-kube       
+      else
+	echo "WARNING: your hopsworks-chef branch, defined in hopsworks-installer.sh, does not appear to be a kubernetes branch: "
+	echo "$BRANCH"
+	echo "If you are developing a kubernetes branch for hopsworks-chef, please rename it to: XXX-kube to skip this warning."
+	echo ""
+        printf 'Do you want to install this branch anyway? (y/n (default y):'
+        read ACCEPT
+        if [ "$ACCEPT" == "y" ] || [ "$ACCEPT" == "yes" ] || [ "$ACCEPT" == "" ] ; then
+	    echo "Ok!"
+            cp -f ../../hopsworks-installer.sh .hopsworks-installer.sh	    
+	else
+	    exit 3
+	fi
+      fi
+      echo "Installing branch: $BRANCH"
+    else
+      cp -f ../../hopsworks-installer.sh .hopsworks-installer.sh
+    fi
 else
     if [ "$ENTERPRISE_DOWNLOAD_URL" == "" ] ; then
 	if [ -e env.sh ] ; then
@@ -94,7 +160,11 @@ else
     else
         DOWNLOAD_URL="-d $ENTERPRISE_DOWNLOAD_URL"	
     fi    
+
+    HOPSWORKS_VERSION=enterprise
+    check_download_url
 fi
+
 
 echo "Installing version: $HOPSWORKS_VERSION"
 
@@ -112,7 +182,6 @@ else
     echo "Skipping VM creation...."
 fi	
 
-
 get_ips
 
 host_ip=$IP
@@ -125,7 +194,13 @@ fi
 
 
 echo "Installing installer on $IP"
-scp -o StrictHostKeyChecking=no ../../hopsworks-installer.sh ${IP}:
+if [ "$4" == "kubernetes" ] || [ "$3" == "kubernetes" ] ; then
+    scp -o StrictHostKeyChecking=no .hopsworks-installer.sh ${IP}:~/hopsworks-installer.sh
+    rm .hopsworks-installer.sh
+else 
+    scp -o StrictHostKeyChecking=no ../../hopsworks-installer.sh ${IP}:
+fi    
+
 ssh -t -o StrictHostKeyChecking=no $IP "mkdir -p cluster-defns"
 scp -o StrictHostKeyChecking=no ../../cluster-defns/hopsworks-installer.yml ${IP}:~/cluster-defns/
 scp -o StrictHostKeyChecking=no ../../cluster-defns/hopsworks-worker.yml ${IP}:~/cluster-defns/
@@ -194,13 +269,26 @@ do
 done
 
 WORKERS=${WORKERS::-1}
-		       
+
+
+DOWNLOAD=""
+if [ "$ENTERPRISE_DOWNLOAD_URL" != "" ] ; then
+  DOWNLOAD="-d $ENTERPRISE_DOWNLOAD_URL "
+fi
+if [ "$ENTERPRISE_USERNAME" != "" ] ; then
+  DOWNLOAD_USERNAME="-du $ENTERPRISE_USERNAME "
+fi
+if [ "$ENTERPRISE_PASSWORD" != "" ] ; then
+  DOWNLOAD_PASSWORD="-dp $ENTERPRISE_PASSWORD "
+fi
+
 echo ""
 echo "Running installer on $IP :"
 echo ""
-echo "ssh -t -o StrictHostKeyChecking=no $IP \"/home/$USER/hopsworks-installer.sh -i $HOPSWORKS_VERSION -ni -c $CLOUD $DOWNLOAD_URL $WORKERS\""
+#echo "ssh -t -o StrictHostKeyChecking=no $IP \"/home/$USER/hopsworks-installer.sh -i $HOPSWORKS_VERSION -ni -c $CLOUD $DOWNLOAD_URL $WORKERS\""
+#ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i $HOPSWORKS_VERSION -ni -c $CLOUD $DOWNLOAD_URL $WORKERS && sleep 5"
 
-ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i $HOPSWORKS_VERSION -ni -c $CLOUD $DOWNLOAD_URL $WORKERS && sleep 5"
+ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i $HOPSWORKS_VERSION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}$WORKERS && sleep 5"
 
 if [ $? -ne 0 ] ; then
     echo "Problem running installer. Exiting..."
