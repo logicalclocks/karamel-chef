@@ -27,8 +27,8 @@
 #                                                                                                 #
 ###################################################################################################
 
-HOPSWORKS_REPO=logicalclocks/hopsworks-chef
-HOPSWORKS_BRANCH=master
+HOPSWORKS_REPO=smkniazi/hopsbench
+HOPSWORKS_BRANCH=azure
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/master
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
