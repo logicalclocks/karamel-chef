@@ -32,9 +32,9 @@ function replace_port() {
        echo "$port -> $p"
     else
        echo "New port is: $p"
-       sed "0,/RE/s/10022/$p/" Vagrantfile > Vagrantfile.new
-       sed "0,/RE/s/10023/$(expr $p + 1)/" Vagrantfile.new > Vagrantfile
-       sed "0,/RE/s/10024/$(expr $p + 2)/" Vagrantfile > Vagrantfile.new
+       sed "0,/10022/s/10022/$p/" Vagrantfile > Vagrantfile.new
+       sed "0,/10023/s/10023/$(expr $p + 1)/" Vagrantfile.new > Vagrantfile
+       sed "0,/10024/s/10024/$(expr $p + 2)/" Vagrantfile > Vagrantfile.new
        mv Vagrantfile.new Vagrantfile
     fi
 }
