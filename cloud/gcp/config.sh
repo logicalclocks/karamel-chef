@@ -43,26 +43,35 @@ SHIELD=""
 GPU=nvidia-tesla-p100
 NUM_GPUS_PER_VM=1
 
-#DEFAULT_TYPE=n1-standard-8
-DEFAULT_TYPE=n1-standard-16
-if [ "$NAME" == "cpu" ] ; then
-   MACHINE_TYPE=$DEFAULT_TYPE
-elif [ "$NAME" == "gpu" ] ; then
-   MACHINE_TYPE=$DEFAULT_TYPE    
-elif [ "$NAME" == "clu" ] || [ "$NAME" == "cluster" ] ; then
+
+DEFAULT_TYPE=n1-standard-8
+#DEFAULT_TYPE=n1-standard-16
+IMAGE=centos-7-v20200429
+IMAGE_PROJECT=centos-cloud
+#IMAGE=ubuntu-1804-bionic-v20200414
+#IMAGE_PROJECT=ubuntu-os-cloud
+LOCAL_DISK=
+# add many local NVMe disks with multiple entries
+#LOCAL_DISK="--local-ssd=interface=NVME --local-ssd=interface=NVME "
+
+
+#
+# Here, we can configure each machine type differently. Give it more CPUs, a NVMe disk, a different OS, etc
+#
+SHORT_NAME=${script:0:2}
+if [ "$SHORT_NAME" == "cp" ] ; then
+    DEFAULT_TYPE=n1-standard-16    
+    MACHINE_TYPE=$DEFAULT_TYPE
+elif [ "$SHORT_NAME" == "gp" ] ; then
+#    MACHINE_TYPE=n1-standard-8
+    # add many local NVMe disks with multiple entries
+    LOCAL_DISK="--local-ssd=interface=NVME --local-ssd=interface=NVME "
+elif [ "$SHORT_NAME" == "cl" ] || [ "$SHORT_NAME" == "be" ] ; then
    MACHINE_TYPE=$DEFAULT_TYPE
 else
    MACHINE_TYPE=$DEFAULT_TYPE    
 fi    
 
-IMAGE=centos-7-v20200429
-IMAGE_PROJECT=centos-cloud
-#IMAGE=ubuntu-1804-bionic-v20200414
-#IMAGE_PROJECT=ubuntu-os-cloud
-
-LOCAL_DISK=
-# add many local NVMe disks with multiple entries
-#LOCAL_DISK="--local-ssd=interface=NVME --local-ssd=interface=NVME "
 
 if [ ! -e ~/.ssh/id_rsa.pub ] ; then
     echo "You do not a ssh keypair in ~/.ssh/id_rsa.pub"

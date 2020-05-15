@@ -30,5 +30,5 @@ else
   echo  "Compute: "
   gcloud compute instances list | grep -E "cp[0-9]{1,3}${reg}" | awk '{ print $4, $5 }'
   echo "GPU: "
-  gcloud compute instances list | grep -E "gp[0-9]{1,3}#${reg}" | awk '{ print $4, $5 }'
+  gcloud compute instances list | grep -E "gp[0-9]{1,3}${reg}" | awk '{ print $4, $5 }'
 fi
