@@ -76,8 +76,6 @@ when "debian"
   end
 
 when 'rhel'
-  include_recipe "nodejs"
-
   remote_file '/tmp/apache-maven-3.6.3-bin.tar.gz' do
     source 'https://downloads.apache.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz'
     owner 'root'
