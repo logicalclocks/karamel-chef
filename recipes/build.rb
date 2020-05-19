@@ -67,6 +67,7 @@ when "debian"
     group 'root'
     cwd node['test']['hopsworks']['base_dir']
     code <<-EOF
+      cp /home/vagrant/.m2/settings.xml /root/.m2/
       mvn clean install #{ubuntu_build_flags} -DskipTests
       VERSION=$(mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec)
       mv hopsworks-ear/target/hopsworks-ear.ear /tmp/chef-solo/hopsworks-ear\:$VERSION-$VERSION.ear
@@ -98,6 +99,7 @@ when 'rhel'
     group 'root'
     cwd node['test']['hopsworks']['base_dir']
     code <<-EOF
+      cp /home/vagrant/.m2/settings.xml /root/.m2/
       /opt/maven/bin/mvn clean install #{centos_build_flags} -DskipTests
       VERSION=$(mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec)
       mv hopsworks-ear/target/hopsworks-ear.ear /tmp/chef-solo/hopsworks-ear\:$VERSION-$VERSION.ear
