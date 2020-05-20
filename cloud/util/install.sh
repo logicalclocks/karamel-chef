@@ -36,11 +36,11 @@ check_download_url()
 	echo ""	
 	exit 3
     fi
-    if [ "$ENTERPRISE_USERNAME" == "" ] ; then    
+    if [ "$ENTERPRISE_USER" == "" ] ; then    
         echo ""
         printf "Enter the username for downloading the Enterprise binaries: "
-        read ENTERPRISE_USERNAME
-        if [ "$ENTERPRISE_USERNAME" == "" ] ; then
+        read ENTERPRISE_USER
+        if [ "$ENTERPRISE_USER" == "" ] ; then
 	    echo "Enterprise username cannot be empty"
 	    echo "Exiting."
 	    exit 3
@@ -48,7 +48,7 @@ check_download_url()
     fi
     if [ "$ENTERPRISE_PASSWORD" == "" ] ; then    
         echo ""
-        printf "Enter the password for the user ($ENTERPRISE_USERNAME): "
+        printf "Enter the password for the user ($ENTERPRISE_USER): "
         read -s ENTERPRISE_PASSWORD
 	echo ""
         if [ "$ENTERPRISE_PASSWORD" == "" ] ; then
@@ -109,8 +109,8 @@ elif [ "$2" == "kubernetes" ] || [ "$3" == "kubernetes" ] ; then
       if [[ $BRANCH =~ $branch_regex ]] ; then      
 	cp -f ../../hopsworks-installer.sh .hopsworks-installer.sh
         escaped=${BRANCH//./\\.}
-        perl -pi -e "s/HOPSWORKS_BRANCH=$escaped/HOPSWORKS_BRANCH=${escaped}-kube/" .hopsworks-installer.sh
-        BRANCH=${BRANCH}-kube       
+#        perl -pi -e "s/HOPSWORKS_BRANCH=$escaped/HOPSWORKS_BRANCH=${escaped}-kube/" .hopsworks-installer.sh
+#        BRANCH=${BRANCH}-kube       
       else
 	echo "WARNING: your hopsworks-chef branch, defined in hopsworks-installer.sh, does not appear to be a kubernetes branch: "
 	echo "$BRANCH"
@@ -238,8 +238,8 @@ DOWNLOAD=""
 if [ "$ENTERPRISE_DOWNLOAD_URL" != "" ] ; then
   DOWNLOAD="-d $ENTERPRISE_DOWNLOAD_URL "
 fi
-if [ "$ENTERPRISE_USERNAME" != "" ] ; then
-  DOWNLOAD_USERNAME="-du $ENTERPRISE_USERNAME "
+if [ "$ENTERPRISE_USER" != "" ] ; then
+  DOWNLOAD_USERNAME="-du $ENTERPRISE_USER "
 fi
 if [ "$ENTERPRISE_PASSWORD" != "" ] ; then
   DOWNLOAD_PASSWORD="-dp $ENTERPRISE_PASSWORD "
