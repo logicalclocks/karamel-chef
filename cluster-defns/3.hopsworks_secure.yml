@@ -95,6 +95,7 @@ groups:
       - hopsmonitor::purge_telegraf
       - elastic
       - consul::master
+      - hops::docker_registry
   datanode1:
     size: 1
     baremetal:
