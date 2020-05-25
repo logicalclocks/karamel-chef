@@ -57,3 +57,4 @@ groups:
       - hive2
       - dela
       - consul::master
+      - hops::docker_registry

@@ -7,7 +7,6 @@
         accept_nvidia_download_terms: true
       hops:
         yarn:
-          gpus: '*'
           vcores: __CPUS__
           memory_mbs: __MBS__
     recipes:

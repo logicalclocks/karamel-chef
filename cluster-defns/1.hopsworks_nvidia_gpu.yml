@@ -11,10 +11,7 @@ attrs:
   install:
     dir: /srv/hops
   hops:
-    yarn:
-      gpus: '*'
-    capacity:
-      resource_calculator_class: org.apache.hadoop.yarn.util.resource.DominantResourceCalculatorGPU
+    gpus: "true"
     rmappsecurity:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
   cuda:
@@ -91,3 +88,4 @@ groups:
       - hopsmonitor::node_exporter
       - hopsmonitor::purge_telegraf
       - consul::master
+      - hops::docker_registry
