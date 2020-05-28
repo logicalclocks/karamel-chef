@@ -16,6 +16,8 @@ attrs:
   kagent:
     enabled: "false"
   hops:
+    docker:
+      enabled: "false"  
     yarn:
       aux_services: "mapreduce_shuffle"
 
