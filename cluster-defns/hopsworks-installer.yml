@@ -32,8 +32,8 @@ attrs:
 #  conda:
 #    hops-util-py:
 #      install-mode: "git"
-#      branch: "acme"
-#      repo: "robzor92"
+#      branch: "model_repo_project"
+#      repo: "jimdowling"
 #  ndb:
 #    nvme:
 #      disks: "/dev/nvme0n1 /dev/nvme0n1"
