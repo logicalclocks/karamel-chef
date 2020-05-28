@@ -16,6 +16,7 @@ attrs:
     __ENTERPRISE__
   __CUDA__
   hops:
+#    version: "2.8.2.10-EE-RC0"  
     tls:
       enabled: __TLS__
     __YARN__
@@ -31,8 +32,8 @@ attrs:
 #  conda:
 #    hops-util-py:
 #      install-mode: "git"
-#      branch: "acme"
-#      repo: "robzor92"
+#      branch: "model_repo_project"
+#      repo: "jimdowling"
 #  ndb:
 #    nvme:
 #      disks: "/dev/nvme0n1 /dev/nvme0n1"
@@ -49,9 +50,9 @@ attrs:
   prometheus:
       retention_time: "8h"
   hopsworks:
-#    war_url: http://snurran.sics.se/hops/hopsworks/1.2.0/hopsworks-web-dev.war
-#    ca_url: http://snurran.sics.se/hops/hopsworks/1.2.0/hopsworks-ca-dev.war    
-#    ear_url: http://snurran.sics.se/hops/hopsworks/1.2.0/hopsworks-ear-dev.ear
+#    war_url: http://snurran.sics.se/hops/hopsworks/1.4.0/hopsworks-web-dev.war
+#    ca_url: http://snurran.sics.se/hops/hopsworks/1.4.0/hopsworks-ca-dev.war    
+#    ear_url: http://snurran.sics.se/hops/hopsworks/1.4.0/hopsworks-ear-dev.ear
     encryption_password: __PWD___001
     master:
       password: __PWD___002
