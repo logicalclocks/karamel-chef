@@ -4,8 +4,8 @@
 #REGION=us-central1
 ZONE=us-east1-c
 REGION=us-east1
-#ZONE=europe-west1-d
-#REGION=europe-west1
+ZONE=europe-west1-d
+REGION=europe-west1
 
 script=$1
 NAME=${script:0:3}${REGION/-/}
@@ -50,9 +50,9 @@ IMAGE=centos-7-v20200429
 IMAGE_PROJECT=centos-cloud
 #IMAGE=ubuntu-1804-bionic-v20200414
 #IMAGE_PROJECT=ubuntu-os-cloud
-LOCAL_DISK=
+#LOCAL_DISK=
 # add many local NVMe disks with multiple entries
-#LOCAL_DISK="--local-ssd=interface=NVME --local-ssd=interface=NVME "
+LOCAL_DISK="--local-ssd=interface=NVME --local-ssd=interface=NVME "
 
 
 #
@@ -60,12 +60,13 @@ LOCAL_DISK=
 #
 SHORT_NAME=${script:0:2}
 if [ "$SHORT_NAME" == "cp" ] ; then
-    DEFAULT_TYPE=n1-standard-16    
+#    DEFAULT_TYPE=n1-standard-16
     MACHINE_TYPE=$DEFAULT_TYPE
 elif [ "$SHORT_NAME" == "gp" ] ; then
-#    MACHINE_TYPE=n1-standard-8
+#    DEFAULT_TYPE=n1-standard-8
+   MACHINE_TYPE=$DEFAULT_TYPE    
     # add many local NVMe disks with multiple entries
-    LOCAL_DISK="--local-ssd=interface=NVME --local-ssd=interface=NVME "
+#    LOCAL_DISK="--local-ssd=interface=NVME --local-ssd=interface=NVME "
 elif [ "$SHORT_NAME" == "cl" ] || [ "$SHORT_NAME" == "be" ] ; then
    MACHINE_TYPE=$DEFAULT_TYPE
 else

@@ -28,7 +28,7 @@
 ###################################################################################################
 
 HOPSWORKS_REPO=logicalclocks/hopsworks-chef
-HOPSWORKS_BRANCH=master
+HOPSWORKS_BRANCH=1.3
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/master
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
@@ -904,6 +904,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
               yml=$1
               ;;
     -pwd|--password)
+	      shift
 	      SUDO_PWD="-passwd $1"
 	      ;;
     *)
@@ -956,8 +957,8 @@ if [ $NON_INTERACT -eq 0 ] ; then
       KARAMEL_HTTP_PROXY="export https_proxy=$PROXY"
     fi
     clear_screen
-#    enter_email
-#    clear_screen
+    enter_email
+    clear_screen
 fi
 
 install_action

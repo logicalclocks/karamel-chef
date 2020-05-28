@@ -22,5 +22,6 @@
       - hopslog::_filebeat-beam
       - tensorflow
       - hopsmonitor::node_exporter
+      - hopsmonitor::purge_telegraf      
       - livy::install
       - consul::slave
