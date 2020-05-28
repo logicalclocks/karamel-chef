@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 
 ###################################################################################################
 #                                                                                                 #
@@ -22,14 +22,14 @@
 # |_   _|      | || |      | | |                                                                  #
 #   | |  _ __  |_|| |_ __ _| | | ___ _ __                                                         #
 #   | | | '_ \/ __| __/ _` | | |/ _ \ '__|                                                        #
-#  _| |_| | | \__ \ || (_| | | |  __/ |                                                           #       
+#  _| |_| | | \__ \ || (_| | | |  __/ |                                                           #
 # |_____|_| |_|___/\__\__,_|_|_|\___|_|                                                           #
 #                                                                                                 #
 ###################################################################################################
 
 HOPSWORKS_REPO=logicalclocks/hopsworks-chef
 HOPSWORKS_BRANCH=1.3
-CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/master
+CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_BRANCH
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
 NON_INTERACT=0
@@ -85,7 +85,7 @@ CUDA=
 KARAMEL_HTTP_PROXY=
 
 # $1 = String describing error
-exit_error() 
+exit_error()
 {
   #CleanUpTempFiles
 
@@ -98,7 +98,7 @@ exit_error()
 
 # $1 = accept phrase (what to accept)
 # caller reads $ENTERED_STRING global variable for result
-enter_string() 
+enter_string()
 {
      echo "$1"
      read ENTERED_STRING
@@ -114,7 +114,7 @@ clear_screen()
    echo ""
    echo "Press ENTER to continue"
    read cont < /dev/tty
- fi 
+ fi
  clear
 }
 
@@ -123,7 +123,7 @@ clear_screen_no_skipline()
  if [ $NON_INTERACT -eq 0 ] ; then
     echo "Press ENTER to continue"
     read cont < /dev/tty
- fi 
+ fi
  clear
 }
 
@@ -132,28 +132,28 @@ clear_screen_no_skipline()
 # LICENSING
 #######################################################################
 
-splash_screen() 
-{   
+splash_screen()
+{
   clear
   echo ""
   echo "Karamel/Hopsworks Installer, Copyright(C) 2020 Logical Clocks AB. All rights reserved."
   echo ""
   echo "This program can install Karamel/Chef and/or Hopsworks."
   echo ""
-  echo "To cancel installation at any time, press CONTROL-C" 
-  echo ""  
+  echo "To cancel installation at any time, press CONTROL-C"
+  echo ""
   echo "You appear to have following setup on this host:"
   echo "* available memory: $AVAILABLE_MEMORY"
   echo "* available disk space (on '/' root partition): $AVAILABLE_DISK"
-  echo "* available disk space (under '/mnt' partition): $AVAILABLE_MNT"  
+  echo "* available disk space (under '/mnt' partition): $AVAILABLE_MNT"
   echo "* available CPUs: $AVAILABLE_CPUS"
-  echo "* available GPUS: $AVAILABLE_GPUS"  
+  echo "* available GPUS: $AVAILABLE_GPUS"
   echo "* your ip is: $IP"
   echo "* installation user: $USER"
   echo "* linux distro: $DISTRO"
   echo "* cluster defn branch: $CLUSTER_DEFINITION_BRANCH"
   echo "* hopsworks-chef branch: $HOPSWORKS_REPO/$HOPSWORKS_BRANCH"
-  
+
   strlen=${#HOSTNAME}
   if [ $strlen -gt 64 ] ; then
       echo ""
@@ -167,7 +167,7 @@ splash_screen()
       echo ""
   fi
 
-  if [[ "$AVAILABLE_DISK" == *"G"* ]]; then  
+  if [[ "$AVAILABLE_DISK" == *"G"* ]]; then
       space=${AVAILABLE_DISK::-1}
   else
       space=${AVAILABLE_DISK}
@@ -179,12 +179,12 @@ splash_screen()
       echo ""
   fi
   if [ "$AVAILABLE_MNT" != "" ] ; then
-      if [[ "$AVAILABLE_MNT" == *"G"* ]]; then  
+      if [[ "$AVAILABLE_MNT" == *"G"* ]]; then
 	  mnt=${AVAILABLE_MNT::-1}
       else
 	  mnt=${AVAILABLE_MNT}
       fi
-      
+
       if [ $space -lt 30 ] || [ $mnt < 50 ]; then
       echo ""
       echo "WARNING: We recommend at least 30GB of disk space on the root partition as well as at least 50GB on the /mnt partition."
@@ -196,14 +196,14 @@ splash_screen()
       echo ""
       echo "WARNING: Hopsworks needs at least 4 CPUs to be able to run Spark applications."
       echo ""
-  fi       
-  
+  fi
+
   which dig > /dev/null
   if [ $? -ne 0 ] ; then
     echo "Installing dig ..."
     if [ "$DISTRO" == "Ubuntu" ] ; then
         sudo apt install dnsutils -y  > /dev/null
-    elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then      
+    elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
 	sudo yum install bind-utils -y > /dev/null
     fi
   fi
@@ -270,7 +270,7 @@ splash_screen()
 
 display_license()
 {
-  echo "" 
+  echo ""
   echo "This code is released under the GNU General Public License, Version 3, see:"
   echo "http://www.gnu.org/licenses/gpl-3.0.txt"
   echo ""
@@ -279,18 +279,18 @@ display_license()
   echo "warranty of the item whatsoever, whether express, implied, or statutory,"
   echo "including, but not limited to, any warranty of merchantability or fitness"
   echo "for a particular purpose or any warranty that the contents of the item will"
-  echo "be error-free. In no respect shall Logical Clocks AB incur any liability for any" 
+  echo "be error-free. In no respect shall Logical Clocks AB incur any liability for any"
   echo "damages, including, but limited to, direct, indirect, special, or consequential"
   echo "damages arising out of, resulting from, or any way connected to the use of the"
-  echo "item, whether or not based upon warranty, contract, tort, or otherwise; " 
+  echo "item, whether or not based upon warranty, contract, tort, or otherwise; "
   echo "whether or not injury was sustained by persons or property or otherwise;"
   echo "and whether or not loss was sustained from, or arose out of, the results of,"
   echo "the item, or any services that may be provided by Logical Clocks AB."
   echo ""
   printf 'Do you accept these terms and conditions? [ yes or no ] '
 }
-  
-accept_license () 
+
+accept_license ()
   {
     read ACCEPT
     case $ACCEPT in
@@ -343,7 +343,7 @@ install_action()
 	echo ""
 	echo "(3) Install a multi-host Hopsworks cluster with TLS enabled."
 	echo ""
-	echo "(4) Install an Enterprise Hopsworks cluster." 
+	echo "(4) Install an Enterprise Hopsworks cluster."
 	echo ""
 	echo "(5) Install an Enterprise Hopsworks cluster with Kubernetes"
 	echo ""
@@ -352,9 +352,9 @@ install_action()
 	echo "(7) Install Nvidia drivers and reboot server."
 	echo ""
 	echo "(8) Purge (uninstall) Hopsworks from this host."
-	echo ""	
+	echo ""
 	echo "(9) Purge (uninstall) Hopsworks from ALL hosts."
-	echo ""	
+	echo ""
 	printf 'Please enter your choice '1', '2', '3', '4', '5', '6', '7', '8', '9',  'q' \(quit\), or 'h' \(help\) :  '
         read ACCEPT
         case $ACCEPT in
@@ -434,7 +434,7 @@ check_proxy()
            case $OK in
                y|yes)
 		 ;;
-              *)	   
+              *)
                clear_screen
                check_proxy
            esac
@@ -516,7 +516,7 @@ enter_email()
 update_worker_yml()
 {
   perl -pi -e "s/__WORKER_ID__/$WORKER_ID/" $tmpYml
-  perl -pi -e "s/__WORKER_IP__/$WORKER_IP/" $tmpYml            
+  perl -pi -e "s/__WORKER_IP__/$WORKER_IP/" $tmpYml
   perl -pi -e "s/__MBS__/$MBS/" $tmpYml
   perl -pi -e "s/__CPUS__/$CPUS/" $tmpYml
   cat $tmpYml >> $YML_FILE
@@ -528,7 +528,7 @@ add_worker()
 	printf 'Please enter the IP of the worker you want to add: '
 	read WORKER_IP
     fi
-    
+
     ssh -t -o StrictHostKeyChecking=no $WORKER_IP "whoami" > /dev/null
     if [ $? -ne 0 ] ; then
 	echo "Failed to ssh using public into: ${USER}@${WORKER_IP}"
@@ -544,27 +544,27 @@ add_worker()
     fi
 
     WORKER_MEM=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "free -m | grep Mem | awk '{ print \$2 }'")
-    WORKER_DISK=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "df -h | grep '/\$' | awk '{ print \$4 }'") 
+    WORKER_DISK=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "df -h | grep '/\$' | awk '{ print \$4 }'")
     WORKER_CPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "cat /proc/cpuinfo | grep '^processor' | wc -l")
 
     NUM_GBS=$(expr $WORKER_MEM - 2)
     NUM_CPUS=$(expr $WORKER_CPUS - 1)
 
     MBS=$WORKER_MEM
-    
+
     echo "Amount of disk space available on root partition ('/'): $WORKER_DISK"
     echo "Amount of memory available on this worker: $WORKER_MEM MBs"
-    if [ "$WORKER_DEFAULTS" != "true" ] ; then   
+    if [ "$WORKER_DEFAULTS" != "true" ] ; then
 	printf "Please enter the amout of memory in this worker to be used (GBs): "
 	read GBS
-	MBS=$(expr $GBS \* 1024)       
+	MBS=$(expr $GBS \* 1024)
     fi
 
     echo "Amount of CPUs available on worker: $WORKER_CPUS"
 
     CPUS=$WORKER_CPUS
     if [ "$WORKER_DEFAULTS" != "true" ] ; then
-	printf "Please enter the number of CPUs in this worker to be used: "   
+	printf "Please enter the number of CPUs in this worker to be used: "
 	read CPUS
     fi
 
@@ -575,7 +575,7 @@ add_worker()
     WORKER_MNT=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo df -h | grep '/mnt' | awk '{ print $4 }'")
 
     re='^[0-9]+$'
-    
+
     if [ "$CLOUD" == "azure" ] ; then
 	NSLOOKUP=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "nslookup $WORKER_IP | grep name | grep -v 'internal.cloudapp.net'")
 	SUSPECTED_HOSTNAME=$(echo $NSLOOKUP | awk {' print $4 '})
@@ -604,12 +604,12 @@ add_worker()
 	if [[ $WORKER_MNT =~ $re ]] ; then
             ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo rm -rf /srv/hops; sudo mkdir -p /mnt/hops; sudo ln -s /mnt/hops /srv/hops"
 	fi
-    fi       
-    
+    fi
+
     WORKER_GPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo lspci | grep -i nvidia | wc -l")
     # strip carriage return '\r' from variable to make it a number
     WORKER_GPUS=$(echo $WORKER_GPUS|tr -d '\r')
-    
+
 
     echo ""
     echo "Number of GPUs found on worker: $WORKER_GPUS"
@@ -631,7 +631,7 @@ add_worker()
 	    fi
 	    #       else
 	    #	   ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo yum install \"kernel-devel-uname-r == $(uname -r)\" -y" > /dev/null
-	fi	   
+	fi
     else
 	echo "No worker GPUs available"
     fi
@@ -642,7 +642,7 @@ add_worker()
 	cat $WORKER_GPU_YML > $tmpYml
 	update_worker_yml
     else
-	echo "CPU Worker YML"	
+	echo "CPU Worker YML"
 	cat $WORKER_YML > $tmpYml
 	update_worker_yml
     fi
@@ -659,7 +659,7 @@ add_worker()
 worker_size()
 {
     # Edit this file: /etc/ssd/sshd_config
-    
+
     #chmod 644 ~/.ssh/authorized_keys
     #chmod 700 ~/.ssh
     #RSAAuthentication yes
@@ -676,7 +676,7 @@ worker_size()
    do
       add_worker
       i=$((i+1))
-      clear_screen      
+      clear_screen
    done
 }
 
@@ -685,7 +685,7 @@ install_dir()
 {
    root="${AVAILABLE_DISK//G}"
    mnt="${AVAILABLE_MNT//G}"
-   
+
    if [ "$mnt" != "" ] && [ $mnt -gt $root ] ; then
        # Azure mounts disks here: /mnt/reosurce
        if [ "$CLOUD" == "azure" ] ; then
@@ -705,7 +705,7 @@ install_dir()
 
 
 # called if interrupt signal is handled
-TrapBreak() 
+TrapBreak()
 {
   trap "" HUP INT TERM
   echo -e "\n\nInstallation cancelled by user!"
@@ -726,7 +726,7 @@ check_linux()
 	    DISTRO=$(ls -d /etc/[A-Za-z]*[_-][rv]e[lr]* | grep -v \"lsb\" | cut -d'/' -f3 | cut -d'-' -f1 | cut -d'_' -f1 | head -1)
 	fi
     else
-        exit_error "This script only works for Linux."	
+        exit_error "This script only works for Linux."
     fi
 }
 
@@ -747,21 +747,21 @@ purge_local()
    fi
    echo "Killing karamel..."
    pkill java
-   echo "Removing karamel..."   
+   echo "Removing karamel..."
    rm -rf ~/karamel*
-   echo "Removing cookbooks..."   
-   sudo rm -rf ~/.karamel   
+   echo "Removing cookbooks..."
+   sudo rm -rf ~/.karamel
    sudo rm -rf /tmp/chef-solo/cookbooks
-   echo "Purging old installation..."      
+   echo "Purging old installation..."
    sudo rm -rf /srv/hops
 }
 
 ###################################################################################################
 ###################################################################################################
 ###################################################################################################
-# 
+#
 # START OF SCRIPT MAINLINE
-# 
+#
 ###################################################################################################
 ###################################################################################################
 ###################################################################################################
@@ -775,13 +775,13 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      echo " [-h|--help]      help message"
 	      echo " [-i|--install-action localhost|localhost-tls|cluster|enterprise|karamel|purge|purge-all] "
 	      echo "                 'localhost' installs a localhost Hopsworks cluster"
-	      echo "                 'localhost-tls' installs a localhost Hopsworks cluster with TLS enabled"	      
+	      echo "                 'localhost-tls' installs a localhost Hopsworks cluster with TLS enabled"
 	      echo "                 'cluster' installs a multi-host Hopsworks cluster"
 	      echo "                 'enterprise' installs a multi-host Enterprise  Hopsworks cluster"
-	      echo "                 'kubernetes' installs a multi-host Enterprise Hopsworks cluster with Kubernetes"	      	      
+	      echo "                 'kubernetes' installs a multi-host Enterprise Hopsworks cluster with Kubernetes"
 	      echo "                 'karamel' installs and starts Karamel"
 	      echo "                 'purge' removes Hopsworks completely from this host"
-	      echo "                 'purge-all' removes Hopsworks completely from ALL hosts"	      
+	      echo "                 'purge-all' removes Hopsworks completely from ALL hosts"
 	      echo " [-cl|--clean]    removes the karamel installation"
 	      echo " [-dr|--dry-run]  does not run karamel, just generates YML file"
 #	      echo " [--gcp-nvme 0-9  number of NVMe disks to mount on worker nodes"
@@ -790,12 +790,12 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      echo " [-d|--download-enterprise-url url] downloads enterprise binaries from this URL."
 	      echo " [-dc|--download-url] downloads binaries from this URL."
 	      echo " [-du|--download-user username] Username for downloading enterprise binaries."
-	      echo " [-dp|--download-password password] Password for downloading enterprise binaries."	      
+	      echo " [-dp|--download-password password] Password for downloading enterprise binaries."
 	      echo " [-ni|--non-interactive)] skip license/terms acceptance and all confirmation screens."
 	      echo " [-p|--http-proxy) url] URL of the http(s) proxy server used to access the Internet"
 	      echo " [-pwd|--password password] sudo password for user running chef recipes."
-	      echo " [-y|--yml yaml_file] yaml file to run Karamel against."	      
-	      echo "" 
+	      echo " [-y|--yml yaml_file] yaml file to run Karamel against."
+	      echo ""
 	      exit 3
               break
 	      ;;
@@ -818,7 +818,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 		 kubernetes)
 		      INSTALL_ACTION=$INSTALL_CLUSTER
                       ENTERPRISE=1
-                      KUBERNETES=1		      
+                      KUBERNETES=1
 		      ;;
 	         karamel)
 		      INSTALL_ACTION=$INSTALL_KARAMEL
@@ -841,19 +841,19 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      CLEAN_INSTALL_DIR=1
 	      ;;
     -d|--download-enterprise-url)
-      	      shift	
+      	      shift
 	      ENTERPRISE_DOWNLOAD_URL=$1
 	      ;;
     -dc|--download-url)
-      	      shift	
+      	      shift
 	      DOWNLOAD_URL=$1
 	      ;;
     -du|--download-username)
-      	      shift	
+      	      shift
 	      ENTERPRISE_USER=$1
 	      ;;
     -dp|--download-password)
-      	      shift	
+      	      shift
 	      ENTERPRISE_PASSWORD=$1
 	      ;;
     -dr|--dry-run)
@@ -895,11 +895,11 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 		  http_proxy="$PROXY"
 	      fi
 	      ;;
-    -w|--workers) 
+    -w|--workers)
               shift
               WORKER_LIST=$1
               ;;
-    -y|--yml) 
+    -y|--yml)
               shift
               yml=$1
               ;;
@@ -924,7 +924,7 @@ done
 ############################################################################################################
 
 # Catch signals and clean up temp files
-trap TrapBreak HUP INT TERM  
+trap TrapBreak HUP INT TERM
 
 check_linux
 
@@ -935,14 +935,14 @@ if [ $? -ne 0 ] ; then
     # this only happens on centos
    echo "Installing pciutils ...."
    sudo yum install pciutils -y > /dev/null
-fi    
+fi
 AVAILABLE_GPUS=$(sudo lspci | grep -i nvidia | wc -l)
 
 
 if [ $NON_INTERACT -eq 0 ] ; then
-    splash_screen  
+    splash_screen
     display_license
-    accept_license  
+    accept_license
     clear_screen
 
     # Check if a proxy server is needed to access the internet.
@@ -951,7 +951,7 @@ if [ $NON_INTERACT -eq 0 ] ; then
 	if [ "$https_proxy" == "" ] ; then
 	   check_proxy
 	else
-           KARAMEL_HTTP_PROXY="export https_proxy=$PROXY"	    
+           KARAMEL_HTTP_PROXY="export https_proxy=$PROXY"
 	fi
     else
       KARAMEL_HTTP_PROXY="export https_proxy=$PROXY"
@@ -971,24 +971,24 @@ if [ "$INSTALL_ACTION" == "$INSTALL_NVIDIA" ] ; then
    sudo reboot
 fi
 
-if [ "$INSTALL_ACTION" == "$PURGE_HOPSWORKS_ALL_HOSTS" ] ; then   
+if [ "$INSTALL_ACTION" == "$PURGE_HOPSWORKS_ALL_HOSTS" ] ; then
     IPS=$(grep 'ip:' hopsworks-installer-active.yml | awk '{ print $2 }')
-    cd							 
+    cd
     for ip in $IPS ; do
 	echo ""
-	echo "Purging on host: $ip"	
+	echo "Purging on host: $ip"
 	scp hopsworks-installer.sh ${ip}:
 	ssh $ip "./hopsworks-installer.sh -i purge -ni"
-	ssh $ip "rm -f hopsworks-installer.sh"	
+	ssh $ip "rm -f hopsworks-installer.sh"
     done
 
     # Only delete local files after other hosts
     purge_local
-    
+
     echo ""
     echo "*********************************************"
     echo "Finished cleaning all hosts."
-    echo "*********************************************"    
+    echo "*********************************************"
     exit 0
 fi
 
@@ -1012,20 +1012,20 @@ if [ $DRY_RUN -eq 0 ] ; then
 	echo "Not currently able to ssh into this host. Updating authorized_keys"
 	pushd .
 	cd ~/.ssh
-	cat id_rsa.pub >> authorized_keys 
+	cat id_rsa.pub >> authorized_keys
 	if [ $? -ne 0 ] ; then
 	    echo "Problem updating .ssh/authorized_keys file. Could not add .ssh/id_rsa.pub to authorized_keys file."
 	fi
 	popd
     else
 	echo "Found existing entry in authorized_keys"
-    fi    
+    fi
 
     ssh -t -o StrictHostKeyChecking=no localhost "whoami" > /dev/null
     ssh -t -o StrictHostKeyChecking=no $IP "whoami" > /dev/null
     if [ $? -ne 0 ] ; then
 	exit_error "Error: problem using ssh to connect to this host with ip: $IP"
-    fi    
+    fi
 
     which java > /dev/null
     if [ $? -ne 0 ] ; then
@@ -1036,7 +1036,7 @@ if [ $DRY_RUN -eq 0 ] ; then
 	    sudo apt install openjdk-8-jre-headless -y
 	elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
 	    sudo yum install java-1.8.0-openjdk-headless -y
-	    sudo yum install wget -y 
+	    sudo yum install wget -y
 	else
 	    echo "Could not recognize Linux distro: $DISTRO"
 	    exit_error
@@ -1044,14 +1044,14 @@ if [ $DRY_RUN -eq 0 ] ; then
     fi
 
     # if [ $GCP_NVME -eq 1 ] ; then
-    #     for (( i=1; i<=${NUM_GCP_NVME_DRIVES_PER_WORKER}; i++ ))		  
+    #     for (( i=1; i<=${NUM_GCP_NVME_DRIVES_PER_WORKER}; i++ ))
     #     do
     # 	  sudo mkdir -p /mnt/nvmeDisks/nvme${i}
     #       sudo mkfs.ext4 -F /dev/nvme0n${i}
     #     done
     # fi
 
-    install_dir    
+    install_dir
 fi
 
 
@@ -1060,14 +1060,14 @@ if [ ! -d cluster-defns ] ; then
     mkdir cluster-defns
 fi
 cd cluster-defns
-# Don't overwrite the YML files, so that users can customize them 
-wget -nc ${CLUSTER_DEFINITION_BRANCH}/$INPUT_YML 
+# Don't overwrite the YML files, so that users can customize them
+wget -nc ${CLUSTER_DEFINITION_BRANCH}/$INPUT_YML
 wget -nc ${CLUSTER_DEFINITION_BRANCH}/$WORKER_YML
 wget -nc ${CLUSTER_DEFINITION_BRANCH}/$WORKER_GPU_YML
 cd ..
 
 if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST_TLS" ]  ; then
-    clear_screen    
+    clear_screen
     enter_cloud
     cp -f $INPUT_YML $YML_FILE
 fi
@@ -1090,12 +1090,12 @@ if [ "$CLOUD" == "azure" ] ; then
     fi
     sudo hostname $PRIVATE_HOSTNAME
     clear_screen
-fi       
+fi
 
 if [ $DRY_RUN -eq 0 ] ; then
     if [ ! -d karamel-${KARAMEL_VERSION} ] ; then
 	echo "Installing Karamel..."
-	clear_screen    
+	clear_screen
 	wget -nc http://www.karamel.io/sites/default/files/downloads/karamel-${KARAMEL_VERSION}.tgz
 	if [ $? -ne 0 ] ; then
 	    exit_error "Problem downloading karamel"
@@ -1113,7 +1113,7 @@ if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] ; then
   if [ "$WORKER_LIST" == "" ] ; then
       worker_size
   else
-      WORKER_DEFAULTS="true"      
+      WORKER_DEFAULTS="true"
       if [ "$WORKER_LIST" != "none" ] ; then
 	  IFS=',' read -r -a workers <<< "$WORKER_LIST"
 	  echo "Workers:   ${workers[*]}"
@@ -1124,7 +1124,7 @@ if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] ; then
 	  done
       fi
   fi
-fi    
+fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST_TLS" ] ; then
   TLS="true"
@@ -1137,7 +1137,7 @@ if [ "$INSTALL_ACTION" == "$INSTALL_KARAMEL" ]  ; then
     echo "To access Karamel, open your browser at: "
     echo ""
     echo "http://${ip}:9090/index.html"
-    echo ""    
+    echo ""
 else
     if [ $DRY_RUN -eq 0 ] ; then
 	sudo -n true
@@ -1150,36 +1150,36 @@ else
 	    echo ""
 	fi
     fi
-    
+
     if [ $AVAILABLE_GPUS -gt 0 ] ; then
 	    CUDA="cuda:
     accept_nvidia_download_terms: true"
     fi
-    
+
     if [ $HAS_GPUS -eq 1 ] ; then
-	YARN="capacity: 
+	YARN="capacity:
       resource_calculator_class: org.apache.hadoop.yarn.util.resource.DominantResourceCalculatorGPU
     yarn:
       cgroups_strict_resource_usage: 'false'
       gpus: '*'"
-    fi    
+    fi
 
     if [ $DRY_RUN -eq 0 ] ; then
 	DNS_IP=$(sudo cat /etc/resolv.conf | grep ^nameserver | awk '{ print $2 }' | tail -1)
     fi
     BASE_PWD=$(date | md5sum | head -c${1:-8})
     GBS=$(expr $AVAILABLE_MEMORY - 2)
-    MEM=$(expr $GBS \* 1024)    
+    MEM=$(expr $GBS \* 1024)
     perl -pi -e "s/__CLOUD__/$CLOUD/" $YML_FILE
     perl -pi -e "s/__MEM__/$MEM/" $YML_FILE
     perl -pi -e "s/__PWD__/$BASE_PWD/g" $YML_FILE
-    perl -pi -e "s/__DNS_IP__/$DNS_IP/g" $YML_FILE        
+    perl -pi -e "s/__DNS_IP__/$DNS_IP/g" $YML_FILE
     CPUS=$(expr $AVAILABLE_CPUS - 1)
     perl -pi -e "s/__CPUS__/$CPUS/" $YML_FILE
     # escape slashes to use perl -e
-    HOPSWORKS_REPO=$(echo "$HOPSWORKS_REPO"  | sed 's/\//\\\//g')    
+    HOPSWORKS_REPO=$(echo "$HOPSWORKS_REPO"  | sed 's/\//\\\//g')
     perl -pi -e "s/__GITHUB__/$HOPSWORKS_REPO/" $YML_FILE
-    perl -pi -e "s/__BRANCH__/$HOPSWORKS_BRANCH/" $YML_FILE    
+    perl -pi -e "s/__BRANCH__/$HOPSWORKS_BRANCH/" $YML_FILE
     perl -pi -e "s/__USER__/$USER/" $YML_FILE
     perl -pi -e "s/__IP__/$IP/" $YML_FILE
     perl -pi -e "s/__YARN__/$YARN/" $YML_FILE
@@ -1187,9 +1187,9 @@ else
     perl -pi -e "s/__CUDA__/$CUDA/" $YML_FILE
 
     if [ "$DOWNLOAD_URL" != "" ] ; then
-       DOWNLOAD="download_url: $DOWNLOAD_URL"	    
+       DOWNLOAD="download_url: $DOWNLOAD_URL"
     fi
-    
+
     if [ $ENTERPRISE -eq 1 ] ; then
 	if [ "$ENTERPRISE_DOWNLOAD_URL" = "" ] ; then
 	    echo ""
@@ -1209,7 +1209,7 @@ else
 	# Escape URL
 	ENTERPRISE_DOWNLOAD_URL=${ENTERPRISE_DOWNLOAD_URL//\./\\\.}
 	ENTERPRISE_DOWNLOAD_URL=${ENTERPRISE_DOWNLOAD_URL//\//\\\/}
-        echo ""	
+        echo ""
 	#printf -v DNS_IP "%q\n" "$DNS_IP"
 	DNS_IP=${DNS_IP//\./\\\.}
 	if [ $KUBERNETES -eq 1 ] ; then
@@ -1227,7 +1227,7 @@ else
       - kube-hops::master
       - kube-hops::post_conf
       - kube-hops::addons
-      - kube-hops::node"	  
+      - kube-hops::node"
 	fi
         ENTERPRISE_ATTRS="enterprise:
       install: true
@@ -1240,7 +1240,7 @@ else
     perl -pi -e "s/__DOWNLOAD__/$DOWNLOAD/" $YML_FILE
     perl -pi -e "s/__KUBERNETES_RECIPES__/$KUBERNETES_RECIPES/" $YML_FILE
     perl -pi -e "s/__KUBE__/$KUBE/" $YML_FILE
-    
+
     if [ $DRY_RUN -eq 0 ] ; then
 	cd karamel-${KARAMEL_VERSION}
 	echo "Running command from ${PWD}:"
@@ -1252,11 +1252,11 @@ else
 	echo "***********************************************************************************************************"
 	echo ""
 	echo "Installation has started, but may take 1 hour or more.........."
-	echo ""	
+	echo ""
 	echo "The Karamel installer UI will soon start at:  http://${IP}:9090/index.html"
 	echo "Note: port 9090 must be open for external traffic and Karamel will shutdown when installation finishes."
 	echo ""
-	echo "====================================================================="	
+	echo "====================================================================="
 	# echo "Hopsworks will later be available at:"
 	# echo ""
 	# echo "https://${IP}/hopsworks"
@@ -1266,7 +1266,7 @@ else
 	echo "You can view the installation logs with this command:"
 	echo ""
 	echo "tail -f installation.log"
-	echo ""    
+	echo ""
 	echo "***********************************************************************************************************"
 	cd ..
     fi
