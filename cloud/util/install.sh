@@ -101,34 +101,6 @@ if [ "$2" == "community" ] || [ "$3" == "community" ] ; then
 elif [ "$2" == "kubernetes" ] || [ "$3" == "kubernetes" ] ; then
     HOPSWORKS_VERSION=kubernetes
     check_download_url
-    if [[ ! $BRANCH =~ "-kube" ]] ; then
-      echo "Found branch: $BRANCH"
-      # check if this is a version branch, if yes update to the kube version of the branch.
-      branch_regex='^[1-9]+\.[1-9]+'
-      #      if [[ $BRANCH =~ $branch_regex ]] || [[ "$BRANCH" == "master" ]] ; then
-      if [[ $BRANCH =~ $branch_regex ]] ; then      
-	cp -f ../../hopsworks-installer.sh .hopsworks-installer.sh
-        escaped=${BRANCH//./\\.}
-#        perl -pi -e "s/HOPSWORKS_BRANCH=$escaped/HOPSWORKS_BRANCH=${escaped}-kube/" .hopsworks-installer.sh
-#        BRANCH=${BRANCH}-kube       
-      else
-	echo "WARNING: your hopsworks-chef branch, defined in hopsworks-installer.sh, does not appear to be a kubernetes branch: "
-	echo "$BRANCH"
-	echo "If you are developing a kubernetes branch for hopsworks-chef, please rename it to: XXX-kube to skip this warning."
-	echo ""
-        printf 'Do you want to install this branch anyway? (y/n (default y):'
-        read ACCEPT
-        if [ "$ACCEPT" == "y" ] || [ "$ACCEPT" == "yes" ] || [ "$ACCEPT" == "" ] ; then
-	    echo "Ok!"
-            cp -f ../../hopsworks-installer.sh .hopsworks-installer.sh	    
-	else
-	    exit 3
-	fi
-      fi
-      echo "Installing branch: $BRANCH"
-    else
-      cp -f ../../hopsworks-installer.sh .hopsworks-installer.sh
-    fi
 else
     HOPSWORKS_VERSION=enterprise
     check_download_url
@@ -170,13 +142,8 @@ fi
 
 
 echo "Installing installer on $IP"
-#ssh -t -o StrictHostKeyChecking=no $IP "wget -nc ${CLUSTER_DEFINITION_BRANCH}/hopsworks-installer.sh && chmod +x hopsworks-installer.sh"
-if [ "$2" == "kubernetes" ] || [ "$3" == "kubernetes" ] ; then
-    scp -o StrictHostKeyChecking=no .hopsworks-installer.sh ${IP}:~/hopsworks-installer.sh
-    rm .hopsworks-installer.sh
-else 
-    scp -o StrictHostKeyChecking=no ../../hopsworks-installer.sh ${IP}:
-fi    
+scp -o StrictHostKeyChecking=no ../../hopsworks-installer.sh ${IP}:
+
 ssh -t -o StrictHostKeyChecking=no $IP "chmod +x hopsworks-installer.sh; mkdir -p cluster-defns"
 scp -o StrictHostKeyChecking=no ../../cluster-defns/hopsworks-installer.yml ${IP}:~/cluster-defns/
 scp -o StrictHostKeyChecking=no ../../cluster-defns/hopsworks-worker.yml ${IP}:~/cluster-defns/

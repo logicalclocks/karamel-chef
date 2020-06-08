@@ -1225,7 +1225,6 @@ else
 	    KUBERNETES_RECIPES="      - kube-hops::hopsworks
       - kube-hops::ca
       - kube-hops::master
-      - kube-hops::post_conf
       - kube-hops::addons
       - kube-hops::node"
 	fi
@@ -1257,11 +1256,11 @@ else
 	echo "Note: port 9090 must be open for external traffic and Karamel will shutdown when installation finishes."
 	echo ""
 	echo "====================================================================="
-	# echo "Hopsworks will later be available at:"
-	# echo ""
-	# echo "https://${IP}/hopsworks"
-	# echo ""
-	# echo "====================================================================="
+        echo "Hopsworks will later be available at:"
+	echo ""
+	echo "https://${IP}/hopsworks"
+	echo ""
+	echo "====================================================================="
 	echo ""
 	echo "You can view the installation logs with this command:"
 	echo ""

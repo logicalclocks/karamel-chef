@@ -2,8 +2,8 @@
 
 #ZONE=us-central1-a
 #REGION=us-central1
-ZONE=us-east1-c
-REGION=us-east1
+#ZONE=us-east1-c
+#REGION=us-east1
 ZONE=europe-west1-d
 REGION=europe-west1
 
@@ -40,13 +40,14 @@ RESERVATION_AFFINITY=any
 #SHIELD="--no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring"
 SHIELD=""
 #GPU=nvidia-tesla-v100
-GPU=nvidia-tesla-p100
+#GPU=nvidia-tesla-p100
+GPU=nvidia-tesla-k80
 NUM_GPUS_PER_VM=1
 
 
 DEFAULT_TYPE=n1-standard-8
 #DEFAULT_TYPE=n1-standard-16
-IMAGE=centos-7-v20200429
+IMAGE=centos-7-v20200603
 IMAGE_PROJECT=centos-cloud
 #IMAGE=ubuntu-1804-bionic-v20200414
 #IMAGE_PROJECT=ubuntu-os-cloud

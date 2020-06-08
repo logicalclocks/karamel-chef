@@ -25,15 +25,15 @@ attrs:
       detect-hardware-capabilities: false
     rmappsecurity:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
-#  maggy:
-#    version: "git+git://github.com/logicalclocks/maggy@master"
   kagent:
     python_conda_versions: 3.6
-#  conda:
-#    hops-util-py:
-#      install-mode: "git"
-#      branch: "model_repo_project"
-#      repo: "jimdowling"
+  maggy:
+    version: "git+git://github.com/moritzmeister/maggy@oblivious-train"
+  conda:
+    hops-util-py:
+      install-mode: "git"
+      branch: "oblivious-train"
+      repo: "moritzmeister"
 #  ndb:
 #    nvme:
 #      disks: "/dev/nvme0n1 /dev/nvme0n1"
@@ -134,8 +134,7 @@ groups:
       - hopsmonitor::prometheus
       - hopsmonitor::alertmanager
       - hopsmonitor::node_exporter
-      - hopsmonitor::purge_telegraf
       - consul::master
-      - hops::docker_registry
+#      - hops::docker_registry
 __KUBERNETES_RECIPES__
 
