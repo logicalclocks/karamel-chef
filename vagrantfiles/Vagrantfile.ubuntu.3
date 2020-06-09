@@ -2,7 +2,7 @@
 Vagrant.configure("2") do |config|
 
   config.ssh.insert_key = false
-  config.disksize.size = "50GB"
+  config.disksize.size = "100GB"
 
   config.vm.define "hopsworks2" do |hopsworks2|
     hopsworks2.vm.box = "ubuntu/bionic64"
@@ -21,8 +21,8 @@ Vagrant.configure("2") do |config|
 
     hopsworks2.vm.provider :virtualbox do |v|
       v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
-      v.customize ["modifyvm", :id, "--memory", 6144]
-      v.customize ["modifyvm", :id, "--cpus", "4"]      
+      v.customize ["modifyvm", :id, "--memory", 12144]
+      v.customize ["modifyvm", :id, "--cpus", "5"]      
       v.customize ["modifyvm", :id, "--name", "hopsworks2"]
     end
 
@@ -54,8 +54,8 @@ Vagrant.configure("2") do |config|
 
     hopsworks1.vm.provider :virtualbox do |v|
       v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
-      v.customize ["modifyvm", :id, "--memory", 6144]
-      v.customize ["modifyvm", :id, "--cpus", "4"]      
+      v.customize ["modifyvm", :id, "--memory", 12144]
+      v.customize ["modifyvm", :id, "--cpus", "5"]      
       v.customize ["modifyvm", :id, "--name", "hopsworks1"]
     end
 
@@ -123,11 +123,11 @@ Vagrant.configure("2") do |config|
 
     hopsworks0.vm.provider :virtualbox do |v|
       v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
-      v.customize ["modifyvm", :id, "--memory", 32768]
+      v.customize ["modifyvm", :id, "--memory", 18768]
       v.customize ["modifyvm", :id, "--name", "hopsworks0"]
       v.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
       v.customize ["modifyvm", :id, "--nictype1", "virtio"]
-      v.customize ["modifyvm", :id, "--cpus", "4"]
+      v.customize ["modifyvm", :id, "--cpus", "6"]
     end
 
     hopsworks0.vm.provision :chef_solo do |chef|
