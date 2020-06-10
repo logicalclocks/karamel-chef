@@ -1,6 +1,6 @@
 include_attribute "elastic"
 default['karamel']['version']         = "0.6"
-default['karamel']['download_url']    = "http://www.karamel.io/sites/default/files/downloads/karamel-#{node['karamel']['version']}.tgz"
+default['karamel']['download_url']    = "https://repo.hops.works/master/karamel-#{node['karamel']['version']}.tgz"
 
 default['karamel']['download_file']    = "#{Chef::Config['file_cache_path']}/#{File.basename(node['karamel']['download_url'])}"
 default['karamel']['base_dir']        = "/home/vagrant/karamel-#{node['karamel']['version']}"
