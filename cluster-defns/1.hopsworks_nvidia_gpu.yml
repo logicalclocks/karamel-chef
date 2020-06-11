@@ -76,7 +76,6 @@ groups:
       - hopslog
       - hopslog::_filebeat-spark
       - hopslog::_filebeat-serving
-      - hopslog::_filebeat-kagent
       - hops::dn
       - hops::nm
       - tensorflow

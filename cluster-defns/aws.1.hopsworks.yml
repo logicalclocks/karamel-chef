@@ -77,7 +77,6 @@ groups:
       - hopslog
       - hopslog::_filebeat-spark
       - hopslog::_filebeat-serving
-      - hopslog::_filebeat-kagent
       - hopslog::_filebeat-beam
       - hops::dn
       - hops::nm
