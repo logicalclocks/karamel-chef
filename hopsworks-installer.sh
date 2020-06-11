@@ -83,6 +83,7 @@ AVAILABLE_GPUS=
 CUDA=
 
 KARAMEL_HTTP_PROXY=
+PROXY=
 
 # $1 = String describing error
 exit_error()
@@ -410,6 +411,34 @@ install_action()
    fi
 }
 
+set_karamel_http_proxy()
+{
+
+    # extract the protocol
+    proto="$(echo $PROXY | grep :// | sed -e's,^\(.*://\).*,\1,g')"
+    # remove the protocol
+    url="$(echo ${PROXY/$proto/})"
+    # extract the user (if any)
+    user="$(echo $url | grep @ | cut -d@ -f1)"
+    # extract the host and port
+    hostport="$(echo ${url/$user@/} | cut -d/ -f1)"
+    # by request host without port
+    host="$(echo $hostport | sed -e 's,:.*,,g')"
+    # by request - try to extract the port
+    port="$(echo $hostport | sed -e 's,^.*:,:,g' -e 's,.*:\([0-9]*\).*,\1,g' -e 's,[^0-9],,g')"
+    if [ "$port" == "" ] ; then
+	if [ "$proto" == "http://" ] ; then
+	    port="80"
+	elif [ "$proto" == "https://" ] ; then
+	    port="443"
+	else
+	    echo "nope"
+	fi
+    fi
+    KARAMEL_HTTP_PROXY="export https_proxy=$host ; export https_proxy_port=$port"	
+}    
+
+
 check_proxy()
 {
    echo ""
@@ -418,17 +447,11 @@ check_proxy()
    case $ACCEPT in
        y|yes)
 	   # Just take the first http proxy set - https or http, not both https_proxy and http_proxy
-           printf "Enter the URL of the HTTP PROXY (hit return if there is only a HTTPS PROXY): "
+           printf "Enter the URL of the HTTP(S) PROXY: "
            read PROXY
-	   if [ "$PROXY" == "" ] ; then
-              printf "Enter the URL of the HTTPS PROXY: "
-              read PROXY
-	      KARAMEL_HTTP_PROXY="export https_proxy=$PROXY"
-	   else
-              KARAMEL_HTTP_PROXY="export http_proxy=$PROXY"
-	   fi
 
-	   echo "Your HTTP(S) Proxy is now set to: $PROXY"
+	   
+	   echo "Your HTTP(S) Proxy host/port is: host: $host and port: $port"
            printf "Does that look ok (y/n)? (default: 'y') "
            read OK
            case $OK in
@@ -503,10 +526,10 @@ enter_email()
 
     if [[ $email =~ .*@.* ]]
     then
-	echo "Registering hopsworks instance...."
+	echo "Registering...."
 	echo "{\"id\": \"$rand\", \"name\":\"$email\"}" > .details
     else
-	echo "Exiting. Invalid email"
+	echo "Exiting. Invalid email address."
 	exit 1
     fi
 
@@ -715,6 +738,8 @@ TrapBreak()
 check_linux()
 {
 
+    
+
     UNAME=$(uname | tr \"[:upper:]\" \"[:lower:]\")
     # If Linux, try to determine specific distribution
     if [ \"$UNAME\" == \"linux\" ]; then
@@ -724,6 +749,14 @@ check_linux()
 	    # Otherwise, use release info file
 	else
 	    DISTRO=$(ls -d /etc/[A-Za-z]*[_-][rv]e[lr]* | grep -v \"lsb\" | cut -d'/' -f3 | cut -d'-' -f1 | cut -d'_' -f1 | head -1)
+	    if [ "$DISTRO" == "Ubuntu" ] ; then
+		sudo apt install lsb-core -y
+	    elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
+		sudo yum install redhat-lsb-core -y
+	    else
+		echo "Could not recognize Linux distro: $DISTRO"
+		exit_error
+	    fi
 	fi
     else
         exit_error "This script only works for Linux."
@@ -889,11 +922,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
     -p|--http-proxy)
               shift
               PROXY=$1
-	      if [[ "$PROXY" == *"https"* ]]; then
-		  https_proxy="$PROXY"
-	      else
-		  http_proxy="$PROXY"
-	      fi
+              set_karamel_http_proxy
 	      ;;
     -w|--workers)
               shift
@@ -951,10 +980,12 @@ if [ $NON_INTERACT -eq 0 ] ; then
 	if [ "$https_proxy" == "" ] ; then
 	   check_proxy
 	else
-           KARAMEL_HTTP_PROXY="export https_proxy=$PROXY"
+           PROXY=$http_proxy	    
+           set_karamel_http_proxy
 	fi
     else
-      KARAMEL_HTTP_PROXY="export https_proxy=$PROXY"
+	PROXY=$http_proxy
+	set_karamel_http_proxy
     fi
     clear_screen
     enter_email

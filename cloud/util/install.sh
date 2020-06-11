@@ -82,6 +82,25 @@ clear_known_hosts()
    ssh-keygen -R $host_ip -f /home/$USER/.ssh/known_hosts 
 }    
 
+enter_email()
+{
+
+    echo "Please enter your email address to continue:"
+    read email
+
+    if [[ $email =~ .*@.* ]]
+    then
+	echo "Registering...."
+	echo "{\"id\": \"$rand\", \"name\":\"$email\"}" > .details
+    else
+	echo "Exiting. Invalid email address."
+	exit 1
+    fi
+
+    curl -H "Content-type:application/json" --data @.details http://snurran.sics.se:8443/keyword --connect-timeout 10 2>&1 > /dev/null
+}
+
+
 ###################################################################
 #   MAIN                                                          #
 ###################################################################
@@ -93,6 +112,12 @@ fi
 
 host_ip=
 . config.sh $1
+
+if [ "$2" == "no-email" ] || [ "$3" == "no-email" ] || [ "$4" == "no-email" ] ; then
+    echo "Skipping registration"
+else
+    enter_email
+fi
 
 get_ips
 
