@@ -432,10 +432,22 @@ set_karamel_http_proxy()
 	elif [ "$proto" == "https://" ] ; then
 	    port="443"
 	else
-	    echo "nope"
+	    port=-1
 	fi
     fi
-    KARAMEL_HTTP_PROXY="export https_proxy=$host ; export https_proxy_port=$port"	
+    KARAMEL_HTTP_PROXY="export https_proxy=$host ; export https_proxy_port=$port"
+    if [ $NON_INTERACT -eq 0 ] ; then
+      export http_proxy="${proto}${host}${port}"
+      rm -f index.html	
+      wget http://www.logicalclocks.com/index.html 2>&1 > /dev/null
+      if [ $? -ne 0 ] ; then
+	  echo "WARNING: There could be a problem with the proxy server setting."	  
+          echo "WARNING: wget (with http proxy 'on') could not download this file: http://www.logicalclocks.com/index.html"
+	  echo "http_proxy=$http_proxy"
+	  echo "https_proxy=$https_proxy"	  
+      fi
+      rm -f index.html
+    fi
 }    
 
 
