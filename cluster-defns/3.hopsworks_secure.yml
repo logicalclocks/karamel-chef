@@ -81,7 +81,6 @@ groups:
       - tensorflow
       - hopslog
       - hopslog::_filebeat-serving
-      - hopslog::_filebeat-kagent
       - hopslog::_filebeat-beam
       - kzookeeper
       - livy
@@ -117,7 +116,6 @@ groups:
       - hadoop_spark::certs
       - flink::yarn
       - hopslog::_filebeat-spark
-      - hopslog::_filebeat-kagent
       - hopslog::_filebeat-beam
       - tensorflow
       - hopsmonitor::node_exporter
@@ -142,7 +140,6 @@ groups:
       - hadoop_spark::certs
       - flink::yarn
       - hopslog::_filebeat-spark
-      - hopslog::_filebeat-kagent
       - hopslog::_filebeat-beam
       - tensorflow
       - hopsmonitor::node_exporter
