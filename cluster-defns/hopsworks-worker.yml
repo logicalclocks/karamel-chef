@@ -18,7 +18,6 @@
       - hadoop_spark::certs
       - flink::yarn
       - hopslog::_filebeat-spark
-      - hopslog::_filebeat-kagent
       - hopslog::_filebeat-beam
       - tensorflow
       - hopsmonitor::node_exporter
