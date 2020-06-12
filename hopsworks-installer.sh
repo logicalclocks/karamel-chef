@@ -435,16 +435,25 @@ set_karamel_http_proxy()
 	    port=-1
 	fi
     fi
-    KARAMEL_HTTP_PROXY="export https_proxy=$host ; export https_proxy_port=$port"
+    if [ "$proto" == "http://" ] ; then
+        KARAMEL_HTTP_PROXY="export http_proxy=$host ; export https_proxy_port=$port"	
+    elif [ "$proto" == "https://" ] ; then
+	KARAMEL_HTTP_PROXY="export https_proxy=$host ; export https_proxy_port=$port"	
+    else
+	echo "Error. Unrecognized http proxy protocol: $proto is a problem from $PROXY"
+	exit 15
+    fi
+
     if [ $NON_INTERACT -eq 0 ] ; then
-      export http_proxy="${proto}${host}${port}"
+      export http_proxy="${proto}${host}:${port}"
       rm -f index.html	
       wget http://www.logicalclocks.com/index.html 2>&1 > /dev/null
       if [ $? -ne 0 ] ; then
 	  echo "WARNING: There could be a problem with the proxy server setting."	  
           echo "WARNING: wget (with http proxy 'on') could not download this file: http://www.logicalclocks.com/index.html"
 	  echo "http_proxy=$http_proxy"
-	  echo "https_proxy=$https_proxy"	  
+	  echo "https_proxy=$https_proxy"
+	  echo "PROXY=$PROXY"	  
       fi
       rm -f index.html
     fi
@@ -461,7 +470,7 @@ check_proxy()
 	   # Just take the first http proxy set - https or http, not both https_proxy and http_proxy
            printf "Enter the URL of the HTTP(S) PROXY: "
            read PROXY
-
+           set_karamel_http_proxy
 	   
 	   echo "Your HTTP(S) Proxy host/port is: host: $host and port: $port"
            printf "Does that look ok (y/n)? (default: 'y') "
@@ -992,7 +1001,7 @@ if [ $NON_INTERACT -eq 0 ] ; then
 	if [ "$https_proxy" == "" ] ; then
 	   check_proxy
 	else
-           PROXY=$http_proxy	    
+           PROXY=$https_proxy	    
            set_karamel_http_proxy
 	fi
     else
