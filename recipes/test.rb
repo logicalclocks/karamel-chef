@@ -76,7 +76,6 @@ when 'centos'
 end
 
 elastic_endpoint=""
-my_ip=""
 elastic_user="#{node['elastic']['opendistro_security']['admin']['username']}"
 elastic_pass="#{node['elastic']['opendistro_security']['admin']['password']}"
 kibana_endpoint="#{node[:karamel][:default][:private_ips][0]}:#{node[:kibana][:port]}"
@@ -92,12 +91,10 @@ end
 case node['platform']
 when elastic_multinode
   elastic_endpoint="#{node[:karamel][:default][:private_ips][2]}:#{node[:elastic][:port]}"
-  my_ip = node[:karamel][:default][:private_ips][0]
   epipe_host = "#{node[:karamel][:default][:private_ips][1]}"
 
 when elastic_singlenode
 elastic_endpoint="#{node[:karamel][:default][:private_ips][0]}:#{node[:elastic][:port]}"
-my_ip = node[:karamel][:default][:private_ips][0]
 epipe_host = "#{node[:karamel][:default][:private_ips][0]}"
 end
 
@@ -108,7 +105,6 @@ template "#{node['test']['hopsworks']['test_dir']}/.env" do
   group "vagrant"
   mode 0755
   variables({
-    'my_ip' => my_ip,
     'elastic_endpoint' => elastic_endpoint,
     'kibana_endpoint' => kibana_endpoint,
     'elastic_user' => elastic_user,
@@ -174,7 +170,7 @@ when 'ubuntu'
     cwd node['test']['hopsworks']['base_dir']
     environment ({'HOPSWORKS_URL' => 'https://localhost:8181/hopsworks',
                   'HEADLESS' => "true",
-                  'DB_HOST' => node[:karamel][:default][:private_ips][0],
+                  'DB_HOST' => "127.0.0.1",
                   'BROWSER' => "firefox"})
     code <<-FIREFOX
       mvn clean install -P-web,mysql
@@ -190,7 +186,7 @@ when 'ubuntu'
     cwd node['test']['hopsworks']['base_dir']
     environment ({'HOPSWORKS_URL' => 'https://localhost:8181/hopsworks',
                   'HEADLESS' => "true",
-                  'DB_HOST' => node[:karamel][:default][:private_ips][0],
+                  'DB_HOST' => "127.0.0.1",
                   'BROWSER' => "chrome"})
     code <<-CHROME
       mvn clean install -P-web,mysql
