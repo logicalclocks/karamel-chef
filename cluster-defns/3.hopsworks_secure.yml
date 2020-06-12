@@ -131,6 +131,7 @@ groups:
       - conda
       - livy::install
       - ndb::ndbd
+      - ndb::mysqld
       - kzookeeper
       - elastic
       - hops::dn
