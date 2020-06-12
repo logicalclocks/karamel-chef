@@ -1,7 +1,7 @@
 # Copy this to .env and update values
 WEB_HOST=localhost                                        # Web host local or remote
 WEB_PORT=8181                                             # Web port local or remote
-DB_HOST=<%= @my_ip %>                                     # Database host local or remote
+DB_HOST=127.0.0.1                                         # Database host local or remote
 DB_PORT=3306                                              # Database port local or remote
 PROJECT_DIR=<%= node['test']['hopsworks']['base_dir'] %>  # where hopsworks project is.
 RSPEC_REPORT=<%= node['test']['hopsworks']['report'] %>   # where to put the report name should be test-report.html.
@@ -21,6 +21,6 @@ KIBANA_API=<%= @kibana_endpoint %>
 EPIPE_HOST=<%= @epipe_host %>
 MYSQL_SOCKET=/tmp/mysql.sock
 
-REMOTE_SSH_USER=vagrant					  # User on remote machine
-REMOTE_SSH_PASSWORD=vagrant				  # Password of remote user
-REMOTE_SSH_PORT=22					  # Port on remote machine sshd listens to
+REMOTE_SSH_USER=vagrant					                  # User on remote machine
+REMOTE_SSH_PASSWORD=vagrant				                  # Password of remote user
+REMOTE_SSH_PORT=22					                      # Port on remote machine sshd listens to
