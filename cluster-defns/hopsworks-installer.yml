@@ -16,7 +16,7 @@ attrs:
     __ENTERPRISE__
   __CUDA__
   hops:
-#    version: "2.8.2.10-EE-RC0"  
+#    version: "2.8.2.10-EE-RC0"
     tls:
       enabled: __TLS__
     __YARN__
@@ -51,7 +51,7 @@ attrs:
       retention_time: "8h"
   hopsworks:
 #    war_url: http://snurran.sics.se/hops/hopsworks/1.4.0/hopsworks-web-dev.war
-#    ca_url: http://snurran.sics.se/hops/hopsworks/1.4.0/hopsworks-ca-dev.war    
+#    ca_url: http://snurran.sics.se/hops/hopsworks/1.4.0/hopsworks-ca-dev.war
 #    ear_url: http://snurran.sics.se/hops/hopsworks/1.4.0/hopsworks-ear-dev.ear
     encryption_password: __PWD___001
     master:
@@ -70,7 +70,7 @@ attrs:
   hive2:
       mysql_password: __PWD___203
   mysql:
-      password: __PWD___202      
+      password: __PWD___202
   elastic:
     opendistro_security:
       jwt:
@@ -110,7 +110,6 @@ groups:
       - hops::jhs
       - hadoop_spark::yarn
       - hadoop_spark::historyserver
-      - hadoop_spark::certs
       - flink::yarn
       - flink::historyserver
       - elastic
@@ -133,7 +132,6 @@ groups:
       - hopsmonitor::prometheus
       - hopsmonitor::alertmanager
       - hopsmonitor::node_exporter
-      - hopsmonitor::purge_telegraf
       - consul::master
       - hops::docker_registry
 __KUBERNETES_RECIPES__
