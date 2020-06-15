@@ -64,7 +64,6 @@ groups:
       - hops::jhs
       - hadoop_spark::yarn
       - hadoop_spark::historyserver
-      - hadoop_spark::certs
       - flink::yarn
       - flink::historyserver
       - elastic
@@ -87,6 +86,5 @@ groups:
       - hopsmonitor::prometheus
       - hopsmonitor::alertmanager
       - hopsmonitor::node_exporter
-      - hopsmonitor::purge_telegraf
       - consul::master
       - hops::docker_registry
