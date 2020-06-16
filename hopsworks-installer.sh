@@ -436,9 +436,9 @@ set_karamel_http_proxy()
 	fi
     fi
     if [ "$proto" == "http://" ] ; then
-        KARAMEL_HTTP_PROXY="export http_proxy=$host ; export https_proxy_port=$port"	
+        KARAMEL_HTTP_PROXY="export http_proxy=${proto}${host}:${port} ; export http_proxy_host=$host ; export https_proxy_port=$port"	
     elif [ "$proto" == "https://" ] ; then
-	KARAMEL_HTTP_PROXY="export https_proxy=$host ; export https_proxy_port=$port"	
+	KARAMEL_HTTP_PROXY="export https_proxy=${proto}${host}:${port} ; export https_proxy_host=$host ; export https_proxy_port=$port"	
     else
 	echo "Error. Unrecognized http proxy protocol: $proto is a problem from $PROXY"
 	exit 15
