@@ -77,6 +77,7 @@ groups:
       - kagent::dev
       - hopslog::_filebeat-serving
       - hopslog::_filebeat-beam
+      - hopslog::_filebeat-jupyter
       - hops_airflow
       - hops_airflow::sqoop
       - hopsmonitor::prometheus
