@@ -81,6 +81,7 @@ groups:
       - hopslog
       - hopslog::_filebeat-serving
       - hopslog::_filebeat-beam
+      - hopslog::_filebeat-jupyter
       - kzookeeper
       - livy
       - hive2
