@@ -16,7 +16,7 @@ attrs:
     __ENTERPRISE__
   __CUDA__
   hops:
-#    version: "2.8.2.10-EE-RC0"
+#    version: "2.8.2.10-EE-RC0"  
     tls:
       enabled: __TLS__
     __YARN__
@@ -25,15 +25,15 @@ attrs:
       detect-hardware-capabilities: false
     rmappsecurity:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
+#  maggy:
+#    version: "git+git://github.com/logicalclocks/maggy@master"
   kagent:
     python_conda_versions: 3.6
-  maggy:
-    version: "git+git://github.com/moritzmeister/maggy@oblivious-train"
-  conda:
-    hops-util-py:
-      install-mode: "git"
-      branch: "oblivious-train"
-      repo: "moritzmeister"
+#  conda:
+#    hops-util-py:
+#      install-mode: "git"
+#      branch: "model_repo_project"
+#      repo: "jimdowling"
 #  ndb:
 #    nvme:
 #      disks: "/dev/nvme0n1 /dev/nvme0n1"
@@ -51,7 +51,7 @@ attrs:
       retention_time: "8h"
   hopsworks:
 #    war_url: http://snurran.sics.se/hops/hopsworks/1.4.0/hopsworks-web-dev.war
-#    ca_url: http://snurran.sics.se/hops/hopsworks/1.4.0/hopsworks-ca-dev.war
+#    ca_url: http://snurran.sics.se/hops/hopsworks/1.4.0/hopsworks-ca-dev.war    
 #    ear_url: http://snurran.sics.se/hops/hopsworks/1.4.0/hopsworks-ear-dev.ear
     encryption_password: __PWD___001
     master:
@@ -70,7 +70,7 @@ attrs:
   hive2:
       mysql_password: __PWD___203
   mysql:
-      password: __PWD___202
+      password: __PWD___202      
   elastic:
     opendistro_security:
       jwt:
@@ -110,6 +110,7 @@ groups:
       - hops::jhs
       - hadoop_spark::yarn
       - hadoop_spark::historyserver
+      - hadoop_spark::certs
       - flink::yarn
       - flink::historyserver
       - elastic
@@ -122,6 +123,7 @@ groups:
       - hopslog
       - hopslog::_filebeat-spark
       - hopslog::_filebeat-serving
+      - hopslog::_filebeat-kagent
       - hopslog::_filebeat-beam
       - hops::dn
       - hops::nm
@@ -132,7 +134,7 @@ groups:
       - hopsmonitor::prometheus
       - hopsmonitor::alertmanager
       - hopsmonitor::node_exporter
-      - consul::master
-#      - hops::docker_registry
+      - hopsmonitor::purge_telegraf
+      - consul::master      
 __KUBERNETES_RECIPES__
 
