@@ -47,13 +47,13 @@ NUM_GPUS_PER_VM=1
 
 DEFAULT_TYPE=n1-standard-8
 #DEFAULT_TYPE=n1-standard-16
-IMAGE=centos-7-v20200603
-IMAGE_PROJECT=centos-cloud
-#IMAGE=ubuntu-1804-bionic-v20200414
-#IMAGE_PROJECT=ubuntu-os-cloud
+#IMAGE=centos-7-v20200603
+#IMAGE_PROJECT=centos-cloud
+IMAGE=ubuntu-1804-bionic-v20200414
+IMAGE_PROJECT=ubuntu-os-cloud
 #LOCAL_DISK=
 # add many local NVMe disks with multiple entries
-LOCAL_DISK="--local-ssd=interface=NVME --local-ssd=interface=NVME "
+#LOCAL_DISK="--local-ssd=interface=NVME --local-ssd=interface=NVME "
 
 
 #

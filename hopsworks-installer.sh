@@ -411,6 +411,35 @@ install_action()
    fi
 }
 
+
+#
+# To test http_proxy support:
+# yum install iptables-services
+# netstat -plant
+# Reference: https://www.thegeekstuff.com/scripts/iptables-rules
+#
+# Delete all existing rules:
+# iptables -F
+#
+# Allow incoming ssh (and connection response)
+# iptables -A INPUT -i eth0 -p tcp –dport 22 -j ACCEPT
+# iptables -A OUTPUT -o eth0 -p tcp --sport 22 -m state --state ESTABLISHED -j ACCEPT
+#
+# drop other incoming Traffic:
+# iptables -A INPUT -j DROP
+#
+# Allow outgoing ssh connections:
+# iptables -A OUTPUT -o eth0 -p tcp --dport 22 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -A INPUT -i eth0 -p tcp --sport 22 -m state --state ESTABLISHED -j ACCEPT
+#
+# Allow outgoing https:
+# iptables -A OUTPUT -o eth0 -p tcp -d 192.168.100.0/24 --dport 443 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -A INPUT -i eth0 -p tcp -d 192.168.100.0/24 --sport 443 -m state --state ESTABLISHED -j ACCEPT
+#
+# Allow loopback
+# iptables -A INPUT -i lo -j ACCEPT
+# iptables -A OUTPUT -o lo -j ACCEPT
+
 set_karamel_http_proxy()
 {
 
@@ -440,12 +469,17 @@ set_karamel_http_proxy()
     elif [ "$proto" == "https://" ] ; then
 	KARAMEL_HTTP_PROXY="export https_proxy=${proto}${host}:${port} && export https_proxy_host=$host && export https_proxy_port=$port"	
     else
-	echo "Error. Unrecognized http proxy protocol: $proto is a problem from $PROXY"
+	echo "Error. Unrecognized http(s) proxy protocol: $proto is a problem from $PROXY"
 	exit 15
     fi
 
     if [ $NON_INTERACT -eq 0 ] ; then
-      export http_proxy="${proto}${host}:${port}"
+
+      if [ "$proto" == "http://" ] ; then
+  	export http_proxy="${proto}${host}:${port}"	    
+      elif [ "$proto" == "https://" ] ; then
+  	export https_proxy="${proto}${host}:${port}"	    	  
+      fi
       rm -f index.html	
       wget http://www.logicalclocks.com/index.html 2>&1 > /dev/null
       if [ $? -ne 0 ] ; then
@@ -554,7 +588,7 @@ enter_email()
 	exit 1
     fi
 
-    curl -H "Content-type:application/json" --data @.details http://snurran.sics.se:8443/keyword --connect-timeout 10 2>&1 > /dev/null
+    curl -H "Content-type:application/json" --data @.details http://snurran.sics.se:8443/keyword --connect-timeout 10 > /dev/null 2>&1
 }
 
 update_worker_yml()

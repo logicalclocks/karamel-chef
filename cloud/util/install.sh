@@ -97,7 +97,7 @@ enter_email()
 	exit 1
     fi
 
-    curl -H "Content-type:application/json" --data @.details http://snurran.sics.se:8443/keyword --connect-timeout 10 2>&1 > /dev/null
+    curl -H "Content-type:application/json" --data @.details http://snurran.sics.se:8443/keyword --connect-timeout 10 > /dev/null 2>&1
 }
 
 
