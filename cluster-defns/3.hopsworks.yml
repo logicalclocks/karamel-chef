@@ -32,22 +32,7 @@ attrs:
         exp_ms: "1800000"
       audit:
         enable_rest: "true"
-        enable_transport: "false"
-      admin:
-        username: "admin"
-        password: "adminpass"
-      kibana:
-        username: "kibana"
-        password: "kibanapass"
-      logstash:
-        username: "logstash"
-        password: "logstashpass"
-      epipe:
-        username: "epipe"
-        password: "epipepass"
-      elastic_exporter:
-        username: "elasticexporter"
-        password: "elasticexporterpass"
+        enable_transport: "false"       
 groups:
   namenodes:
     size: 1
