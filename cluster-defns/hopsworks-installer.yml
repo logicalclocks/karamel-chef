@@ -125,6 +125,7 @@ groups:
       - hopslog::_filebeat-serving
       - hopslog::_filebeat-kagent
       - hopslog::_filebeat-beam
+      - hopslog::_filebeat-jupyter
       - hops::dn
       - hops::nm
       - tensorflow
