@@ -28,7 +28,7 @@
 ###################################################################################################
 
 HOPSWORKS_REPO=logicalclocks/hopsworks-chef
-HOPSWORKS_BRANCH=1.3
+HOPSWORKS_BRANCH=master
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_BRANCH
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
@@ -82,7 +82,9 @@ HAS_GPUS=0
 AVAILABLE_GPUS=
 CUDA=
 
-KARAMEL_HTTP_PROXY=
+KARAMEL_HTTP_PROXY_1=
+KARAMEL_HTTP_PROXY_2=
+KARAMEL_HTTP_PROXY_3=
 PROXY=
 
 # $1 = String describing error
@@ -422,9 +424,17 @@ install_action()
 # iptables -F
 #
 # Allow incoming ssh (and connection response)
-# iptables -A INPUT -i eth0 -p tcp –dport 22 -j ACCEPT
+# sudo iptables -A INPUT -p tcp --dport 22 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+# sudo iptables -A OUTPUT -p tcp --sport 22 -m conntrack --ctstate ESTABLISHED -j ACCEP
 # iptables -A OUTPUT -o eth0 -p tcp --sport 22 -m state --state ESTABLISHED -j ACCEPT
 #
+# allow related traiff
+# sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+# sudo iptables -A OUTPUT -m conntrack --ctstate ESTABLISHED -j ACCEPT
+# sudo iptables -A INPUT -p tcp --dport 22 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+# sudo iptables -A OUTPUT -p tcp --sport 22 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+
+
 # drop other incoming Traffic:
 # iptables -A INPUT -j DROP
 #
@@ -465,9 +475,14 @@ set_karamel_http_proxy()
 	fi
     fi
     if [ "$proto" == "http://" ] ; then
-        KARAMEL_HTTP_PROXY="export http_proxy=${proto}${host}:${port} && export http_proxy_host=$host && export http_proxy_port=$port"	
+        KARAMEL_HTTP_PROXY_1="export http_proxy=${proto}${host}:${port}"
+        KARAMEL_HTTP_PROXY_2="export http_proxy_host=$host"
+        KARAMEL_HTTP_PROXY_3="export http_proxy_port=$port"		
     elif [ "$proto" == "https://" ] ; then
-	KARAMEL_HTTP_PROXY="export https_proxy=${proto}${host}:${port} && export https_proxy_host=$host && export https_proxy_port=$port"	
+        KARAMEL_HTTP_PROXY_1="export https_proxy=${proto}${host}:${port}"
+        KARAMEL_HTTP_PROXY_2="export https_proxy_host=$host"
+        KARAMEL_HTTP_PROXY_3="export https_proxy_port=$port"		
+	
     else
 	echo "Error. Unrecognized http(s) proxy protocol: $proto is a problem from $PROXY"
 	exit 15
@@ -880,7 +895,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      echo " [-du|--download-user username] Username for downloading enterprise binaries."
 	      echo " [-dp|--download-password password] Password for downloading enterprise binaries."
 	      echo " [-ni|--non-interactive)] skip license/terms acceptance and all confirmation screens."
-	      echo " [-p|--http-proxy) url] URL of the http(s) proxy server used to access the Internet"
+	      echo " [-p|--https-proxy) url] URL of the https proxy server. Only https (not http_proxy) with valid certs supported."
 	      echo " [-pwd|--password password] sudo password for user running chef recipes."
 	      echo " [-y|--yml yaml_file] yaml file to run Karamel against."
 	      echo ""
@@ -1218,7 +1233,9 @@ fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_KARAMEL" ]  ; then
     cd karamel-${KARAMEL_VERSION}
-    $KARAMEL_HTTP_PROXY
+    $KARAMEL_HTTP_PROXY_1
+    $KARAMEL_HTTP_PROXY_2
+    $KARAMEL_HTTP_PROXY_3    
     setsid ./bin/karamel -headless &
     echo "To access Karamel, open your browser at: "
     echo ""
@@ -1329,9 +1346,13 @@ else
     if [ $DRY_RUN -eq 0 ] ; then
 	cd karamel-${KARAMEL_VERSION}
 	echo "Running command from ${PWD}:"
-	echo "$KARAMEL_HTTP_PROXY "
+	echo "$KARAMEL_HTTP_PROXY_1"
+	echo "$KARAMEL_HTTP_PROXY_2"
+	echo "$KARAMEL_HTTP_PROXY_3"	
 	echo "setsid ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log 2>&1 &"
-	$KARAMEL_HTTP_PROXY
+        $KARAMEL_HTTP_PROXY_1
+        $KARAMEL_HTTP_PROXY_2
+        $KARAMEL_HTTP_PROXY_3    
 	setsid ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log 2>&1 &
 	echo ""
 	echo "***********************************************************************************************************"

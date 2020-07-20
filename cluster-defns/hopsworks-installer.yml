@@ -27,8 +27,7 @@ attrs:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
 #  maggy:
 #    version: "git+git://github.com/logicalclocks/maggy@master"
-  kagent:
-    python_conda_versions: 3.6
+#  kagent:
 #  conda:
 #    hops-util-py:
 #      install-mode: "git"
@@ -110,7 +109,6 @@ groups:
       - hops::jhs
       - hadoop_spark::yarn
       - hadoop_spark::historyserver
-      - hadoop_spark::certs
       - flink::yarn
       - flink::historyserver
       - elastic
@@ -123,8 +121,6 @@ groups:
       - hopslog
       - hopslog::_filebeat-spark
       - hopslog::_filebeat-serving
-      - hopslog::_filebeat-kagent
-      - hopslog::_filebeat-beam
       - hopslog::_filebeat-jupyter
       - hops::dn
       - hops::nm
@@ -135,7 +131,7 @@ groups:
       - hopsmonitor::prometheus
       - hopsmonitor::alertmanager
       - hopsmonitor::node_exporter
-      - hopsmonitor::purge_telegraf
-      - consul::master      
+      - consul::master
+      - hops::docker_registry      
 __KUBERNETES_RECIPES__
 

@@ -85,7 +85,7 @@ clear_known_hosts()
 enter_email()
 {
 
-    echo "Please enter your email address to continue:"
+    printf "Please enter your email address to continue: "
     read email
 
     if [[ $email =~ .*@.* ]]
@@ -233,7 +233,8 @@ fi
 if [ "$ENTERPRISE_USER" != "" ] ; then
   DOWNLOAD_USERNAME="-du $ENTERPRISE_USER "
 fi
-if [ "$ENTERPRISE_PASSWORD" != "" ] ; then
+if [ "$ENTERPRISE_PASSWOR
+D" != "" ] ; then
   DOWNLOAD_PASSWORD="-dp $ENTERPRISE_PASSWORD "
 fi
 echo
