@@ -1,5 +1,7 @@
 #!/bin/bash
 
+prefix=$USER
+
 help()
 {
     echo ""
@@ -100,6 +102,20 @@ enter_email()
     curl -H "Content-type:application/json" --data @.details http://snurran.sics.se:8443/keyword --connect-timeout 10 > /dev/null 2>&1
 }
 
+enter_prefix()
+{
+
+    printf "Enter the name of the VM that will be created (default: $USER): "
+    read prefix
+
+    if [ "$prefix" == "" ] ; then
+        prefix=$USER
+    fi
+
+    echo "VM name: $prefix"
+}
+
+
 
 ###################################################################
 #   MAIN                                                          #
@@ -110,8 +126,10 @@ if [ "$1" != "cpu" ] && [ "$1" != "gpu" ] && [ "$1" != "cluster" ] ; then
     exit 3
 fi
 
+enter_prefix
+
 host_ip=
-. config.sh $1
+. config.sh $prefix $1
 
 if [ "$2" == "no-email" ] || [ "$3" == "no-email" ] || [ "$4" == "no-email" ] ; then
     echo "Skipping registration"
@@ -132,7 +150,7 @@ else
 fi
 
 if [ ! "$2" == "skip-create" ] ; then
-    IP=$(./_list_public.sh $1)    
+    IP=$(./_list_public.sh $prefix)    
     if [ "$IP" != "" ] ; then
 	echo "VM already created and running at: $IP"
 	echo "Exiting..."
@@ -141,7 +159,7 @@ if [ ! "$2" == "skip-create" ] ; then
     echo ""
     echo "Creating VM(s) ...."
     echo ""    
-    ./_create.sh $1
+    ./_create.sh $prefix $1
     if [ $? -ne 0 ] ; then
 	echo ""	
 	echo "Problem creating a VM. Exiting....."

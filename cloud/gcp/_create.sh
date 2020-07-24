@@ -3,13 +3,13 @@
 help()
 {
     echo ""
-    echo "Usage: $0 cpu|gpu|cluster|[benchmark num_cpus num_gpus]"
-    echo "Create a VM or a cluster."
+    echo "Usage: $0 vm_name_prefix num_cpus num_gpus [head_num_gpus]"
+    echo "Create a Hopsworks cluster."
     echo ""    
     exit 1
 }
 
-if [ $# -lt 1 ] ; then
+if [ $# -lt 3 ] ; then
     help
 fi
 
@@ -17,6 +17,7 @@ set -e
 
 ACCELERATOR=
 MACHINE_SPECS=
+HEAD_NUM_GPUS=0
 
 create()
 {
@@ -43,67 +44,44 @@ nvidia_drivers_ubuntu()
     ssh -t -o StrictHostKeyChecking=no $GPU_IP "/home/$USER/hopsworks-installer.sh -i nvidia -ni -c gcp"
 }
 
-MODE=$1
-
-. config.sh $MODE
-
+PREFIX=$1
+MODE="head"
 MACHINE_SPECS=
-if [ "$MODE" == "cpu" ] ; then
+CPUS=$2
+GPUS=$3
+if [ $# -gt 3 ] ; then
+ HEAD_NUM_GPUS=$4
+fi
+
+. config.sh $PREFIX $MODE
+
+create
+
+for i in $(seq 1 ${CPUS}) ;
+do
+    n="${PREFIX}cp$i"
+    . config.sh $n
     ACCELERATOR=""
     create
-elif [ "$MODE" == "gpu" ] ; then
+    # store intermediate counts of number of cpu-only VMs, in case of VM creation failure
+    echo $i > .cpus
+done
+
+for i in $(seq 1 ${GPUS}) ;
+do
+    n="${PREFIX}gp$i"
+    . config.sh $n
     ACCELERATOR="--accelerator=type=$GPU,count=$NUM_GPUS_PER_VM "
     create
-elif [ "$MODE" == "cluster" ] ; then
-    ACCELERATOR=""    
-    create
-    . config.sh "cpu"
-    create
-    . config.sh "gpu"
-    ACCELERATOR="--accelerator=type=$GPU,count=$NUM_GPUS_PER_VM "
-    create
+    # store intermediate counts of number of gpu-enabled VMs, in case of VM creation failure    
+    echo $i > .gpus
     if [ "$IMAGE_PROJECT" == "ubuntu-os-cloud" ] ; then
 	nvidia_drivers_ubuntu
     fi
-    
-    export NAME="clu"
-elif [ "$MODE" == "benchmark" ] ; then
-    if [ $# -lt 3 ] ; then
-	help
-    fi
-    CPUS=$2
-    GPUS=$3
-
-    create
-    
-    for i in $(seq 1 ${CPUS}) ;
-    do
-	n="cp$i"
-	. config.sh $n
-       ACCELERATOR=""
-       create
-       echo $i > .cpus
-    done
-
-    for i in $(seq 1 ${GPUS}) ;
-    do
-	n="gp$i"
-	. config.sh $n
-	ACCELERATOR="--accelerator=type=$GPU,count=$NUM_GPUS_PER_VM "
-	create
-        echo $i > .gpus	
-    done
-    export NAME="clu"
-    echo $CPUS > .cpus
-    echo $GPUS > .gpus
-else
-    echo "Bad argument."
-    echo ""
-    echo "Usage: $0 cpu|gpu|cluster"
-    echo "Create a VM or a cluster."
-    echo ""    
-    exit 2
-fi	    
+done
+#    export NAME="clu"
+echo $CPUS > .cpus
+echo $GPUS > .gpus
 
 
 echo ""

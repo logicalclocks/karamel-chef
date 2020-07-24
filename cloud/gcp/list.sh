@@ -2,33 +2,34 @@
 
 check()
 {
-    row=$(gcloud compute instances list | grep $job)
-    PRIVATE_IP=$(echo $row | awk '{ print $4 }')
-    PUBLIC_IP=$(echo $row | awk '{ print $5 }')
-    echo -e "$job \t PUBLIC_IP: $PUBLIC_IP \t PRIVATE_IP: $PRIVATE_IP"
+    row=$(gcloud compute instances list)
+    if [ "$row" != "" ] && [ "$job" != "" ] ; then
+      row=$(echo $row | grep $job)
+      PRIVATE_IP=$(echo $row | awk '{ print $4 }')
+      PUBLIC_IP=$(echo $row | awk '{ print $5 }')
+      echo -e "$job \t PUBLIC_IP: $PUBLIC_IP \t PRIVATE_IP: $PRIVATE_IP"
+    else
+      echo "No instances found."	
+    fi
 }
 
-. config.sh
-echo "Region: ${REGION}"
+PREFIX=$USER
 
-if [ $# -lt 1 ] ; then
-    job="cpu${REGION/-/}"
-    check
-    job="gpu${REGION/-/}"
-    check
-    job="clu${REGION/-/}"
-    check
-else    
-    if [ "$1" == "-h" ] ; then
-	echo "Usage: $0 [benchmark]"
-	exit 1
-    fi
-  reg="${REGION/-/}"    
-  echo  "Head: "
-  ben="ben${reg}"    
-  gcloud compute instances list  | grep "$ben" | awk '{ print $4, $5 }'
-  echo  "Compute: "
-  gcloud compute instances list | grep -E "cp[0-9]{1,3}${reg}" | awk '{ print $4, $5 }'
-  echo "GPU: "
-  gcloud compute instances list | grep -E "gp[0-9]{1,3}${reg}" | awk '{ print $4, $5 }'
+if [ "$1" == "-h" ] ; then
+    echo "Usage: $0 [vm_name_prefix]"
+    exit 1
 fi
+
+#echo "Region: ${REGION}"
+if [ $# -gt 0 ] ; then
+ PREFIX=$1
+fi
+
+. config.sh $PREFIX "head"
+
+job=$PREFIX
+check
+#  reg="${REGION/-/}"    
+#gcloud compute instances list  | grep "$NAME" | awk '{ print $4, $5 }'
+#  gcloud compute instances list | grep -E "gp[0-9]{1,3}${reg}" | awk '{ print $4, $5 }'
+

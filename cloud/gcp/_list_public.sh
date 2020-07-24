@@ -1,7 +1,8 @@
 #!/bin/bash
 
 if [ "$1" == "-h" ] ; then
-    echo "Usage: $0 cpu|gpu|cluster"
+    echo "Usage: $0 vm_name_prefix"
+    
     exit 1
 fi
 

@@ -3,8 +3,8 @@
 
 help()
 {
-    echo "Usage: $0 [cpu|gpu|cluster|benchmark]"
-    echo "Delete an instance on GCP"
+    echo "Usage: $0 [vm_name_prefix]"
+    echo "Delete a Hopsworks cluster on GCP. "
     exit 1
 }
 
@@ -12,54 +12,45 @@ if [ "$1" == "-h" ] ; then
    help
 fi
 
-if [ $# -ne 1 ] ; then
+if [ $# -lt 1 ] ; then
    help
 fi    
 
 rm_instance()
 {
-    echo "gcloud compute instances delete -q $NAME"
-    gcloud compute instances delete -q $NAME 
+    echo "Deleting $NAME"
+    nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1 </dev/null &
 }
 
-. config.sh
+prefix=$USER
 
-if [ "$1" = "cpu" ] ; then
-    . config.sh cpu.sh
-    rm_instance
-elif [ "$1" = "gpu" ] ; then
-    . config.sh "gpu"
-    rm_instance    
-elif [ "$1" = "cluster" ] ; then
-    . config.sh "cpu"
-    rm_instance
-    . config.sh "gpu"
-    rm_instance    
-    . config.sh "cluster"
-    rm_instance
-elif [ "$1" = "benchmark" ] ; then
-    reg=${REGION/-/}
-    NAME="ben${reg}"
-    rm_instance
+if [ $# -gt 0 ] ; then
+    prefix=$1
+fi    
 
-    CPUS=$(cat .cpus)
-    GPUS=$(cat .gpus)
-    for i in $(seq 1 ${CPUS}) ;
-    do
-        NAME="cp${i}${reg}"
-        rm_instance
-    done
-    
-    for i in $(seq 1 ${GPUS}) ;
-    do
-        NAME="gp${i}${reg}"
-        rm_instance
-    done
-else
-    echo "Invalid argument."
-    exit 1
-fi
+
+#reg=${REGION/-/}
+#NAME="ben${reg}"
+. config.sh $prefix "head"
+rm_instance
+
+CPUS=$(cat .cpus)
+GPUS=$(cat .gpus)
+for i in $(seq 1 ${CPUS}) ;
+do
+#    NAME="${prefix}cp${i}${reg}"
+    NAME="${prefix}cp${i}"    
+    rm_instance
+done
+
+for i in $(seq 1 ${GPUS}) ;
+do
+    NAME="${prefix}gp${i}"        
+    rm_instance
+done
 
 echo ""
-echo "Finished deleting instance $NAME. Exiting..."
+echo "Deleting cluster with prefix:  $prefix."
+echo "Check log file for progress: "
+echo "tail -f gcp-installer.log"
 echo ""

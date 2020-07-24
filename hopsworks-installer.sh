@@ -94,7 +94,7 @@ exit_error()
 
   echo "" $ECHO_OUT
   echo "Error number: $1"
-  echo "Exiting $PRODUCT $VERSION installer."
+  echo "Exiting hopsworks-installer.sh."
   echo ""
   exit 1
 }
@@ -278,7 +278,7 @@ display_license()
   echo "http://www.gnu.org/licenses/gpl-3.0.txt"
   echo ""
   echo "Copyright(C) 2020 Logical Clocks AB. All rights reserved."
-  echo "Logical Clocks AB is furnishing this item "as is". Logical Clocks AB does not provide any"
+  echo "Logical Clocks AB is furnishing this item \"as is\". Logical Clocks AB does not provide any"
   echo "warranty of the item whatsoever, whether express, implied, or statutory,"
   echo "including, but not limited to, any warranty of merchantability or fitness"
   echo "for a particular purpose or any warranty that the contents of the item will"

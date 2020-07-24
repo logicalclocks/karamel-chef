@@ -7,8 +7,18 @@ REGION=us-east1
 #ZONE=europe-west1-d
 #REGION=europe-west1
 
-script=$1
-NAME=${script:0:3}${REGION/-/}
+vm_name_prefix=$USER
+machine="head"
+if [ $# -gt 0 ] ; then
+  vm_name_prefix=$1
+fi    
+if [ $# -gt 1 ] ; then
+  machine=$2
+fi
+
+export NAME=${vm_name_prefix}${machine}
+#NAME=${vm_name_prefix:0:4}${machine}
+#NAME=${vm_name_prefix:0:3}${REGION/-/}
 
 BRANCH=$(grep ^HOPSWORKS_BRANCH ../../hopsworks-installer.sh | sed -e 's/HOPSWORKS_BRANCH=//g')
 CLUSTER_DEFINITION_BRANCH=$(grep ^CLUSTER_DEFINITION_BRANCH ../../hopsworks-installer.sh | sed -e 's/CLUSTER_DEFINITION_BRANCH=//g')
@@ -59,16 +69,16 @@ IMAGE_PROJECT=centos-cloud
 #
 # Here, we can configure each machine type differently. Give it more CPUs, a NVMe disk, a different OS, etc
 #
-SHORT_NAME=${script:0:2}
-if [ "$SHORT_NAME" == "cp" ] ; then
+
+if [ "$machine" == "cpu" ] ; then
 #    DEFAULT_TYPE=n1-standard-16
     MACHINE_TYPE=$DEFAULT_TYPE
-elif [ "$SHORT_NAME" == "gp" ] ; then
+elif [ "$machine" == "gpu" ] ; then
 #    DEFAULT_TYPE=n1-standard-8
    MACHINE_TYPE=$DEFAULT_TYPE    
     # add many local NVMe disks with multiple entries
 #    LOCAL_DISK="--local-ssd=interface=NVME --local-ssd=interface=NVME "
-elif [ "$SHORT_NAME" == "cl" ] || [ "$SHORT_NAME" == "be" ] ; then
+elif [ "$machine" == "head" ] ; then
    MACHINE_TYPE=$DEFAULT_TYPE
 else
    MACHINE_TYPE=$DEFAULT_TYPE    
