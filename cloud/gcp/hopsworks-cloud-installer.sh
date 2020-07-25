@@ -33,14 +33,18 @@
 ###################################################################################################
 
 HOPSWORKS_INSTALLER_VERSION=1.3
-HOPSWORKS_INSTALLER_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_BRANCH
-CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_BRANCH
+BRANCH=master
+HOPSWORKS_INSTALLER_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$BRANCH
+CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$BRANCH
 
 declare -a CPU
 declare -a GPU
 
 declare -a PRIVATE_CPU
 declare -a PRIVATE_GPU
+
+DO_LISTING=0
+RM_TYPE=
 
 INSTALL_ACTION=
 HOPSWORKS_VERSION=enterprise
@@ -64,8 +68,6 @@ WORKER_YML="cluster-defns/hopsworks-worker.yml"
 WORKER_GPU_YML="cluster-defns/hopsworks-worker-gpu.yml"
 YML_FILE="cluster-defns/hopsworks-installer-active.yml"
 
-GPU_TYPE=
-
 WORKER_LIST=
 WORKER_IP=
 WORKER_DEFAULTS=
@@ -76,6 +78,11 @@ ENTERPRISE_USERNAME=
 ENTERPRISE_PASSWORD=
 SKIP_CREATE=0
 
+NUM_GPUS_PER_VM=
+GPU_TYPE=
+
+NUM_WORKERS_GPU=0
+NUM_WORKERS_GPU=0
 
 CLOUD=
 # GCP Config
@@ -177,6 +184,19 @@ splash_screen()
   echo "To cancel installation at any time, press CONTROL-C"
   echo ""
 
+  if [ ! -e ~/.ssh/id_rsa.pub ] ; then
+      echo "ATTENTION."
+      echo "A public ssh key cannot be found at: ~/.ssh/id_rsa.pub"
+      echo "To continue, you need to create one at that path. Is that ok (y/n)?"
+      read ACCEPT
+      if [ "$ACCEPT" == "y" ] ; then
+	  cat /dev/zero | ssh-keygen -q -N "" > /dev/null
+      else
+	  echo "Exiting...."
+	  exit 99
+      fi
+  fi
+  
   clear_screen
 }
 
@@ -291,7 +311,6 @@ install_action()
             install_action
             ;;
          esac
-	clear_screen
    fi
 }
 
@@ -411,7 +430,6 @@ enter_cloud()
             enter_cloud
             ;;
          esac
-	clear_screen
    fi
 }
 
@@ -419,38 +437,19 @@ enter_cloud()
 enter_prefix()
 {
 
-    printf "Enter the name of the VM that will be created (default: $USER): "
+    printf "All VMs created will have their names prefixed with the string you enter here. Enter the prefix (default: $USER): "
     read PREFIX
 
     if [ "$PREFIX" == "" ] ; then
         PREFIX=$USER
     fi
 
-    echo "VM name: $PREFIX"
+    echo "VM name prefix: $PREFIX"
 }
-
-enter_head_vm_type()
-{
-
-    printf "How many GPUs would you like the head node to have: (default: 0)"
-    read HEAD_NUM_GPUS
-
-    if [[ $email =~ .*@.* ]]
-    then
-	echo "Registering...."
-	echo "{\"id\": \"$rand\", \"name\":\"$email\"}" > .details
-    else
-	echo "Exiting. Invalid email address."
-	exit 1
-    fi
-
-    curl -H "Content-type:application/json" --data @.details http://snurran.sics.se:8443/keyword --connect-timeout 10 > /dev/null 2>&1
-}
-
 
 download_installer() {
 
-    wget -nc ${HOPSWORKS_INSTALLER_BRANCH}/hopsworks-installer.sh
+    wget -nc ${HOPSWORKS_INSTALLER_BRANCH}/hopsworks-installer.sh 2>&1 > /dev/null
     if [ $? -ne 0 ] ; then
 	echo "Could not download hopsworks-installer.sh"
 	echo "WARNING: There could be a problem with your proxy server settings."	  
@@ -467,11 +466,10 @@ download_installer() {
     fi
     cd cluster-defns
     # Don't overwrite the YML files, so that users can customize them
-    wget -nc ${CLUSTER_DEFINITION_BRANCH}/$INPUT_YML
-    wget -nc ${CLUSTER_DEFINITION_BRANCH}/$WORKER_YML
-    wget -nc ${CLUSTER_DEFINITION_BRANCH}/$WORKER_GPU_YML
+    wget -nc ${CLUSTER_DEFINITION_BRANCH}/$INPUT_YML  2>&1 > /dev/null
+    wget -nc ${CLUSTER_DEFINITION_BRANCH}/$WORKER_YML  2>&1 > /dev/null
+    wget -nc ${CLUSTER_DEFINITION_BRANCH}/$WORKER_GPU_YML  2>&1 > /dev/null
     cd ..
-    
 }
 
 
@@ -480,15 +478,13 @@ download_installer() {
 add_worker()
 {
     WORKER_GPUS=$1
-    WORKER_GPU_TYPE=$2
     
-    re='^[0-9]+$'
-
     if [ "$WORKER_GPUS" -gt "0" ] ; then
-	HAS_GPUS=1
-
-        create_vm_gpu 
-
+        NAME="${PREFIX}gpu${WORKER_ID}${REGION/-/}"
+        create_vm_gpu
+    else
+        NAME="${PREFIX}cpu${WORKER_ID}${REGION/-/}"	
+	create_vm_cpu
     fi
 
     WORKER_ID=$((WORKER_ID+1))
@@ -497,13 +493,15 @@ add_worker()
 
 cpu_worker_size()
 {
-   printf 'Please enter the number of CPU-only workers you want to add (default: 0): '
-   read CPU_NUM_WORKERS
-   if [ "$CPU_NUM_WORKERS" == "" ] ; then
-       CPU_NUM_WORKERS=0
+   if [ $NUM_WORKERS_CPU -eq 0 ] ; then
+       printf 'Please enter the number of CPU-only workers you want to add (default: 0): '
+       read CPU_NUM_WORKERS
+       if [ "$CPU_NUM_WORKERS" == "" ] ; then
+	   NUM_WORKERS_CPU=0
+       fi
    fi
    i=0
-   while [ $i -lt $CPU_NUM_WORKERS ] ;
+   while [ $i -lt $NUM_WORKERS_CPU ] ;
    do
       add_worker 0
       i=$((i+1))
@@ -514,19 +512,49 @@ cpu_worker_size()
 
 gpu_worker_size()
 {
-   printf 'Please enter the number of GPU-enabled workers you want to add (default: 0): '
-   read GPU_NUM_WORKERS
-   if [ "$GPU_NUM_WORKERS" == "" ] ; then
-       GPU_NUM_WORKERS=0
+   if [ $NUM_WORKERS_GPU -eq 0 ] ; then    
+     printf 'Please enter the number of GPU-enabled workers you want to add (default: 0): '
+     read NUM_WORKERS_GPU
+     if [ "$NUM_WORKERS_GPU" == "" ] ; then
+       NUM_WORKERS_GPU=0
+     fi
    fi
    i=0
-   while [ $i -lt $GPU_NUM_WORKERS ] ;
+   while [ $i -lt $NUM_WORKERS_GPU ] ;
    do
-      add_worker $NUM_GPUS $GPU_TYPE
+      add_worker $NUM_GPUS_PER_VM 
       i=$((i+1))
       clear_screen
    done
 }
+
+
+select_gpu()
+{
+   printf 'Please enter the number of GPUs per VM (default: 0): '
+   read NUM_GPUS_PER_VM
+   if [ "$NUM_GPUS_PER_VM" == "" ] ; then
+       NUM_GPUS_PER_VM=0
+   else
+     echo ""
+     echo "Available GPU types: v100, p100, k80"
+     printf 'Please enter the type of GPU (default: v100): '
+     read GPU_TYPE
+     case $GPU_TYPE in
+         v100 | p100 | k80)
+	  echo ""
+	  echo "Number of GPUs: $NUM_GPUS . GPU type: $GPU_TYPE"
+	  clear_screen
+        ;;
+        *)
+          echo "Invalid GPU choice. Try again."
+          echo ""
+          select_gpu
+        ;;
+     esac
+   fi
+}
+
 
 
 enter_enterprise_credentials()
@@ -622,108 +650,6 @@ gcloud_setup()
 	echo ""
 	exit 1
     fi    
-    
-    gcloud config get-value project
-    echo ""
-    printf "Do you want to use the current active project (y/n)? (default: y) "
-    read CHANGE_PROJECT
-
-    if [ "CHANGE_PROJECT" == "" ] || [ "CHANGE_PROJECT" == "y" ] ; then
-      echo ""
-    else
-      gcloud projects list --sort-by=projectId
-      echo ""
-      printf "Enter the PROJECT_ID: "
-      read CHANGE_PROJECT
-      gcloud config set core/project $CHANGE_PROJECT > /dev/null 2>&1
-    fi
-
-    PROJECT=$(gcloud config get-value core/project 2> /dev/null)
-
-
-    gcloud config get-value compute/region
-    echo ""
-    printf "Do you want to use the current active region (y/n)? (default: y) "
-    read CHANGE_REGION
-
-    if [ "CHANGE_REGION" == "" ] || [ "CHANGE_REGION" == "y" ] ; then
-      echo ""
-    else
-      gcloud compute regions list | awk '{ print $1 }'
-      echo ""
-      printf "Enter the REGION: "
-      read CHANGE_REGION
-      gcloud config set compute/region $CHANGE_REGION  > /dev/null 2>&1
-    fi
-    REGION=$(gcloud config get-value compute/region 2> /dev/null)    
-
-    gcloud config get-value compute/zone
-    echo ""
-    printf "Do you want to use the current active zone (y/n)? (default: y) "
-    read CHANGE_ZONE
-
-    if [ "CHANGE_ZONE" == "" ] || [ "CHANGE_ZONE" == "y" ] ; then
-      echo ""
-    else
-      gcloud compute zones list | grep $REGION  | awk '{ print $1 }'
-      echo ""
-      printf "Enter the ZONE: "
-      read CHANGE_ZONE
-      gcloud config set compute/zone $CHANGE_ZONE > /dev/null 2>&1
-    fi
-    ZONE=$(gcloud config get-value compute/zone 2> /dev/null)    
-
-
-
-    echo ""
-    printf "Select IMAGE/IMAGE_PROJECT (centos/ubuntu/custom)? (default: centos) "
-    read SELECT_IMAGE
-
-    if [ "SELECT_IMAGE" == "" ] || [ "SELECT_IMAGE" == "centos" ] ; then
-	IMAGE=centos-7-v20200714
-	IMAGE_PROJECT=centos-cloud
-    elif [ "SELECT_IMAGE" == "ubuntu" ] ; then
-	IMAGE=ubuntu-1804-bionic-v20200716
-	IMAGE_PROJECT=ubuntu-os-cloud
-    else
-      printf "Enter the IMAGE: "
-      read IMAGE
-      printf "Enter the IMAGE_PROJECT: "
-      read IMAGE_PROJECT
-    fi
-    echo
-    echo "IMAGE is now: $IMAGE"
-    echo "IMAGE_PROJECT is now: $IMAGE_PROJECT"
-    echo ""
-
-    GPU=nvidia-tesla-${GPU_TYPE}
-    
-    clear_screen
-    
-    #IMAGE=ubuntu-1804-bionic-v20200716
-    #IMAGE_PROJECT=ubuntu-os-cloud
-
-    
-}
-
-gcloud_config()
-{
-    vm_name_prefix=$USER
-
-    printf "Enter the prefix for the name of the virtual machines to be created  (default: $vm_name_prefix): "
-    read prefix
-    if [ "$prefix" != "" ] ; then
-        vm_name_prefix=$prefix
-    fi
-
-    BRANCH=$(grep ^HOPSWORKS_BRANCH ./hopsworks-installer.sh | sed -e 's/HOPSWORKS_BRANCH=//g')
-    CLUSTER_DEFINITION_BRANCH=$(grep ^CLUSTER_DEFINITION_BRANCH ./hopsworks-installer.sh | sed -e 's/CLUSTER_DEFINITION_BRANCH=//g')
-
-    GCP_USER=$USER
-#    PROJECT=hops-20
-#    gcloud config set core/project $PROJECT > /dev/null 2>&1
-#    gcloud config set compute/zone $ZONE > /dev/null 2>&1
-#    gcloud config set compute/region $REGION > /dev/null 2>&1
 
     BOOT_SIZE=150GB
     RAW_SSH_KEY="${USER}:$(cat /home/$USER/.ssh/id_rsa.pub)"
@@ -740,52 +666,105 @@ gcloud_config()
     SHIELD=""
     #GPU=nvidia-tesla-v100
     GPU=nvidia-tesla-${GPU_TYPE}
-    #GPU=nvidia-tesla-k80
-#    NUM_GPUS_PER_VM=1
-
-
-    MACHINE_TYPE=n1-standard-8
-    #DEFAULT_TYPE=n1-standard-16
-    IMAGE=centos-7-v20200603
-    IMAGE_PROJECT=centos-cloud
-    #IMAGE=ubuntu-1804-bionic-v20200716
-    #IMAGE_PROJECT=ubuntu-os-cloud
     #LOCAL_DISK=
     # add many local NVMe disks with multiple entries
     #LOCAL_DISK="--local-ssd=interface=NVME --local-ssd=interface=NVME "
 
+    GCP_USER=$USER
+    GPU_TYPE=nvidia-tesla-${GPU_TYPE}
 
-    #
-    # Here, we can configure each machine type differently. Give it more CPUs, a NVMe disk, a different OS, etc
-    #
+    
+    gcloud config get-value project
+    echo ""
+    printf "Do you want to use the current active project (y/n)? (default: y) "
+    read CHANGE_PROJECT
 
-    if [ "$machine" == "cpu" ] ; then
-	#    DEFAULT_TYPE=n1-standard-16
-	MACHINE_TYPE=$DEFAULT_TYPE
-    elif [ "$machine" == "gpu" ] ; then
-	#    DEFAULT_TYPE=n1-standard-8
-	MACHINE_TYPE=$DEFAULT_TYPE    
-	# add many local NVMe disks with multiple entries
-	#    LOCAL_DISK="--local-ssd=interface=NVME --local-ssd=interface=NVME "
-    elif [ "$machine" == "head" ] ; then
-	MACHINE_TYPE=$DEFAULT_TYPE
+    if [ "$CHANGE_PROJECT" == "" ] || [ "$CHANGE_PROJECT" == "y" ] ; then
+      echo ""
     else
-	MACHINE_TYPE=$DEFAULT_TYPE    
-    fi    
+      gcloud projects list --sort-by=projectId
+      echo ""
+      printf "Enter the PROJECT_ID: "
+      read CHANGE_PROJECT
+      gcloud config set core/project $CHANGE_PROJECT > /dev/null 2>&1
+    fi
 
+    PROJECT=$(gcloud config get-value core/project 2> /dev/null)
+    echo "Active project is: $PROJECT"
+    clear_screen
 
+    gcloud config get-value compute/region
+    echo ""
+    printf "Do you want to use the current active region (y/n)? (default: y) "
+    read CHANGE_REGION
+
+    if [ "$CHANGE_REGION" == "" ] || [ "$CHANGE_REGION" == "y" ] ; then
+      echo ""
+    else
+      gcloud compute regions list | awk '{ print $1 }'
+      echo ""
+      printf "Enter the REGION: "
+      read CHANGE_REGION
+      gcloud config set compute/region $CHANGE_REGION  > /dev/null 2>&1
+    fi
+    REGION=$(gcloud config get-value compute/region 2> /dev/null)    
+    echo "Active region is: $REGION"
+    clear_screen
+    
+    gcloud config get-value compute/zone
+    echo ""
+    printf "Do you want to use the current active zone (y/n)? (default: y) "
+    read CHANGE_ZONE
+
+    if [ "$CHANGE_ZONE" == "" ] || [ "$CHANGE_ZONE" == "y" ] ; then
+      echo ""
+    else
+      gcloud compute zones list | grep $REGION  | awk '{ print $1 }'
+      echo ""
+      printf "Enter the ZONE: "
+      read CHANGE_ZONE
+      gcloud config set compute/zone $CHANGE_ZONE > /dev/null 2>&1
+    fi
+    ZONE=$(gcloud config get-value compute/zone 2> /dev/null)    
+    echo "Active zone is: $ZONE"
+    clear_screen
+
+    echo ""
+    printf "Select IMAGE/IMAGE_PROJECT (centos/ubuntu/custom)? (default: centos) "
+    read SELECT_IMAGE
+
+    if [ "$SELECT_IMAGE" == "" ] || [ "$SELECT_IMAGE" == "centos" ] ; then
+	IMAGE=centos-7-v20200714
+	IMAGE_PROJECT=centos-cloud
+    elif [ "$SELECT_IMAGE" == "ubuntu" ] ; then
+	IMAGE=ubuntu-1804-bionic-v20200716
+	IMAGE_PROJECT=ubuntu-os-cloud
+    else
+	echo "Examples of IMAGE/IMAGE_PROJECT are:"
+	echo "IMAGE=centos-7-v20200714  \t IMAGE_PROJECT=ubuntu-os-cloud"
+	echo "IMAGE=ubuntu-1804-bionic-v20200716 \t IMAGE_PROJECT=ubuntu-os-cloud"
+	echo ""
+	printf "Enter the IMAGE: "
+	read IMAGE
+	printf "Enter the IMAGE_PROJECT: "
+	read IMAGE_PROJECT
+    fi
+    echo
+    echo "Active IMAGE is: $IMAGE"
+    echo "Active IMAGE_PROJECT is: $IMAGE_PROJECT"
+    echo ""    
+    clear_screen
 }
-
 
 gcloud_list_private_ips()
 {
-
+    echo ""
 }
 
 
 gcloud_list_public_ips()
-{
-
+{    
+    gcloud compute instances list 
 }
 
 
@@ -800,20 +779,23 @@ _gcloud_precreate()
     fi
 
     echo "Image type: $MACHINE_TYPE"
-    printf "Do you want to change the default image type (y/n)? (default: n) "
+    printf "Is the default image type OK (y/n)? (default: y) "
     read CHANGE_IMAGE
-    if [ "CHANGE_IMAGE" == "y" ] ; then
+    if [ "$CHANGE_IMAGE" == "y" ] || [ "$CHANGE_IMAGE" == "" ] ; then
+	echo ""
+    else
 	echo ""
 	echo "Example image types: n1-standard-8, n1-standard-16, n1-standard-32"
-      printf "Enter the image type: "
-      read MACHINE_TYPE
+	printf "Enter the image type: "
+	read MACHINE_TYPE
     fi
-
+    echo "Image type selected: $MACHINE_TYPE"
+    clear_screen
 }
 
 gcloud_create_gpu()
 {
-    ACCELERATOR="--accelerator=type=$GPU,count=$NUM_GPUS_PER_VM "    
+    ACCELERATOR="--accelerator=type=$GPU_TYPE,count=$NUM_GPUS_PER_VM "    
     _gcloud_create_vm
 }
 
@@ -826,6 +808,8 @@ gcloud_create_cpu()
 _gcloud_create_vm()
 {
     _gcloud_precreate
+echo "    gcloud compute --project=$PROJECT instances create $NAME --zone=$ZONE --machine-type=$MACHINE_TYPE --subnet=$SUBNET --network-tier=$NETWORK_TIER --maintenance-policy=$MAINTENANCE_POLICY $SERVICE_ACCOUNT --no-scopes $ACCELERATOR --tags=$TAGS --image=$IMAGE --image-project=$IMAGE_PROJECT --boot-disk-size=$BOOT_SIZE --boot-disk-type=$BOOT_DISK $LOCAL_DISK --boot-disk-device-name=$NAME --reservation-affinity=$RESERVATION_AFFINITY --metadata=ssh-keys=\"$ESCAPED_SSH_KEY\""
+    
     gcloud compute --project=$PROJECT instances create $NAME --zone=$ZONE --machine-type=$MACHINE_TYPE --subnet=$SUBNET --network-tier=$NETWORK_TIER --maintenance-policy=$MAINTENANCE_POLICY $SERVICE_ACCOUNT --no-scopes $ACCELERATOR --tags=$TAGS --image=$IMAGE --image-project=$IMAGE_PROJECT --boot-disk-size=$BOOT_SIZE --boot-disk-type=$BOOT_DISK $LOCAL_DISK --boot-disk-device-name=$NAME --reservation-affinity=$RESERVATION_AFFINITY --metadata=ssh-keys="$ESCAPED_SSH_KEY"
     if [ $? -ne 0 ] ; then
       echo "Problem creating VM. Exiting ..."
@@ -836,7 +820,16 @@ _gcloud_create_vm()
 
 gcloud_delete_vm()
 {
-
+    if [ "$RM_TYPE" == "cluster" ] ; then
+	NAME="${PREFIX}head${REGION/-/}"
+        nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1 </dev/null &	
+    else
+        NAME="${PREFIX}${RM_TYPE}${REGION/-/}"
+        nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1 </dev/null & 	
+    fi
+    RES=$?
+    echo "Deleting in the background. Check gcp-installer.log for status."
+    exit $RES
 }
 
 ###################################################################
@@ -846,9 +839,51 @@ gcloud_delete_vm()
 
 check_az_tools()
 {
-
+  echo "Checking az tools"
 }
 
+az_setup()
+{
+  echo ""
+}
+
+
+az_list_private_ips()
+{
+  echo ""
+}
+
+
+az_list_public_ips()
+{
+  echo ""
+}
+
+_az_precreate()
+{
+  echo ""
+}
+
+az_create_gpu()
+{
+  echo ""    
+}
+
+az_create_cpu()
+{
+  echo ""    
+}
+
+_az_create_vm()
+{
+  echo ""    
+}
+
+
+az_delete_vm()
+{
+  echo ""
+}
 
 
 ###################################################################
@@ -857,9 +892,50 @@ check_az_tools()
 
 check_aws_tools()
 {
-
+  echo ""
 }
 
+aws_setup()
+{
+  echo ""
+}
+
+aws_list_private_ips()
+{
+  echo ""
+}
+
+
+aws_list_public_ips()
+{
+  echo ""
+}
+
+_aws_precreate()
+{
+  echo ""
+}
+
+aws_create_gpu()
+{
+  echo ""    
+}
+
+aws_create_cpu()
+{
+  echo ""    
+}
+
+_aws_create_vm()
+{
+  echo ""    
+}
+
+
+aws_delete_vm()
+{
+  echo ""
+}
 
 
 ###################################################################
@@ -871,22 +947,22 @@ check_aws_tools()
 create_vm_cpu()
 {
     if [ "$CLOUD" == "gcp" ] ; then
-
+      gcloud_create_cpu
     elif [ "$CLOUD" == "azure" ] ; then
-
+      az_create_cpu
     elif [ "$CLOUD" == "aws" ] ; then
-
+      aws_create_cpu
     fi    
 }
 
 create_vm_gpu()
 {
     if [ "$CLOUD" == "gcp" ] ; then
-
+      gcloud_create_gpu
     elif [ "$CLOUD" == "azure" ] ; then
-
+      az_create_gpu
     elif [ "$CLOUD" == "aws" ] ; then
-
+      aws_create_gpu
     fi    
 }
 
@@ -894,36 +970,52 @@ create_vm_gpu()
 delete_vm()
 {
     if [ "$CLOUD" == "gcp" ] ; then
-
+      gcloud_delete_vm
     elif [ "$CLOUD" == "azure" ] ; then
-
+      az_delete_vm
     elif [ "$CLOUD" == "aws" ] ; then
-
+      aws_delete_vm
     fi    
 }
 
 list_private_ips()
 {
     if [ "$CLOUD" == "gcp" ] ; then
-
+      gcloud_list_private_ips
     elif [ "$CLOUD" == "azure" ] ; then
-
+      az_list_private_ips
     elif [ "$CLOUD" == "aws" ] ; then
-
+      aws_list_private_ips
     fi    
 }
 
 list_public_ips()
 {
+    echo "Listing public IPs"
+    echo ""
     if [ "$CLOUD" == "gcp" ] ; then
-
+      gcloud_list_public_ips
     elif [ "$CLOUD" == "azure" ] ; then
-
+      az_list_public_ips
     elif [ "$CLOUD" == "aws" ] ; then
-
+	aws_list_public_ips
+    else
+	echo "You forgot to specify your cloud provider. "
+	echo "Add the switch '-c gcp' for GCP, '-c aws' for AWS, '-c azure' for Azure."
+	echo ""
     fi    
 }
 
+cloud_setup()
+{
+    if [ "$CLOUD" == "gcp" ] ; then
+      gcloud_setup
+    elif [ "$CLOUD" == "azure" ] ; then
+      az_setup
+    elif [ "$CLOUD" == "aws" ] ; then
+      aws_setup
+    fi    
+}    
 
 ###################################################################
 #   MAIN                                                          #
@@ -936,27 +1028,32 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
     -h|--help|-help)
               echo "usage: [sudo] ./$SCRIPTNAME "
 	      echo " [-h|--help]      help message"
-	      echo " [-i|--install-action community|community-gpu|community-cluster|enterprise|kubernetes"
+	      echo " [-i|--install-action community|community-gpu|community-cluster|enterprise|kubernetes]"
 	      echo "                 'community' installs Hopsworks Community on a single VM"
 	      echo "                 'community-gpu' installs Hopsworks Community on a single VM with GPU(s)"
 	      echo "                 'community-cluster' installs Hopsworks Community on a multi-VM cluster"
 	      echo "                 'enterprise' installs Hopsworks Enterprise (single VM or multi-VM)"
 	      echo "                 'kubernetes' installs Hopsworks Enterprise (single VM or multi-VM) alson with open-source Kubernetes"
 	      echo "                 'purge' removes any existing Hopsworks Cluster (single VM or multi-VM) and destroys its VMs"	      
-	      echo " [-c|--cloud      gcp|aws|azure"
-	      echo " [-w|--num-cpu-workers Number of workers (CPU only) to create for the cluster."
-	      echo " [-g|--num-gpu-workers Number of workers (with GPUs) to create for the cluster."
-	      echo " [-gpus|--num-gpus-per-worker Number of GPUs per worker."
-	      echo " [-gt|--gpu-type Type of GPU to add to GPU worker nodes."
+	      echo " [-c|--cloud gcp|aws|azure] Name of the public cloud "
+	      echo " [-g|--num-gpu-workers num] Number of workers (with GPUs) to create for the cluster."
+	      echo " [-gpus|--num-gpus-per-worker num] Number of GPUs per worker."
+	      echo " [-gt|--gpu-type type]"
 	      echo "                 'v100' Nvidia Tesla V100"
 	      echo "                 'p100' Nvidia Tesla P100"
 	      echo "                 'k80' Nvidia K80"	      
 	      echo " [-d|--download-enterprise-url url] downloads enterprise binaries from this URL."
-	      echo " [-dc|--download-url] downloads binaries from this URL."
+	      echo " [-dc|--download-url url] downloads binaries from this URL."
 	      echo " [-du|--download-user username] Username for downloading enterprise binaries."
 	      echo " [-dp|--download-password password] Password for downloading enterprise binaries."
-	      echo " [-ni|--non-interactive)] skip license/terms acceptance and all confirmation screens."
-	      echo " [-sc|--skip-create)] skip creating the VMs, use the existing VM(s) with the same vm_name(s)."	      
+	      echo " [-l|--list-public-ips] List the public ips of all VMs."
+	      echo " [-ni|--non-interactive] skip license/terms acceptance and all confirmation screens."
+	      echo " [-rm|--remove cluster]"
+	      echo "                 'cpu' single-VM Hopsworks Community (no GPUs)"
+	      echo "                 'gpu' single-VM Hopsworks Community with GPU(s)"
+	      echo "                 'cluster' Hopsworks Cluster - Community or Entperise"
+	      echo " [-sc|--skip-create] skip creating the VMs, use the existing VM(s) with the same vm_name(s)."
+	      echo " [-w|--num-cpu-workers num] Number of workers (CPU only) to create for the cluster."	      
 	      echo ""
 	      exit 3
               break
@@ -1017,14 +1114,18 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
       	      shift
 	      ENTERPRISE_PASSWORD=$1
 	      ;;
-    -gpus|--num-gpus-per-gpu-worker)
+    -g|--num-gpu-workers)
+              shift
+	      NUM_WORKERS_GPU=$1
+              ;;
+    -gpus|--num-gpus-per-host)
       	      shift
               NUM_GPUS_PER_VM=$1
 	      ;;
     -gt|--gpu-type)
       	      shift
 	      case $1 in
-		 v100|p100|k80)
+		 v100 | p100 | k80)
 		      GPU_TYPE=$1
   		      ;;
 		  *)
@@ -1036,9 +1137,24 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
     # 	      NUM_GCP_NVME_DRIVES_PER_WORKER=$1
     # 	      GCP_NVME=1
     # 	      ;;
+    -l|--list-public-ips)
+	      DO_LISTING=1
+	      ;;	
     -ni|--non-interactive)
 	      NON_INTERACT=1
 	      ;;
+    -rm|--remove)
+              shift
+	      case $1 in
+		 cpu | gpu | cluster)
+		      RM_TYPE=$1
+  		      ;;
+		  *)
+		      echo "Could not recognise option: $1"
+		      exit_error "Failed."
+	      esac
+	      ;;
+
     -prefix|--vm-name-prefix)
       	      shift
 	      PREFIX=$1
@@ -1060,6 +1176,10 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 		  exit 20
 	      fi	      
 	      ;;
+    -w|--num-cpu-workers)
+              shift
+	      NUM_WORKERS_CPU=$1
+              ;;
     *)
 	  exit_error "Unrecognized parameter: $1"
 	  ;;
@@ -1068,6 +1188,15 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 done
 
 
+if [ $DO_LISTING -eq 1 ] ; then
+    list_public_ips
+    exit 0
+fi
+
+if [ "$RM_TYPE" != "" ] ; then
+    delete_vm
+    exit 0
+fi    
 
 #CPUS=$1
 #GPUS=$2
@@ -1086,7 +1215,7 @@ if [ $NON_INTERACT -eq 0 ] ; then
   enter_cloud
   clear_screen
   install_action
-  clear_screen    
+  clear_screen
   enter_prefix    
 fi
 
@@ -1095,35 +1224,48 @@ if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
     NAME="${PREFIX}cpu${REGION/-/}"    
 elif [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then
     NAME="${PREFIX}gpu${REGION/-/}"
-    
+    if [ $NON_INTERACT -eq 0 ] ; then        
+	select_gpu
+    fi
 elif [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then    
     NAME="${PREFIX}head${REGION/-/}"
-    HOPSWORKS_VERSION=cluster    
-#    HOPSWORKS_VERSION=kubernetes
-    #    check_download_url
+    HOPSWORKS_VERSION=cluster
+    if [ $NON_INTERACT -eq 0 ] ; then        
+	select_gpu
+    fi
 elif [ $INSTALL_ACTION -eq $PURGE ] ; then
     delete
 else
     exit_error "Bad install action: $INSTALL_ACTION"
 fi
 
-echo "Installing version: $HOPSWORKS_VERSION"
+
+download_installer
+clear_screen
+cloud_setup
 
 if [ $SKIP_CREATE -eq 0 ] ; then
-    ./_create.sh $PREFIX $CPUS $GPUS $HEAD_VM_TYPE
+    if [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then    
+	create_vm_gpu
+    else
+	create_vm_cpu	
+    fi
+    #$PREFIX $CPUS $GPUS $HEAD_VM_TYPE
+    if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then    
+      cpu_worker_size
+      gpu_worker_size
+    fi
 else
     echo "Skipping VM creation...."
 fi	
 
-
+if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then    
+    NAME="${PREFIX}head${REGION/-/}"
+fi  
 
 get_ips
 host_ip=$IP
 clear_known_hosts
-
-
-
-download_installer
 
 if [[ "$IMAGE" == *"centos"* ]]; then
     ssh -t -o StrictHostKeyChecking=no $IP "sudo yum install wget -y > /dev/null"
@@ -1143,10 +1285,11 @@ if [ $? -ne 0 ] ; then
     exit 11
 fi    
 
-scp -o StrictHostKeyChecking=no ../../cluster-defns/hopsworks-*.yml ${IP}:~/cluster-defns/
-#scp -o StrictHostKeyChecking=no ../../cluster-defns/hopsworks-worker.yml ${IP}:~/cluster-defns/
-#scp -o StrictHostKeyChecking=no ../../cluster-defns/hopsworks-worker-gpu.yml ${IP}:~/cluster-defns/
+#scp -o StrictHostKeyChecking=no ./cluster-defns/hopsworks-installer.yml ${IP}:~/cluster-defns/
+#scp -o StrictHostKeyChecking=no ./cluster-defns/hopsworks-worker.yml ${IP}:~/cluster-defns/
+#scp -o StrictHostKeyChecking=no ./cluster-defns/hopsworks-worker-gpu.yml ${IP}:~/cluster-defns/
 
+scp -o StrictHostKeyChecking=no ./cluster-defns/hopsworks-*.yml ${IP}:~/cluster-defns/
 if [ $? -ne 0 ] ; then
     echo "Problem scp'ing cluster definitions to head server. Exiting..."
     exit 12
