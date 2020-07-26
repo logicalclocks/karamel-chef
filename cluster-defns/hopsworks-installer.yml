@@ -121,7 +121,7 @@ groups:
       - hopslog
       - hopslog::_filebeat-spark
       - hopslog::_filebeat-serving
-      - hopslog::_filebeat-jupyter
+#      - hopslog::_filebeat-jupyter
       - hops::dn
       - hops::nm
       - tensorflow
@@ -132,6 +132,6 @@ groups:
       - hopsmonitor::alertmanager
       - hopsmonitor::node_exporter
       - consul::master
-      - hops::docker_registry      
+#      - hops::docker_registry      
 __KUBERNETES_RECIPES__
 

@@ -355,16 +355,13 @@ cpus_gpus()
     elif [ "$CLOUD" == "aws" ] ; then
 	echo ""	
     fi
-
-    echo "CPUS: $CPUS"
-    echo "GPUS: $GPUS"
 }
 
 gcloud_get_ips()
 {
     MY_IPS=$(gcloud compute instances list | grep "$PREFIX")
-    clear_screen
-    echo "MY_IPS : $MY_IPS"
+
+    echo "$MY_IPS"
     
     head="${PREFIX}head${REGION/-/}"
     if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
@@ -373,29 +370,27 @@ gcloud_get_ips()
        head="${PREFIX}gpu${REGION/-/}"		
     fi
     
-    IP=$(echo $MY_IPS | grep $head | awk '{ print $5 }')
-    PRIVATE_IP=$(echo $MY_IPS | grep $head | awk '{ print $4 }')
+    IP=$(echo $MY_IPS | sed -e "s/.*${head}/${head}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
+    PRIVATE_IP=$(echo $MY_IPS | sed -e "s/.*${head}/${head}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
     echo -e "${head}\t Public IP: $IP \t Private IP: $PRIVATE_IP"
 
     cpus_gpus
-
+    
     for i in $(seq 1 ${CPUS}) ;
     do
         cpuid="${PREFIX}cpu${i}${REGION/-/}"
-	CPU[$i]=$(echo $MY_IPS | grep "$cpuid" | awk '{ print $5 }')
-	PRIVATE_CPU[$i]=$(echo $MY_IPS | grep "$cpuid" | awk '{ print $4 }')
+	CPU[$i]=$(echo $MY_IPS | sed -e "s/.*${cpuid}/${cpuid}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
+	PRIVATE_CPU[$i]=$(echo $MY_IPS | sed -e "s/.*${cpuid}/${cpuid}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
         echo -e "${cpuid}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
     done
 
-    clear_screen
     for j in $(seq 1 ${GPUS}) ;
     do
         gpuid="${PREFIX}gpu${j}${REGION/-/}"
-	GPU[$j]=$(echo $MY_IPS | grep "$gpuid" | awk '{ print $5 }')
-	PRIVATE_GPU[$j]=$(echo $MY_IPS | grep "$gpuid" | awk '{ print $4 }')
+	GPU[$j]=$(echo $MY_IPS | sed -e "s/.*${gpuid}/${gpuid}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
+	PRIVATE_GPU[$j]=$(echo $MY_IPS | sed -e "s/.*${gpuid}/${gpuid}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
         echo -e "${gpuid}\t Public IP: ${GPU[${j}]} \t Private IP: ${PRIVATE_GPU[${j}]}"
     done
-    clear_screen    
 }    
 
 clear_known_hosts()
@@ -823,8 +818,8 @@ gcloud_list_public_ips()
 
 _gcloud_precreate()
 {
-    IP=$(gcloud compute instances list | grep $NAME | awk '{ print $5 }')
-    if [ "$IP" != "" ] ; then
+    VM_IP=$(gcloud compute instances list | grep $NAME | awk '{ print $5 }')
+    if [ "$VM_IP" != "" ] ; then
 	echo ""
 	echo "WARNING:"	
 	echo "VM already exists with name: $NAME"
@@ -848,7 +843,7 @@ _gcloud_precreate()
 
     echo ""
     echo "Boot disk size: $BOOT_DISK_SIZE_GBS"
-    printf "Is the default boot disk size (GBs) OK (y/n)? (default: $BOOT_DISK_SIZE_GBS) "
+    printf "Is the default boot disk size (GBs) OK (y/n)? (default: y) "
     read CHANGE_SIZE
     if [ "$CHANGE_SIZE" == "y" ] || [ "$CHANGE_SIZE" == "" ] ; then
 	echo ""
@@ -1390,7 +1385,6 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
 fi  
 
 get_ips
-clear_screen
 host_ip=$IP
 clear_known_hosts
 
@@ -1430,10 +1424,6 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
     echo "$pubkey"
     echo ""
 
-    clear_screen
-    echo "IP is $IP"
-    clear_screen
-
 
     WORKERS="-w "
     for i in $(seq 1 ${CPUS}) ;
@@ -1457,6 +1447,8 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
 	fi
 
 	WORKERS="${WORKERS}${PRIVATE_CPU[${i}]},"
+
+	echo "workers: $WORKERS"
     done
 
     for i in $(seq 1 ${GPUS}) ;
@@ -1479,9 +1471,10 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
 	fi
 
 	WORKERS="${WORKERS}${PRIVATE_GPU[${i}]},"
+
+	echo "workers: $WORKERS"
     done
     WORKERS=${WORKERS::-1}
-    clear_screen
 else
     WORKERS="-w none"
 fi
