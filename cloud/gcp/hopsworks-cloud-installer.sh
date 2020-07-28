@@ -34,8 +34,8 @@
 
 email="test"
 
-HOPSWORKS_INSTALLER_VERSION=master
-CLUSTER_DEFINITION_VERSION=master
+HOPSWORKS_INSTALLER_VERSION=installer_1_4
+CLUSTER_DEFINITION_VERSION=installer_1_4
 HOPSWORKS_INSTALLER_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_INSTALLER_VERSION
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$CLUSTER_DEFINITION_VERSION
 
@@ -1491,9 +1491,6 @@ if [ $DO_LISTING -eq 1 ] ; then
 fi
 
 if [ "$RM_TYPE" != "" ] ; then
-    if [ "$PREFIX" == "" ] ; then
-	PREFIX=$USER
-    fi
     delete_vm
     exit 0
 fi    
