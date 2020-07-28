@@ -624,6 +624,9 @@ select_gpu()
 
 enter_enterprise_credentials()
 {
+    if [ -e env.sh ] ; then
+	. env.sh
+    fi    
 
     if [ "$ENTERPRISE_DOWNLOAD_URL" == "" ] ; then
         echo ""
