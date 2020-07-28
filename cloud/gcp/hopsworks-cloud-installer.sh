@@ -1,4 +1,4 @@
-#!/bin/bash
+ #!/bin/bash
 
 ###################################################################################################
 #                                                                                                 #
@@ -35,9 +35,9 @@
 email="test"
 
 HOPSWORKS_INSTALLER_VERSION=1.3
-BRANCH=master
-HOPSWORKS_INSTALLER_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$BRANCH
-CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$BRANCH
+CLUSTER_DEFINITION_VERSION=1.3
+HOPSWORKS_INSTALLER_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_INSTALLER_VERSION
+CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$CLUSTER_DEFINITION_VERSION
 
 declare -a CPU
 declare -a GPU
@@ -114,6 +114,33 @@ TAGS=http-server,https-server,karamel
 
 ACTION=
 # Azure Config
+
+RESOURCE_GROUP=hopsworks
+VIRTUAL_NETWORK=hops
+
+LOCATION=
+SUBNET=default
+ZONE=3
+ACCELERATOR_ZONE=$ZONE
+DNS_PRIVATE_ZONE=h.w
+DNS_VN_LINK=hopslink
+VM_HEAD=hd
+VM_WORKER=cpu
+VM_GPU=gpu
+
+VM_SIZE=Standard_D4s_v3
+ACCELERATOR_VM=Standard_D4s_v3
+IMAGE=UbuntuLTS
+
+ADDRESS_PREFIXES="10.0.0.0/16"
+SUBNET_PREFIXES="10.0.0.0/24"
+
+DATA_DISK_SIZES_GB="150"
+OS_DISK_SIZE_GB=150
+LOCAL_DISK=
+ACCELERATED_NETWORKING=false
+PRIORITY=spot
+PRICE=0.06
 
 
 # AWS Config
@@ -646,7 +673,7 @@ check_gcp_tools()
 	echo "gcloud does not appear to be installed"
 	printf 'Do you want to install gcloud tools? Enter: 'yes' or 'no' (default: yes): '
 	read INSTALL_GCLOUD
-	if [ "$INSTALL_GCLOUD" == "yes" ] ; then
+	if [ "$INSTALL_GCLOUD" == "yes" ] || [ "$INSTALL_GCLOUD" == "" ] ; then
             echo "Installing google-cloud-sdk"
 	else
 	    echo "Exiting...."
@@ -682,18 +709,6 @@ gcloud_setup()
 	check_gcp_tools
     fi
     
-    if [ ! -e ~/.ssh/id_rsa.pub ] ; then
-	clear_screen
-	echo "Error!"
-	echo "You do not a public openssh key in ~/.ssh/id_rsa.pub"
-	echo "Exiting ..."
-	echo ""
-	exit 1
-    fi    
-
-    RAW_SSH_KEY="${USER}:$(cat /home/$USER/.ssh/id_rsa.pub)"
-    #printf -v ESCAPED_SSH_KEY "%q\n" "$RAW_SSH_KEY"
-    ESCAPED_SSH_KEY="$RAW_SSH_KEY"
     TAGS=http-server,https-server,karamel
     SUBNET=default
     NETWORK_TIER=PREMIUM
@@ -918,14 +933,153 @@ gcloud_delete_vm()
 ###################################################################
 
 
-check_az_tools()
-{
-  echo "Checking az tools"
-}
-
 az_setup()
 {
-  echo ""
+    which az
+    if [ $? -ne 0 ] ; then
+
+	echo "Azure CLI tools does not appear to be installed"
+	printf 'Do you want to install Azure CLI tools? Enter: 'yes' or 'no' (default: yes): '
+	read 
+	if [ "$INSTALL_AZ" == "yes" ] || [ "$INSTALL_AZ" == "" ] ; then
+            echo "Installing Azure CLI tools"
+	else
+	    echo "Exiting...."
+	    exit 45
+	fi
+
+	if [ "$DISTRO" == "Ubuntu" ] ; then
+	    sudo apt-get update -y
+	    sudo apt-get install ca-certificates curl apt-transport-https lsb-release gnupg -y
+	    curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null
+	    AZ_REPO=$(lsb_release -cs)
+	    echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
+	    sudo apt-get update -y
+	    sudo apt-get install azure-cli -y
+	elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
+            sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+	    sudo sh -c 'echo -e "[azure-cli]
+name=Azure CLI
+baseurl=https://packages.microsoft.com/yumrepos/azure-cli
+enabled=1
+gpgcheck=1
+gpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/azure-cli.repo'
+	    sudo yum install azure-cli -y
+        fi
+
+	az login -o table
+	if [ $? -ne 0 ] ; then
+	    echo "Problem logging in to Azure"
+	    echo "Exiting..."
+	    exit 88
+	fi
+
+    fi
+
+    #az account list-locations -o table
+    if [ $NON_INTERACT -eq 0 ] ; then    
+	echo ""
+	printf "Do you want to change the Location (default: $LOCATION) (y/n)?"
+	read CHANGE_LOCATION
+
+	if [ "$CHANGE_LOCATION" == "" ] || [ "$CHANGE_LOCATION" == "n" ] ; then
+	    echo ""
+	else
+	    az account list-locations -o table
+	    echo ""
+	    printf "Enter the LOCATION: "
+	    read LOCATION
+	fi
+    fi
+    echo "LOCATION is: $RESOURCE_GROUP"
+    
+    if [ $NON_INTERACT -eq 0 ] ; then
+       clear_screen
+    fi
+
+
+    
+    if [ $NON_INTERACT -eq 0 ] ; then    
+	echo ""
+	printf "Do you want to change the Resource Group (default: $RESOURCE_GROUP) (y/n)?"
+	read CHANGE_GROUP
+
+	if [ "$CHANGE_GROUP" == "" ] || [ "$CHANGE_GROUP" == "n" ] ; then
+	    echo ""
+	else
+	    az group list
+	    echo ""
+	    printf "Enter the Resource Group: "
+	    read RESOURCE_GROUP
+	fi
+    fi
+    echo "Resource Group is: $RESOURCE_GROUP"
+    az group exists $RESOURCE_GROUP
+    if [ $? -ne 0 ] ; then
+	echo "Creating ResourceGroup: $RESOURCE_GROUP in $RESOURCE_GROUP"
+	az group create --name $RESOURCE_GROUP --location $LOCATION
+    fi
+    
+    if [ $NON_INTERACT -eq 0 ] ; then
+       clear_screen
+    fi
+
+
+    if [ $NON_INTERACT -eq 0 ] ; then    
+	echo ""
+        vns=$(az network vnet list -g $RESOURCE_GROUP | grep "^    \"name\":" | awk '{ print $2 }' | sed -s 's/\"//g' | sed -e 's/,//')
+
+	printf "Do you want to change the Resource Group (default: $VIRTUAL_NETWORK) (y/n)?"	
+	read CHANGE_GROUP
+
+	if [ "$CHANGE_GROUP" == "" ] || [ "$CHANGE_GROUP" == "n" ] ; then
+	    echo ""
+	else
+	    az group list
+	    echo ""
+	    printf "Enter the Resource Group: "
+	    read VIRTUAL_NETWORK
+	fi
+    fi
+    echo "Resource Group is: $VIRTUAL_NETWORK"
+    az network vnet show -g $RESOURCE_GROUP -n $VIRTUAL_NETWORK
+    if [ $? -ne 0 ] ; then
+	az network vnet create -g $RESOURCE_GROUP -n $VIRTUAL_NETWORK --address-prefixes $ADDRESS_PREFIXES --subnet-name $SUBNET --subnet-prefixes $SUBNET_PREFIXES --location $LOCATION
+    fi
+    
+    if [ $NON_INTERACT -eq 0 ] ; then
+       clear_screen
+    fi
+    
+
+
+
+    if [[ "$vns" =~ "$VIRTUAL_NETWORK" ]]; then
+	echo "Found virtual networks in resource group $RESOURCE_GROUP  : $vns"
+    else
+	echo "az network vnet create -g $RESOURCE_GROUP -n $VIRTUAL_NETWORK --address-prefixes $ADDRESS_PREFIXES --subnet-name $SUBNET --subnet-prefixes $SUBNET_PREFIXES --location $LOCATION"
+	az network vnet create -g $RESOURCE_GROUP -n $VIRTUAL_NETWORK --address-prefixes $ADDRESS_PREFIXES --subnet-name $SUBNET --subnet-prefixes $SUBNET_PREFIXES --location $LOCATION
+    fi
+
+    # https://docs.microsoft.com/bs-cyrl-ba/azure/dns/private-dns-getstarted-cli
+    # -e true for automatic hostname registration
+    dns=$(az network private-dns zone list -g $RESOURCE_GROUP | grep "^    \"name\":" | awk '{ print $2 }' | sed -s 's/\"//g' | sed -e 's/,//')
+    if [[ "$dns" =~ "$DNS_PRIVATE_ZONE" ]]; then
+	echo "Found DNS private zones in resource group $RESOURCE_GROUP  : $dns"
+    else
+	echo "az network private-dns zone create -g $RESOURCE_GROUP -n $DNS_PRIVATE_ZONE --location $LOCATION"
+	az network private-dns zone create -g $RESOURCE_GROUP -n $DNS_PRIVATE_ZONE 
+    fi
+
+
+    links=$(az network private-dns link vnet list -g $RESOURCE_GROUP -z $DNS_PRIVATE_ZONE | grep "^    \"name\":" | awk '{ print $2 }' | sed -s 's/\"//g' | sed -e 's/,//')
+    if [[ "$links" =~ "$DNS_VN_LINK" ]] ; then
+	echo "Found linke from dns zone $DNS_PRIVATE_ZONE to virtual network $VIRTUAL_NETWORK in : $links"
+    else    
+	echo "az network private-dns link vnet create -g $RESOURCE_GROUP -n $DNS_VN_LINK -z $DNS_PRIVATE_ZONE -v $VIRTUAL_NETWORK -e true"  
+	az network private-dns link vnet create -g $RESOURCE_GROUP -n $DNS_VN_LINK -z $DNS_PRIVATE_ZONE -v $VIRTUAL_NETWORK -e true
+    fi
+    
 }
 
 
@@ -1108,6 +1262,10 @@ list_public_ips()
 
 cloud_setup()
 {
+
+    RAW_SSH_KEY="${USER}:$(cat ~/.ssh/id_rsa.pub)"
+    ESCAPED_SSH_KEY="$RAW_SSH_KEY"
+    
     if [ "$CLOUD" == "gcp" ] ; then
       gcloud_setup
     elif [ "$CLOUD" == "azure" ] ; then
