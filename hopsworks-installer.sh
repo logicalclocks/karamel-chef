@@ -1328,8 +1328,7 @@ else
 	    KUBERNETES_RECIPES="      - kube-hops::hopsworks
       - kube-hops::ca
       - kube-hops::master
-      - kube-hops::addons
-      - kube-hops::node"
+      - kube-hops::addons"
 	fi
         ENTERPRISE_ATTRS="enterprise:
       install: true

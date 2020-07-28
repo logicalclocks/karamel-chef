@@ -34,8 +34,8 @@
 
 email="test"
 
-HOPSWORKS_INSTALLER_VERSION=1.3
-CLUSTER_DEFINITION_VERSION=1.3
+HOPSWORKS_INSTALLER_VERSION=master
+CLUSTER_DEFINITION_VERSION=master
 HOPSWORKS_INSTALLER_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_INSTALLER_VERSION
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$CLUSTER_DEFINITION_VERSION
 
@@ -492,7 +492,7 @@ enter_cloud()
 enter_prefix()
 {
     if [ "$PREFIX" == "" ] ; then 
-	printf "All VMs created will have their names prefixed with the string you enter here. Enter the prefix (default: $USER): "
+	printf "The VM names will be prefixed with the string you enter here. Enter the prefix (default: $USER): "
 	read PREFIX
 
 	if [ "$PREFIX" == "" ] ; then
@@ -702,6 +702,80 @@ EOM
     fi
 }
 
+gcloud_set_env()
+{
+    PROJECT=$(gcloud config get-value core/project 2> /dev/null)
+    REGION=$(gcloud config get-value compute/region 2> /dev/null)
+    ZONE=$(gcloud config get-value compute/zone 2> /dev/null)        
+}
+
+gcloud_enter_region()
+{
+    if [ $NON_INTERACT -eq 0 ] ; then
+	gcloud config get-value compute/region
+	echo ""
+	printf "Do you want to use the current active region (y/n)? (default: y) "
+	read CHANGE_REGION
+
+	if [ "$CHANGE_REGION" == "" ] || [ "$CHANGE_REGION" == "y" ] ; then
+	    echo ""
+	else
+	    gcloud compute regions list | awk '{ print $1 }'
+	    echo ""
+	    printf "Enter the REGION: "
+	    read CHANGE_REGION
+	    gcloud config set compute/region $CHANGE_REGION  > /dev/null 2>&1
+	fi
+    fi
+    REGION=$(gcloud config get-value compute/region 2> /dev/null)    
+    echo "Active region is: $REGION"
+
+}
+
+gcloud_enter_zone()
+{
+    if [ $NON_INTERACT -eq 0 ] ; then
+	gcloud config get-value compute/zone
+	echo ""
+	printf "Do you want to use the current active zone (y/n)? (default: y) "
+	read CHANGE_ZONE
+
+	if [ "$CHANGE_ZONE" == "" ] || [ "$CHANGE_ZONE" == "y" ] ; then
+	    echo ""
+	else
+	    gcloud compute zones list | grep $REGION  | awk '{ print $1 }'
+	    echo ""
+	    printf "Enter the ZONE: "
+	    read CHANGE_ZONE
+	    gcloud config set compute/zone $CHANGE_ZONE > /dev/null 2>&1
+	fi
+    fi
+    ZONE=$(gcloud config get-value compute/zone 2> /dev/null)    
+    echo "Active zone is: $ZONE"
+}
+
+gcloud_enter_project()
+{
+    if [ $NON_INTERACT -eq 0 ] ; then    
+	gcloud config get-value project
+	echo ""
+	printf "Do you want to use the current active project (y/n)? (default: y) "
+	read CHANGE_PROJECT
+
+	if [ "$CHANGE_PROJECT" == "" ] || [ "$CHANGE_PROJECT" == "y" ] ; then
+	    echo ""
+	else
+	    gcloud projects list --sort-by=projectId
+	    echo ""
+	    printf "Enter the PROJECT_ID: "
+	    read CHANGE_PROJECT
+	    gcloud config set core/project $CHANGE_PROJECT > /dev/null 2>&1
+	fi
+    fi
+    PROJECT=$(gcloud config get-value core/project 2> /dev/null)
+    echo "Active project is: $PROJECT"
+
+}
 
 gcloud_setup()
 {
@@ -724,69 +798,18 @@ gcloud_setup()
 
     GCP_USER=$USER
 
-    if [ $NON_INTERACT -eq 0 ] ; then    
-	gcloud config get-value project
-	echo ""
-	printf "Do you want to use the current active project (y/n)? (default: y) "
-	read CHANGE_PROJECT
-
-	if [ "$CHANGE_PROJECT" == "" ] || [ "$CHANGE_PROJECT" == "y" ] ; then
-	    echo ""
-	else
-	    gcloud projects list --sort-by=projectId
-	    echo ""
-	    printf "Enter the PROJECT_ID: "
-	    read CHANGE_PROJECT
-	    gcloud config set core/project $CHANGE_PROJECT > /dev/null 2>&1
-	fi
-    fi
-    PROJECT=$(gcloud config get-value core/project 2> /dev/null)
-    echo "Active project is: $PROJECT"
-
-    if [ $NON_INTERACT -eq 0 ] ; then
-       clear_screen
-    fi
-
-    if [ $NON_INTERACT -eq 0 ] ; then
-	gcloud config get-value compute/region
-	echo ""
-	printf "Do you want to use the current active region (y/n)? (default: y) "
-	read CHANGE_REGION
-
-	if [ "$CHANGE_REGION" == "" ] || [ "$CHANGE_REGION" == "y" ] ; then
-	    echo ""
-	else
-	    gcloud compute regions list | awk '{ print $1 }'
-	    echo ""
-	    printf "Enter the REGION: "
-	    read CHANGE_REGION
-	    gcloud config set compute/region $CHANGE_REGION  > /dev/null 2>&1
-	fi
-    fi
-    REGION=$(gcloud config get-value compute/region 2> /dev/null)    
-    echo "Active region is: $REGION"
+    gcloud_enter_project
     if [ $NON_INTERACT -eq 0 ] ; then
        clear_screen
     fi
     
+    gcloud_enter_region
     if [ $NON_INTERACT -eq 0 ] ; then
-	gcloud config get-value compute/zone
-	echo ""
-	printf "Do you want to use the current active zone (y/n)? (default: y) "
-	read CHANGE_ZONE
-
-	if [ "$CHANGE_ZONE" == "" ] || [ "$CHANGE_ZONE" == "y" ] ; then
-	    echo ""
-	else
-	    gcloud compute zones list | grep $REGION  | awk '{ print $1 }'
-	    echo ""
-	    printf "Enter the ZONE: "
-	    read CHANGE_ZONE
-	    gcloud config set compute/zone $CHANGE_ZONE > /dev/null 2>&1
-	fi
+       clear_screen
     fi
-    ZONE=$(gcloud config get-value compute/zone 2> /dev/null)    
-    echo "Active zone is: $ZONE"
+
+    gcloud_enter_zone
+    
     if [ $NON_INTERACT -eq 0 ] ; then
       clear_screen
     fi
@@ -900,6 +923,8 @@ echo "    gcloud compute --project=$PROJECT instances create $NAME --zone=$ZONE 
 
 gcloud_delete_vm()
 {
+    gcloud_enter_region
+    gcloud_enter_zone
     if [ "$RM_TYPE" == "cluster" ] ; then
 	NAME="${PREFIX}head${REGION/-/}"
 	echo "nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1 </dev/null &"
@@ -1221,6 +1246,7 @@ create_vm_gpu()
 
 delete_vm()
 {
+    enter_prefix
     if [ "$CLOUD" == "gcp" ] ; then
       gcloud_delete_vm
     elif [ "$CLOUD" == "azure" ] ; then
@@ -1584,6 +1610,11 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
 
 
     WORKERS="-w "
+
+    if [ $NUM_WORKERS_CPU -eq 0 ] && [ $NUM_WORKERS_GPU -eq 0 ] ; then
+	WORKERS="-w none "
+    fi
+    
     for i in $(seq 1 ${CPUS}) ;
     do
 	host_ip=${CPU[${i}]}
