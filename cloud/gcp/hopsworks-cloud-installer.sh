@@ -136,7 +136,8 @@ VM_GPU=gpu
 VM_SIZE=Standard_D4s_v3
 ACCELERATOR_VM=Standard_D4s_v3
 OS_IMAGE=UbuntuLTS
-
+#AZ_NETWORKING="--accelerated-networking true"
+AZ_NETWORKING="--accelerated-networking false"
 #GPUs on Azure
 # GPUs are often limited to a particular zone in a region, so only enter a value here if you know the zone where the GPUs are located
 ACCELERATOR_ZONE=3
@@ -673,25 +674,25 @@ gcloud_get_ips()
     fi
     
     IP=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
-    PRIVATE_IP=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
-    echo -e "${NAME}\t Public IP: $IP \t Private IP: $PRIVATE_IP"
+#    PRIVATE_IP=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
+#    echo -e "${NAME}\t Public IP: $IP \t Private IP: $PRIVATE_IP"
 
     cpus_gpus
     
     for i in $(seq 1 ${CPUS}) ;
     do
-        cpuid="${PREFIX}cpu${i}${REGION/-/}"
-	CPU[$i]=$(echo $MY_IPS | sed -e "s/.*${cpuid}/${cpuid}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
-	PRIVATE_CPU[$i]=$(echo $MY_IPS | sed -e "s/.*${cpuid}/${cpuid}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
-        echo -e "${cpuid}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
+	set_name "cpu${i}"
+	CPU[$i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
+	PRIVATE_CPU[$i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
+        echo -e "${NAME}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
     done
 
     for j in $(seq 1 ${GPUS}) ;
     do
-        gpuid="${PREFIX}gpu${j}${REGION/-/}"
-	GPU[$j]=$(echo $MY_IPS | sed -e "s/.*${gpuid}/${gpuid}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
-	PRIVATE_GPU[$j]=$(echo $MY_IPS | sed -e "s/.*${gpuid}/${gpuid}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
-        echo -e "${gpuid}\t Public IP: ${GPU[${j}]} \t Private IP: ${PRIVATE_GPU[${j}]}"
+	set_name "gpu${i}"
+	GPU[$j]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
+	PRIVATE_GPU[$j]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
+        echo -e "${NAME}\t Public IP: ${GPU[${j}]} \t Private IP: ${PRIVATE_GPU[${j}]}"
     done
 }    
 
@@ -988,16 +989,7 @@ gcloud_delete_vm()
 
 az_get_ips()
 {
-
-    echo "
-    az vm list-ip-addresses -g $RESOURCE_GROUP --output table | grep -v "VirtualMachine" | grep -v "^\-" | grep "$PREFIX"
-"
-    az vm list-ip-addresses -g $RESOURCE_GROUP --output table | grep -v "VirtualMachine" | grep -v "^\-" | grep "$PREFIX"
-
-    
-    MY_IPS=$(az vm list | grep "$PREFIX")
-
-    echo "$MY_IPS"
+    echo "Azure get_ips"
 
     set_name "head"
     if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
@@ -1006,26 +998,27 @@ az_get_ips()
        set_name "gpu"
     fi
     # 
-    IP=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
-    PRIVATE_IP=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
-    echo -e "${NAME}\t Public IP: $IP \t Private IP: $PRIVATE_IP"
+    IP=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table  | grep ^$NAME | awk '{ print $2 }')
+    echo -e "${NAME}\t Public IP: $IP"
 
     cpus_gpus
     
     for i in $(seq 1 ${CPUS}) ;
     do
-        cpuid="${PREFIX}cpu${i}${REGION/-/}"
-	CPU[$i]=$(echo $MY_IPS | sed -e "s/.*${cpuid}/${cpuid}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
-	PRIVATE_CPU[$i]=$(echo $MY_IPS | sed -e "s/.*${cpuid}/${cpuid}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
-        echo -e "${cpuid}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
+	set_name "cpu${i}"
+	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table  | grep ^$NAME | awk '{ print $2, $3 }')
+	CPU[$i]=$(echo "$MY_IPS" | awk '{ print $1 }')
+	PRIVATE_CPU[$i]=$(echo "$MY_IPS" | awk '{ print $2 }')
+        echo -e "${NAME}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
     done
 
     for j in $(seq 1 ${GPUS}) ;
     do
-        gpuid="${PREFIX}gpu${j}${REGION/-/}"
-	GPU[$j]=$(echo $MY_IPS | sed -e "s/.*${gpuid}/${gpuid}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
-	PRIVATE_GPU[$j]=$(echo $MY_IPS | sed -e "s/.*${gpuid}/${gpuid}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
-        echo -e "${gpuid}\t Public IP: ${GPU[${j}]} \t Private IP: ${PRIVATE_GPU[${j}]}"
+        set_name "gpu${i}"
+	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table  | grep ^$NAME | awk '{ print $2, $3 }')
+	GPU[$j]=$(echo "$MY_IPS" | awk '{ print $1 }')
+	PRIVATE_GPU[$j]=$(echo "$MY_IPS" | awk '{ print $2 }')
+        echo -e "${NAME}\t Public IP: ${GPU[${j}]} \t Private IP: ${PRIVATE_GPU[${j}]}"
     done
 }    
 
@@ -1480,9 +1473,10 @@ _az_create_vm()
     _az_precreate $1
   echo "
   az vm create -n $NAME -g $RESOURCE_GROUP \
+   --attach-data-disks \
    --image $OS_IMAGE --data-disk-sizes-gb $DATA_DISK_SIZE --os-disk-size-gb $BOOT_SIZE \
    --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
-   --size $VM_SIZE --location $REGION --zone $AZ_ZONE $ACCELERATOR \
+   --size $VM_SIZE --location $REGION --zone $AZ_ZONE $ACCELERATOR $AZ_NETWORKING\
    --ssh-key-value /home/$USER/.ssh/id_rsa.pub    
 "
   az vm create -n $NAME -g $RESOURCE_GROUP \
@@ -1502,6 +1496,7 @@ _az_create_vm()
 az_delete_vm()
 {
     _az_set_resource_group
+    _az_set_location
 
     if [ "$RM_TYPE" == "cluster" ] ; then
 	set_name "head"
@@ -1526,6 +1521,7 @@ az_delete_vm()
 	done
     else
 	set_name "$RM_TYPE"
+	echo "az vm delete -g $RESOURCE_GROUP --name $NAME --yes --no-wait"
 	az vm delete -g $RESOURCE_GROUP --name $NAME --yes --no-wait
         _check_deletion
     fi
@@ -1534,11 +1530,6 @@ az_delete_vm()
 
     sleep 3
     list_public_ips
-
-    echo "To check the VM status, run:"
-    echo "./hopsworks-cloud-installer.sh -l -c gcp|azure|aws"
-    echo ""
-  
 }
 
 
@@ -1954,7 +1945,13 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
     set_name "head"    
 fi  
 
-get_ips
+IP=
+while [ "$IP" == "" ] ; do
+    get_ips
+    sleep 5
+done
+
+
 host_ip=$IP
 clear_known_hosts
 
