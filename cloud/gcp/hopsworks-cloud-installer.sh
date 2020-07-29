@@ -88,7 +88,10 @@ NUM_WORKERS_CPU=0
 NUM_WORKERS_GPU=0
 
 CLOUD=
+
+#################
 # GCP Config
+#################
 REGION=us-east1
 ZONE=us-east1-c
 IMAGE=centos-7-v20200714
@@ -105,7 +108,7 @@ RESERVATION_AFFINITY=any
 SHIELD=""
 
 BOOT_DISK=pd-ssd
-BOOT_DISK_SIZE_GBS=150
+BOOT_DISK_SIZE_GB=150
 
 RAW_SSH_KEY="${USER}:$(cat /home/$USER/.ssh/id_rsa.pub)"
 #printf -v ESCAPED_SSH_KEY "%q\n" "$RAW_SSH_KEY"
@@ -113,15 +116,17 @@ ESCAPED_SSH_KEY="$RAW_SSH_KEY"
 TAGS=http-server,https-server,karamel
 
 ACTION=
-# Azure Config
 
+###################
+# Azure Config
+###################
+SUBSCRIPTION=
 RESOURCE_GROUP=hopsworks
 VIRTUAL_NETWORK=hops
 
-LOCATION=
+# We call Azure's LOCATION "REGION" to make this script more generic
+AZ_ZONE=3
 SUBNET=default
-ZONE=3
-ACCELERATOR_ZONE=$ZONE
 DNS_PRIVATE_ZONE=h.w
 DNS_VN_LINK=hopslink
 VM_HEAD=hd
@@ -130,21 +135,25 @@ VM_GPU=gpu
 
 VM_SIZE=Standard_D4s_v3
 ACCELERATOR_VM=Standard_D4s_v3
-IMAGE=UbuntuLTS
+OS_IMAGE=UbuntuLTS
+
+#GPUs on Azure
+# GPUs are often limited to a particular zone in a region, so only enter a value here if you know the zone where the GPUs are located
+ACCELERATOR_ZONE=3
 
 ADDRESS_PREFIXES="10.0.0.0/16"
 SUBNET_PREFIXES="10.0.0.0/24"
 
-DATA_DISK_SIZES_GB="150"
-OS_DISK_SIZE_GB=150
+DATA_DISK_SIZES_GB=150
 LOCAL_DISK=
 ACCELERATED_NETWORKING=false
 PRIORITY=spot
 PRICE=0.06
 
 
+#################
 # AWS Config
-
+#################
 
 # $1 = String describing error
 exit_error()
@@ -214,9 +223,9 @@ splash_screen()
   echo "To cancel installation at any time, press CONTROL-C"
   echo ""
 
-  if [ ! -e ~/.ssh/id_rsa.pub ] ; then
+  if [ ! -e /home/$USER/.ssh/id_rsa.pub ] ; then
       echo "ATTENTION."
-      echo "A public ssh key cannot be found at: ~/.ssh/id_rsa.pub"
+      echo "A public ssh key cannot be found at: /home/$USER"
       echo "To continue, you need to create one at that path. Is that ok (y/n)?"
       read ACCEPT
       if [ "$ACCEPT" == "y" ] ; then
@@ -365,7 +374,7 @@ get_ips()
     if [ "$CLOUD" == "gcp" ] ; then
 	gcloud_get_ips
     elif [ "$CLOUD" == "azure" ] ; then
-	azure_get_ips
+	az_get_ips
     elif [ "$CLOUD" == "aws" ] ; then
 	aws_get_ips
     fi    
@@ -384,41 +393,6 @@ cpus_gpus()
     fi
 }
 
-gcloud_get_ips()
-{
-    MY_IPS=$(gcloud compute instances list | grep "$PREFIX")
-
-    echo "$MY_IPS"
-    
-    head="${PREFIX}head${REGION/-/}"
-    if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
-       head="${PREFIX}cpu${REGION/-/}"	
-    elif [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then
-       head="${PREFIX}gpu${REGION/-/}"		
-    fi
-    
-    IP=$(echo $MY_IPS | sed -e "s/.*${head}/${head}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
-    PRIVATE_IP=$(echo $MY_IPS | sed -e "s/.*${head}/${head}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
-    echo -e "${head}\t Public IP: $IP \t Private IP: $PRIVATE_IP"
-
-    cpus_gpus
-    
-    for i in $(seq 1 ${CPUS}) ;
-    do
-        cpuid="${PREFIX}cpu${i}${REGION/-/}"
-	CPU[$i]=$(echo $MY_IPS | sed -e "s/.*${cpuid}/${cpuid}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
-	PRIVATE_CPU[$i]=$(echo $MY_IPS | sed -e "s/.*${cpuid}/${cpuid}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
-        echo -e "${cpuid}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
-    done
-
-    for j in $(seq 1 ${GPUS}) ;
-    do
-        gpuid="${PREFIX}gpu${j}${REGION/-/}"
-	GPU[$j]=$(echo $MY_IPS | sed -e "s/.*${gpuid}/${gpuid}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
-	PRIVATE_GPU[$j]=$(echo $MY_IPS | sed -e "s/.*${gpuid}/${gpuid}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
-        echo -e "${gpuid}\t Public IP: ${GPU[${j}]} \t Private IP: ${PRIVATE_GPU[${j}]}"
-    done
-}    
 
 clear_known_hosts()
 {
@@ -491,7 +465,8 @@ enter_cloud()
 
 enter_prefix()
 {
-    if [ "$PREFIX" == "" ] ; then 
+    if [ "$PREFIX" == "" ] ; then
+	echo ""
 	printf "The VM names will be prefixed with the string you enter here. Enter the prefix (default: $USER): "
 	read PREFIX
 
@@ -539,11 +514,11 @@ add_worker()
     WORKER_GPUS=$1
     
     if [ "$WORKER_GPUS" -gt "0" ] ; then
-        NAME="${PREFIX}gpu${GPU_WORKER_ID}${REGION/-/}"
+	set_name "gpu${GPU_WORKER_ID}"
         create_vm_gpu "worker"
         GPU_WORKER_ID=$((GPU_WORKER_ID+1))	
     else
-        NAME="${PREFIX}cpu${CPU_WORKER_ID}${REGION/-/}"	
+	set_name "cpu${CPU_WORKER_ID}"	
 	create_vm_cpu "worker"
         CPU_WORKER_ID=$((CPU_WORKER_ID+1))		
     fi
@@ -625,7 +600,10 @@ select_gpu()
 enter_enterprise_credentials()
 {
     if [ -e env.sh ] ; then
-	. env.sh
+	. env.sh	
+	echo "Found env.sh for enterprise binaries"
+	echo "$ENTERPRISE_DOWNLOAD_URL"
+	echo "$ENTERPRISE_USERNAME"
     fi    
 
     if [ "$ENTERPRISE_DOWNLOAD_URL" == "" ] ; then
@@ -664,10 +642,59 @@ enter_enterprise_credentials()
     fi
 }
 
+set_name()
+{
+  NAME="${PREFIX}$1${REGION/-/}"
+}
+
+_check_deletion()
+{
+    if [ $? -ne 0 ] ; then
+	echo "Problem deleting instance: $NAME"
+    fi
+}
+
 
 ###################################################################
 #  GCLOUD VM OPERATIONS                                           #
 ###################################################################
+
+gcloud_get_ips()
+{
+    MY_IPS=$(gcloud compute instances list | grep "$PREFIX")
+
+    echo "$MY_IPS"
+
+    set_name "head"
+    if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
+       set_name "cpu"
+    elif [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then
+       set_name "gpu"
+    fi
+    
+    IP=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
+    PRIVATE_IP=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
+    echo -e "${NAME}\t Public IP: $IP \t Private IP: $PRIVATE_IP"
+
+    cpus_gpus
+    
+    for i in $(seq 1 ${CPUS}) ;
+    do
+        cpuid="${PREFIX}cpu${i}${REGION/-/}"
+	CPU[$i]=$(echo $MY_IPS | sed -e "s/.*${cpuid}/${cpuid}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
+	PRIVATE_CPU[$i]=$(echo $MY_IPS | sed -e "s/.*${cpuid}/${cpuid}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
+        echo -e "${cpuid}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
+    done
+
+    for j in $(seq 1 ${GPUS}) ;
+    do
+        gpuid="${PREFIX}gpu${j}${REGION/-/}"
+	GPU[$j]=$(echo $MY_IPS | sed -e "s/.*${gpuid}/${gpuid}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
+	PRIVATE_GPU[$j]=$(echo $MY_IPS | sed -e "s/.*${gpuid}/${gpuid}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
+        echo -e "${gpuid}\t Public IP: ${GPU[${j}]} \t Private IP: ${PRIVATE_GPU[${j}]}"
+    done
+}    
+
 
 check_gcp_tools()
 {    
@@ -845,12 +872,6 @@ gcloud_setup()
     fi
 }
 
-gcloud_list_private_ips()
-{
-    echo ""
-}
-
-
 gcloud_list_public_ips()
 {    
     gcloud compute instances list 
@@ -883,7 +904,7 @@ _gcloud_precreate()
     echo "Image type selected: $MACHINE_TYPE"
 
     echo ""
-    echo "Boot disk size: $BOOT_DISK_SIZE_GBS"
+    echo "Boot disk size: $BOOT_DISK_SIZE_GB"
     printf "Is the default boot disk size (GBs) OK (y/n)? (default: y) "
     read CHANGE_SIZE
     if [ "$CHANGE_SIZE" == "y" ] || [ "$CHANGE_SIZE" == "" ] ; then
@@ -891,9 +912,9 @@ _gcloud_precreate()
     else
 	echo ""
 	printf "Enter the boot disk size in GBs: "
-	read BOOT_DISK_SIZE_GBS
+	read BOOT_DISK_SIZE_GB
     fi
-    BOOT_SIZE="${BOOT_DISK_SIZE_GBS}GB"
+    BOOT_SIZE="${BOOT_DISK_SIZE_GB}GB"
     echo "Boot disk size: $BOOT_SIZE"
     
 }
@@ -923,13 +944,12 @@ echo "    gcloud compute --project=$PROJECT instances create $NAME --zone=$ZONE 
     fi
 }
 
-
 gcloud_delete_vm()
 {
     gcloud_enter_region
     gcloud_enter_zone
     if [ "$RM_TYPE" == "cluster" ] ; then
-	NAME="${PREFIX}head${REGION/-/}"
+        set_name "head"
 	echo "nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1 </dev/null &"
         nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1  &
 
@@ -937,22 +957,28 @@ gcloud_delete_vm()
 
 	for i in $(seq 1 ${CPUS}) ;
 	do
-            cpuid="${PREFIX}cpu${i}${REGION/-/}"
-            nohup gcloud compute instances delete -q $cpuid > gcp-installer.log 2>&1  &	    
+	    set_name "cpu${i}"
+            echo "nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1 </dev/null &"	    	    
+            nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1  &	    
 	done
 	
 	for j in $(seq 1 ${GPUS}) ;
 	do
-            gpuid="${PREFIX}gpu${i}${REGION/-/}"
-            nohup gcloud compute instances delete -q $gpuid > gcp-installer.log 2>&1  &	    	    
+	    set_name "gpu${i}"
+            echo "nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1 </dev/null &"	    
+            nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1  &	    	    
 	done
     else
-        NAME="${PREFIX}${RM_TYPE}${REGION/-/}"
+	set_name "$RM_TYPE"
 	echo "nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1 </dev/null &"
         nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1  & 	
     fi
     RES=$?
     echo "Deleting in the background. Check gcp-installer.log for status."
+
+    sleep 3
+    list_public_ips
+
     exit $RES
 }
 
@@ -960,16 +986,332 @@ gcloud_delete_vm()
 #  AZURE VM OPERATIONS                                            #
 ###################################################################
 
+az_get_ips()
+{
+
+    echo "
+    az vm list-ip-addresses -g $RESOURCE_GROUP --output table | grep -v "VirtualMachine" | grep -v "^\-" | grep "$PREFIX"
+"
+    az vm list-ip-addresses -g $RESOURCE_GROUP --output table | grep -v "VirtualMachine" | grep -v "^\-" | grep "$PREFIX"
+
+    
+    MY_IPS=$(az vm list | grep "$PREFIX")
+
+    echo "$MY_IPS"
+
+    set_name "head"
+    if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
+       set_name "cpu"
+    elif [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then
+       set_name "gpu"
+    fi
+    # 
+    IP=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
+    PRIVATE_IP=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
+    echo -e "${NAME}\t Public IP: $IP \t Private IP: $PRIVATE_IP"
+
+    cpus_gpus
+    
+    for i in $(seq 1 ${CPUS}) ;
+    do
+        cpuid="${PREFIX}cpu${i}${REGION/-/}"
+	CPU[$i]=$(echo $MY_IPS | sed -e "s/.*${cpuid}/${cpuid}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
+	PRIVATE_CPU[$i]=$(echo $MY_IPS | sed -e "s/.*${cpuid}/${cpuid}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
+        echo -e "${cpuid}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
+    done
+
+    for j in $(seq 1 ${GPUS}) ;
+    do
+        gpuid="${PREFIX}gpu${j}${REGION/-/}"
+	GPU[$j]=$(echo $MY_IPS | sed -e "s/.*${gpuid}/${gpuid}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
+	PRIVATE_GPU[$j]=$(echo $MY_IPS | sed -e "s/.*${gpuid}/${gpuid}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
+        echo -e "${gpuid}\t Public IP: ${GPU[${j}]} \t Private IP: ${PRIVATE_GPU[${j}]}"
+    done
+}    
+
+
+
+
+_az_set_subscription()
+{
+    SUBSCRIPTION=$(az account list -o table | grep True | sed -e 's/\s*AzureCloud.*//')
+}
+
+_az_enter_subscription()
+{
+    _az_set_subscription
+    if [ $NON_INTERACT -eq 0 ] ; then    
+	echo ""
+	printf "Do you want to use the current subscription $SUBSCRIPTION (y/n) (default: y)? "
+	read CHANGE_SUBSCRIPTION
+
+	if [ "$CHANGE_SUBSCRIPTION" == "y" ] || [ "$CHANGE_SUBSCRIPTION" == "" ] ; then
+	    echo ""
+	else
+            az account list -o table
+	    echo ""
+	    printf "Enter the Subscription: "
+	    read SUBSCRIPTION
+	    az account set --subscription "$SUBSCRIPTION"
+	    if [ $? -ne 0 ] ; then
+		echo "Invalid subscription name: $SUBSCRIPTION"
+		echo "Enter a valid subscription name."
+		echo ""
+		_az_enter_subscription
+		return
+	    fi
+	fi
+    fi
+    echo "Subscription is: $SUBSCRIPTION"
+}
+
+_az_set_location()
+{
+    REGION=$(az configure -o table -l | tail -n +3 | tail -n +1 | grep ^location | awk '{ print $3 }')
+}
+
+_az_enter_location()
+{
+    _az_set_location
+    if [ $NON_INTERACT -eq 0 ] ; then    
+	CHANGE=0
+	if [ "$REGION" != "" ] ; then
+ 	  echo ""
+  	  printf "Do you want to keep the current Location $REGION (y/n) (default: y)? "
+ 	  read CHANGE_LOCATION
+	  if [ "$CHANGE_LOCATION" == "n" ] || [ "$CHANGE_LOCATION" == "no" ] ; then
+	      CHANGE=1
+	  fi
+        else
+	    CHANGE=1
+	fi
+	if [ $CHANGE -eq 1 ] ; then
+            az account list-locations -o table | sed -e 's/.*[0-9]*\.[0-9]*.*[0-9]*\.[0-9]*\s*//' | tail -n +3 | tail -n +1
+	    echo ""
+	    printf "Enter the Location: "
+	    read REGION
+	    az configure --defaults location=$REGION
+	    if [ $? -ne 0 ] ; then
+		echo "Invalid location name: $REGION"
+		echo ""	
+		_az_enter_location
+                return		
+	    fi
+	fi
+    fi
+    echo "Location is: $REGION"
+}    
+
+
+_az_set_resource_group()
+{
+    RESOURCE_GROUP=$(az configure -o table -l | tail -n +3 | tail -n +1 | grep ^group | awk '{ print $3 }')
+}
+
+_az_enter_resource_group()
+{
+    _az_set_resource_group
+    if [ $NON_INTERACT -eq 0 ] ; then    
+	echo ""
+	CHANGE=0
+	if [ "$RESOURCE_GROUP" != "" ] ; then
+  	    printf "Do you want to keep the Resource Group $RESOURCE_GROUP (y/n) (default: y)? "
+	    read CHANGE_GROUP
+            if [ "$CHANGE_GROUP" == "n" ] || [ "$CHANGE_GROUP" == "no" ] ; then
+		CHANGE=1
+	    fi
+        else
+	    CHANGE=1
+	fi
+	if [ $CHANGE -eq 1 ] ; then
+	    az group list
+	    echo ""
+	    printf "Enter the Resource Group: "
+	    read RESOURCE_GROUP
+
+	    az group exists $RESOURCE_GROUP
+	    if [ $? -ne 0 ] ; then
+		echo "Creating ResourceGroup: $RESOURCE_GROUP in $RESOURCE_GROUP"
+		az group create --name $RESOURCE_GROUP --location $REGION
+		if [ $? -ne 0 ] ; then
+		    echo "Problem creating resource group: $RESOURCE_GROUP"
+		    echo "Exiting..."
+		    exit 12
+		fi
+
+		
+		az configure --defaults group=$RESOURCE_GROUP
+		if [ $? -ne 0 ] ; then
+		    echo "Invalid resource group: $RESOURCE_GROUP"
+		    echo "Enter a valid resource group name."
+		    echo ""	
+		    _az_enter_resource_group
+          	    return		    
+		fi
+	    fi
+	fi
+    fi
+    echo "Resource Group is: $RESOURCE_GROUP"
+}    
+
+
+_az_set_virtual_network()
+{
+#    VIRTUAL_NETWORK=$(az network vnet list -g $RESOURCE_GROUP | grep "^    \"name\":" | awk '{ print $2 }' | sed -s 's/\"//g' | sed -e 's/,//')
+    VIRTUAL_NETWORK=$(az network vnet list -g $RESOURCE_GROUP -o table | tail -n +3 | awk '{ print $1 }' | tail -1)
+}
+
+_az_enter_virtual_network()
+{
+    _az_set_virtual_network
+    if [ $NON_INTERACT -eq 0 ] ; then    
+	echo ""
+	CHANGE=0
+	
+	if [ "$VIRTUAL_NETWORK" != "" ] ; then
+  	    printf "Do you want to keep the virtual network $VIRTUAL_NETWORK (y/n) (default: y)? "
+	    read CHANGE_GROUP
+            if [ "$CHANGE_GROUP" == "n" ] || [ "$CHANGE_GROUP" == "no" ] ; then
+		CHANGE=1
+	    fi
+        else
+	    CHANGE=1
+	fi
+	if [ $CHANGE -eq 1 ] ; then
+            az network vnet list -g $RESOURCE_GROUP -o table | tail -n +3 | awk '{ print $1 }'	    
+	    echo ""
+	    printf "Enter the Virtual Network: "
+	    read VIRTUAL_NETWORK
+
+	    az network vnet show -n $VIRTUAL_NETWORK 2>&1 > /dev/null
+	    if [ $? -ne 0 ] ; then
+		echo "Creating ResourceGroup: $VIRTUAL_NETWORK in $VIRTUAL_NETWORK"
+                az network vnet create -g $RESOURCE_GROUP -n $VIRTUAL_NETWORK --address-prefixes $ADDRESS_PREFIXES --subnet-name $SUBNET \
+		   --subnet-prefixes $SUBNET_PREFIXES --location $REGION		
+		if [ $? -ne 0 ] ; then
+		    echo "Problem creating resource group: $VIRTUAL_NETWORK"
+		    echo "Exiting..."
+		    exit 22
+		fi
+
+		
+		az configure --defaults group=$VIRTUAL_NETWORK
+		if [ $? -ne 0 ] ; then
+		    echo "Invalid resource group: $VIRTUAL_NETWORK"
+		    echo "Enter a valid resource group name."
+		    echo ""	
+		    _az_enter_resource_group
+          	    return		    
+		fi
+	    fi
+	fi
+    fi
+    echo "Virtual network is: $VIRTUAL_NETWORK"
+}    
+
+
+_az_set_private_dns_zone()
+{
+    DNS_PRIVATE_ZONE=$(az network private-dns zone list -g $RESOURCE_GROUP |  grep "$RESOURCE_GROUP" | awk '{ print $1 }')
+    if [ "$DNS_PRIVATE_ZONE" == "" ] ; then
+	DNS_VN_LINK=""
+    else
+	DNS_VN_LINK=$(az network private-dns link vnet list -g $RESOURCE_GROUP -z $DNS_PRIVATE_ZONE |  grep "$RESOURCE_GROUP" | awk '{ print $1 }')
+    fi
+}
+
+_az_enter_private_dns_zone()
+{
+    _az_set_private_dns_zone
+    if [ $NON_INTERACT -eq 0 ] ; then    
+	echo ""
+	DNS_CHANGE=0
+	if [ "$DNS_PRIVATE_ZONE" != "" ] ; then
+  	    printf "Do you want to keep the DNS private zone ${DNS_PRIVATE_ZONE} (y/n) (default: y)? "
+	    read CHANGE
+            if [ "$CHANGE" == "n" ] || [ "$CHANGE" == "no" ] ; then
+		DNS_CHANGE=1
+	    fi
+        else
+	    DNS_CHANGE=1
+	fi
+
+	
+	if [ $DNS_CHANGE -eq 1 ] ; then
+	    az network private-dns zone list -g $RESOURCE_GROUP
+	    echo ""
+	    printf "Enter the name for the private DNS Zone (if it does not exist, it will be created): "
+	    read DNS_PRIVATE_ZONE
+	fi
+	if [ "$DNS_PRIVATE_ZONE" == "" ] ; then
+	    echo "Error: Private DNS Zone cannot be empty"
+	    _az_enter_private_dns_zone
+	    return	    
+	fi
+
+	az network private-dns zone show -g $RESOURCE_GROUP -n $DNS_PRIVATE_ZONE 2>&1 > /dev/null
+	
+	if [ $? -ne 0 ] ; then
+	    echo ""
+	    echo "Could not find DNS private zone, creating...."
+	    az network private-dns zone create -g $RESOURCE_GROUP -n $DNS_PRIVATE_ZONE  --location $REGION
+	    if [ $? -ne 0 ] ; then
+		echo "Problem creating the DNS private zone: $DNS_PRIVATE_ZONE"
+		echo "Exiting..."
+		exit 33
+	    fi
+	fi
+
+	
+	LINK_CHANGE=0
+	if [ "$DNS_VN_LINK" != "" ] ; then
+  	    printf "Do you want to keep the DNS virtual network link ${DNS_VN_LINK} (${DNS_PRIVATE_ZONE} to ${VIRTUAL_NETWORK})) (y/n) (default: y)?"
+	    read CHANGE_LINK
+            if [ "$CHANGE_LINK" == "n" ] || [ "$CHANGE_LINK" == "no" ] ; then
+		LINK_CHANGE=1
+	    fi
+        else
+	    LINK_CHANGE=1
+	fi
+
+	if [ $LINK_CHANGE -eq 1 ] ; then
+	    echo ""
+	    printf "Enter the name for the private DNS Zone to Virtual Network link: "
+	    read DNS_VN_LINK
+	fi
+	if [ "$DNS_VN_LINK" == "" ] ; then
+	    echo "Error: Private DNS Zone virtual Network link cannot be empty"
+	    _az_enter_private_dns_zone
+	    return
+	fi
+
+	az network private-dns link vnet show -n $DNS_VN_LINK -g $RESOURCE_GROUP -z $DNS_PRIVATE_ZONE 2>&1 > /dev/null
+	if [ $? -ne 0 ] ; then
+	    echo ""
+	    echo "Could not find DNS private zone Virtual Network Link, creating...."
+	    az network private-dns link vnet create -g $RESOURCE_GROUP -n $DNS_VN_LINK -z $DNS_PRIVATE_ZONE -v $VIRTUAL_NETWORK -e true
+	    if [ $? -ne 0 ] ; then
+		echo "Problem creating the DNS private zone - virtual network link: $DNS_VN_LINK"
+		echo "Exiting..."
+		exit 44
+            fi
+        fi
+	
+    fi
+    echo "Private DNS Zone and VN Link are: ${DNS_PRIVATE_ZONE}/${DNS_VN_LINK}"
+}    
+
+
 
 az_setup()
 {
-    which az
+    which az 2>&1 > /dev/null
     if [ $? -ne 0 ] ; then
 
 	echo "Azure CLI tools does not appear to be installed"
-	printf 'Do you want to install Azure CLI tools? Enter: 'yes' or 'no' (default: yes): '
+	printf 'Do you want to install Azure CLI tools?  (y/n) (default: y): '
 	read 
-	if [ "$INSTALL_AZ" == "yes" ] || [ "$INSTALL_AZ" == "" ] ; then
+	if [ "$INSTALL_AZ" == "y" ] || [ "$INSTALL_AZ" == "" ] ; then
             echo "Installing Azure CLI tools"
 	else
 	    echo "Exiting...."
@@ -1004,148 +1346,199 @@ gpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/azu
 
     fi
 
-    #az account list-locations -o table
-    if [ $NON_INTERACT -eq 0 ] ; then    
-	echo ""
-	printf "Do you want to change the Location (default: $LOCATION) (y/n)?"
-	read CHANGE_LOCATION
-
-	if [ "$CHANGE_LOCATION" == "" ] || [ "$CHANGE_LOCATION" == "n" ] ; then
-	    echo ""
-	else
-	    az account list-locations -o table
-	    echo ""
-	    printf "Enter the LOCATION: "
-	    read LOCATION
-	fi
+    _az_enter_subscription
+    if [ $NON_INTERACT -eq 0 ] ; then
+       clear_screen
     fi
-    echo "LOCATION is: $RESOURCE_GROUP"
-    
+    _az_enter_location
+    if [ $NON_INTERACT -eq 0 ] ; then
+       clear_screen
+    fi
+    _az_enter_resource_group
+    if [ $NON_INTERACT -eq 0 ] ; then
+       clear_screen
+    fi
+    _az_enter_virtual_network
+    if [ $NON_INTERACT -eq 0 ] ; then
+       clear_screen
+    fi
+    _az_enter_private_dns_zone
     if [ $NON_INTERACT -eq 0 ] ; then
        clear_screen
     fi
 
-
-    
-    if [ $NON_INTERACT -eq 0 ] ; then    
-	echo ""
-	printf "Do you want to change the Resource Group (default: $RESOURCE_GROUP) (y/n)?"
-	read CHANGE_GROUP
-
-	if [ "$CHANGE_GROUP" == "" ] || [ "$CHANGE_GROUP" == "n" ] ; then
-	    echo ""
-	else
-	    az group list
-	    echo ""
-	    printf "Enter the Resource Group: "
-	    read RESOURCE_GROUP
-	fi
-    fi
-    echo "Resource Group is: $RESOURCE_GROUP"
-    az group exists $RESOURCE_GROUP
-    if [ $? -ne 0 ] ; then
-	echo "Creating ResourceGroup: $RESOURCE_GROUP in $RESOURCE_GROUP"
-	az group create --name $RESOURCE_GROUP --location $LOCATION
-    fi
-    
-    if [ $NON_INTERACT -eq 0 ] ; then
-       clear_screen
-    fi
-
-
-    if [ $NON_INTERACT -eq 0 ] ; then    
-	echo ""
-        vns=$(az network vnet list -g $RESOURCE_GROUP | grep "^    \"name\":" | awk '{ print $2 }' | sed -s 's/\"//g' | sed -e 's/,//')
-
-	printf "Do you want to change the Resource Group (default: $VIRTUAL_NETWORK) (y/n)?"	
-	read CHANGE_GROUP
-
-	if [ "$CHANGE_GROUP" == "" ] || [ "$CHANGE_GROUP" == "n" ] ; then
-	    echo ""
-	else
-	    az group list
-	    echo ""
-	    printf "Enter the Resource Group: "
-	    read VIRTUAL_NETWORK
-	fi
-    fi
-    echo "Resource Group is: $VIRTUAL_NETWORK"
-    az network vnet show -g $RESOURCE_GROUP -n $VIRTUAL_NETWORK
-    if [ $? -ne 0 ] ; then
-	az network vnet create -g $RESOURCE_GROUP -n $VIRTUAL_NETWORK --address-prefixes $ADDRESS_PREFIXES --subnet-name $SUBNET --subnet-prefixes $SUBNET_PREFIXES --location $LOCATION
-    fi
-    
-    if [ $NON_INTERACT -eq 0 ] ; then
-       clear_screen
-    fi
-    
-
-
-
-    if [[ "$vns" =~ "$VIRTUAL_NETWORK" ]]; then
-	echo "Found virtual networks in resource group $RESOURCE_GROUP  : $vns"
-    else
-	echo "az network vnet create -g $RESOURCE_GROUP -n $VIRTUAL_NETWORK --address-prefixes $ADDRESS_PREFIXES --subnet-name $SUBNET --subnet-prefixes $SUBNET_PREFIXES --location $LOCATION"
-	az network vnet create -g $RESOURCE_GROUP -n $VIRTUAL_NETWORK --address-prefixes $ADDRESS_PREFIXES --subnet-name $SUBNET --subnet-prefixes $SUBNET_PREFIXES --location $LOCATION
-    fi
-
-    # https://docs.microsoft.com/bs-cyrl-ba/azure/dns/private-dns-getstarted-cli
-    # -e true for automatic hostname registration
-    dns=$(az network private-dns zone list -g $RESOURCE_GROUP | grep "^    \"name\":" | awk '{ print $2 }' | sed -s 's/\"//g' | sed -e 's/,//')
-    if [[ "$dns" =~ "$DNS_PRIVATE_ZONE" ]]; then
-	echo "Found DNS private zones in resource group $RESOURCE_GROUP  : $dns"
-    else
-	echo "az network private-dns zone create -g $RESOURCE_GROUP -n $DNS_PRIVATE_ZONE --location $LOCATION"
-	az network private-dns zone create -g $RESOURCE_GROUP -n $DNS_PRIVATE_ZONE 
-    fi
-
-
-    links=$(az network private-dns link vnet list -g $RESOURCE_GROUP -z $DNS_PRIVATE_ZONE | grep "^    \"name\":" | awk '{ print $2 }' | sed -s 's/\"//g' | sed -e 's/,//')
-    if [[ "$links" =~ "$DNS_VN_LINK" ]] ; then
-	echo "Found linke from dns zone $DNS_PRIVATE_ZONE to virtual network $VIRTUAL_NETWORK in : $links"
-    else    
-	echo "az network private-dns link vnet create -g $RESOURCE_GROUP -n $DNS_VN_LINK -z $DNS_PRIVATE_ZONE -v $VIRTUAL_NETWORK -e true"  
-	az network private-dns link vnet create -g $RESOURCE_GROUP -n $DNS_VN_LINK -z $DNS_PRIVATE_ZONE -v $VIRTUAL_NETWORK -e true
-    fi
-    
-}
-
-
-az_list_private_ips()
-{
-  echo ""
 }
 
 
 az_list_public_ips()
 {
-  echo ""
+  _az_set_resource_group    
+  az vm list-ip-addresses -g $RESOURCE_GROUP --output table #--show-details 
 }
 
 _az_precreate()
 {
-  echo ""
+    az vm list-ip-addresses -g $RESOURCE_GROUP -n $NAME 2>&1 > /dev/null
+    if [ $? -ne 0 ] ; then
+	echo ""
+	echo "WARNING:"	
+	echo "VM already exists with name: $NAME"
+	echo ""
+	exit 12
+    fi
+
+    echo ""
+    echo "For the $1 VM:"
+    echo "VM type (size): $VM_SIZE"
+    printf "Is the default VM type OK (y/n)? (default: y) "
+    read CHANGE_IMAGE
+    if [ "$CHANGE_IMAGE" == "y" ] || [ "$CHANGE_IMAGE" == "" ] ; then
+	echo ""
+    else
+	echo ""
+	echo "Example image types: Standard_D4s_v3, Standard_NV6_Promo, etc"
+	printf "Enter the VM type: "
+	read VM_SIZE
+    fi
+    echo "VM type selected: $VM_SIZE"
+
+    
+    echo ""
+    echo "For the $1 VM:"
+    echo "OS Image: $OS_IMAGE"
+    printf "Is the default image type OK (y/n)? (default: y) "
+    read CHANGE_IMAGE
+    if [ "$CHANGE_IMAGE" == "n" ] || [ "$CHANGE_IMAGE" == "no" ] ; then
+	echo ""
+	echo "Example OS image types: UbuntuLTS, CentoS"
+	printf "Enter the OS image type: "
+	read OS_IMAGE
+    fi
+    echo "OS Image selected: $OS_IMAGE"
+    # az vm image list --all | grep $OS_IMAGE
+    # if [ $? -ne 0 ] ; then
+    # 	echo "Could not find $OS_IMAGE amoung available images (az vm image list --all)"
+    # 	echo "Try again."
+    # 	_az_precreate
+    # 	return
+    # fi
+    
+    echo ""
+    echo "Boot disk size: $BOOT_DISK_SIZE_GB"
+    printf "Is the default boot disk size (GBs) OK (y/n)? (default: y) "
+    read CHANGE_SIZE
+    if [ "$CHANGE_SIZE" == "y" ] || [ "$CHANGE_SIZE" == "" ] ; then
+	echo ""
+    else
+	echo ""
+	printf "Enter the boot disk size in GBs: "
+	read BOOT_DISK_SIZE_GB
+    fi
+    BOOT_SIZE=$BOOT_DISK_SIZE_GB
+    echo "Boot disk size: ${BOOT_SIZE}GB"
+    
+    echo ""
+    echo "Data disk size: $DATA_DISK_SIZES_GB"
+    printf "Is the additional data disk size (GBs) OK (y/n)? (default: y) "
+    read CHANGE_SIZE
+    if [ "$CHANGE_SIZE" == "y" ] || [ "$CHANGE_SIZE" == "" ] ; then
+	echo ""
+    else
+	echo ""
+	printf "Enter the data disk size in GBs: "
+	read DATA_DISK_SIZES_GB
+    fi
+    DATA_DISK_SIZE=$DATA_DISK_SIZES_GB
+    echo "Boot disk size: ${DATA_DISK_SIZE}GB"
+    
 }
 
 az_create_gpu()
 {
-  echo ""    
+    if [ "$GPU_TYPE" == "k80" ] ; then
+	ACCELERATOR_ZONE=3
+    elif [ "$GPU_TYPE" == "p100" ] ; then
+	ACCELERATOR_ZONE=2	
+    elif [ "$GPU_TYPE" == "v100" ] ; then
+	ACCELERATOR_ZONE=1	
+    else
+	ACCELERATOR_ZONE=3	
+    fi
+    VM_SIZE=$ACCELERATOR_VM
+    ACCELERATOR="--size $NUM_GPUS_PER_VM"
+    _az_create_vm $1
 }
 
 az_create_cpu()
 {
-  echo ""    
+    ACCELERATOR=""
+    _az_create_vm $1
 }
 
 _az_create_vm()
 {
-  echo ""    
+    _az_precreate $1
+  echo "
+  az vm create -n $NAME -g $RESOURCE_GROUP \
+   --image $OS_IMAGE --data-disk-sizes-gb $DATA_DISK_SIZE --os-disk-size-gb $BOOT_SIZE \
+   --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
+   --size $VM_SIZE --location $REGION --zone $AZ_ZONE $ACCELERATOR \
+   --ssh-key-value /home/$USER/.ssh/id_rsa.pub    
+"
+  az vm create -n $NAME -g $RESOURCE_GROUP \
+   --image $OS_IMAGE --data-disk-sizes-gb $DATA_DISK_SIZE --os-disk-size-gb $BOOT_SIZE \
+   --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
+   --size $VM_SIZE --location $REGION --zone $AZ_ZONE $ACCELERATOR \
+   --ssh-key-value /home/$USER/.ssh/id_rsa.pub    
+  #   --priority $PRIORITY --max-price 0.06 \
+  if [ $? -ne 0 ] ; then
+    echo "Problem creating VM. Exiting ..."
+    exit 12
+  fi
+  sleep 20
 }
 
 
 az_delete_vm()
 {
-  echo ""
+    _az_set_resource_group
+
+    if [ "$RM_TYPE" == "cluster" ] ; then
+	set_name "head"
+	echo "az vm delete -g $RESOURCE_GROUP -n $NAME --yes --no-wait"
+	az vm delete -g $RESOURCE_GROUP -n $NAME --yes --no-wait
+        _check_deletion
+	
+	cpus_gpus
+
+	for i in $(seq 1 ${CPUS}) ;
+	do
+	    set_name "cpu${i}"
+            az vm delete -g $RESOURCE_GROUP -n $NAME --yes --no-wait
+           _check_deletion	    
+	done
+	
+	for j in $(seq 1 ${GPUS}) ;
+	do
+	    set_name "gpu${i}"
+            az vm delete -g $RESOURCE_GROUP --name $NAME --yes --no-wait
+           _check_deletion	    
+	done
+    else
+	set_name "$RM_TYPE"
+	az vm delete -g $RESOURCE_GROUP --name $NAME --yes --no-wait
+        _check_deletion
+    fi
+
+    echo "Deleting VM(s) in the background."
+
+    sleep 3
+    list_public_ips
+
+    echo "To check the VM status, run:"
+    echo "./hopsworks-cloud-installer.sh -l -c gcp|azure|aws"
+    echo ""
+  
 }
 
 
@@ -1163,12 +1556,6 @@ aws_setup()
   echo ""
 }
 
-aws_list_private_ips()
-{
-  echo ""
-}
-
-
 aws_list_public_ips()
 {
   echo ""
@@ -1176,7 +1563,7 @@ aws_list_public_ips()
 
 _aws_precreate()
 {
-  echo ""
+    _az_precreate $1
 }
 
 aws_create_gpu()
@@ -1204,7 +1591,6 @@ aws_delete_vm()
 ###################################################################
 #  ABSTRACT VM OPERATIONS                                              #
 ###################################################################
-
 
 _missing_cloud()
 {
@@ -1243,7 +1629,11 @@ create_vm_gpu()
     else
       _missing_cloud	
     fi
-    clear
+    echo ""
+    echo "To check the VM status, run:"
+    echo "./hopsworks-cloud-installer.sh -l -c gcp|azure|aws"
+    echo ""
+    clear_screen
 }
 
 
@@ -1255,23 +1645,15 @@ delete_vm()
     elif [ "$CLOUD" == "azure" ] ; then
       az_delete_vm
     elif [ "$CLOUD" == "aws" ] ; then
-	aws_delete_vm
+      aws_delete_vm
     else
       _missing_cloud	
-    fi    
-}
-
-list_private_ips()
-{
-    if [ "$CLOUD" == "gcp" ] ; then
-      gcloud_list_private_ips
-    elif [ "$CLOUD" == "azure" ] ; then
-      az_list_private_ips
-    elif [ "$CLOUD" == "aws" ] ; then
-      aws_list_private_ips
-    else
-      _missing_cloud	
-    fi    
+    fi
+    echo ""
+    echo "To check the VM status, run:"
+    echo "./hopsworks-cloud-installer.sh -l -c gcp|azure|aws"
+    echo ""
+    
 }
 
 list_public_ips()
@@ -1292,7 +1674,7 @@ list_public_ips()
 cloud_setup()
 {
 
-    RAW_SSH_KEY="${USER}:$(cat ~/.ssh/id_rsa.pub)"
+    RAW_SSH_KEY="${USER}:$(cat /home/$USER/.ssh/id_rsa.pub)"
     ESCAPED_SSH_KEY="$RAW_SSH_KEY"
     
     if [ "$CLOUD" == "gcp" ] ; then
@@ -1309,12 +1691,8 @@ cloud_setup()
 ###################################################################
 #   MAIN                                                          #
 ###################################################################
-
-
-
-while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
-  case "$1" in
-    -h|--help|-help)
+help()
+{
               echo "usage: [sudo] ./$SCRIPTNAME "
 	      echo " [-h|--help]      help message"
 	      echo " [-i|--install-action community|community-gpu|community-cluster|enterprise|kubernetes]"
@@ -1347,7 +1725,14 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      echo " [-w|--num-cpu-workers num] Number of workers (CPU only) to create for the cluster."	      
 	      echo ""
 	      exit 3
-              break
+
+}
+
+
+while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
+  case "$1" in
+      -h|--help|-help)
+	      help
 	      ;;
     -i|--install-action)
 	      shift
@@ -1381,7 +1766,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 		      ;;
 		  *)
 		      echo "Could not recognise '-i' option: $1"
-		      exit_error "Failed."
+              	      get_install_option_help		      
 		 esac
 	       ;;
     -c|--cloud)
@@ -1390,9 +1775,10 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 		 gcp|aws|azure)
 		      CLOUD=$1
   		      ;;
-		  *)
-		      echo "Could not recognise '-c' option: $1"
-		      exit_error "Failed."
+		 *)
+                     echo "Invalid option for '-c' option: $1"
+		     echo "Valid options are: gcp | azure | aws"
+                     exit 44
 		 esac
 	       ;;
     -d|--download-enterprise-url)
@@ -1532,14 +1918,14 @@ fi
 cloud_setup
 
 if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
-    NAME="${PREFIX}cpu${REGION/-/}"    
+    set_name "cpu"
 elif [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then
-    NAME="${PREFIX}gpu${REGION/-/}"
+    set_name "gpu"    
     if [ $NON_INTERACT -eq 0 ] ; then        
 	select_gpu "head"
     fi
-elif [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then    
-    NAME="${PREFIX}head${REGION/-/}"
+elif [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
+    set_name "head"    
     if [ $NON_INTERACT -eq 0 ] ; then        
 	select_gpu "head"
     fi
@@ -1564,8 +1950,8 @@ else
     echo "Skipping VM creation...."
 fi	
 
-if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then    
-    NAME="${PREFIX}head${REGION/-/}"
+if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
+    set_name "head"    
 fi  
 
 get_ips
@@ -1598,8 +1984,8 @@ fi
 
 if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
     
-    ssh -t -o StrictHostKeyChecking=no $IP "if [ ! -e ~/.ssh/id_rsa.pub ] ; then cat /dev/zero | ssh-keygen -q -N \"\" ; fi"
-    pubkey=$(ssh -t -o StrictHostKeyChecking=no $IP "cat ~/.ssh/id_rsa.pub")
+    ssh -t -o StrictHostKeyChecking=no $IP "if [ ! -e /home/$USER/.ssh/id_rsa.pub ] ; then cat /dev/zero | ssh-keygen -q -N \"\" ; fi"
+    pubkey=$(ssh -t -o StrictHostKeyChecking=no $IP "cat /home/$USER/.ssh/id_rsa.pub")
 
     keyfile=".pubkey.pub"
     echo "$pubkey" > $keyfile

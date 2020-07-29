@@ -26,6 +26,7 @@ VM_SIZE=Standard_D4s_v3
 ACCELERATOR_VM=Standard_D4s_v3
 #ACCELERATOR_VM=Standard_NV6_Promo
 
+#CentOS
 IMAGE=UbuntuLTS
 
 ADDRESS_PREFIXES="10.0.0.0/16"
