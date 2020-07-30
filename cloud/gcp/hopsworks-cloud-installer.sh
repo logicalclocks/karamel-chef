@@ -133,8 +133,8 @@ VM_HEAD=hd
 VM_WORKER=cpu
 VM_GPU=gpu
 
-VM_SIZE=Standard_D4s_v3
-ACCELERATOR_VM=Standard_D4s_v3
+VM_SIZE=Standard_E4as_v4
+ACCELERATOR_VM=Standard_E4as_v4
 OS_IMAGE=UbuntuLTS
 #AZ_NETWORKING="--accelerated-networking true"
 AZ_NETWORKING="--accelerated-networking false"
@@ -155,6 +155,12 @@ PRICE=0.06
 #################
 # AWS Config
 #################
+
+AWS_VM_SIZE=t3.2xlarge
+VPC=
+AWS_SUBNET=
+AMI=
+
 
 # $1 = String describing error
 exit_error()
@@ -1389,7 +1395,7 @@ _az_precreate()
 	echo ""
     else
 	echo ""
-	echo "Example image types: Standard_D4s_v3, Standard_NV6_Promo, etc"
+	echo "Example image types: Standard_E4as_v4, Standard_NV6_Promo, etc"
 	printf "Enter the VM type: "
 	read VM_SIZE
     fi
@@ -1490,6 +1496,8 @@ _az_create_vm()
     exit 12
   fi
   sleep 20
+  # Shortcut to create a network security group (NSG) add the 443 inbound rule, and applies it to the VM 
+  az vm open-port -g $RESOURCE_GROUP -n $NAME --port 443
 }
 
 
@@ -1539,27 +1547,52 @@ az_delete_vm()
 
 check_aws_tools()
 {
-  echo ""
+    which aws 2>&1 > /dev/null
+    if [ $? -ne 0 ] ; then
+	echo "AWS CLI does not appear to be installed"
+	printf "Do you want to install AWS CLI? Enter: 'y/n' (default: y): "
+	read INSTALL_AWS
+	if [ "$INSTALL_AWS" == "y" ] || [ "$INSTALL_AWS" == "" ] ; then
+            echo "Installing AWS CLI"
+	else
+	    echo "Exiting...."
+	    exit 77
+	fi
+
+	curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+	unzip awscliv2.zip
+	sudo ./aws/install
+	aws --version
+	if [ $? -ne 0 ] ; then
+	    echo "Problem installing aws tools"
+	    echo "Exiting..."
+	    exit 88
+	fi
+        aws configure
+    fi
 }
 
 aws_setup()
 {
-  echo ""
+    if [ $NON_INTERACT -eq 0 ] ; then
+	check_aws_tools
+    fi
 }
 
 aws_list_public_ips()
 {
+    # aws ec2    --output table
   echo ""
 }
 
 _aws_precreate()
 {
-    _az_precreate $1
+    echo ""
 }
 
 aws_create_gpu()
 {
-  echo ""    
+    echo ""    
 }
 
 aws_create_cpu()
@@ -1569,7 +1602,7 @@ aws_create_cpu()
 
 _aws_create_vm()
 {
-  echo ""    
+    _az_precreate $1        
 }
 
 
