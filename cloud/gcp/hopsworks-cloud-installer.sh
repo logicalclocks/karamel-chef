@@ -88,6 +88,7 @@ NUM_WORKERS_CPU=0
 NUM_WORKERS_GPU=0
 
 CLOUD=
+VM_DELETE=
 
 #################
 # GCP Config
@@ -953,37 +954,42 @@ echo "    gcloud compute --project=$PROJECT instances create $NAME --zone=$ZONE 
 
 gcloud_delete_vm()
 {
-    gcloud_enter_region
-    gcloud_enter_zone
-    if [ "$RM_TYPE" == "cluster" ] ; then
-        set_name "head"
-	echo "nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1 </dev/null &"
-        nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1  &
+#    gcloud_enter_region
+    #    gcloud_enter_zone
 
-	cpus_gpus
 
-	for i in $(seq 1 ${CPUS}) ;
-	do
-	    set_name "cpu${i}"
-            echo "nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1 </dev/null &"	    	    
-            nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1  &	    
-	done
+    
+    # if [ "$RM_TYPE" == "cluster" ] ; then
+    #     set_name "head"
+    # 	echo "nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1 </dev/null &"
+    #     nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1  &
+
+    # 	cpus_gpus
+
+    # 	for i in $(seq 1 ${CPUS}) ;
+    # 	do
+    # 	    set_name "cpu${i}"
+    #         echo "nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1 </dev/null &"	    	    
+    #         nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1  &	    
+    # 	done
 	
-	for j in $(seq 1 ${GPUS}) ;
-	do
-	    set_name "gpu${i}"
-            echo "nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1 </dev/null &"	    
-            nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1  &	    	    
-	done
-    else
-	set_name "$RM_TYPE"
-	echo "nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1 </dev/null &"
-        nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1  & 	
-    fi
+    # 	for j in $(seq 1 ${GPUS}) ;
+    # 	do
+    # 	    set_name "gpu${i}"
+    #         echo "nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1 </dev/null &"	    
+    #         nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1  &	    	    
+    # 	done
+    # else
+    # 	set_name "$RM_TYPE"
+    # 	echo "nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1 </dev/null &"
+    #     nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1  & 	
+    # fi
+
+    nohup gcloud compute instances delete -q $VM_DELETE > gcp-installer.log 2>&1  & 
     RES=$?
     echo "Deleting in the background. Check gcp-installer.log for status."
 
-    sleep 3
+    sleep 1
     list_public_ips
 
     exit $RES
@@ -1504,38 +1510,40 @@ _az_create_vm()
 az_delete_vm()
 {
     _az_set_resource_group
-    _az_set_location
+    # _az_set_location
 
-    if [ "$RM_TYPE" == "cluster" ] ; then
-	set_name "head"
-	echo "az vm delete -g $RESOURCE_GROUP -n $NAME --yes --no-wait"
-	az vm delete -g $RESOURCE_GROUP -n $NAME --yes --no-wait
-        _check_deletion
+    # if [ "$RM_TYPE" == "cluster" ] ; then
+    # 	set_name "head"
+    # 	echo "az vm delete -g $RESOURCE_GROUP -n $NAME --yes --no-wait"
+    # 	az vm delete -g $RESOURCE_GROUP -n $NAME --yes --no-wait
+    #     _check_deletion
 	
-	cpus_gpus
+    # 	cpus_gpus
 
-	for i in $(seq 1 ${CPUS}) ;
-	do
-	    set_name "cpu${i}"
-            az vm delete -g $RESOURCE_GROUP -n $NAME --yes --no-wait
-           _check_deletion	    
-	done
+    # 	for i in $(seq 1 ${CPUS}) ;
+    # 	do
+    # 	    set_name "cpu${i}"
+    #         az vm delete -g $RESOURCE_GROUP -n $NAME --yes --no-wait
+    #        _check_deletion	    
+    # 	done
 	
-	for j in $(seq 1 ${GPUS}) ;
-	do
-	    set_name "gpu${i}"
-            az vm delete -g $RESOURCE_GROUP --name $NAME --yes --no-wait
-           _check_deletion	    
-	done
-    else
-	set_name "$RM_TYPE"
-	echo "az vm delete -g $RESOURCE_GROUP --name $NAME --yes --no-wait"
-	az vm delete -g $RESOURCE_GROUP --name $NAME --yes --no-wait
-        _check_deletion
-    fi
+    # 	for j in $(seq 1 ${GPUS}) ;
+    # 	do
+    # 	    set_name "gpu${i}"
+    #         az vm delete -g $RESOURCE_GROUP --name $NAME --yes --no-wait
+    #        _check_deletion	    
+    # 	done
+    # else
+    # 	set_name "$RM_TYPE"
+    # 	echo "az vm delete -g $RESOURCE_GROUP --name $NAME --yes --no-wait"
+    # 	az vm delete -g $RESOURCE_GROUP --name $NAME --yes --no-wait
+    #     _check_deletion
+    # fi
 
-    echo "Deleting VM(s) in the background."
+    # echo "Deleting VM(s) in the background."
 
+    az vm delete -g $RESOURCE_GROUP --name $VM_DELETE --yes --no-wait
+    
     sleep 3
     list_public_ips
 }
@@ -1663,7 +1671,15 @@ create_vm_gpu()
 
 delete_vm()
 {
-    enter_prefix
+    #enter_prefix
+    if [ "$VM_DELETE" == "" ] ; then
+        list_public_ips	
+	echo ""
+	printf "Enter the name of the VM to delete: "
+	read VM_DELETE
+    fi
+
+    echo "Deleting $VM_DELETE"
     if [ "$CLOUD" == "gcp" ] ; then
       gcloud_delete_vm
     elif [ "$CLOUD" == "azure" ] ; then
@@ -1741,10 +1757,7 @@ help()
 	      echo " [-l|--list-public-ips] List the public ips of all VMs."
 	      echo " [-n|--vm-name-prefix name] The prefix for the VM name created."
 	      echo " [-ni|--non-interactive] skip license/terms acceptance and all confirmation screens."
-	      echo " [-rm|--remove cluster]"
-	      echo "                 'cpu' single-VM Hopsworks Community (no GPUs)"
-	      echo "                 'gpu' single-VM Hopsworks Community with GPU(s)"
-	      echo "                 'cluster' Hopsworks Cluster - Community or Entperise"
+	      echo " [-rm|--remove [VM_Name]]"
 	      echo " [-sc|--skip-create] skip creating the VMs, use the existing VM(s) with the same vm_name(s)."
 	      echo " [-w|--num-cpu-workers num] Number of workers (CPU only) to create for the cluster."	      
 	      echo ""
@@ -1854,15 +1867,17 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      NON_INTERACT=1
 	      ;;
     -rm|--remove)
-              shift
-	      case $1 in
-		 cpu | gpu | cluster)
-		      RM_TYPE=$1
-  		      ;;
-		  *)
-		      echo "Could not recognise option: $1"
-		      exit_error "Failed."
-	      esac
+        shift
+	RM_TYPE="delete"
+	VM_DELETE=$1
+	      # case $1 in
+	      # 	 cpu | gpu | cluster)
+	      # 	      RM_TYPE=$1
+  	      # 	      ;;
+	      # 	  *)
+	      # 	      echo "Could not recognise option: $1"
+	      # 	      exit_error "Failed."
+	      #esac
 	      ;;
 
     -n|--vm-name-prefix)
