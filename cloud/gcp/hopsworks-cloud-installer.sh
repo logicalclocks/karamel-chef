@@ -65,10 +65,10 @@ ENTERPRISE=0
 KUBERNETES=0
 HEAD_VM_TYPE=head_cpu
 
-INPUT_YML="cluster-defns/hopsworks-installer.yml"
+INPUT_YML="cluster-defns/hopsworks-head.yml"
 WORKER_YML="cluster-defns/hopsworks-worker.yml"
 WORKER_GPU_YML="cluster-defns/hopsworks-worker-gpu.yml"
-YML_FILE="cluster-defns/hopsworks-installer-active.yml"
+YML_FILE="cluster-defns/hopsworks-installation.yml"
 
 WORKER_LIST=
 WORKER_IP=
@@ -109,7 +109,7 @@ RESERVATION_AFFINITY=any
 SHIELD=""
 
 BOOT_DISK=pd-ssd
-BOOT_DISK_SIZE_GB=150
+BOOT_SIZE_GBS=150
 
 RAW_SSH_KEY="${USER}:$(cat /home/$USER/.ssh/id_rsa.pub)"
 #printf -v ESCAPED_SSH_KEY "%q\n" "$RAW_SSH_KEY"
@@ -243,7 +243,7 @@ splash_screen()
 	  exit 99
       fi
   fi
-  
+
   clear_screen
 }
 
@@ -586,11 +586,11 @@ select_gpu()
        NUM_GPUS_PER_VM=0
    else
      echo ""
-     echo "Available GPU types: v100, p100, k80"
+     echo "Available GPU types: v100, p100, t4, k80"
      printf 'Please enter the type of GPU: '
      read GPU_TYPE
      case $GPU_TYPE in
-         v100 | p100 | k80)
+         v100 | p100 | k80 | t4)
 	  echo ""
 	  echo "Number of GPUs per GPU-enabled VM: $NUM_GPUS_PER_VM  GPU type: $GPU_TYPE"
         ;;
@@ -895,34 +895,35 @@ _gcloud_precreate()
 	echo "VM already exists with name: $NAME"
 	echo ""	
     fi
+    if [ $NON_INTERACT -eq 0 ] ; then    
+	echo ""
+	echo "For the $1 VM:"
+	echo "Image type: $MACHINE_TYPE"
+	printf "Is the default image type OK (y/n)? (default: y) "
+	read CHANGE_IMAGE
+	if [ "$CHANGE_IMAGE" == "y" ] || [ "$CHANGE_IMAGE" == "" ] ; then
+	    echo ""
+	else
+	    echo ""
+	    echo "Example image types: n1-standard-8, n1-standard-16, n1-standard-32"
+	    printf "Enter the image type: "
+	    read MACHINE_TYPE
+	fi
+	echo "Image type selected: $MACHINE_TYPE"
 
-    echo ""
-    echo "For the $1 VM:"
-    echo "Image type: $MACHINE_TYPE"
-    printf "Is the default image type OK (y/n)? (default: y) "
-    read CHANGE_IMAGE
-    if [ "$CHANGE_IMAGE" == "y" ] || [ "$CHANGE_IMAGE" == "" ] ; then
 	echo ""
-    else
-	echo ""
-	echo "Example image types: n1-standard-8, n1-standard-16, n1-standard-32"
-	printf "Enter the image type: "
-	read MACHINE_TYPE
+	echo "Boot disk size: $BOOT_SIZE_GBS"
+	printf "Is the default boot disk size (GBs) OK (y/n)? (default: y) "
+	read CHANGE_SIZE
+	if [ "$CHANGE_SIZE" == "y" ] || [ "$CHANGE_SIZE" == "" ] ; then
+	    echo ""
+	else
+	    echo ""
+	    printf "Enter the boot disk size in GBs: "
+	    read BOOT_SIZE_GBS
+	fi
     fi
-    echo "Image type selected: $MACHINE_TYPE"
-
-    echo ""
-    echo "Boot disk size: $BOOT_DISK_SIZE_GB"
-    printf "Is the default boot disk size (GBs) OK (y/n)? (default: y) "
-    read CHANGE_SIZE
-    if [ "$CHANGE_SIZE" == "y" ] || [ "$CHANGE_SIZE" == "" ] ; then
-	echo ""
-    else
-	echo ""
-	printf "Enter the boot disk size in GBs: "
-	read BOOT_DISK_SIZE_GB
-    fi
-    BOOT_SIZE="${BOOT_DISK_SIZE_GB}GB"
+    BOOT_SIZE="${BOOT_SIZE_GBS}GB"
     echo "Boot disk size: $BOOT_SIZE"
     
 }
@@ -1392,70 +1393,72 @@ _az_precreate()
 	exit 12
     fi
 
-    echo ""
-    echo "For the $1 VM:"
-    echo "VM type (size): $VM_SIZE"
-    printf "Is the default VM type OK (y/n)? (default: y) "
-    read CHANGE_IMAGE
-    if [ "$CHANGE_IMAGE" == "y" ] || [ "$CHANGE_IMAGE" == "" ] ; then
+    if [ $NON_INTERACT -eq 0 ] ; then    
+	
 	echo ""
-    else
-	echo ""
-	echo "Example image types: Standard_E4as_v4, Standard_NV6_Promo, etc"
-	printf "Enter the VM type: "
-	read VM_SIZE
-    fi
-    echo "VM type selected: $VM_SIZE"
+	echo "For the $1 VM:"
+	echo "VM type (size): $VM_SIZE"
+	printf "Is the default VM type OK (y/n)? (default: y) "
+	read CHANGE_IMAGE
+	if [ "$CHANGE_IMAGE" == "y" ] || [ "$CHANGE_IMAGE" == "" ] ; then
+	    echo ""
+	else
+	    echo ""
+	    echo "Example image types: Standard_E4as_v4, Standard_NV6_Promo, etc"
+	    printf "Enter the VM type: "
+	    read VM_SIZE
+	fi
+	echo "VM type selected: $VM_SIZE"
 
-    
-    echo ""
-    echo "For the $1 VM:"
-    echo "OS Image: $OS_IMAGE"
-    printf "Is the default image type OK (y/n)? (default: y) "
-    read CHANGE_IMAGE
-    if [ "$CHANGE_IMAGE" == "n" ] || [ "$CHANGE_IMAGE" == "no" ] ; then
+	
 	echo ""
-	echo "Example OS image types: UbuntuLTS, CentoS"
-	printf "Enter the OS image type: "
-	read OS_IMAGE
+	echo "For the $1 VM:"
+	echo "OS Image: $OS_IMAGE"
+	printf "Is the default image type OK (y/n)? (default: y) "
+	read CHANGE_IMAGE
+	if [ "$CHANGE_IMAGE" == "n" ] || [ "$CHANGE_IMAGE" == "no" ] ; then
+	    echo ""
+	    echo "Example OS image types: UbuntuLTS, CentoS"
+	    printf "Enter the OS image type: "
+	    read OS_IMAGE
+	fi
+	echo "OS Image selected: $OS_IMAGE"
+	# az vm image list --all | grep $OS_IMAGE
+	# if [ $? -ne 0 ] ; then
+	# 	echo "Could not find $OS_IMAGE amoung available images (az vm image list --all)"
+	# 	echo "Try again."
+	# 	_az_precreate
+	# 	return
+	# fi
+	
+	echo ""
+	echo "Boot disk size: $BOOT_SIZE_GBS"
+	printf "Is the default boot disk size (GBs) OK (y/n)? (default: y) "
+	read CHANGE_SIZE
+	if [ "$CHANGE_SIZE" == "y" ] || [ "$CHANGE_SIZE" == "" ] ; then
+	    echo ""
+	else
+	    echo ""
+	    printf "Enter the boot disk size in GBs: "
+	    read BOOT_SIZE_GBS
+	fi
+	echo "Boot disk size: ${BOOT_SIZE_GBS}GB"
+	
+	echo ""
+	echo "Data disk size: $DATA_DISK_SIZES_GB"
+	printf "Is the additional data disk size (GBs) OK (y/n)? (default: y) "
+	read CHANGE_SIZE
+	if [ "$CHANGE_SIZE" == "y" ] || [ "$CHANGE_SIZE" == "" ] ; then
+	    echo ""
+	else
+	    echo ""
+	    printf "Enter the data disk size in GBs: "
+	    read DATA_DISK_SIZES_GB
+	fi
+	DATA_DISK_SIZE=$DATA_DISK_SIZES_GB
+	echo "Boot disk size: ${DATA_DISK_SIZE}GB"
     fi
-    echo "OS Image selected: $OS_IMAGE"
-    # az vm image list --all | grep $OS_IMAGE
-    # if [ $? -ne 0 ] ; then
-    # 	echo "Could not find $OS_IMAGE amoung available images (az vm image list --all)"
-    # 	echo "Try again."
-    # 	_az_precreate
-    # 	return
-    # fi
-    
-    echo ""
-    echo "Boot disk size: $BOOT_DISK_SIZE_GB"
-    printf "Is the default boot disk size (GBs) OK (y/n)? (default: y) "
-    read CHANGE_SIZE
-    if [ "$CHANGE_SIZE" == "y" ] || [ "$CHANGE_SIZE" == "" ] ; then
-	echo ""
-    else
-	echo ""
-	printf "Enter the boot disk size in GBs: "
-	read BOOT_DISK_SIZE_GB
-    fi
-    BOOT_SIZE=$BOOT_DISK_SIZE_GB
-    echo "Boot disk size: ${BOOT_SIZE}GB"
-    
-    echo ""
-    echo "Data disk size: $DATA_DISK_SIZES_GB"
-    printf "Is the additional data disk size (GBs) OK (y/n)? (default: y) "
-    read CHANGE_SIZE
-    if [ "$CHANGE_SIZE" == "y" ] || [ "$CHANGE_SIZE" == "" ] ; then
-	echo ""
-    else
-	echo ""
-	printf "Enter the data disk size in GBs: "
-	read DATA_DISK_SIZES_GB
-    fi
-    DATA_DISK_SIZE=$DATA_DISK_SIZES_GB
-    echo "Boot disk size: ${DATA_DISK_SIZE}GB"
-    
+    BOOT_SIZE=$BOOT_SIZE_GBS
 }
 
 az_create_gpu()
@@ -1665,7 +1668,6 @@ create_vm_gpu()
     echo "To check the VM status, run:"
     echo "./hopsworks-cloud-installer.sh -l -c gcp|azure|aws"
     echo ""
-    clear_screen
 }
 
 
@@ -1749,6 +1751,7 @@ help()
 	      echo " [-gt|--gpu-type type]"
 	      echo "                 'v100' Nvidia Tesla V100"
 	      echo "                 'p100' Nvidia Tesla P100"
+	      echo "                 't4' Nvidia Tesla T4"	      
 	      echo "                 'k80' Nvidia K80"	      
 	      echo " [-d|--download-enterprise-url url] downloads enterprise binaries from this URL."
 	      echo " [-dc|--download-url url] downloads binaries from this URL."
@@ -1757,7 +1760,7 @@ help()
 	      echo " [-l|--list-public-ips] List the public ips of all VMs."
 	      echo " [-n|--vm-name-prefix name] The prefix for the VM name created."
 	      echo " [-ni|--non-interactive] skip license/terms acceptance and all confirmation screens."
-	      echo " [-rm|--remove [VM_Name]]"
+	      echo " [-rm|--remove] Delete a VM - you will be prompted for the name of the VM to delete."
 	      echo " [-sc|--skip-create] skip creating the VMs, use the existing VM(s) with the same vm_name(s)."
 	      echo " [-w|--num-cpu-workers num] Number of workers (CPU only) to create for the cluster."	      
 	      echo ""
@@ -1867,9 +1870,8 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      NON_INTERACT=1
 	      ;;
     -rm|--remove)
-        shift
 	RM_TYPE="delete"
-	VM_DELETE=$1
+	#VM_DELETE=$1
 	      # case $1 in
 	      # 	 cpu | gpu | cluster)
 	      # 	      RM_TYPE=$1

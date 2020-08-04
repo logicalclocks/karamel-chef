@@ -69,10 +69,10 @@ ENTERPRISE=0
 KUBERNETES=0
 DOWNLOAD=
 KUBERNETES_RECIPES=""
-INPUT_YML="cluster-defns/hopsworks-installer.yml"
+INPUT_YML="cluster-defns/hopsworks-head.yml"
 WORKER_YML="cluster-defns/hopsworks-worker.yml"
 WORKER_GPU_YML="cluster-defns/hopsworks-worker-gpu.yml"
-YML_FILE="cluster-defns/hopsworks-installer-active.yml"
+YML_FILE="cluster-defns/hopsworks-installation.yml"
 ENTERPRISE_ATTRS=
 KUBE="false"
 WORKER_LIST=
@@ -1073,7 +1073,7 @@ if [ "$INSTALL_ACTION" == "$INSTALL_NVIDIA" ] ; then
 fi
 
 if [ "$INSTALL_ACTION" == "$PURGE_HOPSWORKS_ALL_HOSTS" ] ; then
-    IPS=$(grep 'ip:' hopsworks-installer-active.yml | awk '{ print $2 }')
+    IPS=$(grep 'ip:' hopsworks-installation.yml | awk '{ print $2 }')
     cd
     for ip in $IPS ; do
 	echo ""
@@ -1362,7 +1362,7 @@ else
 	echo "Note: port 9090 must be open for external traffic and Karamel will shutdown when installation finishes."
 	echo ""
 	echo "====================================================================="
-        echo "Hopsworks will later be available at:"
+        echo "Hopsworks will later be available at private IP:"
 	echo ""
 	echo "https://${IP}/hopsworks"
 	echo ""
