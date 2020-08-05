@@ -753,16 +753,16 @@ gcloud_enter_region()
 	gcloud config get-value compute/region
 	echo ""
 	printf "Do you want to use the current active region (y/n)? (default: y) "
-	read CHANGE_REGION
+	read KEEP_REGION
 
-	if [ "$CHANGE_REGION" == "" ] || [ "$CHANGE_REGION" == "y" ] ; then
+	if [ "$KEEP_REGION" == "" ] || [ "$KEEP_REGION" == "y" ] ; then
 	    echo ""
 	else
 	    gcloud compute regions list | awk '{ print $1 }'
 	    echo ""
 	    printf "Enter the REGION: "
-	    read CHANGE_REGION
-	    gcloud config set compute/region $CHANGE_REGION  > /dev/null 2>&1
+	    read KEEP_REGION
+	    gcloud config set compute/region $KEEP_REGION  > /dev/null 2>&1
 	fi
     fi
     REGION=$(gcloud config get-value compute/region 2> /dev/null)    
@@ -776,16 +776,16 @@ gcloud_enter_zone()
 	gcloud config get-value compute/zone
 	echo ""
 	printf "Do you want to use the current active zone (y/n)? (default: y) "
-	read CHANGE_ZONE
+	read KEEP_ZONE
 
-	if [ "$CHANGE_ZONE" == "" ] || [ "$CHANGE_ZONE" == "y" ] ; then
+	if [ "$KEEP_ZONE" == "" ] || [ "$KEEP_ZONE" == "y" ] ; then
 	    echo ""
 	else
 	    gcloud compute zones list | grep $REGION  | awk '{ print $1 }'
 	    echo ""
 	    printf "Enter the ZONE: "
-	    read CHANGE_ZONE
-	    gcloud config set compute/zone $CHANGE_ZONE > /dev/null 2>&1
+	    read KEEP_ZONE
+	    gcloud config set compute/zone $KEEP_ZONE > /dev/null 2>&1
 	fi
     fi
     ZONE=$(gcloud config get-value compute/zone 2> /dev/null)    
@@ -798,16 +798,16 @@ gcloud_enter_project()
 	gcloud config get-value project
 	echo ""
 	printf "Do you want to use the current active project (y/n)? (default: y) "
-	read CHANGE_PROJECT
+	read KEEP_PROJECT
 
-	if [ "$CHANGE_PROJECT" == "" ] || [ "$CHANGE_PROJECT" == "y" ] ; then
+	if [ "$KEEP_PROJECT" == "" ] || [ "$KEEP_PROJECT" == "y" ] ; then
 	    echo ""
 	else
 	    gcloud projects list --sort-by=projectId
 	    echo ""
 	    printf "Enter the PROJECT_ID: "
-	    read CHANGE_PROJECT
-	    gcloud config set core/project $CHANGE_PROJECT > /dev/null 2>&1
+	    read KEEP_PROJECT
+	    gcloud config set core/project $KEEP_PROJECT > /dev/null 2>&1
 	fi
     fi
     PROJECT=$(gcloud config get-value core/project 2> /dev/null)
@@ -900,8 +900,8 @@ _gcloud_precreate()
 	echo "For the $1 VM:"
 	echo "Image type: $MACHINE_TYPE"
 	printf "Is the default image type OK (y/n)? (default: y) "
-	read CHANGE_IMAGE
-	if [ "$CHANGE_IMAGE" == "y" ] || [ "$CHANGE_IMAGE" == "" ] ; then
+	read KEEP_IMAGE
+	if [ "$KEEP_IMAGE" == "y" ] || [ "$KEEP_IMAGE" == "" ] ; then
 	    echo ""
 	else
 	    echo ""
@@ -914,8 +914,8 @@ _gcloud_precreate()
 	echo ""
 	echo "Boot disk size: $BOOT_SIZE_GBS"
 	printf "Is the default boot disk size (GBs) OK (y/n)? (default: y) "
-	read CHANGE_SIZE
-	if [ "$CHANGE_SIZE" == "y" ] || [ "$CHANGE_SIZE" == "" ] ; then
+	read KEEP_SIZE
+	if [ "$KEEP_SIZE" == "y" ] || [ "$KEEP_SIZE" == "" ] ; then
 	    echo ""
 	else
 	    echo ""
@@ -1049,9 +1049,9 @@ _az_enter_subscription()
     if [ $NON_INTERACT -eq 0 ] ; then    
 	echo ""
 	printf "Do you want to use the current subscription $SUBSCRIPTION (y/n) (default: y)? "
-	read CHANGE_SUBSCRIPTION
+	read KEEP_SUBSCRIPTION
 
-	if [ "$CHANGE_SUBSCRIPTION" == "y" ] || [ "$CHANGE_SUBSCRIPTION" == "" ] ; then
+	if [ "$KEEP_SUBSCRIPTION" == "y" ] || [ "$KEEP_SUBSCRIPTION" == "" ] ; then
 	    echo ""
 	else
             az account list -o table
@@ -1084,8 +1084,8 @@ _az_enter_location()
 	if [ "$REGION" != "" ] ; then
  	  echo ""
   	  printf "Do you want to keep the current Location $REGION (y/n) (default: y)? "
- 	  read CHANGE_LOCATION
-	  if [ "$CHANGE_LOCATION" == "n" ] || [ "$CHANGE_LOCATION" == "no" ] ; then
+ 	  read KEEP_LOCATION
+	  if [ "$KEEP_LOCATION" == "n" ] || [ "$KEEP_LOCATION" == "no" ] ; then
 	      CHANGE=1
 	  fi
         else
@@ -1122,8 +1122,8 @@ _az_enter_resource_group()
 	CHANGE=0
 	if [ "$RESOURCE_GROUP" != "" ] ; then
   	    printf "Do you want to keep the Resource Group $RESOURCE_GROUP (y/n) (default: y)? "
-	    read CHANGE_GROUP
-            if [ "$CHANGE_GROUP" == "n" ] || [ "$CHANGE_GROUP" == "no" ] ; then
+	    read KEEP_GROUP
+            if [ "$KEEP_GROUP" == "n" ] || [ "$KEEP_GROUP" == "no" ] ; then
 		CHANGE=1
 	    fi
         else
@@ -1176,8 +1176,8 @@ _az_enter_virtual_network()
 	
 	if [ "$VIRTUAL_NETWORK" != "" ] ; then
   	    printf "Do you want to keep the virtual network $VIRTUAL_NETWORK (y/n) (default: y)? "
-	    read CHANGE_GROUP
-            if [ "$CHANGE_GROUP" == "n" ] || [ "$CHANGE_GROUP" == "no" ] ; then
+	    read KEEP_GROUP
+            if [ "$KEEP_GROUP" == "n" ] || [ "$KEEP_GROUP" == "no" ] ; then
 		CHANGE=1
 	    fi
         else
@@ -1272,8 +1272,8 @@ _az_enter_private_dns_zone()
 	LINK_CHANGE=0
 	if [ "$DNS_VN_LINK" != "" ] ; then
   	    printf "Do you want to keep the DNS virtual network link ${DNS_VN_LINK} (${DNS_PRIVATE_ZONE} to ${VIRTUAL_NETWORK})) (y/n) (default: y)?"
-	    read CHANGE_LINK
-            if [ "$CHANGE_LINK" == "n" ] || [ "$CHANGE_LINK" == "no" ] ; then
+	    read KEEP_LINK
+            if [ "$KEEP_LINK" == "n" ] || [ "$KEEP_LINK" == "no" ] ; then
 		LINK_CHANGE=1
 	    fi
         else
@@ -1399,8 +1399,8 @@ _az_precreate()
 	echo "For the $1 VM:"
 	echo "VM type (size): $VM_SIZE"
 	printf "Is the default VM type OK (y/n)? (default: y) "
-	read CHANGE_IMAGE
-	if [ "$CHANGE_IMAGE" == "y" ] || [ "$CHANGE_IMAGE" == "" ] ; then
+	read KEEP_IMAGE
+	if [ "$KEEP_IMAGE" == "y" ] || [ "$KEEP_IMAGE" == "" ] ; then
 	    echo ""
 	else
 	    echo ""
@@ -1415,8 +1415,8 @@ _az_precreate()
 	echo "For the $1 VM:"
 	echo "OS Image: $OS_IMAGE"
 	printf "Is the default image type OK (y/n)? (default: y) "
-	read CHANGE_IMAGE
-	if [ "$CHANGE_IMAGE" == "n" ] || [ "$CHANGE_IMAGE" == "no" ] ; then
+	read KEEP_IMAGE
+	if [ "$KEEP_IMAGE" == "n" ] || [ "$KEEP_IMAGE" == "no" ] ; then
 	    echo ""
 	    echo "Example OS image types: UbuntuLTS, CentoS"
 	    printf "Enter the OS image type: "
@@ -1434,8 +1434,8 @@ _az_precreate()
 	echo ""
 	echo "Boot disk size: $BOOT_SIZE_GBS"
 	printf "Is the default boot disk size (GBs) OK (y/n)? (default: y) "
-	read CHANGE_SIZE
-	if [ "$CHANGE_SIZE" == "y" ] || [ "$CHANGE_SIZE" == "" ] ; then
+	read KEEP_SIZE
+	if [ "$KEEP_SIZE" == "y" ] || [ "$KEEP_SIZE" == "" ] ; then
 	    echo ""
 	else
 	    echo ""
@@ -1447,8 +1447,8 @@ _az_precreate()
 	echo ""
 	echo "Data disk size: $DATA_DISK_SIZES_GB"
 	printf "Is the additional data disk size (GBs) OK (y/n)? (default: y) "
-	read CHANGE_SIZE
-	if [ "$CHANGE_SIZE" == "y" ] || [ "$CHANGE_SIZE" == "" ] ; then
+	read KEEP_SIZE
+	if [ "$KEEP_SIZE" == "y" ] || [ "$KEEP_SIZE" == "" ] ; then
 	    echo ""
 	else
 	    echo ""
