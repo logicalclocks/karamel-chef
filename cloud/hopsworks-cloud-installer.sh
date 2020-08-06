@@ -1,4 +1,4 @@
- #!/bin/bash
+#!/bin/bash
 
 ###################################################################################################
 #                                                                                                 #
@@ -84,8 +84,8 @@ SKIP_CREATE=0
 NUM_GPUS_PER_VM=
 GPU_TYPE=
 
-NUM_WORKERS_CPU=0
-NUM_WORKERS_GPU=0
+NUM_WORKERS_CPU=
+NUM_WORKERS_GPU=
 
 CLOUD=
 VM_DELETE=
@@ -535,7 +535,7 @@ add_worker()
 
 cpu_worker_size()
 {
-   if [ $NUM_WORKERS_CPU -eq 0 ] ; then
+   if [ "$NUM_WORKERS_CPU" == "" ] ; then
        printf 'Please enter the number of CPU-only workers you want to add (default: 0): '
        read NUM_WORKERS_CPU
        if [ "$NUM_WORKERS_CPU" == "" ] ; then
@@ -556,7 +556,7 @@ cpu_worker_size()
 
 gpu_worker_size()
 {
-   if [ $NUM_WORKERS_GPU -eq 0 ] ; then    
+   if [ "$NUM_WORKERS_GPU" == "" ] ; then    
      printf 'Please enter the number of GPU-enabled workers you want to add (default: 0): '
      read NUM_WORKERS_GPU
      if [ "$NUM_WORKERS_GPU" == "" ] ; then
@@ -652,7 +652,8 @@ enter_enterprise_credentials()
 
 set_name()
 {
-  NAME="${PREFIX}$1${REGION/-/}"
+    #  NAME="${PREFIX}$1${REGION/-/}"
+    NAME="${PREFIX}$1"
 }
 
 _check_deletion()
@@ -681,8 +682,6 @@ gcloud_get_ips()
     fi
     
     IP=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
-#    PRIVATE_IP=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
-#    echo -e "${NAME}\t Public IP: $IP \t Private IP: $PRIVATE_IP"
 
     cpus_gpus
     
@@ -863,12 +862,15 @@ gcloud_setup()
 	    IMAGE=ubuntu-1804-bionic-v20200716
 	    IMAGE_PROJECT=ubuntu-os-cloud
 	else
-	    echo "Examples of IMAGE/IMAGE_PROJECT are:"
-	    echo "IMAGE=centos-7-v20200714  \t IMAGE_PROJECT=ubuntu-os-cloud"
-	    echo "IMAGE=ubuntu-1804-bionic-v20200716 \t IMAGE_PROJECT=ubuntu-os-cloud"
+	    echo "Examples of IMAGE are:"
+	    echo "IMAGE=centos-7-v20200714"
+	    echo "IMAGE=ubuntu-1804-bionic-v20200716"
 	    echo ""
 	    printf "Enter the IMAGE: "
 	    read IMAGE
+	    echo "Examples of IMAGE/IMAGE_PROJECT are:"
+	    echo "IMAGE_PROJECT=centoos-cloud"
+	    echo "IMAGE_PROJECT=ubuntu-os-cloud"
 	    printf "Enter the IMAGE_PROJECT: "
 	    read IMAGE_PROJECT
 	fi
@@ -1831,7 +1833,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      ;;
     -du|--download-username)
       	      shift
-	      ENTERPRISE_USER=$1
+	      ENTERPRISE_USERNAME=$1
 	      ;;
     -dp|--download-password)
       	      shift
@@ -1983,9 +1985,9 @@ if [ $SKIP_CREATE -eq 0 ] ; then
 	create_vm_cpu "head"
     fi
     #$PREFIX $CPUS $GPUS $HEAD_VM_TYPE
-    if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then    
-      cpu_worker_size
-      gpu_worker_size
+    if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
+        cpu_worker_size
+        gpu_worker_size
     fi
 else
     echo "Skipping VM creation...."
