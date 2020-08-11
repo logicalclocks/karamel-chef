@@ -1,4 +1,4 @@
-x#!/bin/bash
+#!/bin/bash
 
 ###################################################################################################
 #                                                                                                 #
@@ -45,6 +45,8 @@ declare -a GPU
 declare -a PRIVATE_CPU
 declare -a PRIVATE_GPU
 
+SCRIPTNAME=$0
+
 DO_LISTING=0
 RM_TYPE=
 
@@ -56,7 +58,6 @@ host_ip=
 INSTALL_CPU=0
 INSTALL_GPU=1
 INSTALL_CLUSTER=2
-PURGE=3
 
 NON_INTERACT=0
 DRY_RUN=0
@@ -76,9 +77,6 @@ WORKER_DEFAULTS=
 CPU_WORKER_ID=1
 GPU_WORKER_ID=1
 
-ENTERPRISE_DOWNLOAD_URL=
-ENTERPRISE_USERNAME=
-ENTERPRISE_PASSWORD=
 SKIP_CREATE=0
 
 NUM_GPUS_PER_VM=
@@ -231,6 +229,14 @@ splash_screen()
   echo "To cancel installation at any time, press CONTROL-C"
   echo ""
 
+  if [ ! -w `pwd` ]; then
+      echo ""
+      echo "WARNING!"
+      echo "The current directory is not writable and needs to be writeable by this script: $(PWD)"
+      echo "Suggested fix:"
+      echo "sudo chown $USER . && chmod +w ."
+      echo ""
+  fi
   if [ ! -e /home/$USER/.ssh/id_rsa.pub ] ; then
       echo "ATTENTION."
       echo "A public ssh key cannot be found at: /home/$USER"
@@ -404,7 +410,13 @@ cpus_gpus()
 
 clear_known_hosts()
 {
-   ssh-keygen -f "/home/$USER/.ssh/known_hosts" -R $host_ip
+    echo "ssh-keygen -f "/home/$USER/.ssh/known_hosts" -R $host_ip"
+    ssh-keygen -f "/home/$USER/.ssh/known_hosts" -R $host_ip
+    if [ $? -ne 0 ] ; then
+	echo ""	
+	echo "WARN: Could not clean up known_hosts file"
+	echo ""
+    fi
 }    
 
 enter_email()
@@ -607,8 +619,6 @@ enter_enterprise_credentials()
     if [ -e env.sh ] ; then
 	. env.sh	
 	echo "Found env.sh for enterprise binaries"
-	echo "$ENTERPRISE_DOWNLOAD_URL"
-	echo "$ENTERPRISE_USERNAME"
     fi    
 
     if [ "$ENTERPRISE_DOWNLOAD_URL" == "" ] ; then
@@ -668,8 +678,6 @@ _check_deletion()
 gcloud_get_ips()
 {
     MY_IPS=$(gcloud compute instances list | grep "$PREFIX")
-
-    echo "$MY_IPS"
 
     set_name "head"
     if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
@@ -950,7 +958,6 @@ echo "    gcloud compute --project=$PROJECT instances create $NAME --zone=$ZONE 
       echo "Problem creating VM. Exiting ..."
       exit 12
     fi
-    sleep 3
 }
 
 gcloud_delete_vm()
@@ -1729,7 +1736,7 @@ cloud_setup()
 ###################################################################
 help()
 {
-              echo "usage: [sudo] ./$SCRIPTNAME "
+              echo "usage: $SCRIPTNAME "
 	      echo " [-h|--help]      help message"
 	      echo " [-i|--install-action community|community-gpu|community-cluster|enterprise|kubernetes]"
 	      echo "                 'community' installs Hopsworks Community on a single VM"
@@ -1737,7 +1744,6 @@ help()
 	      echo "                 'community-cluster' installs Hopsworks Community on a multi-VM cluster"
 	      echo "                 'enterprise' installs Hopsworks Enterprise (single VM or multi-VM)"
 	      echo "                 'kubernetes' installs Hopsworks Enterprise (single VM or multi-VM) alson with open-source Kubernetes"
-	      echo "                 'purge' removes any existing Hopsworks Cluster (single VM or multi-VM) and destroys its VMs"	      
 	      echo " [-c|--cloud gcp|aws|azure] Name of the public cloud "
 	      echo " [-dr|--dry-run]  generates cluster definition (YML) files, allowing customization of clusters."	      
 	      echo " [-g|--num-gpu-workers num] Number of workers (with GPUs) to create for the cluster."
@@ -1794,9 +1800,6 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
                       ENTERPRISE=1
                       KUBERNETES=1
 		      ACTION="kubernetes"		      
-		      ;;
-	         purge)
-		      INSTALL_ACTION=$PURGE
 		      ;;
 		  *)
 		      echo "Could not recognise '-i' option: $1"
@@ -1960,11 +1963,13 @@ elif [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
     if [ $NON_INTERACT -eq 0 ] ; then        
 	select_gpu "head"
     fi
-elif [ $INSTALL_ACTION -eq $PURGE ] ; then
-    delete
 else
     exit_error "Bad install action: $INSTALL_ACTION"
 fi
+
+if [ $ENTERPRISE -eq 1 ] ; then
+    enter_enterprise_credentials
+fi    
 
 if [ $SKIP_CREATE -eq 0 ] ; then
     if [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then    
@@ -1972,7 +1977,6 @@ if [ $SKIP_CREATE -eq 0 ] ; then
     else
 	create_vm_cpu "head"
     fi
-    #$PREFIX $CPUS $GPUS $HEAD_VM_TYPE
     if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
         cpu_worker_size
         gpu_worker_size
@@ -1988,7 +1992,7 @@ fi
 IP=
 while [ "$IP" == "" ] ; do
     get_ips
-    sleep 5
+    sleep 3
 done
 
 
