@@ -915,7 +915,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 		      INSTALL_ACTION=$INSTALL_CLUSTER
 		      ;;
 		 enterprise)
-		      INSTALL_ACTION=$INSTALL_CLUSTER
+		      INSTALL_ACTION=$INSTALL_CLUSTRE
                       ENTERPRISE=1
 		      ;;
 		 kubernetes)
@@ -1131,7 +1131,6 @@ if [ $DRY_RUN -eq 0 ] ; then
     which java > /dev/null
     if [ $? -ne 0 ] ; then
 	echo "Installing Java..."
-	clear_screen
 	if [ "$DISTRO" == "Ubuntu" ] ; then
 	    sudo apt update -y
 	    sudo apt install openjdk-8-jre-headless -y
@@ -1168,7 +1167,6 @@ wget -nc ${CLUSTER_DEFINITION_BRANCH}/$WORKER_GPU_YML
 cd ..
 
 if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST_TLS" ]  ; then
-    clear_screen
     enter_cloud
     cp -f $INPUT_YML $YML_FILE
 fi
@@ -1190,13 +1188,11 @@ if [ "$CLOUD" == "azure" ] ; then
       PRIVATE_HOSTNAME=$SUSPECTED_HOSTNAME
     fi
     sudo hostname $PRIVATE_HOSTNAME
-    clear_screen
 fi
 
 if [ $DRY_RUN -eq 0 ] ; then
     if [ ! -d karamel-${KARAMEL_VERSION} ] ; then
 	echo "Installing Karamel..."
-	clear_screen
 	wget -nc http://www.karamel.io/sites/default/files/downloads/karamel-${KARAMEL_VERSION}.tgz
 	if [ $? -ne 0 ] ; then
 	    exit_error "Problem downloading karamel"
@@ -1211,6 +1207,12 @@ if [ $DRY_RUN -eq 0 ] ; then
 fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] ; then
+  TLS="true
+      crl_enabled: true
+      crl_fetcher_class: org.apache.hadoop.security.ssl.DevRemoteCRLFetcher
+      crl_fetcher_interval: 5m
+"
+    
   if [ "$WORKER_LIST" == "" ] ; then
       worker_size
   else
@@ -1228,7 +1230,11 @@ if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] ; then
 fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST_TLS" ] ; then
-  TLS="true"
+  TLS="true
+      crl_enabled: true
+      crl_fetcher_class: org.apache.hadoop.security.ssl.DevRemoteCRLFetcher
+      crl_fetcher_interval: 5m
+"
 fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_KARAMEL" ]  ; then
@@ -1294,6 +1300,11 @@ else
     fi
 
     if [ $ENTERPRISE -eq 1 ] ; then
+        TLS="true
+      crl_enabled: true
+      crl_fetcher_class: org.apache.hadoop.security.ssl.DevRemoteCRLFetcher
+      crl_fetcher_interval: 5m
+"	
 	if [ "$ENTERPRISE_DOWNLOAD_URL" = "" ] ; then
 	    echo ""
             printf "Enter the URL to download the Enterprise Binaries from: "

@@ -1,4 +1,4 @@
-#!/bin/bash
+x#!/bin/bash
 
 ###################################################################################################
 #                                                                                                 #
@@ -34,8 +34,8 @@
 
 email="test"
 
-HOPSWORKS_INSTALLER_VERSION=installer_1_4
-CLUSTER_DEFINITION_VERSION=installer_1_4
+HOPSWORKS_INSTALLER_VERSION=master
+CLUSTER_DEFINITION_VERSION=master
 HOPSWORKS_INSTALLER_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_INSTALLER_VERSION
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$CLUSTER_DEFINITION_VERSION
 
@@ -404,8 +404,7 @@ cpus_gpus()
 
 clear_known_hosts()
 {
-   echo "   ssh-keygen -R $host_ip -f /home/$USER/.ssh/known_host"
-   ssh-keygen -R $host_ip -f "/home/$USER/.ssh/known_hosts" 
+   ssh-keygen -f "/home/$USER/.ssh/known_hosts" -R $host_ip
 }    
 
 enter_email()
@@ -549,7 +548,6 @@ cpu_worker_size()
        echo ""
       add_worker 0
       i=$((i+1))
-      clear
    done
 }
 
@@ -573,7 +571,6 @@ gpu_worker_size()
        echo ""       
       add_worker $NUM_GPUS_PER_VM 
       i=$((i+1))
-      clear
    done
 }
 
@@ -953,6 +950,7 @@ echo "    gcloud compute --project=$PROJECT instances create $NAME --zone=$ZONE 
       echo "Problem creating VM. Exiting ..."
       exit 12
     fi
+    sleep 3
 }
 
 gcloud_delete_vm()
@@ -991,9 +989,6 @@ gcloud_delete_vm()
     nohup gcloud compute instances delete -q $VM_DELETE > gcp-installer.log 2>&1  & 
     RES=$?
     echo "Deleting in the background. Check gcp-installer.log for status."
-
-    sleep 1
-    list_public_ips
 
     exit $RES
 }
@@ -1549,8 +1544,6 @@ az_delete_vm()
 
     az vm delete -g $RESOURCE_GROUP --name $VM_DELETE --yes --no-wait
     
-    sleep 3
-    list_public_ips
 }
 
 
@@ -1650,7 +1643,6 @@ create_vm_cpu()
     else
       _missing_cloud	
     fi
-    clear
 }
 
 create_vm_gpu()
@@ -1927,10 +1919,6 @@ if [ "$RM_TYPE" != "" ] ; then
     exit 0
 fi    
 
-#CPUS=$1
-#GPUS=$2
-
-#. config.sh $PREFIX "head"
 if [ $DRY_RUN -eq 1 ] ; then
     NON_INTERACT=1
 fi    
