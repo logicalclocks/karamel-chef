@@ -2,6 +2,13 @@
 Hopsworks Cloud Installer
 =====================================
 
+Requirements:
+  * Linux command-line with bash support
+  * An existing account on either GCP or Azure.
+  
+
+`hopsworks-cloud-installer.sh` is a shell script to install Hopsworks using cloud sdk frameworks (GCP CLI tools, Azure CLI tools).
+
 
 usage: ./hopsworks-cloud-installer.sh
  [-h|--help]      help message
