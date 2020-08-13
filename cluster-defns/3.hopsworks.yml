@@ -100,13 +100,6 @@ groups:
     size: 1
     baremetal:
       ip: 192.168.56.103
-    attrs:
-      cuda:
-        accept_nvidia_download_terms: true
-      hops:
-        yarn:
-          vcores: 16
-          memory_mbs: 48000
     recipes:
       - kagent
       - conda

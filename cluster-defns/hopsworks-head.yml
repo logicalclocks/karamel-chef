@@ -24,14 +24,6 @@ attrs:
       detect-hardware-capabilities: false
     rmappsecurity:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
-#  maggy:
-#    version: "git+git://github.com/logicalclocks/maggy@master"
-#  kagent:
-#  conda:
-#    hops-util-py:
-#      install-mode: "git"
-#      branch: "model_repo_project"
-#      repo: "jimdowling"
 #  ndb:
 #    nvme:
 #      disks: "/dev/nvme0n1 /dev/nvme0n1"
@@ -48,9 +40,6 @@ attrs:
   prometheus:
       retention_time: "8h"
   hopsworks:
-#    war_url: http://snurran.sics.se/hops/hopsworks/1.4.0/hopsworks-web-dev.war
-#    ca_url: http://snurran.sics.se/hops/hopsworks/1.4.0/hopsworks-ca-dev.war    
-#    ear_url: http://snurran.sics.se/hops/hopsworks/1.4.0/hopsworks-ear-dev.ear
     encryption_password: __PWD___001
     master:
       password: __PWD___002
@@ -68,7 +57,7 @@ attrs:
   hive2:
       mysql_password: __PWD___203
   mysql:
-      password: __PWD___202      
+      password: __PWD___202
   elastic:
     opendistro_security:
       jwt:
@@ -131,6 +120,6 @@ groups:
       - hopsmonitor::alertmanager
       - hopsmonitor::node_exporter
       - consul::master
-      - hops::docker_registry      
+      - hops::docker_registry
 __KUBERNETES_RECIPES__
 

@@ -915,7 +915,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 		      INSTALL_ACTION=$INSTALL_CLUSTER
 		      ;;
 		 enterprise)
-		      INSTALL_ACTION=$INSTALL_CLUSTRE
+		      INSTALL_ACTION=$INSTALL_CLUSTER
                       ENTERPRISE=1
 		      ;;
 		 kubernetes)
