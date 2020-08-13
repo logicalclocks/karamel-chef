@@ -28,7 +28,7 @@
 ###################################################################################################
 
 HOPSWORKS_REPO=logicalclocks/hopsworks-chef
-HOPSWORKS_BRANCH=1.3
+HOPSWORKS_BRANCH=master
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_BRANCH
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
@@ -69,10 +69,10 @@ ENTERPRISE=0
 KUBERNETES=0
 DOWNLOAD=
 KUBERNETES_RECIPES=""
-INPUT_YML="cluster-defns/hopsworks-installer.yml"
+INPUT_YML="cluster-defns/hopsworks-head.yml"
 WORKER_YML="cluster-defns/hopsworks-worker.yml"
 WORKER_GPU_YML="cluster-defns/hopsworks-worker-gpu.yml"
-YML_FILE="cluster-defns/hopsworks-installer-active.yml"
+YML_FILE="cluster-defns/hopsworks-installation.yml"
 ENTERPRISE_ATTRS=
 KUBE="false"
 WORKER_LIST=
@@ -82,7 +82,10 @@ HAS_GPUS=0
 AVAILABLE_GPUS=
 CUDA=
 
-KARAMEL_HTTP_PROXY=
+KARAMEL_HTTP_PROXY_1=
+KARAMEL_HTTP_PROXY_2=
+KARAMEL_HTTP_PROXY_3=
+PROXY=
 
 # $1 = String describing error
 exit_error()
@@ -91,7 +94,7 @@ exit_error()
 
   echo "" $ECHO_OUT
   echo "Error number: $1"
-  echo "Exiting $PRODUCT $VERSION installer."
+  echo "Exiting hopsworks-installer.sh."
   echo ""
   exit 1
 }
@@ -275,7 +278,7 @@ display_license()
   echo "http://www.gnu.org/licenses/gpl-3.0.txt"
   echo ""
   echo "Copyright(C) 2020 Logical Clocks AB. All rights reserved."
-  echo "Logical Clocks AB is furnishing this item "as is". Logical Clocks AB does not provide any"
+  echo "Logical Clocks AB is furnishing this item \"as is\". Logical Clocks AB does not provide any"
   echo "warranty of the item whatsoever, whether express, implied, or statutory,"
   echo "including, but not limited to, any warranty of merchantability or fitness"
   echo "for a particular purpose or any warranty that the contents of the item will"
@@ -410,6 +413,102 @@ install_action()
    fi
 }
 
+
+#
+# To test http_proxy support:
+# yum install iptables-services
+# netstat -plant
+# Reference: https://www.thegeekstuff.com/scripts/iptables-rules
+#
+# Delete all existing rules:
+# iptables -F
+#
+# Allow incoming ssh (and connection response)
+# sudo iptables -A INPUT -p tcp --dport 22 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+# sudo iptables -A OUTPUT -p tcp --sport 22 -m conntrack --ctstate ESTABLISHED -j ACCEP
+# iptables -A OUTPUT -o eth0 -p tcp --sport 22 -m state --state ESTABLISHED -j ACCEPT
+#
+# allow related traiff
+# sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+# sudo iptables -A OUTPUT -m conntrack --ctstate ESTABLISHED -j ACCEPT
+# sudo iptables -A INPUT -p tcp --dport 22 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+# sudo iptables -A OUTPUT -p tcp --sport 22 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+
+
+# drop other incoming Traffic:
+# iptables -A INPUT -j DROP
+#
+# Allow outgoing ssh connections:
+# iptables -A OUTPUT -o eth0 -p tcp --dport 22 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -A INPUT -i eth0 -p tcp --sport 22 -m state --state ESTABLISHED -j ACCEPT
+#
+# Allow outgoing https:
+# iptables -A OUTPUT -o eth0 -p tcp -d 192.168.100.0/24 --dport 443 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -A INPUT -i eth0 -p tcp -d 192.168.100.0/24 --sport 443 -m state --state ESTABLISHED -j ACCEPT
+#
+# Allow loopback
+# iptables -A INPUT -i lo -j ACCEPT
+# iptables -A OUTPUT -o lo -j ACCEPT
+
+set_karamel_http_proxy()
+{
+
+    # extract the protocol
+    proto="$(echo $PROXY | grep :// | sed -e's,^\(.*://\).*,\1,g')"
+    # remove the protocol
+    url="$(echo ${PROXY/$proto/})"
+    # extract the user (if any)
+    user="$(echo $url | grep @ | cut -d@ -f1)"
+    # extract the host and port
+    hostport="$(echo ${url/$user@/} | cut -d/ -f1)"
+    # by request host without port
+    host="$(echo $hostport | sed -e 's,:.*,,g')"
+    # by request - try to extract the port
+    port="$(echo $hostport | sed -e 's,^.*:,:,g' -e 's,.*:\([0-9]*\).*,\1,g' -e 's,[^0-9],,g')"
+    if [ "$port" == "" ] ; then
+	if [ "$proto" == "http://" ] ; then
+	    port="80"
+	elif [ "$proto" == "https://" ] ; then
+	    port="443"
+	else
+	    port=-1
+	fi
+    fi
+    if [ "$proto" == "http://" ] ; then
+        KARAMEL_HTTP_PROXY_1="export http_proxy=${proto}${host}:${port}"
+        KARAMEL_HTTP_PROXY_2="export http_proxy_host=$host"
+        KARAMEL_HTTP_PROXY_3="export http_proxy_port=$port"		
+    elif [ "$proto" == "https://" ] ; then
+        KARAMEL_HTTP_PROXY_1="export https_proxy=${proto}${host}:${port}"
+        KARAMEL_HTTP_PROXY_2="export https_proxy_host=$host"
+        KARAMEL_HTTP_PROXY_3="export https_proxy_port=$port"		
+	
+    else
+	echo "Error. Unrecognized http(s) proxy protocol: $proto is a problem from $PROXY"
+	exit 15
+    fi
+
+    if [ $NON_INTERACT -eq 0 ] ; then
+
+      if [ "$proto" == "http://" ] ; then
+  	export http_proxy="${proto}${host}:${port}"	    
+      elif [ "$proto" == "https://" ] ; then
+  	export https_proxy="${proto}${host}:${port}"	    	  
+      fi
+      rm -f index.html	
+      wget http://www.logicalclocks.com/index.html 2>&1 > /dev/null
+      if [ $? -ne 0 ] ; then
+	  echo "WARNING: There could be a problem with the proxy server setting."	  
+          echo "WARNING: wget (with http proxy 'on') could not download this file: http://www.logicalclocks.com/index.html"
+	  echo "http_proxy=$http_proxy"
+	  echo "https_proxy=$https_proxy"
+	  echo "PROXY=$PROXY"	  
+      fi
+      rm -f index.html
+    fi
+}    
+
+
 check_proxy()
 {
    echo ""
@@ -418,17 +517,11 @@ check_proxy()
    case $ACCEPT in
        y|yes)
 	   # Just take the first http proxy set - https or http, not both https_proxy and http_proxy
-           printf "Enter the URL of the HTTP PROXY (hit return if there is only a HTTPS PROXY): "
+           printf "Enter the URL of the HTTP(S) PROXY: "
            read PROXY
-	   if [ "$PROXY" == "" ] ; then
-              printf "Enter the URL of the HTTPS PROXY: "
-              read PROXY
-	      KARAMEL_HTTP_PROXY="export https_proxy=$PROXY"
-	   else
-              KARAMEL_HTTP_PROXY="export http_proxy=$PROXY"
-	   fi
-
-	   echo "Your HTTP(S) Proxy is now set to: $PROXY"
+           set_karamel_http_proxy
+	   
+	   echo "Your HTTP(S) Proxy host/port is: host: $host and port: $port"
            printf "Does that look ok (y/n)? (default: 'y') "
            read OK
            case $OK in
@@ -503,14 +596,14 @@ enter_email()
 
     if [[ $email =~ .*@.* ]]
     then
-	echo "Registering hopsworks instance...."
+	echo "Registering...."
 	echo "{\"id\": \"$rand\", \"name\":\"$email\"}" > .details
     else
-	echo "Exiting. Invalid email"
+	echo "Exiting. Invalid email address."
 	exit 1
     fi
 
-    curl -H "Content-type:application/json" --data @.details http://snurran.sics.se:8443/keyword
+    curl -H "Content-type:application/json" --data @.details http://snurran.sics.se:8443/keyword --connect-timeout 10 > /dev/null 2>&1
 }
 
 update_worker_yml()
@@ -715,6 +808,8 @@ TrapBreak()
 check_linux()
 {
 
+    
+
     UNAME=$(uname | tr \"[:upper:]\" \"[:lower:]\")
     # If Linux, try to determine specific distribution
     if [ \"$UNAME\" == \"linux\" ]; then
@@ -724,6 +819,14 @@ check_linux()
 	    # Otherwise, use release info file
 	else
 	    DISTRO=$(ls -d /etc/[A-Za-z]*[_-][rv]e[lr]* | grep -v \"lsb\" | cut -d'/' -f3 | cut -d'-' -f1 | cut -d'_' -f1 | head -1)
+	    if [ "$DISTRO" == "Ubuntu" ] ; then
+		sudo apt install lsb-core -y
+	    elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
+		sudo yum install redhat-lsb-core -y
+	    else
+		echo "Could not recognize Linux distro: $DISTRO"
+		exit_error
+	    fi
 	fi
     else
         exit_error "This script only works for Linux."
@@ -792,7 +895,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      echo " [-du|--download-user username] Username for downloading enterprise binaries."
 	      echo " [-dp|--download-password password] Password for downloading enterprise binaries."
 	      echo " [-ni|--non-interactive)] skip license/terms acceptance and all confirmation screens."
-	      echo " [-p|--http-proxy) url] URL of the http(s) proxy server used to access the Internet"
+	      echo " [-p|--https-proxy) url] URL of the https proxy server. Only https (not http_proxy) with valid certs supported."
 	      echo " [-pwd|--password password] sudo password for user running chef recipes."
 	      echo " [-y|--yml yaml_file] yaml file to run Karamel against."
 	      echo ""
@@ -889,11 +992,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
     -p|--http-proxy)
               shift
               PROXY=$1
-	      if [[ "$PROXY" == *"https"* ]]; then
-		  https_proxy="$PROXY"
-	      else
-		  http_proxy="$PROXY"
-	      fi
+              set_karamel_http_proxy
 	      ;;
     -w|--workers)
               shift
@@ -951,10 +1050,12 @@ if [ $NON_INTERACT -eq 0 ] ; then
 	if [ "$https_proxy" == "" ] ; then
 	   check_proxy
 	else
-           KARAMEL_HTTP_PROXY="export https_proxy=$PROXY"
+           PROXY=$https_proxy	    
+           set_karamel_http_proxy
 	fi
     else
-      KARAMEL_HTTP_PROXY="export https_proxy=$PROXY"
+	PROXY=$http_proxy
+	set_karamel_http_proxy
     fi
     clear_screen
     enter_email
@@ -972,7 +1073,7 @@ if [ "$INSTALL_ACTION" == "$INSTALL_NVIDIA" ] ; then
 fi
 
 if [ "$INSTALL_ACTION" == "$PURGE_HOPSWORKS_ALL_HOSTS" ] ; then
-    IPS=$(grep 'ip:' hopsworks-installer-active.yml | awk '{ print $2 }')
+    IPS=$(grep 'ip:' hopsworks-installation.yml | awk '{ print $2 }')
     cd
     for ip in $IPS ; do
 	echo ""
@@ -1030,7 +1131,6 @@ if [ $DRY_RUN -eq 0 ] ; then
     which java > /dev/null
     if [ $? -ne 0 ] ; then
 	echo "Installing Java..."
-	clear_screen
 	if [ "$DISTRO" == "Ubuntu" ] ; then
 	    sudo apt update -y
 	    sudo apt install openjdk-8-jre-headless -y
@@ -1067,7 +1167,6 @@ wget -nc ${CLUSTER_DEFINITION_BRANCH}/$WORKER_GPU_YML
 cd ..
 
 if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST_TLS" ]  ; then
-    clear_screen
     enter_cloud
     cp -f $INPUT_YML $YML_FILE
 fi
@@ -1089,13 +1188,11 @@ if [ "$CLOUD" == "azure" ] ; then
       PRIVATE_HOSTNAME=$SUSPECTED_HOSTNAME
     fi
     sudo hostname $PRIVATE_HOSTNAME
-    clear_screen
 fi
 
 if [ $DRY_RUN -eq 0 ] ; then
     if [ ! -d karamel-${KARAMEL_VERSION} ] ; then
 	echo "Installing Karamel..."
-	clear_screen
 	wget -nc http://www.karamel.io/sites/default/files/downloads/karamel-${KARAMEL_VERSION}.tgz
 	if [ $? -ne 0 ] ; then
 	    exit_error "Problem downloading karamel"
@@ -1110,6 +1207,12 @@ if [ $DRY_RUN -eq 0 ] ; then
 fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] ; then
+  TLS="true
+      crl_enabled: true
+      crl_fetcher_class: org.apache.hadoop.security.ssl.DevRemoteCRLFetcher
+      crl_fetcher_interval: 5m
+"
+    
   if [ "$WORKER_LIST" == "" ] ; then
       worker_size
   else
@@ -1127,12 +1230,18 @@ if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] ; then
 fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST_TLS" ] ; then
-  TLS="true"
+  TLS="true
+      crl_enabled: true
+      crl_fetcher_class: org.apache.hadoop.security.ssl.DevRemoteCRLFetcher
+      crl_fetcher_interval: 5m
+"
 fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_KARAMEL" ]  ; then
     cd karamel-${KARAMEL_VERSION}
-    $KARAMEL_HTTP_PROXY
+    $KARAMEL_HTTP_PROXY_1
+    $KARAMEL_HTTP_PROXY_2
+    $KARAMEL_HTTP_PROXY_3    
     setsid ./bin/karamel -headless &
     echo "To access Karamel, open your browser at: "
     echo ""
@@ -1191,6 +1300,11 @@ else
     fi
 
     if [ $ENTERPRISE -eq 1 ] ; then
+        TLS="true
+      crl_enabled: true
+      crl_fetcher_class: org.apache.hadoop.security.ssl.DevRemoteCRLFetcher
+      crl_fetcher_interval: 5m
+"	
 	if [ "$ENTERPRISE_DOWNLOAD_URL" = "" ] ; then
 	    echo ""
             printf "Enter the URL to download the Enterprise Binaries from: "
@@ -1225,9 +1339,7 @@ else
 	    KUBERNETES_RECIPES="      - kube-hops::hopsworks
       - kube-hops::ca
       - kube-hops::master
-      - kube-hops::post_conf
-      - kube-hops::addons
-      - kube-hops::node"
+      - kube-hops::addons"
 	fi
         ENTERPRISE_ATTRS="enterprise:
       install: true
@@ -1244,9 +1356,13 @@ else
     if [ $DRY_RUN -eq 0 ] ; then
 	cd karamel-${KARAMEL_VERSION}
 	echo "Running command from ${PWD}:"
-	echo "$KARAMEL_HTTP_PROXY "
+	echo "$KARAMEL_HTTP_PROXY_1"
+	echo "$KARAMEL_HTTP_PROXY_2"
+	echo "$KARAMEL_HTTP_PROXY_3"	
 	echo "setsid ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log 2>&1 &"
-	$KARAMEL_HTTP_PROXY
+        $KARAMEL_HTTP_PROXY_1
+        $KARAMEL_HTTP_PROXY_2
+        $KARAMEL_HTTP_PROXY_3    
 	setsid ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log 2>&1 &
 	echo ""
 	echo "***********************************************************************************************************"
@@ -1257,11 +1373,11 @@ else
 	echo "Note: port 9090 must be open for external traffic and Karamel will shutdown when installation finishes."
 	echo ""
 	echo "====================================================================="
-	# echo "Hopsworks will later be available at:"
-	# echo ""
-	# echo "https://${IP}/hopsworks"
-	# echo ""
-	# echo "====================================================================="
+        echo "Hopsworks will later be available at private IP:"
+	echo ""
+	echo "https://${IP}/hopsworks"
+	echo ""
+	echo "====================================================================="
 	echo ""
 	echo "You can view the installation logs with this command:"
 	echo ""
