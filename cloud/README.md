@@ -9,7 +9,6 @@ Requirements:
 
 `hopsworks-cloud-installer.sh` is a shell script to install Hopsworks using cloud sdk frameworks (GCP CLI tools, Azure CLI tools).
 
-
 usage: ./hopsworks-cloud-installer.sh
  [-h|--help]      help message
  [-i|--install-action community|community-gpu|community-cluster|enterprise|kubernetes]
@@ -20,6 +19,7 @@ usage: ./hopsworks-cloud-installer.sh
                  'kubernetes' installs Hopsworks Enterprise (single VM or multi-VM) alson with open-source Kubernetes
  [-c|--cloud gcp|aws|azure] Name of the public cloud
  [-dr|--dry-run]  generates cluster definition (YML) files, allowing customization of clusters.
+ [-drc|--dry-run-create-vms]  creates the VMs, generates cluster definition (YML) files but doesn't run karamel.
  [-g|--num-gpu-workers num] Number of workers (with GPUs) to create for the cluster.
  [-gpus|--num-gpus-per-worker num] Number of GPUs per worker.
  [-gt|--gpu-type type]
@@ -37,8 +37,6 @@ usage: ./hopsworks-cloud-installer.sh
  [-rm|--remove] Delete a VM - you will be prompted for the name of the VM to delete.
  [-sc|--skip-create] skip creating the VMs, use the existing VM(s) with the same vm_name(s).
  [-w|--num-cpu-workers num] Number of workers (CPU only) to create for the cluster.
-
-
 
 Enterprise Installation
 ----------------------------------

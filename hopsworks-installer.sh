@@ -1385,6 +1385,21 @@ else
 	echo ""
 	echo "***********************************************************************************************************"
 	cd ..
+    else
+
+	echo ""
+	echo "Skipping this command: "
+	echo "ssh -t -o StrictHostKeyChecking=no $IP \"/home/$USER/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}$WORKERS && sleep 5\""     
+	echo ""
+	echo "****************************************"
+	echo "*                                      *"
+	echo " ssh ${IP}"
+	echo " Then, edit your cluster definitions in: /home/$USER/cluster-defns"
+	echo " Then run karamel on your new cluster definition: "
+	echo " cd karamel-0.6"
+	echo " setsid ./bin/karamel -headless -launch ../$YML_FILE > ../installation.log 2>&1 &"
+	echo "****************************************"
+	
     fi
 fi
 
