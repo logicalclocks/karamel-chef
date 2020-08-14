@@ -59,6 +59,7 @@ INSTALL_CLUSTER=2
 
 NON_INTERACT=0
 DRY_RUN=0
+DRY_RUN_CREATE_VMS=0
 
 ENTERPRISE=0
 KUBERNETES=0
@@ -1743,7 +1744,8 @@ help()
 	      echo "                 'enterprise' installs Hopsworks Enterprise (single VM or multi-VM)"
 	      echo "                 'kubernetes' installs Hopsworks Enterprise (single VM or multi-VM) alson with open-source Kubernetes"
 	      echo " [-c|--cloud gcp|aws|azure] Name of the public cloud "
-	      echo " [-dr|--dry-run]  generates cluster definition (YML) files, allowing customization of clusters."	      
+	      echo " [-dr|--dry-run]  generates cluster definition (YML) files, allowing customization of clusters."
+	      echo " [-drc|--dry-run-create-vms]  creates the VMs, generates cluster definition (YML) files but doesn't run karamel."	      	      
 	      echo " [-g|--num-gpu-workers num] Number of workers (with GPUs) to create for the cluster."
 	      echo " [-gpus|--num-gpus-per-worker num] Number of GPUs per worker."
 	      echo " [-gt|--gpu-type type]"
@@ -1834,6 +1836,9 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      ;;
     -dr|--dry-run)
               DRY_RUN=1
+              ;;
+    -drc|--dry-run-create-vms)
+              DRY_RUN_CREATE_VMS=1
               ;;
     -g|--num-gpu-workers)
               shift
@@ -2110,24 +2115,43 @@ echo ""
 echo "Running installer on $IP :"
 echo ""
 
-echo "ssh -t -o StrictHostKeyChecking=no $IP \"/home/$USER/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}$WORKERS && sleep 5\""
 
-ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}$WORKERS && sleep 5"
+DRY_RUN_KARAMEL=""
+if [ $DRY_RUN_CREATE_VMS -eq 1 ] ; then
+    DRY_RUN_KARAMEL=" -dr "
+fi    
+    echo "ssh -t -o StrictHostKeyChecking=no $IP \"/home/$USER/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL} && sleep 5\""    
+    ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL} && sleep 5"
 
-if [ $? -ne 0 ] ; then
-    echo "Problem running installer. Exiting..."
-    exit 2
-fi
+    if [ $? -ne 0 ] ; then
+	echo "Problem running installer. Exiting..."
+	exit 2
+    fi
 
-echo ""
-echo "****************************************"
-echo "*                                      *"
-echo "* Public IP access to Karamel at:      *"
-echo "  http://${IP}:9090/index.html   "
-echo "*                                      *"
-echo "* Public IP access to Hopsworks at:    *"
-echo "  https://${IP}/hopsworks   "
-echo "*                                      *"
-echo "* View installation progress:          *"
-echo " ssh ${IP} \"tail -f installation.log\"   "
-echo "****************************************"
+if [ $DRY_RUN_CREATE_VMS -eq 0 ] ; then    
+    echo ""
+    echo "****************************************"
+    echo "*                                      *"
+    echo "* Public IP access to Karamel at:      *"
+    echo "  http://${IP}:9090/index.html   "
+    echo "*                                      *"
+    echo "* Public IP access to Hopsworks at:    *"
+    echo "  https://${IP}/hopsworks   "
+    echo "*                                      *"
+    echo "* View installation progress:          *"
+    echo " ssh ${IP} \"tail -f installation.log\"   "
+    echo "*                                      *"
+    echo "****************************************"
+else
+    echo ""
+    echo "****************************************"
+    echo "*                                      *"
+    echo "*                                      *"    
+    echo " ssh ${IP}"
+    echo " Then, edit your cluster definition /home/$USER/cluster-defns/$YML_FILE"
+    echo " Then run karamel on your new cluster definition: "
+    echo " cd karamel-0.6"
+    echo " setsid ./bin/karamel -headless -launch ../$YML_FILE > ../installation.log 2>&1 &"
+    echo "*                                      *"    
+    echo "****************************************"
+fi    
