@@ -1226,8 +1226,7 @@ else
       - kube-hops::ca
       - kube-hops::master
       - kube-hops::post_conf
-      - kube-hops::addons
-      - kube-hops::node"
+      - kube-hops::addons"
 	fi
         ENTERPRISE_ATTRS="enterprise:
       install: true
