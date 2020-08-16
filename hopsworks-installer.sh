@@ -59,8 +59,8 @@ TLS="false"
 REVERSE_DNS=1
 
 CLOUD=
-#GCP_NVME=0
-#NUM_GCP_NVME_DRIVES_PER_WORKER=0
+NVME=0
+NDB_NVME=NDB_NVM
 
 YARN="yarn:
       cgroups_strict_resource_usage: 'false'"
@@ -962,10 +962,9 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
     -dr|--dry-run)
 	      DRY_RUN=1
 	      ;;
-    # -gn|--gcp-nvme)
-    # 	      NUM_GCP_NVME_DRIVES_PER_WORKER=$1
-    # 	      GCP_NVME=1
-    # 	      ;;
+    -nvme|---nvme)
+    	      NVME=1
+     	      ;;
     -c|--cloud)
 	      shift
 	      case $1 in
@@ -1143,14 +1142,6 @@ if [ $? -ne 0 ] ; then
     fi
 fi
 
-
-# if [ $GCP_NVME -eq 1 ] ; then
-#     for (( i=1; i<=${NUM_GCP_NVME_DRIVES_PER_WORKER}; i++ ))
-#     do
-# 	  sudo mkdir -p /mnt/nvmeDisks/nvme${i}
-#       sudo mkfs.ext4 -F /dev/nvme0n${i}
-#     done
-# fi
 
 install_dir
 
@@ -1343,10 +1334,21 @@ else
       password: $ENTERPRISE_PASSWORD"
 
     fi
+
+    if [ $NVME -eq 1 ] ; then
+       NDB_NVME="nvme:
+    disks: "/dev/nvme0n1 /dev/nvme0n1"
+    format: true
+    logfile_size: 100000M
+    undofile_size: 1000M
+"
+    fi
+    
     perl -pi -e "s/__ENTERPRISE__/$ENTERPRISE_ATTRS/" $YML_FILE
     perl -pi -e "s/__DOWNLOAD__/$DOWNLOAD/" $YML_FILE
     perl -pi -e "s/__KUBERNETES_RECIPES__/$KUBERNETES_RECIPES/" $YML_FILE
     perl -pi -e "s/__KUBE__/$KUBE/" $YML_FILE
+    perl -pi -e "s/__NDB_NVME__/$NDB_NVME/" $YML_FILE    
 
     if [ $DRY_RUN -eq 0 ] ; then
 	cd karamel-${KARAMEL_VERSION}

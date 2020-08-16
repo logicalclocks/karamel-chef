@@ -87,6 +87,9 @@ NUM_WORKERS_GPU=
 CLOUD=
 VM_DELETE=
 
+NVME=0
+NUM_NVME_DRIVES_PER_WORKER=1
+
 #################
 # GCP Config
 #################
@@ -795,6 +798,7 @@ gcloud_enter_zone()
     echo "Active zone is: $ZONE"
 }
 
+
 gcloud_enter_project()
 {
     if [ $NON_INTERACT -eq 0 ] ; then    
@@ -833,9 +837,6 @@ gcloud_setup()
     RESERVATION_AFFINITY=any
     #SHIELD="--no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring"
     SHIELD=""
-    #LOCAL_DISK=
-    # add many local NVMe disks with multiple entries
-    #LOCAL_DISK="--local-ssd=interface=NVME --local-ssd=interface=NVME "
 
     GCP_USER=$USER
 
@@ -849,7 +850,7 @@ gcloud_setup()
        clear_screen
     fi
 
-    gcloud_enter_zone
+    gcloud_enter_zone    
     
     if [ $NON_INTERACT -eq 0 ] ; then
       clear_screen
@@ -928,6 +929,17 @@ _gcloud_precreate()
 	    printf "Enter the boot disk size in GBs: "
 	    read BOOT_SIZE_GBS
 	fi
+
+	echo ""
+	printf "Do you want to add a NVMe local disk (y/n)? (default: n) "
+	read ADD_NVME
+
+	if [ "$ADD_NVME" == "" ] || [ "$ADD_NVME" == "n" ] ; then
+          NVME=0	    
+	else
+          NVME=1
+	fi
+	gcloud_enter_zone
     fi
     BOOT_SIZE="${BOOT_SIZE_GBS}GB"
     echo "Boot disk size: $BOOT_SIZE"
@@ -943,7 +955,7 @@ gcloud_create_gpu()
 
 gcloud_create_cpu()
 {
-    ACCELERATOR=""
+    ACCELERATOR=""    
     _gcloud_create_vm $1 
 }
 
@@ -961,41 +973,9 @@ echo "    gcloud compute --project=$PROJECT instances create $NAME --zone=$ZONE 
 
 gcloud_delete_vm()
 {
-#    gcloud_enter_region
-    #    gcloud_enter_zone
-
-
-    
-    # if [ "$RM_TYPE" == "cluster" ] ; then
-    #     set_name "head"
-    # 	echo "nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1 </dev/null &"
-    #     nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1  &
-
-    # 	cpus_gpus
-
-    # 	for i in $(seq 1 ${CPUS}) ;
-    # 	do
-    # 	    set_name "cpu${i}"
-    #         echo "nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1 </dev/null &"	    	    
-    #         nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1  &	    
-    # 	done
-	
-    # 	for j in $(seq 1 ${GPUS}) ;
-    # 	do
-    # 	    set_name "gpu${i}"
-    #         echo "nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1 </dev/null &"	    
-    #         nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1  &	    	    
-    # 	done
-    # else
-    # 	set_name "$RM_TYPE"
-    # 	echo "nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1 </dev/null &"
-    #     nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1  & 	
-    # fi
-
     nohup gcloud compute instances delete -q $VM_DELETE > gcp-installer.log 2>&1  & 
     RES=$?
     echo "Deleting in the background. Check gcp-installer.log for status."
-
     exit $RES
 }
 
@@ -1638,6 +1618,7 @@ _missing_cloud()
 
 create_vm_cpu()
 {
+    
     echo "Creating VM...."
     echo ""
     if [ "$CLOUD" == "gcp" ] ; then
@@ -1760,6 +1741,7 @@ help()
 	      echo " [-l|--list-public-ips] List the public ips of all VMs."
 	      echo " [-n|--vm-name-prefix name] The prefix for the VM name created."
 	      echo " [-ni|--non-interactive] skip license/terms acceptance and all confirmation screens."
+	      echo " [-nvme|--nvme ]  attach a local NVMe disk to the worker nodes"	      
 	      echo " [-rm|--remove] Delete a VM - you will be prompted for the name of the VM to delete."
 	      echo " [-sc|--skip-create] skip creating the VMs, use the existing VM(s) with the same vm_name(s)."
 	      echo " [-w|--num-cpu-workers num] Number of workers (CPU only) to create for the cluster."	      
@@ -1859,10 +1841,9 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 		      exit_error "Failed."
 	      esac
 	      ;;
-    # -gn|--gcp-nvme)
-    # 	      NUM_GCP_NVME_DRIVES_PER_WORKER=$1
-    # 	      GCP_NVME=1
-    # 	      ;;
+    -nvme|--nvme)
+     	      NVME=1
+     	      ;;
     -l|--list-public-ips)
 	      DO_LISTING=1
 	      ;;	
@@ -1881,7 +1862,6 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      # 	      exit_error "Failed."
 	      #esac
 	      ;;
-
     -n|--vm-name-prefix)
       	      shift
 	      PREFIX=$1
@@ -2065,6 +2045,16 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
 	    echo "Success: SSH from $IP to ${PRIVATE_CPU[${i}]}"
 	fi
 
+	if [ $NVME -eq 1 ] ; then
+	    if [ "$cloud" == "gcp" ] ; then
+		for (( i=1; i<=${NUM_NVME_DRIVES_PER_WORKER}; i++ ))
+		do
+                  ssh -t -o StrictHostKeyChecking=no $IP "ssh -t -o StrictHostKeyChecking=no ${PRIVATE_CPU[${i}]} \"sudo mkdir -p /mnt/nvmeDisks/nvme${i}\""
+		  ssh -t -o StrictHostKeyChecking=no $IP "ssh -t -o StrictHostKeyChecking=no ${PRIVATE_CPU[${i}]} \"sudo test -f /dev/nvme0n${i} && sudo mkfs.ext4 -F /dev/nvme0n${i}\""
+		done
+	    fi
+	fi
+	
 	WORKERS="${WORKERS}${PRIVATE_CPU[${i}]},"
 
 	echo "workers: $WORKERS"
