@@ -2053,27 +2053,6 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
 	    echo "Success: SSH from $IP to ${PRIVATE_CPU[${i}]}"
 	fi
 
-# 	if [ $NVME -eq 1 ] ; then
-# 	    if [ "$cloud" == "gcp" ] ; then
-# 		for (( i=1; i<=${NUM_NVME_DRIVES_PER_WORKER}; i++ ))
-# 		do
-# #                  ssh -t -o StrictHostKeyChecking=no $IP "ssh -t -o StrictHostKeyChecking=no ${PRIVATE_CPU[${i}]} \"sudo mkdir -p /mnt/nvmeDisks/nvme${i}\""
-# #		  ssh -t -o StrictHostKeyChecking=no $IP "ssh -t -o StrictHostKeyChecking=no ${PRIVATE_CPU[${i}]} \"sudo mkfs.ext4 -F /dev/nvme0n${i}\""
-# 		  if [ $? -ne 0 ] ; then
-# 		      echo ""
-# 		      echo "Error: Problem creating filesystem on NVMe device: /dev/nvme0n${i}"
-# 		      exit 44
-# 		  fi
-# 		  ssh -t -o StrictHostKeyChecking=no $IP "ssh -t -o StrictHostKeyChecking=no ${PRIVATE_CPU[${i}]} \"sudo mount /dev/nvme0n${i} /mnt/nvmeDisks/nvme${i}\""
-# 		  if [ $? -ne 0 ] ; then
-# 		      echo ""
-# 		      echo "Error: Problem mounting filesystem /mnt/nvmeDisks/nvme${i} on NVMe device /dev/nvme0n${i}"
-# 		      exit 55
-# 		  fi
-# 		done
-# 	    fi
-# 	fi
-	
 	WORKERS="${WORKERS}${PRIVATE_CPU[${i}]},"
 
 	echo "workers: $WORKERS"
