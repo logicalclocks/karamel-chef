@@ -54,4 +54,4 @@ export ENTERPRISE_PASSWORD=<password>
 
 Install a community cluster with NVMe support:
 
-./hopsworks-cloud-installer.sh -ni -drc -c gcp -nvme -i community-cluster -gpus 0 -g 0 -w 4
+./hopsworks-cloud-installer.sh -ni -drc -c gcp -nvme 1 -i community-cluster -gpus 0 -g 0 -w 4
