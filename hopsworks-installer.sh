@@ -59,8 +59,8 @@ TLS="false"
 REVERSE_DNS=1
 
 CLOUD=
-#GCP_NVME=0
-#NUM_GCP_NVME_DRIVES_PER_WORKER=0
+NVME=0
+NDB_NVME=
 
 YARN="yarn:
       cgroups_strict_resource_usage: 'false'"
@@ -887,7 +887,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      echo "                 'purge-all' removes Hopsworks completely from ALL hosts"
 	      echo " [-cl|--clean]    removes the karamel installation"
 	      echo " [-dr|--dry-run]  does not run karamel, just generates YML file"
-#	      echo " [--gcp-nvme 0-9  number of NVMe disks to mount on worker nodes"
+	      echo " [-nvme|--nvme num_disks] Number of NVMe disks on worker nodes (for NDB/HopsFS)"
 	      echo " [-c|--cloud      on-premises|gcp|aws|azure]"
 	      echo " [-w|--workers    IP1,IP2,...,IPN|none] install on workers with IPs in supplied list (or none). Uses default mem/cpu/gpus for the workers."
 	      echo " [-d|--download-enterprise-url url] downloads enterprise binaries from this URL."
@@ -962,10 +962,10 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
     -dr|--dry-run)
 	      DRY_RUN=1
 	      ;;
-    # -gn|--gcp-nvme)
-    # 	      NUM_GCP_NVME_DRIVES_PER_WORKER=$1
-    # 	      GCP_NVME=1
-    # 	      ;;
+    -nvme|---nvme)
+	      shift
+    	      NVME=$1
+     	      ;;
     -c|--cloud)
 	      shift
 	      case $1 in
@@ -1098,62 +1098,53 @@ if [ "$INSTALL_ACTION" == "$PURGE_HOPSWORKS" ] ; then
    exit 0
 fi
 
-if [ $DRY_RUN -eq 0 ] ; then
-    # generate a pub/private keypair if none exists
-    if [ ! -e ~/.ssh/id_rsa.pub ] ; then
-	cat /dev/zero | ssh-keygen -q -N "" > /dev/null
-    else
-	echo "Found existing id_rsa.pub"
-    fi
 
-    # Karamel needs to be able to ssh back into the host it is running on to install Hopsworks there
-    pub=$(cat ~/.ssh/id_rsa.pub)
-    grep "$pub" ~/.ssh/authorized_keys > /dev/null
-    if [ $? -ne 0 ] ; then
-	echo "Not currently able to ssh into this host. Updating authorized_keys"
-	pushd .
-	cd ~/.ssh
-	cat id_rsa.pub >> authorized_keys
-	if [ $? -ne 0 ] ; then
-	    echo "Problem updating .ssh/authorized_keys file. Could not add .ssh/id_rsa.pub to authorized_keys file."
-	fi
-	popd
-    else
-	echo "Found existing entry in authorized_keys"
-    fi
-
-    ssh -t -o StrictHostKeyChecking=no localhost "whoami" > /dev/null
-    ssh -t -o StrictHostKeyChecking=no $IP "whoami" > /dev/null
-    if [ $? -ne 0 ] ; then
-	exit_error "Error: problem using ssh to connect to this host with ip: $IP"
-    fi
-
-    which java > /dev/null
-    if [ $? -ne 0 ] ; then
-	echo "Installing Java..."
-	if [ "$DISTRO" == "Ubuntu" ] ; then
-	    sudo apt update -y
-	    sudo apt install openjdk-8-jre-headless -y
-	elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
-	    sudo yum install java-1.8.0-openjdk-headless -y
-	    sudo yum install wget -y
-	else
-	    echo "Could not recognize Linux distro: $DISTRO"
-	    exit_error
-	fi
-    fi
-
-    # if [ $GCP_NVME -eq 1 ] ; then
-    #     for (( i=1; i<=${NUM_GCP_NVME_DRIVES_PER_WORKER}; i++ ))
-    #     do
-    # 	  sudo mkdir -p /mnt/nvmeDisks/nvme${i}
-    #       sudo mkfs.ext4 -F /dev/nvme0n${i}
-    #     done
-    # fi
-
-    install_dir
+# generate a pub/private keypair if none exists
+if [ ! -e ~/.ssh/id_rsa.pub ] ; then
+    cat /dev/zero | ssh-keygen -q -N "" > /dev/null
+else
+    echo "Found existing id_rsa.pub"
 fi
 
+# Karamel needs to be able to ssh back into the host it is running on to install Hopsworks there
+pub=$(cat ~/.ssh/id_rsa.pub)
+grep "$pub" ~/.ssh/authorized_keys > /dev/null
+if [ $? -ne 0 ] ; then
+    echo "Not currently able to ssh into this host. Updating authorized_keys"
+    pushd .
+    cd ~/.ssh
+    cat id_rsa.pub >> authorized_keys
+    if [ $? -ne 0 ] ; then
+	echo "Problem updating .ssh/authorized_keys file. Could not add .ssh/id_rsa.pub to authorized_keys file."
+    fi
+    popd
+else
+    echo "Found existing entry in authorized_keys"
+fi
+
+ssh -t -o StrictHostKeyChecking=no localhost "whoami" > /dev/null
+ssh -t -o StrictHostKeyChecking=no $IP "whoami" > /dev/null
+if [ $? -ne 0 ] ; then
+    exit_error "Error: problem using ssh to connect to this host with ip: $IP"
+fi
+
+which java > /dev/null
+if [ $? -ne 0 ] ; then
+    echo "Installing Java..."
+    if [ "$DISTRO" == "Ubuntu" ] ; then
+	sudo apt update -y
+	sudo apt install openjdk-8-jre-headless -y
+    elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
+	sudo yum install java-1.8.0-openjdk-headless -y
+	sudo yum install wget -y
+    else
+	echo "Could not recognize Linux distro: $DISTRO"
+	exit_error
+    fi
+fi
+
+
+install_dir
 
 
 if [ ! -d cluster-defns ] ; then
@@ -1190,20 +1181,18 @@ if [ "$CLOUD" == "azure" ] ; then
     sudo hostname $PRIVATE_HOSTNAME
 fi
 
-if [ $DRY_RUN -eq 0 ] ; then
-    if [ ! -d karamel-${KARAMEL_VERSION} ] ; then
-	echo "Installing Karamel..."
-	wget -nc http://www.karamel.io/sites/default/files/downloads/karamel-${KARAMEL_VERSION}.tgz
-	if [ $? -ne 0 ] ; then
-	    exit_error "Problem downloading karamel"
-	fi
-	tar zxf karamel-${KARAMEL_VERSION}.tgz
-	if [ $? -ne 0 ] ; then
-	    exit_error "Problem extracting karamel from archive"
-	fi
-    else
-	echo "Found karamel"
+if [ ! -d karamel-${KARAMEL_VERSION} ] ; then
+    echo "Installing Karamel..."
+    wget -nc http://www.karamel.io/sites/default/files/downloads/karamel-${KARAMEL_VERSION}.tgz
+    if [ $? -ne 0 ] ; then
+	exit_error "Problem downloading karamel"
     fi
+    tar zxf karamel-${KARAMEL_VERSION}.tgz
+    if [ $? -ne 0 ] ; then
+	exit_error "Problem extracting karamel from archive"
+    fi
+else
+    echo "Found karamel"
 fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] ; then
@@ -1273,9 +1262,7 @@ else
       gpus: '*'"
     fi
 
-    if [ $DRY_RUN -eq 0 ] ; then
-	DNS_IP=$(sudo cat /etc/resolv.conf | grep ^nameserver | awk '{ print $2 }' | tail -1)
-    fi
+    DNS_IP=$(sudo cat /etc/resolv.conf | grep ^nameserver | awk '{ print $2 }' | tail -1)
     BASE_PWD=$(date | md5sum | head -c${1:-8})
     GBS=$(expr $AVAILABLE_MEMORY - 2)
     MEM=$(expr $GBS \* 1024)
@@ -1348,10 +1335,31 @@ else
       password: $ENTERPRISE_PASSWORD"
 
     fi
+    
+    if [ $NVME -gt 0 ] ; then
+	nvme_devices="\\["
+	i=0
+	while [ $i -lt $NVME ] ;
+	do
+	    i=$((i+1))
+	    nvme_devices="${nvme_devices}'\\/dev\\/nvme0n${i}',"
+	done
+	nvme_devices=$(echo $nvme_devices | sed 's/,$//')
+	nvme_devices="${nvme_devices}\\]"
+	
+	# \['/dev/nvme0n1'\]
+       NDB_NVME="nvme:
+      devices: $nvme_devices
+      format: true
+      logfile_size: 100000M
+      undofile_size: 1000M"
+    fi
+
     perl -pi -e "s/__ENTERPRISE__/$ENTERPRISE_ATTRS/" $YML_FILE
     perl -pi -e "s/__DOWNLOAD__/$DOWNLOAD/" $YML_FILE
     perl -pi -e "s/__KUBERNETES_RECIPES__/$KUBERNETES_RECIPES/" $YML_FILE
     perl -pi -e "s/__KUBE__/$KUBE/" $YML_FILE
+    perl -pi -e "s/__NDB_NVME__/${NDB_NVME}/" $YML_FILE    
 
     if [ $DRY_RUN -eq 0 ] ; then
 	cd karamel-${KARAMEL_VERSION}
@@ -1396,8 +1404,8 @@ else
 	echo " ssh ${IP}"
 	echo " Then, edit your cluster definitions in: /home/$USER/cluster-defns"
 	echo " Then run karamel on your new cluster definition: "
-	echo " cd karamel-0.6"
-	echo " setsid ./bin/karamel -headless -launch ../$YML_FILE > ../installation.log 2>&1 &"
+	echo " "
+	echo " cd karamel-0.6 && setsid ./bin/karamel -headless -launch ../$YML_FILE > ../installation.log 2>&1 &"
 	echo "****************************************"
 	
     fi

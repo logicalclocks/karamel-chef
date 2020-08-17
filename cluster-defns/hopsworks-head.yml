@@ -24,14 +24,10 @@ attrs:
       detect-hardware-capabilities: false
     rmappsecurity:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
-#  ndb:
-#    nvme:
-#      disks: "/dev/nvme0n1 /dev/nvme0n1"
-#      format: true
-#      logfile_size: 100000M
-#      undofile_size: 1000M
-#    NoOfReplicas: 2
-#    DataMemory: 8192
+  ndb:
+    __NDB_NVME__  
+    NoOfReplicas: 1
+    DataMemory: 4096
   alertmanager:
     email:
       to: sre@logicalclocks.com

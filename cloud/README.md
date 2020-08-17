@@ -1,5 +1,5 @@
-=====================================
 Hopsworks Cloud Installer
+
 =====================================
 
 Requirements:
@@ -50,3 +50,8 @@ export ENTERPRISE_PASSWORD=<password>
 
 
 ./hopsworks-cloud-installer.sh -n hops -i kubernetes -ni -c gcp -w 0 -g 0 -gt p100 -gpus 1
+
+
+Install a community cluster with NVMe support:
+
+./hopsworks-cloud-installer.sh -ni -drc -c gcp -nvme 1 -i community-cluster -gpus 0 -g 0 -w 4

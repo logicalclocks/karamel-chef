@@ -87,6 +87,8 @@ NUM_WORKERS_GPU=
 CLOUD=
 VM_DELETE=
 
+NUM_NVME_DRIVES_PER_WORKER=0
+
 #################
 # GCP Config
 #################
@@ -795,6 +797,7 @@ gcloud_enter_zone()
     echo "Active zone is: $ZONE"
 }
 
+
 gcloud_enter_project()
 {
     if [ $NON_INTERACT -eq 0 ] ; then    
@@ -833,9 +836,6 @@ gcloud_setup()
     RESERVATION_AFFINITY=any
     #SHIELD="--no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring"
     SHIELD=""
-    #LOCAL_DISK=
-    # add many local NVMe disks with multiple entries
-    #LOCAL_DISK="--local-ssd=interface=NVME --local-ssd=interface=NVME "
 
     GCP_USER=$USER
 
@@ -849,7 +849,7 @@ gcloud_setup()
        clear_screen
     fi
 
-    gcloud_enter_zone
+    gcloud_enter_zone    
     
     if [ $NON_INTERACT -eq 0 ] ; then
       clear_screen
@@ -928,6 +928,20 @@ _gcloud_precreate()
 	    printf "Enter the boot disk size in GBs: "
 	    read BOOT_SIZE_GBS
 	fi
+
+	echo ""
+	printf "How many NVMe local disks do you want to add to this host (max: 24)? (default: 0) "
+	read NUM_NVME_DRIVES_PER_WORKER
+
+	if [ "$NUM_NVME_DRIVES_PER_WORKER" == "" ] ; then
+	  NUM_NVME_DRIVES_PER_WORKER=0
+	fi
+	LOCAL_DISK=
+        for (( i=1; i<=${NUM_NVME_DRIVES_PER_WORKER}; i++ ))
+	do
+	  LOCAL_DISK="$LOCAL_DISK --local-ssd=interface=NVME"
+	done
+	gcloud_enter_zone	
     fi
     BOOT_SIZE="${BOOT_SIZE_GBS}GB"
     echo "Boot disk size: $BOOT_SIZE"
@@ -943,9 +957,10 @@ gcloud_create_gpu()
 
 gcloud_create_cpu()
 {
-    ACCELERATOR=""
+    ACCELERATOR=""    
     _gcloud_create_vm $1 
 }
+
 
 _gcloud_create_vm()
 {
@@ -961,41 +976,9 @@ echo "    gcloud compute --project=$PROJECT instances create $NAME --zone=$ZONE 
 
 gcloud_delete_vm()
 {
-#    gcloud_enter_region
-    #    gcloud_enter_zone
-
-
-    
-    # if [ "$RM_TYPE" == "cluster" ] ; then
-    #     set_name "head"
-    # 	echo "nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1 </dev/null &"
-    #     nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1  &
-
-    # 	cpus_gpus
-
-    # 	for i in $(seq 1 ${CPUS}) ;
-    # 	do
-    # 	    set_name "cpu${i}"
-    #         echo "nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1 </dev/null &"	    	    
-    #         nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1  &	    
-    # 	done
-	
-    # 	for j in $(seq 1 ${GPUS}) ;
-    # 	do
-    # 	    set_name "gpu${i}"
-    #         echo "nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1 </dev/null &"	    
-    #         nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1  &	    	    
-    # 	done
-    # else
-    # 	set_name "$RM_TYPE"
-    # 	echo "nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1 </dev/null &"
-    #     nohup gcloud compute instances delete -q $NAME > gcp-installer.log 2>&1  & 	
-    # fi
-
     nohup gcloud compute instances delete -q $VM_DELETE > gcp-installer.log 2>&1  & 
     RES=$?
     echo "Deleting in the background. Check gcp-installer.log for status."
-
     exit $RES
 }
 
@@ -1638,6 +1621,7 @@ _missing_cloud()
 
 create_vm_cpu()
 {
+    
     echo "Creating VM...."
     echo ""
     if [ "$CLOUD" == "gcp" ] ; then
@@ -1760,6 +1744,7 @@ help()
 	      echo " [-l|--list-public-ips] List the public ips of all VMs."
 	      echo " [-n|--vm-name-prefix name] The prefix for the VM name created."
 	      echo " [-ni|--non-interactive] skip license/terms acceptance and all confirmation screens."
+	      echo " [-nvme|--nvme num_disks] the number of disks to attach to each worker node"	      
 	      echo " [-rm|--remove] Delete a VM - you will be prompted for the name of the VM to delete."
 	      echo " [-sc|--skip-create] skip creating the VMs, use the existing VM(s) with the same vm_name(s)."
 	      echo " [-w|--num-cpu-workers num] Number of workers (CPU only) to create for the cluster."	      
@@ -1859,10 +1844,14 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 		      exit_error "Failed."
 	      esac
 	      ;;
-    # -gn|--gcp-nvme)
-    # 	      NUM_GCP_NVME_DRIVES_PER_WORKER=$1
-    # 	      GCP_NVME=1
-    # 	      ;;
+    -nvme|--nvme)
+	      shift
+	      NUM_NVME_DRIVES_PER_WORKER=$1
+              for (( i=1; i<=${NUM_NVME_DRIVES_PER_WORKER}; i++ ))
+	      do
+		  LOCAL_DISK="$LOCAL_DISK --local-ssd=interface=NVME"
+	      done
+     	      ;;
     -l|--list-public-ips)
 	      DO_LISTING=1
 	      ;;	
@@ -1881,7 +1870,6 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      # 	      exit_error "Failed."
 	      #esac
 	      ;;
-
     -n|--vm-name-prefix)
       	      shift
 	      PREFIX=$1
@@ -1940,6 +1928,16 @@ if [ $NON_INTERACT -eq 0 ] ; then
   install_action
   enter_prefix    
 fi
+
+if [ "$CLOUD" != "gcp" ] ; then
+    if [ $NUM_NVME_DRIVES_PER_WORKER -gt 0 ] ; then
+	echo """
+	echo "Sorry! NVM disks are currently only supported for GCP."
+	echo ""
+        exit 88
+    fi
+fi
+
 
 download_installer
 if [ $DRY_RUN -eq 1 ] ; then
@@ -2119,9 +2117,14 @@ echo ""
 DRY_RUN_KARAMEL=""
 if [ $DRY_RUN_CREATE_VMS -eq 1 ] ; then
     DRY_RUN_KARAMEL=" -dr "
-fi    
-    echo "ssh -t -o StrictHostKeyChecking=no $IP \"/home/$USER/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL} && sleep 5\""    
-    ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL} && sleep 5"
+fi
+
+NVME_SWITCH=""
+if [ $NUM_NVME_DRIVES_PER_WORKER -gt 0 ] ; then
+    NVME_SWITCH=" -nvme $NUM_NVME_DRIVES_PER_WORKER "
+fi
+    echo "ssh -t -o StrictHostKeyChecking=no $IP \"/home/$USER/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH} && sleep 5\""    
+    ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH} && sleep 5"
 
     if [ $? -ne 0 ] ; then
 	echo "Problem running installer. Exiting..."
