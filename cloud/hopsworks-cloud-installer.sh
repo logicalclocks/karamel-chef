@@ -1931,7 +1931,7 @@ fi
 
 if [ "$CLOUD" != "gcp" ] ; then
     if [ $NUM_NVME_DRIVES_PER_WORKER -gt 0 ] ; then
-	echo """
+	echo ""
 	echo "Sorry! NVM disks are currently only supported for GCP."
 	echo ""
         exit 88
