@@ -87,8 +87,7 @@ NUM_WORKERS_GPU=
 CLOUD=
 VM_DELETE=
 
-NVME=0
-NUM_NVME_DRIVES_PER_WORKER=1
+NUM_NVME_DRIVES_PER_WORKER=0
 
 #################
 # GCP Config
@@ -931,15 +930,18 @@ _gcloud_precreate()
 	fi
 
 	echo ""
-	printf "Do you want to add a NVMe local disk (y/n)? (default: n) "
-	read ADD_NVME
+	printf "How many NVMe local disks do you want to add to this host (max: 24)? (default: 0) "
+	read NUM_NVME_DRIVES_PER_WORKER
 
-	if [ "$ADD_NVME" == "" ] || [ "$ADD_NVME" == "n" ] ; then
-          NVME=0	    
-	else
-          NVME=1
+	if [ "$NUM_NVME_DRIVES_PER_WORKER" == "" ] ; then
+	  NUM_NVME_DRIVES_PER_WORKER=0
 	fi
-	gcloud_enter_zone
+	LOCAL_DISK=
+        for (( i=1; i<=${NUM_NVME_DRIVES_PER_WORKER}; i++ ))
+	do
+	  LOCAL_DISK="$LOCAL_DISK --local-ssd=interface=NVME"
+	done
+	gcloud_enter_zone	
     fi
     BOOT_SIZE="${BOOT_SIZE_GBS}GB"
     echo "Boot disk size: $BOOT_SIZE"
@@ -958,6 +960,7 @@ gcloud_create_cpu()
     ACCELERATOR=""    
     _gcloud_create_vm $1 
 }
+
 
 _gcloud_create_vm()
 {
@@ -1741,7 +1744,7 @@ help()
 	      echo " [-l|--list-public-ips] List the public ips of all VMs."
 	      echo " [-n|--vm-name-prefix name] The prefix for the VM name created."
 	      echo " [-ni|--non-interactive] skip license/terms acceptance and all confirmation screens."
-	      echo " [-nvme|--nvme ]  attach a local NVMe disk to the worker nodes"	      
+	      echo " [-nvme|--nvme num_disks] the number of disks to attach to each worker node"	      
 	      echo " [-rm|--remove] Delete a VM - you will be prompted for the name of the VM to delete."
 	      echo " [-sc|--skip-create] skip creating the VMs, use the existing VM(s) with the same vm_name(s)."
 	      echo " [-w|--num-cpu-workers num] Number of workers (CPU only) to create for the cluster."	      
@@ -1842,7 +1845,12 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      esac
 	      ;;
     -nvme|--nvme)
-     	      NVME=1
+	      shift
+	      NUM_NVME_DRIVES_PER_WORKER=$1
+              for (( i=1; i<=${NUM_NVME_DRIVES_PER_WORKER}; i++ ))
+	      do
+		  LOCAL_DISK="$LOCAL_DISK --local-ssd=interface=NVME"
+	      done
      	      ;;
     -l|--list-public-ips)
 	      DO_LISTING=1
@@ -2045,15 +2053,26 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
 	    echo "Success: SSH from $IP to ${PRIVATE_CPU[${i}]}"
 	fi
 
-	if [ $NVME -eq 1 ] ; then
-	    if [ "$cloud" == "gcp" ] ; then
-		for (( i=1; i<=${NUM_NVME_DRIVES_PER_WORKER}; i++ ))
-		do
-                  ssh -t -o StrictHostKeyChecking=no $IP "ssh -t -o StrictHostKeyChecking=no ${PRIVATE_CPU[${i}]} \"sudo mkdir -p /mnt/nvmeDisks/nvme${i}\""
-		  ssh -t -o StrictHostKeyChecking=no $IP "ssh -t -o StrictHostKeyChecking=no ${PRIVATE_CPU[${i}]} \"sudo test -f /dev/nvme0n${i} && sudo mkfs.ext4 -F /dev/nvme0n${i}\""
-		done
-	    fi
-	fi
+# 	if [ $NVME -eq 1 ] ; then
+# 	    if [ "$cloud" == "gcp" ] ; then
+# 		for (( i=1; i<=${NUM_NVME_DRIVES_PER_WORKER}; i++ ))
+# 		do
+# #                  ssh -t -o StrictHostKeyChecking=no $IP "ssh -t -o StrictHostKeyChecking=no ${PRIVATE_CPU[${i}]} \"sudo mkdir -p /mnt/nvmeDisks/nvme${i}\""
+# #		  ssh -t -o StrictHostKeyChecking=no $IP "ssh -t -o StrictHostKeyChecking=no ${PRIVATE_CPU[${i}]} \"sudo mkfs.ext4 -F /dev/nvme0n${i}\""
+# 		  if [ $? -ne 0 ] ; then
+# 		      echo ""
+# 		      echo "Error: Problem creating filesystem on NVMe device: /dev/nvme0n${i}"
+# 		      exit 44
+# 		  fi
+# 		  ssh -t -o StrictHostKeyChecking=no $IP "ssh -t -o StrictHostKeyChecking=no ${PRIVATE_CPU[${i}]} \"sudo mount /dev/nvme0n${i} /mnt/nvmeDisks/nvme${i}\""
+# 		  if [ $? -ne 0 ] ; then
+# 		      echo ""
+# 		      echo "Error: Problem mounting filesystem /mnt/nvmeDisks/nvme${i} on NVMe device /dev/nvme0n${i}"
+# 		      exit 55
+# 		  fi
+# 		done
+# 	    fi
+# 	fi
 	
 	WORKERS="${WORKERS}${PRIVATE_CPU[${i}]},"
 
@@ -2109,9 +2128,14 @@ echo ""
 DRY_RUN_KARAMEL=""
 if [ $DRY_RUN_CREATE_VMS -eq 1 ] ; then
     DRY_RUN_KARAMEL=" -dr "
-fi    
-    echo "ssh -t -o StrictHostKeyChecking=no $IP \"/home/$USER/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL} && sleep 5\""    
-    ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL} && sleep 5"
+fi
+
+NVME_SWITCH=""
+if [ $NUM_NVME_DRIVES_PER_WORKER -gt 0 ] ; then
+    NVME_SWITCH=" -nvme $NUM_NVME_DRIVES_PER_WORKER "
+fi
+    echo "ssh -t -o StrictHostKeyChecking=no $IP \"/home/$USER/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH} && sleep 5\""    
+    ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH} && sleep 5"
 
     if [ $? -ne 0 ] ; then
 	echo "Problem running installer. Exiting..."

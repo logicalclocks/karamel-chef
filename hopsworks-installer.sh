@@ -28,7 +28,7 @@
 ###################################################################################################
 
 HOPSWORKS_REPO=logicalclocks/hopsworks-chef
-HOPSWORKS_BRANCH=master
+HOPSWORKS_BRANCH=standalone
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_BRANCH
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
@@ -60,7 +60,7 @@ REVERSE_DNS=1
 
 CLOUD=
 NVME=0
-NDB_NVME=NDB_NVM
+NDB_NVME=
 
 YARN="yarn:
       cgroups_strict_resource_usage: 'false'"
@@ -887,7 +887,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      echo "                 'purge-all' removes Hopsworks completely from ALL hosts"
 	      echo " [-cl|--clean]    removes the karamel installation"
 	      echo " [-dr|--dry-run]  does not run karamel, just generates YML file"
-#	      echo " [--gcp-nvme 0-9  number of NVMe disks to mount on worker nodes"
+	      echo " [-nvme|--nvme num_disks] Number of NVMe disks on worker nodes (for NDB/HopsFS)"
 	      echo " [-c|--cloud      on-premises|gcp|aws|azure]"
 	      echo " [-w|--workers    IP1,IP2,...,IPN|none] install on workers with IPs in supplied list (or none). Uses default mem/cpu/gpus for the workers."
 	      echo " [-d|--download-enterprise-url url] downloads enterprise binaries from this URL."
@@ -963,7 +963,8 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      DRY_RUN=1
 	      ;;
     -nvme|---nvme)
-    	      NVME=1
+	      shift
+    	      NVME=$1
      	      ;;
     -c|--cloud)
 	      shift
@@ -1334,21 +1335,33 @@ else
       password: $ENTERPRISE_PASSWORD"
 
     fi
-
-    if [ $NVME -eq 1 ] ; then
+    
+    if [ $NVME -gt 0 ] ; then
+	nvme_devices="\\["
+	i=0
+	while [ $i -lt $NVME ] ;
+	do
+	    i=$((i+1))
+	    nvme_devices="${nvme_devices}'\\/dev\\/nvme0n${i}',"
+	done
+	nvme_devices=$(echo $nvme_devices | sed 's/,$//')
+	nvme_devices="${nvme_devices}\\]"
+	
+	# \['/dev/nvme0n1'\]
        NDB_NVME="nvme:
-    disks: "/dev/nvme0n1 /dev/nvme0n1"
-    format: true
-    logfile_size: 100000M
-    undofile_size: 1000M
-"
+      devices: $nvme_devices
+      format: true
+      logfile_size: 100000M
+      undofile_size: 1000M"
     fi
+
+    echo "NVME is now: $NDB_NVME"
     
     perl -pi -e "s/__ENTERPRISE__/$ENTERPRISE_ATTRS/" $YML_FILE
     perl -pi -e "s/__DOWNLOAD__/$DOWNLOAD/" $YML_FILE
     perl -pi -e "s/__KUBERNETES_RECIPES__/$KUBERNETES_RECIPES/" $YML_FILE
     perl -pi -e "s/__KUBE__/$KUBE/" $YML_FILE
-    perl -pi -e "s/__NDB_NVME__/$NDB_NVME/" $YML_FILE    
+    perl -pi -e "s/__NDB_NVME__/${NDB_NVME}/" $YML_FILE    
 
     if [ $DRY_RUN -eq 0 ] ; then
 	cd karamel-${KARAMEL_VERSION}
@@ -1393,8 +1406,8 @@ else
 	echo " ssh ${IP}"
 	echo " Then, edit your cluster definitions in: /home/$USER/cluster-defns"
 	echo " Then run karamel on your new cluster definition: "
-	echo " cd karamel-0.6"
-	echo " setsid ./bin/karamel -headless -launch ../$YML_FILE > ../installation.log 2>&1 &"
+	echo " "
+	echo " cd karamel-0.6 && setsid ./bin/karamel -headless -launch ../$YML_FILE > ../installation.log 2>&1 &"
 	echo "****************************************"
 	
     fi
