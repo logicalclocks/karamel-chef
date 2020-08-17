@@ -1,7 +1,7 @@
 #!/bin/bash
 
 printf "Enter the Enterprise username: "
-read -s USERNAME
+read  USERNAME
 printf "Enter the Enterprise password: "
 read -s PASSWORD
 export ENTERPRISE_USERNAME=$USERNAME
