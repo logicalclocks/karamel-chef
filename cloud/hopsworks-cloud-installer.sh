@@ -1929,6 +1929,16 @@ if [ $NON_INTERACT -eq 0 ] ; then
   enter_prefix    
 fi
 
+if [ "$CLOUD" != "gcp" ] ; then
+    if [ $NUM_NVME_DRIVES_PER_WORKER -gt 0 ] ; then
+	echo """
+	echo "Sorry! NVM disks are currently only supported for GCP."
+	echo ""
+        exit 88
+    fi
+fi
+
+
 download_installer
 if [ $DRY_RUN -eq 1 ] ; then
     echo ""
