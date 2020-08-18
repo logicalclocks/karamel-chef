@@ -846,6 +846,7 @@ check_linux()
 			exit_error "Invalid Linux version. Only Centos or Ubuntu supported."
 			;;
 		esac
+	   fi
 	fi
     else
         exit_error "This script only works for Linux."
