@@ -496,7 +496,7 @@ set_karamel_http_proxy()
   	export https_proxy="${proto}${host}:${port}"	    	  
       fi
       rm -f index.html	
-      wget http://www.logicalclocks.com/index.html 2>&1 > /dev/null
+      wget http://www.google.com/index.html 2>&1 > /dev/null
       if [ $? -ne 0 ] ; then
 	  echo "WARNING: There could be a problem with the proxy server setting."	  
           echo "WARNING: wget (with http proxy 'on') could not download this file: http://www.logicalclocks.com/index.html"
