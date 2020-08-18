@@ -808,8 +808,6 @@ TrapBreak()
 check_linux()
 {
 
-    
-
     UNAME=$(uname | tr \"[:upper:]\" \"[:lower:]\")
     # If Linux, try to determine specific distribution
     if [ \"$UNAME\" == \"linux\" ]; then
@@ -825,8 +823,29 @@ check_linux()
 		sudo yum install redhat-lsb-core -y
 	    else
 		echo "Could not recognize Linux distro: $DISTRO"
-		exit_error
-	    fi
+		echo ""
+		echo "Please select your Linux OS distribution"
+		echo ""
+		echo "(1) Centos/RedHat."
+		echo ""
+		echo "(2) Debian/Ubuntu."
+		echo ""
+		echo "(3) Other."
+		echo ""
+		printf 'Please enter your choice '1', '2', '3':  '
+		read ACCEPT
+		case $ACCEPT in
+		    1)
+			DISTRO="centos"
+			;;
+		    2)
+			DISTRO="Ubuntu"
+			;;
+		    *)
+			echo ""
+			exit_error "Invalid Linux version. Only Centos or Ubuntu supported."
+			;;
+		esac
 	fi
     else
         exit_error "This script only works for Linux."
@@ -1171,7 +1190,7 @@ if [ "$CLOUD" == "azure" ] ; then
     echo "    $SUSPECTED_HOSTNAME"
     echo ""
     if [ $NON_INTERACT -eq 0 ] ; then
-      printf 'Please enter the private DNS hostname for this head node (default:'
+      printf 'Please enter the private DNS hostname for this head node:'
       echo -n " $SUSPECTED_HOSTNAME):"
       read PRIVATE_HOSTNAME
     fi
