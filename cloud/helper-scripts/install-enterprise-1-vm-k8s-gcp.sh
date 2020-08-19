@@ -1,5 +1,5 @@
 #!/bin/bash
-
+cd ..
 printf "Enter the Enterprise username: "
 read  USERNAME
 printf "Enter the Enterprise password: "
