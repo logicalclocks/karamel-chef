@@ -12,4 +12,4 @@ name=$(cat /dev/urandom | tr -dc 'a-z' | fold -w ${1:-4} | head -n 1)
 
 echo "The cluster name prefix is: $name"
 
-ENTERPRISE_PASSWORD=$PASSWORD ./hopsworks-cloud-installer.sh -n jj -i kubernetes -ni -c gcp -d https://nexus.hops.works/repository -w 0 -g 0 -gt p100 -gpus 1
+ENTERPRISE_PASSWORD=$PASSWORD ./hopsworks-cloud-installer.sh -n $name -i kubernetes -ni -c gcp -d https://nexus.hops.works/repository -w 0 -g 0 -gt p100 -gpus 1
