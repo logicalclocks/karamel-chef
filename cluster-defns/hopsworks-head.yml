@@ -93,6 +93,7 @@ groups:
       - hops::jhs
       - hadoop_spark::yarn
       - hadoop_spark::historyserver
+      - hadoop_spark::certs
       - flink::yarn
       - flink::historyserver
       - elastic
@@ -105,7 +106,8 @@ groups:
       - hopslog
       - hopslog::_filebeat-spark
       - hopslog::_filebeat-serving
-      - hopslog::_filebeat-jupyter
+      - hopslog::_filebeat-kagent
+      - hopslog::_filebeat-beam
       - hops::dn
       - hops::nm
       - tensorflow
@@ -115,7 +117,7 @@ groups:
       - hopsmonitor::prometheus
       - hopsmonitor::alertmanager
       - hopsmonitor::node_exporter
+      - hopsmonitor::purge_telegraf
       - consul::master
-      - hops::docker_registry
 __KUBERNETES_RECIPES__
 

@@ -972,6 +972,7 @@ echo "    gcloud compute --project=$PROJECT instances create $NAME --zone=$ZONE 
       echo "Problem creating VM. Exiting ..."
       exit 12
     fi
+    sleep 4
 }
 
 gcloud_delete_vm()
@@ -1993,7 +1994,7 @@ fi
 IP=
 while [ "$IP" == "" ] ; do
     get_ips
-    sleep 3
+    sleep 5
 done
 
 

@@ -28,8 +28,9 @@
 ###################################################################################################
 
 HOPSWORKS_REPO=logicalclocks/hopsworks-chef
-HOPSWORKS_BRANCH=master
-CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_BRANCH
+HOPSWORKS_BRANCH=1.3
+CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/rakuten_fixes
+#$HOPSWORKS_BRANCH
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
 NON_INTERACT=0
@@ -496,7 +497,7 @@ set_karamel_http_proxy()
   	export https_proxy="${proto}${host}:${port}"	    	  
       fi
       rm -f index.html	
-      wget http://www.logicalclocks.com/index.html 2>&1 > /dev/null
+      wget http://www.google.com/index.html 2>&1 > /dev/null
       if [ $? -ne 0 ] ; then
 	  echo "WARNING: There could be a problem with the proxy server setting."	  
           echo "WARNING: wget (with http proxy 'on') could not download this file: http://www.logicalclocks.com/index.html"
@@ -808,8 +809,6 @@ TrapBreak()
 check_linux()
 {
 
-    
-
     UNAME=$(uname | tr \"[:upper:]\" \"[:lower:]\")
     # If Linux, try to determine specific distribution
     if [ \"$UNAME\" == \"linux\" ]; then
@@ -825,8 +824,30 @@ check_linux()
 		sudo yum install redhat-lsb-core -y
 	    else
 		echo "Could not recognize Linux distro: $DISTRO"
-		exit_error
-	    fi
+		echo ""
+		echo "Please select your Linux OS distribution"
+		echo ""
+		echo "(1) Centos/RedHat."
+		echo ""
+		echo "(2) Debian/Ubuntu."
+		echo ""
+		echo "(3) Other."
+		echo ""
+		printf 'Please enter your choice '1', '2', '3':  '
+		read ACCEPT
+		case $ACCEPT in
+		    1)
+			DISTRO="centos"
+			;;
+		    2)
+			DISTRO="Ubuntu"
+			;;
+		    *)
+			echo ""
+			exit_error "Invalid Linux version. Only Centos or Ubuntu supported."
+			;;
+		esac
+	   fi
 	fi
     else
         exit_error "This script only works for Linux."
@@ -895,7 +916,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      echo " [-du|--download-user username] Username for downloading enterprise binaries."
 	      echo " [-dp|--download-password password] Password for downloading enterprise binaries."
 	      echo " [-ni|--non-interactive)] skip license/terms acceptance and all confirmation screens."
-	      echo " [-p|--https-proxy) url] URL of the https proxy server. Only https (not http_proxy) with valid certs supported."
+	      echo " [-p|--http-proxy) url] URL of the http(s) proxy server. Only https proxies with valid certs supported."
 	      echo " [-pwd|--password password] sudo password for user running chef recipes."
 	      echo " [-y|--yml yaml_file] yaml file to run Karamel against."
 	      echo ""
@@ -1046,16 +1067,11 @@ if [ $NON_INTERACT -eq 0 ] ; then
 
     # Check if a proxy server is needed to access the internet.
     # If yes, set the http(s)_proxy environment variable when starting karamel
-    if [ "$http_proxy" == "" ] ; then
-	if [ "$https_proxy" == "" ] ; then
-	   check_proxy
-	else
-           PROXY=$https_proxy	    
-           set_karamel_http_proxy
+    if [ "$PROXY" != "" ] ; then
+	if [ "$http_proxy" != "" ] || [ "$https_proxy" != "" ] ; then
+	    PROXY=$http_proxy
+	    set_karamel_http_proxy
 	fi
-    else
-	PROXY=$http_proxy
-	set_karamel_http_proxy
     fi
     clear_screen
     enter_email
@@ -1074,13 +1090,11 @@ fi
 
 if [ "$INSTALL_ACTION" == "$PURGE_HOPSWORKS_ALL_HOSTS" ] ; then
     IPS=$(grep 'ip:' hopsworks-installation.yml | awk '{ print $2 }')
-    cd
     for ip in $IPS ; do
 	echo ""
 	echo "Purging on host: $ip"
 	scp hopsworks-installer.sh ${ip}:
 	ssh $ip "./hopsworks-installer.sh -i purge -ni"
-	ssh $ip "rm -f hopsworks-installer.sh"
     done
 
     # Only delete local files after other hosts
@@ -1171,7 +1185,7 @@ if [ "$CLOUD" == "azure" ] ; then
     echo "    $SUSPECTED_HOSTNAME"
     echo ""
     if [ $NON_INTERACT -eq 0 ] ; then
-      printf 'Please enter the private DNS hostname for this head node (default:'
+      printf 'Please enter the private DNS hostname for this head node:'
       echo -n " $SUSPECTED_HOSTNAME):"
       read PRIVATE_HOSTNAME
     fi
