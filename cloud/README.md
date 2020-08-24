@@ -1,5 +1,4 @@
 Hopsworks Cloud Installer
-
 =====================================
 
 Requirements:
