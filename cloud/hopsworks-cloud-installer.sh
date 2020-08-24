@@ -503,6 +503,10 @@ enter_prefix()
 
 download_installer() {
 
+    mkdir -p .tmp
+
+    cd .tmp
+    
     curl -C - ${HOPSWORKS_INSTALLER_BRANCH}/hopsworks-installer.sh -o ./hopsworks-installer.sh 2>&1 > /dev/null
     if [ $? -ne 0 ] ; then
 	echo "Could not download hopsworks-installer.sh"
@@ -516,9 +520,8 @@ download_installer() {
     fi
     chmod +x hopsworks-installer.sh
 
-    if [ ! -d $CLUSTER_DEFINITIONS_DIR ] ; then
-	mkdir $CLUSTER_DEFINITIONS_DIR
-    fi
+    mkdir -p $CLUSTER_DEFINITIONS_DIR
+
     cd cluster-defns
     # Don't overwrite the YML files, so that users can customize them
     curl -C - ${CLUSTER_DEFINITION_BRANCH}/${CLUSTER_DEFINITIONS_DIR}/$INPUT_YML -o ./$INPUT_YML 2>&1 > /dev/null
@@ -2019,7 +2022,7 @@ fi
 
 
 echo "Installing installer on $IP"
-scp -o StrictHostKeyChecking=no ./hopsworks-installer.sh ${IP}:
+scp -o StrictHostKeyChecking=no ./.tmp/hopsworks-installer.sh ${IP}:
 if [ $? -ne 0 ] ; then
     echo "Problem copying installer to head server. Exiting..."
     exit 10
@@ -2031,7 +2034,7 @@ if [ $? -ne 0 ] ; then
     exit 11
 fi    
 
-scp -o StrictHostKeyChecking=no ./cluster-defns/hopsworks-*.yml ${IP}:~/cluster-defns/
+scp -o StrictHostKeyChecking=no ./.tmp/cluster-defns/hopsworks-*.yml ${IP}:~/cluster-defns/
 if [ $? -ne 0 ] ; then
     echo "Problem scp'ing cluster definitions to head server. Exiting..."
     exit 12
