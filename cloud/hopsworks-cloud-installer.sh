@@ -1,4 +1,4 @@
-#!/bin/bash
+!/bin/bash
 
 ###################################################################################################
 #                                                                                                 #
@@ -400,8 +400,8 @@ get_ips()
 cpus_gpus()
 {
     if [ "$CLOUD" == "gcp" ] ; then
-	CPUS=$(gcloud compute instances list | awk '{ print $1 }' | grep "^${PREFIX}" | grep -e "cpu[1-99]" | wc -l)
-	GPUS=$(gcloud compute instances list | awk '{ print $1 }' | grep "^${PREFIX}" | grep -e "gpu[1-99]" | wc -l)	
+	CPUS=$(gcloud compute instances list | awk '{ print $1 }' | grep "^${PREFIX}" | grep -e "cpu[1-99]" |  wc -l)
+	GPUS=$(gcloud compute instances list | awk '{ print $1 }' | grep "^${PREFIX}" | grep -e "gpu[1-99]" |  wc -l)	
     elif [ "$CLOUD" == "azure" ] ; then
 	echo ""
     elif [ "$CLOUD" == "aws" ] ; then
@@ -536,7 +536,7 @@ download_installer() {
     if [ $? -ne 0 ] ; then
 	exit 14
     fi
-    cd ..
+    cd ../..
 }
 
 
