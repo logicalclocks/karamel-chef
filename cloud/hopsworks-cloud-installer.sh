@@ -110,7 +110,7 @@ SHIELD=""
 BOOT_DISK=pd-ssd
 BOOT_SIZE_GBS=150
 
-RAW_SSH_KEY="${USER}:$(cat /home/$USER/.ssh/id_rsa.pub)"
+RAW_SSH_KEY="${USER}:$(cat ~/.ssh/id_rsa.pub)"
 #printf -v ESCAPED_SSH_KEY "%q\n" "$RAW_SSH_KEY"
 ESCAPED_SSH_KEY="$RAW_SSH_KEY"
 TAGS=http-server,https-server,karamel
@@ -238,9 +238,9 @@ splash_screen()
       echo "sudo chown $USER . && chmod +w ."
       echo ""
   fi
-  if [ ! -e /home/$USER/.ssh/id_rsa.pub ] ; then
+  if [ ! -e ~/.ssh/id_rsa.pub ] ; then
       echo "ATTENTION."
-      echo "A public ssh key cannot be found at: /home/$USER"
+      echo "A public ssh key cannot be found at your home directory (~/)"
       echo "To continue, you need to create one at that path. Is that ok (y/n)?"
       read ACCEPT
       if [ "$ACCEPT" == "y" ] ; then
@@ -411,8 +411,8 @@ cpus_gpus()
 
 clear_known_hosts()
 {
-    echo "ssh-keygen -f "/home/$USER/.ssh/known_hosts" -R $host_ip"
-    ssh-keygen -f "/home/$USER/.ssh/known_hosts" -R $host_ip
+    echo "ssh-keygen -f "~/.ssh/known_hosts" -R $host_ip"
+    ssh-keygen -f "~/.ssh/known_hosts" -R $host_ip
     if [ $? -ne 0 ] ; then
 	echo ""	
 	echo "WARN: Could not clean up known_hosts file"
@@ -502,7 +502,7 @@ enter_prefix()
 
 download_installer() {
 
-    wget -q -nc ${HOPSWORKS_INSTALLER_BRANCH}/hopsworks-installer.sh 2>&1 > /dev/null
+    curl -C - ${HOPSWORKS_INSTALLER_BRANCH}/hopsworks-installer.sh -o ./hopsworks-installer.sh 2>&1 > /dev/null
     if [ $? -ne 0 ] ; then
 	echo "Could not download hopsworks-installer.sh"
 	echo "WARNING: There could be a problem with your proxy server settings."	  
@@ -520,9 +520,9 @@ download_installer() {
     fi
     cd cluster-defns
     # Don't overwrite the YML files, so that users can customize them
-    wget -q -nc ${CLUSTER_DEFINITION_BRANCH}/$INPUT_YML 2>&1 > /dev/null
-    wget -q -nc ${CLUSTER_DEFINITION_BRANCH}/$WORKER_YML 2>&1 > /dev/null
-    wget -q -nc ${CLUSTER_DEFINITION_BRANCH}/$WORKER_GPU_YML 2>&1 > /dev/null
+    curl -C - ${CLUSTER_DEFINITION_BRANCH}/$INPUT_YML -o ./$INPUT_YML 2>&1 > /dev/null    
+    curl -C - ${CLUSTER_DEFINITION_BRANCH}/$WORKER_YML -o ./$WORKER_YML 2>&1 > /dev/null
+    curl -C - ${CLUSTER_DEFINITION_BRANCH}/$WORKER_GPU_YML -o ./$WORKER_GPU_YML 2>&1 > /dev/null    
     cd ..
 }
 
@@ -1479,13 +1479,13 @@ _az_create_vm()
    --image $OS_IMAGE --data-disk-sizes-gb $DATA_DISK_SIZE --os-disk-size-gb $BOOT_SIZE \
    --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
    --size $VM_SIZE --location $REGION --zone $AZ_ZONE $ACCELERATOR $AZ_NETWORKING\
-   --ssh-key-value /home/$USER/.ssh/id_rsa.pub    
+   --ssh-key-value ~/.ssh/id_rsa.pub    
 "
   az vm create -n $NAME -g $RESOURCE_GROUP \
    --image $OS_IMAGE --data-disk-sizes-gb $DATA_DISK_SIZE --os-disk-size-gb $BOOT_SIZE \
    --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
    --size $VM_SIZE --location $REGION --zone $AZ_ZONE $ACCELERATOR \
-   --ssh-key-value /home/$USER/.ssh/id_rsa.pub    
+   --ssh-key-value ~/.ssh/id_rsa.pub    
   #   --priority $PRIORITY --max-price 0.06 \
   if [ $? -ne 0 ] ; then
     echo "Problem creating VM. Exiting ..."
@@ -1701,7 +1701,7 @@ list_public_ips()
 cloud_setup()
 {
 
-    RAW_SSH_KEY="${USER}:$(cat /home/$USER/.ssh/id_rsa.pub)"
+    RAW_SSH_KEY="${USER}:$(cat ~/.ssh/id_rsa.pub)"
     ESCAPED_SSH_KEY="$RAW_SSH_KEY"
     
     if [ "$CLOUD" == "gcp" ] ; then
@@ -2027,8 +2027,8 @@ fi
 
 if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
     
-    ssh -t -o StrictHostKeyChecking=no $IP "if [ ! -e /home/$USER/.ssh/id_rsa.pub ] ; then cat /dev/zero | ssh-keygen -q -N \"\" ; fi"
-    pubkey=$(ssh -t -o StrictHostKeyChecking=no $IP "cat /home/$USER/.ssh/id_rsa.pub")
+    ssh -t -o StrictHostKeyChecking=no $IP "if [ ! -e ~/.ssh/id_rsa.pub ] ; then cat /dev/zero | ssh-keygen -q -N \"\" ; fi"
+    pubkey=$(ssh -t -o StrictHostKeyChecking=no $IP "cat ~/.ssh/id_rsa.pub")
 
     keyfile=".pubkey.pub"
     echo "$pubkey" > $keyfile
@@ -2124,8 +2124,8 @@ NVME_SWITCH=""
 if [ $NUM_NVME_DRIVES_PER_WORKER -gt 0 ] ; then
     NVME_SWITCH=" -nvme $NUM_NVME_DRIVES_PER_WORKER "
 fi
-    echo "ssh -t -o StrictHostKeyChecking=no $IP \"/home/$USER/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH} && sleep 5\""    
-    ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH} && sleep 5"
+    echo "ssh -t -o StrictHostKeyChecking=no $IP \"~/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH} && sleep 5\""    
+    ssh -t -o StrictHostKeyChecking=no $IP "~/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH} && sleep 5"
 
     if [ $? -ne 0 ] ; then
 	echo "Problem running installer. Exiting..."
@@ -2152,7 +2152,7 @@ else
     echo "*                                      *"
     echo "*                                      *"    
     echo " ssh ${IP}"
-    echo " Then, edit your cluster definition /home/$USER/cluster-defns/$YML_FILE"
+    echo " Then, edit your cluster definition ~/cluster-defns/$YML_FILE"
     echo " Then run karamel on your new cluster definition: "
     echo " cd karamel-0.6"
     echo " setsid ./bin/karamel -headless -launch ../$YML_FILE > ../installation.log 2>&1 &"
