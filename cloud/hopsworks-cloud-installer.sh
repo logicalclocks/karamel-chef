@@ -82,8 +82,8 @@ SKIP_CREATE=0
 NUM_GPUS_PER_VM=
 GPU_TYPE=
 
-NUM_WORKERS_CPU=
-NUM_WORKERS_GPU=
+NUM_WORKERS_CPU=0
+NUM_WORKERS_GPU=0
 
 CLOUD=
 VM_DELETE=
@@ -557,7 +557,7 @@ add_worker()
 
 cpu_worker_size()
 {
-   if [ "$NUM_WORKERS_CPU" == "" ] ; then
+   if [ $NUM_WORKERS_CPU -eq 0 ] ; then
        printf 'Please enter the number of CPU-only workers you want to add (default: 0): '
        read NUM_WORKERS_CPU
        if [ "$NUM_WORKERS_CPU" == "" ] ; then
@@ -577,7 +577,7 @@ cpu_worker_size()
 
 gpu_worker_size()
 {
-   if [ "$NUM_WORKERS_GPU" == "" ] ; then    
+   if [ $NUM_WORKERS_GPU -eq 0 ] ; then    
      printf 'Please enter the number of GPU-enabled workers you want to add (default: 0): '
      read NUM_WORKERS_GPU
      if [ "$NUM_WORKERS_GPU" == "" ] ; then
@@ -1990,8 +1990,10 @@ if [ $SKIP_CREATE -eq 0 ] ; then
 	create_vm_cpu "head"
     fi
     if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
-        cpu_worker_size
-        gpu_worker_size
+        if [ $NON_INTERACT -eq 0 ] ; then	
+          cpu_worker_size
+          gpu_worker_size
+	fi
     fi
 else
     echo "Skipping VM creation...."
