@@ -207,7 +207,7 @@ splash_screen()
     echo "Installing dig ..."
     if [ "$DISTRO" == "Ubuntu" ] ; then
         sudo apt install dnsutils -y  > /dev/null
-    elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
+    elif [ "${DISTRO,,}" == "centos" ] || [ "${DISTRO,,}" == "os" ] ; then
 	sudo yum install bind-utils -y > /dev/null
     fi
   fi
@@ -662,7 +662,7 @@ add_worker()
 	read CPUS
     fi
 
-    if [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
+    if [ "${DISTRO,,}" == "centos" ] || [ "${DISTRO,,}" == "os" ] ; then
 	ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo yum install pciutils -y"
     fi
 
@@ -715,10 +715,6 @@ add_worker()
 	    read ACCEPT
 	    if [ "$ACCEPT" == "y" ] || [ "$ACCEPT" == "yes" ] || [ "$ACCEPT" == "" ] ; then
 		echo "$WORKER_GPUS will be used on this worker."
-		# if [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
-		# 	   echo "Installing kernel-devel on worker.."
-		# 	   ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo yum install \"kernel-devel-uname-r == $(uname -r)\" -y" > /dev/null
-		# fi
 	    else
 		echo "$The GPUs will not be used on this worker."
 		WORKER_GPUS=0
@@ -820,7 +816,7 @@ check_linux()
 	    DISTRO=$(ls -d /etc/[A-Za-z]*[_-][rv]e[lr]* | grep -v \"lsb\" | cut -d'/' -f3 | cut -d'-' -f1 | cut -d'_' -f1 | head -1)
 	    if [ "$DISTRO" == "Ubuntu" ] ; then
 		sudo apt install lsb-core -y
-	    elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
+	    elif [ "${DISTRO,,}" == "centos" ] || [ "${DISTRO,,}" == "os" ] ; then
 		sudo yum install redhat-lsb-core -y
 	    else
 		echo "Could not recognize Linux distro: $DISTRO"
@@ -1148,7 +1144,7 @@ if [ $? -ne 0 ] ; then
     if [ "$DISTRO" == "Ubuntu" ] ; then
 	sudo apt update -y
 	sudo apt install openjdk-8-jre-headless -y
-    elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
+    elif [ "${DISTRO,,}" == "centos" ] || [ "${DISTRO,,}" == "os" ] ; then
 	sudo yum install java-1.8.0-openjdk-headless -y
 	sudo yum install wget -y
     else
@@ -1420,7 +1416,6 @@ else
 	echo " Then run karamel on your new cluster definition: "
 	echo " "
 	echo " cd karamel-0.6 && setsid ./bin/karamel -headless -launch ../$YML_FILE > ../installation.log 2>&1 &"
-	echo "****************************************"
-	
+	echo "****************************************"	
     fi
 fi
