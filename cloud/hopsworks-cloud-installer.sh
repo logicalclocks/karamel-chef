@@ -65,10 +65,11 @@ ENTERPRISE=0
 KUBERNETES=0
 HEAD_VM_TYPE=head_cpu
 
-INPUT_YML="cluster-defns/hopsworks-head.yml"
-WORKER_YML="cluster-defns/hopsworks-worker.yml"
-WORKER_GPU_YML="cluster-defns/hopsworks-worker-gpu.yml"
-YML_FILE="cluster-defns/hopsworks-installation.yml"
+CLUSTER_DEFINITIONS_DIR="cluster-defns"
+INPUT_YML="hopsworks-head.yml"
+WORKER_YML="hopsworks-worker.yml"
+WORKER_GPU_YML="hopsworks-worker-gpu.yml"
+YML_FILE="hopsworks-installation.yml"
 
 WORKER_LIST=
 WORKER_IP=
@@ -515,14 +516,23 @@ download_installer() {
     fi
     chmod +x hopsworks-installer.sh
 
-    if [ ! -d cluster-defns ] ; then
-	mkdir cluster-defns
+    if [ ! -d $CLUSTER_DEFINITIONS_DIR ] ; then
+	mkdir $CLUSTER_DEFINITIONS_DIR
     fi
     cd cluster-defns
     # Don't overwrite the YML files, so that users can customize them
-    curl -C - ${CLUSTER_DEFINITION_BRANCH}/$INPUT_YML -o ./$INPUT_YML 2>&1 > /dev/null    
-    curl -C - ${CLUSTER_DEFINITION_BRANCH}/$WORKER_YML -o ./$WORKER_YML 2>&1 > /dev/null
-    curl -C - ${CLUSTER_DEFINITION_BRANCH}/$WORKER_GPU_YML -o ./$WORKER_GPU_YML 2>&1 > /dev/null    
+    curl -C - ${CLUSTER_DEFINITION_BRANCH}/${CLUSTER_DEFINITIONS_DIR}/$INPUT_YML -o ./$INPUT_YML 2>&1 > /dev/null
+    if [ $? -ne 0 ] ; then
+	exit 12
+    fi
+    curl -C - ${CLUSTER_DEFINITION_BRANCH}/${CLUSTER_DEFINITIONS_DIR}/$WORKER_YML -o ./$WORKER_YML 2>&1 > /dev/null
+    if [ $? -ne 0 ] ; then
+	exit 13
+    fi
+    curl -C - ${CLUSTER_DEFINITION_BRANCH}/${CLUSTER_DEFINITIONS_DIR}/$WORKER_GPU_YML -o ./$WORKER_GPU_YML 2>&1 > /dev/null    
+    if [ $? -ne 0 ] ; then
+	exit 14
+    fi
     cd ..
 }
 
