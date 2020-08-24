@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 
 ###################################################################################################
 #                                                                                                 #
@@ -32,8 +32,8 @@
 #                                                                                                 #
 ###################################################################################################
 
-HOPSWORKS_INSTALLER_VERSION=master
-CLUSTER_DEFINITION_VERSION=master
+HOPSWORKS_INSTALLER_VERSION=cloud_installer_fixes
+CLUSTER_DEFINITION_VERSION=cloud_installer_fixes
 HOPSWORKS_INSTALLER_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_INSTALLER_VERSION
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$CLUSTER_DEFINITION_VERSION
 
@@ -504,10 +504,9 @@ enter_prefix()
 download_installer() {
 
     mkdir -p .tmp
-
     cd .tmp
     
-    curl -C - ${HOPSWORKS_INSTALLER_BRANCH}/hopsworks-installer.sh -o ./hopsworks-installer.sh 2>&1 > /dev/null
+    curl --silent --show-error -C - ${HOPSWORKS_INSTALLER_BRANCH}/hopsworks-installer.sh -o ./hopsworks-installer.sh 2>&1 > /dev/null
     if [ $? -ne 0 ] ; then
 	echo "Could not download hopsworks-installer.sh"
 	echo "WARNING: There could be a problem with your proxy server settings."	  
@@ -521,18 +520,17 @@ download_installer() {
     chmod +x hopsworks-installer.sh
 
     mkdir -p $CLUSTER_DEFINITIONS_DIR
-
-    cd cluster-defns
+    cd $CLUSTER_DEFINITIONS_DIR
     # Don't overwrite the YML files, so that users can customize them
-    curl -C - ${CLUSTER_DEFINITION_BRANCH}/${CLUSTER_DEFINITIONS_DIR}/$INPUT_YML -o ./$INPUT_YML 2>&1 > /dev/null
+    curl --silent --show-error -C - ${CLUSTER_DEFINITION_BRANCH}/${CLUSTER_DEFINITIONS_DIR}/$INPUT_YML -o ./$INPUT_YML 2>&1 > /dev/null
     if [ $? -ne 0 ] ; then
 	exit 12
     fi
-    curl -C - ${CLUSTER_DEFINITION_BRANCH}/${CLUSTER_DEFINITIONS_DIR}/$WORKER_YML -o ./$WORKER_YML 2>&1 > /dev/null
+    curl --silent --show-error -C - ${CLUSTER_DEFINITION_BRANCH}/${CLUSTER_DEFINITIONS_DIR}/$WORKER_YML -o ./$WORKER_YML 2>&1 > /dev/null
     if [ $? -ne 0 ] ; then
 	exit 13
     fi
-    curl -C - ${CLUSTER_DEFINITION_BRANCH}/${CLUSTER_DEFINITIONS_DIR}/$WORKER_GPU_YML -o ./$WORKER_GPU_YML 2>&1 > /dev/null    
+    curl --silent --show-error -C - ${CLUSTER_DEFINITION_BRANCH}/${CLUSTER_DEFINITIONS_DIR}/$WORKER_GPU_YML -o ./$WORKER_GPU_YML 2>&1 > /dev/null    
     if [ $? -ne 0 ] ; then
 	exit 14
     fi
@@ -560,11 +558,13 @@ add_worker()
 
 cpu_worker_size()
 {
-   if [ $NUM_WORKERS_CPU -eq 0 ] ; then
-       printf 'Please enter the number of CPU-only workers you want to add (default: 0): '
-       read NUM_WORKERS_CPU
-       if [ "$NUM_WORKERS_CPU" == "" ] ; then
-	   NUM_WORKERS_CPU=0
+   if [ $NON_INTERACT -eq 0 ] ; then	    
+       if [ $NUM_WORKERS_CPU -eq 0 ] ; then
+	   printf 'Please enter the number of CPU-only workers you want to add (default: 0): '
+	   read NUM_WORKERS_CPU
+	   if [ "$NUM_WORKERS_CPU" == "" ] ; then
+	       NUM_WORKERS_CPU=0
+	   fi
        fi
    fi
    i=0
@@ -580,12 +580,14 @@ cpu_worker_size()
 
 gpu_worker_size()
 {
-   if [ $NUM_WORKERS_GPU -eq 0 ] ; then    
-     printf 'Please enter the number of GPU-enabled workers you want to add (default: 0): '
-     read NUM_WORKERS_GPU
-     if [ "$NUM_WORKERS_GPU" == "" ] ; then
-       NUM_WORKERS_GPU=0
-     fi
+   if [ $NON_INTERACT -eq 0 ] ; then    
+       if [ $NUM_WORKERS_GPU -eq 0 ] ; then    
+	   printf 'Please enter the number of GPU-enabled workers you want to add (default: 0): '
+	   read NUM_WORKERS_GPU
+	   if [ "$NUM_WORKERS_GPU" == "" ] ; then
+	       NUM_WORKERS_GPU=0
+	   fi
+       fi
    fi
    if [ $NUM_WORKERS_GPU -ne 0 ] ; then
        select_gpu "worker"
@@ -1957,8 +1959,8 @@ download_installer
 if [ $DRY_RUN -eq 1 ] ; then
     echo ""
     echo "The cluster definition (YML) files are now available here:"
-    echo "$(pwd)/cluster-defns"
-    ls -l $(pwd)/cluster-defns
+    echo "$(pwd)/$CLUSTER_DEFINITIONS_DIR"
+    ls -l $(pwd)/$CLUSTER_DEFINITIONS_DIR
     echo ""    
     echo "You can customize/edit them and re-run this installer."
     echo ""
@@ -1993,10 +1995,8 @@ if [ $SKIP_CREATE -eq 0 ] ; then
 	create_vm_cpu "head"
     fi
     if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
-        if [ $NON_INTERACT -eq 0 ] ; then	
-          cpu_worker_size
-          gpu_worker_size
-	fi
+        cpu_worker_size
+        gpu_worker_size
     fi
 else
     echo "Skipping VM creation...."
@@ -2028,13 +2028,13 @@ if [ $? -ne 0 ] ; then
     exit 10
 fi    
 
-ssh -t -o StrictHostKeyChecking=no $IP "mkdir -p cluster-defns"
+ssh -t -o StrictHostKeyChecking=no $IP "mkdir -p $CLUSTER_DEFINITIONS_DIR"
 if [ $? -ne 0 ] ; then
-    echo "Problem creating 'cluster-defns' directory on head server. Exiting..."
+    echo "Problem creating $CLUSTER_DEFINITIONS_DIR directory on head server. Exiting..."
     exit 11
 fi    
 
-scp -o StrictHostKeyChecking=no ./.tmp/cluster-defns/hopsworks-*.yml ${IP}:~/cluster-defns/
+scp -o StrictHostKeyChecking=no ./.tmp/$CLUSTER_DEFINITIONS_DIR/hopsworks-*.yml ${IP}:~/${CLUSTER_DEFINITIONS_DIR}/
 if [ $? -ne 0 ] ; then
     echo "Problem scp'ing cluster definitions to head server. Exiting..."
     exit 12
@@ -2167,7 +2167,7 @@ else
     echo "*                                      *"
     echo "*                                      *"    
     echo " ssh ${IP}"
-    echo " Then, edit your cluster definition ~/cluster-defns/$YML_FILE"
+    echo " Then, edit your cluster definition ~/$CLUSTER_DEFINITIONS_DIR/$YML_FILE"
     echo " Then run karamel on your new cluster definition: "
     echo " cd karamel-0.6"
     echo " setsid ./bin/karamel -headless -launch ../$YML_FILE > ../installation.log 2>&1 &"
