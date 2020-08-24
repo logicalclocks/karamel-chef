@@ -95,7 +95,7 @@ NUM_NVME_DRIVES_PER_WORKER=0
 #################
 REGION=us-east1
 ZONE=us-east1-c
-IMAGE=centos-7-v20200714
+IMAGE=centos-7-v20200811
 IMAGE_PROJECT=centos-cloud
 MACHINE_TYPE=n1-standard-8
 NAME=
