@@ -671,6 +671,18 @@ enter_enterprise_credentials()
 	    exit 3
 	fi
     fi
+
+    lines=$(curl --silent -u ${ENTERPRISE_USERNAME}:${ENTERPRISE_PASSWORD} ${ENTERPRISE_DOWNLOAD_URL}/index.html | wc -l | tail -1)
+    if [ $lines -eq 0 ] ; then
+	echo "ERROR."
+	echo "Bad username or password"
+	echo ""
+#	exit 1
+    else
+	echo "Username/Password for Nexus OK."
+    fi    
+    
+    
 }
 
 set_name()
@@ -1747,7 +1759,7 @@ help()
 	      echo " [-dr|--dry-run]  generates cluster definition (YML) files, allowing customization of clusters."
 	      echo " [-drc|--dry-run-create-vms]  creates the VMs, generates cluster definition (YML) files but doesn't run karamel."	      	      
 	      echo " [-g|--num-gpu-workers num] Number of workers (with GPUs) to create for the cluster."
-	      echo " [-gpus|--num-gpus-per-worker num] Number of GPUs per worker."
+	      echo " [-gpus|--num-gpus-per-worker num] Number of GPUs per worker or head node."
 	      echo " [-gt|--gpu-type type]"
 	      echo "                 'v100' Nvidia Tesla V100"
 	      echo "                 'p100' Nvidia Tesla P100"
@@ -1968,28 +1980,35 @@ if [ $DRY_RUN -eq 1 ] ; then
 fi    
 cloud_setup
 
+if [ $ENTERPRISE -eq 1 ] ; then
+    enter_enterprise_credentials
+fi    
+
+HEAD_GPU=0
+
 if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
     set_name "cpu"
 elif [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then
-    set_name "gpu"    
+    set_name "gpu"
+    HEAD_GPU=1
     if [ $NON_INTERACT -eq 0 ] ; then        
 	select_gpu "head"
     fi
 elif [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
     set_name "head"    
-    if [ $NON_INTERACT -eq 0 ] ; then        
+    if [ $NON_INTERACT -eq 0 ] ; then
+        HEAD_GPU=1
 	select_gpu "head"
+    elif [ $NUM_WORKERS_CPU -eq 0 ] && [ $NUM_WORKERS_GPU -eq 0 ] && [ "$GPU_TYPE" != "" ] ; then
+	HEAD_GPU=1
+	echo "Head VM is allocated a GPU"
     fi
 else
     exit_error "Bad install action: $INSTALL_ACTION"
 fi
 
-if [ $ENTERPRISE -eq 1 ] ; then
-    enter_enterprise_credentials
-fi    
-
 if [ $SKIP_CREATE -eq 0 ] ; then
-    if [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then    
+    if [ $HEAD_GPU -eq 1 ] ; then    
 	create_vm_gpu "head"
     else
 	create_vm_cpu "head"
