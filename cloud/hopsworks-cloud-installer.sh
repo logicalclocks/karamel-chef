@@ -607,9 +607,10 @@ select_gpu()
 {
    printf "Please enter the number of GPUs for the $1 VM(s) (default: 0): "
    read NUM_GPUS_PER_VM
-   if [ "$NUM_GPUS_PER_VM" == "" ] ; then
+   if [ "$NUM_GPUS_PER_VM" == "" ] || [ "$NUM_GPUS_PER_VM" == "0" ] ; then
        NUM_GPUS_PER_VM=0
    else
+     HEAD_GPU=1
      echo ""
      echo "Available GPU types: v100, p100, t4, k80"
      printf 'Please enter the type of GPU: '
@@ -677,7 +678,7 @@ enter_enterprise_credentials()
 	echo "ERROR."
 	echo "Bad username or password"
 	echo ""
-#	exit 1
+	exit 1
     else
 	echo "Username/Password for Nexus OK."
     fi    
@@ -1997,7 +1998,6 @@ elif [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then
 elif [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
     set_name "head"    
     if [ $NON_INTERACT -eq 0 ] ; then
-        HEAD_GPU=1
 	select_gpu "head"
     elif [ $NUM_WORKERS_CPU -eq 0 ] && [ $NUM_WORKERS_GPU -eq 0 ] && [ "$GPU_TYPE" != "" ] ; then
 	HEAD_GPU=1
