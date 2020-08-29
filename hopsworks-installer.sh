@@ -88,7 +88,7 @@ KARAMEL_HTTP_PROXY_2=
 KARAMEL_HTTP_PROXY_3=
 PROXY=
 GEM_SERVER=0
-
+GEM_SERVER_PORT=54321
 
 # $1 = String describing error
 exit_error()
@@ -1379,7 +1379,7 @@ else
 
     RUN_GEM_SERVER=
     if [ $GEM_SERVER -eq 1 ] ; then
-      RUN_GEM_SERVER="-gemserver http://${IP}:54321"
+      RUN_GEM_SERVER="-gemserver http://${IP}:$GEM_SERVER_PORT"
     fi
     
     if [ $DRY_RUN -eq 0 ] ; then
@@ -1398,9 +1398,15 @@ else
 	echo ""
 	echo "Installation has started, but may take 1 hour or more.........."
 	echo ""
-	echo "The Karamel installer UI will soon start at:  http://${IP}:9090/index.html"
+	echo "The Karamel installer UI will soon start at private IP:  http://${IP}:9090/index.html"
 	echo "Note: port 9090 must be open for external traffic and Karamel will shutdown when installation finishes."
 	echo ""
+	if [ $GEM_SERVER -eq 1 ] ; then
+	    echo "When installation has completed, stop the gem server using the following commands:"
+	    echo "GEM_PID=\$(sudo netstat -ltpn | grep $GEM_SERVER_PORT | awk '{ print \$7 }' | tail -1 | sed -e 's/\/ruby//')"
+	    echo "sudo kill -9 \$GEM_PID"
+	    echo ""
+	fi
 	echo "====================================================================="
         echo "Hopsworks will later be available at private IP:"
 	echo ""
