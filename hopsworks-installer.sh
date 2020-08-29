@@ -87,6 +87,8 @@ KARAMEL_HTTP_PROXY_1=
 KARAMEL_HTTP_PROXY_2=
 KARAMEL_HTTP_PROXY_3=
 PROXY=
+GEM_SERVER=0
+
 
 # $1 = String describing error
 exit_error()
@@ -911,6 +913,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      echo " [-dc|--download-url] downloads binaries from this URL."
 	      echo " [-du|--download-user username] Username for downloading enterprise binaries."
 	      echo " [-dp|--download-password password] Password for downloading enterprise binaries."
+	      echo " [-gs|--gem-server] Run a local gem server for chef-solo (for air-gapped installations)."	      
 	      echo " [-ni|--non-interactive)] skip license/terms acceptance and all confirmation screens."
 	      echo " [-p|--http-proxy) url] URL of the http(s) proxy server. Only https proxies with valid certs supported."
 	      echo " [-pwd|--password password] sudo password for user running chef recipes."
@@ -1005,6 +1008,9 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	       ;;
     -ni|--non-interactive)
 	      NON_INTERACT=1
+	      ;;
+    -gs|--gem-server)
+	      GEM_SERVER=1
 	      ;;
     -p|--http-proxy)
               shift
@@ -1369,8 +1375,13 @@ else
     perl -pi -e "s/__DOWNLOAD__/$DOWNLOAD/" $YML_FILE
     perl -pi -e "s/__KUBERNETES_RECIPES__/$KUBERNETES_RECIPES/" $YML_FILE
     perl -pi -e "s/__KUBE__/$KUBE/" $YML_FILE
-    perl -pi -e "s/__NDB_NVME__/${NDB_NVME}/" $YML_FILE    
+    perl -pi -e "s/__NDB_NVME__/${NDB_NVME}/" $YML_FILE
 
+    RUN_GEM_SERVER=
+    if [ $GEM_SERVER -eq 1 ] ; then
+      RUN_GEM_SERVER="-gemserver http://${IP}:54321"
+    fi
+    
     if [ $DRY_RUN -eq 0 ] ; then
 	cd karamel-${KARAMEL_VERSION}
 	echo "Running command from ${PWD}:"
@@ -1381,7 +1392,7 @@ else
         $KARAMEL_HTTP_PROXY_1
         $KARAMEL_HTTP_PROXY_2
         $KARAMEL_HTTP_PROXY_3    
-	setsid ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log 2>&1 &
+	setsid ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD $RUN_GEM_SERVER > ../installation.log 2>&1 &
 	echo ""
 	echo "***********************************************************************************************************"
 	echo ""
