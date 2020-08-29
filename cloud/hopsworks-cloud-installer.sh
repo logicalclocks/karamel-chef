@@ -65,10 +65,11 @@ ENTERPRISE=0
 KUBERNETES=0
 HEAD_VM_TYPE=head_cpu
 
-INPUT_YML="cluster-defns/hopsworks-head.yml"
-WORKER_YML="cluster-defns/hopsworks-worker.yml"
-WORKER_GPU_YML="cluster-defns/hopsworks-worker-gpu.yml"
-YML_FILE="cluster-defns/hopsworks-installation.yml"
+CLUSTER_DEFINITIONS_DIR="cluster-defns"
+INPUT_YML="hopsworks-head.yml"
+WORKER_YML="hopsworks-worker.yml"
+WORKER_GPU_YML="hopsworks-worker-gpu.yml"
+YML_FILE="hopsworks-installation.yml"
 
 WORKER_LIST=
 WORKER_IP=
@@ -81,8 +82,8 @@ SKIP_CREATE=0
 NUM_GPUS_PER_VM=
 GPU_TYPE=
 
-NUM_WORKERS_CPU=
-NUM_WORKERS_GPU=
+NUM_WORKERS_CPU=0
+NUM_WORKERS_GPU=0
 
 CLOUD=
 VM_DELETE=
@@ -94,7 +95,7 @@ NUM_NVME_DRIVES_PER_WORKER=0
 #################
 REGION=us-east1
 ZONE=us-east1-c
-IMAGE=centos-7-v20200714
+IMAGE=centos-7-v20200811
 IMAGE_PROJECT=centos-cloud
 MACHINE_TYPE=n1-standard-8
 NAME=
@@ -110,7 +111,7 @@ SHIELD=""
 BOOT_DISK=pd-ssd
 BOOT_SIZE_GBS=150
 
-RAW_SSH_KEY="${USER}:$(cat /home/$USER/.ssh/id_rsa.pub)"
+RAW_SSH_KEY="${USER}:$(cat ~/.ssh/id_rsa.pub)"
 #printf -v ESCAPED_SSH_KEY "%q\n" "$RAW_SSH_KEY"
 ESCAPED_SSH_KEY="$RAW_SSH_KEY"
 TAGS=http-server,https-server,karamel
@@ -238,9 +239,9 @@ splash_screen()
       echo "sudo chown $USER . && chmod +w ."
       echo ""
   fi
-  if [ ! -e /home/$USER/.ssh/id_rsa.pub ] ; then
+  if [ ! -e ~/.ssh/id_rsa.pub ] ; then
       echo "ATTENTION."
-      echo "A public ssh key cannot be found at: /home/$USER"
+      echo "A public ssh key cannot be found at your home directory (~/)"
       echo "To continue, you need to create one at that path. Is that ok (y/n)?"
       read ACCEPT
       if [ "$ACCEPT" == "y" ] ; then
@@ -399,8 +400,8 @@ get_ips()
 cpus_gpus()
 {
     if [ "$CLOUD" == "gcp" ] ; then
-	CPUS=$(gcloud compute instances list | awk '{ print $1 }' | grep "^${PREFIX}" | grep -e "cpu[1-99]" | wc -l)
-	GPUS=$(gcloud compute instances list | awk '{ print $1 }' | grep "^${PREFIX}" | grep -e "gpu[1-99]" | wc -l)	
+	CPUS=$(gcloud compute instances list | awk '{ print $1 }' | grep "^${PREFIX}" | grep -e "cpu[1-99]" |  wc -l)
+	GPUS=$(gcloud compute instances list | awk '{ print $1 }' | grep "^${PREFIX}" | grep -e "gpu[1-99]" |  wc -l)	
     elif [ "$CLOUD" == "azure" ] ; then
 	echo ""
     elif [ "$CLOUD" == "aws" ] ; then
@@ -411,8 +412,8 @@ cpus_gpus()
 
 clear_known_hosts()
 {
-    echo "ssh-keygen -f "/home/$USER/.ssh/known_hosts" -R $host_ip"
-    ssh-keygen -f "/home/$USER/.ssh/known_hosts" -R $host_ip
+    echo "ssh-keygen -f "~/.ssh/known_hosts" -R $host_ip"
+    ssh-keygen -f ~/.ssh/known_hosts -R $host_ip
     if [ $? -ne 0 ] ; then
 	echo ""	
 	echo "WARN: Could not clean up known_hosts file"
@@ -502,7 +503,10 @@ enter_prefix()
 
 download_installer() {
 
-    wget -q -nc ${HOPSWORKS_INSTALLER_BRANCH}/hopsworks-installer.sh 2>&1 > /dev/null
+    mkdir -p .tmp
+    cd .tmp
+    
+    curl --silent --show-error -C - ${HOPSWORKS_INSTALLER_BRANCH}/hopsworks-installer.sh -o ./hopsworks-installer.sh 2>&1 > /dev/null
     if [ $? -ne 0 ] ; then
 	echo "Could not download hopsworks-installer.sh"
 	echo "WARNING: There could be a problem with your proxy server settings."	  
@@ -515,15 +519,22 @@ download_installer() {
     fi
     chmod +x hopsworks-installer.sh
 
-    if [ ! -d cluster-defns ] ; then
-	mkdir cluster-defns
-    fi
-    cd cluster-defns
+    mkdir -p $CLUSTER_DEFINITIONS_DIR
+    cd $CLUSTER_DEFINITIONS_DIR
     # Don't overwrite the YML files, so that users can customize them
-    wget -q -nc ${CLUSTER_DEFINITION_BRANCH}/$INPUT_YML 2>&1 > /dev/null
-    wget -q -nc ${CLUSTER_DEFINITION_BRANCH}/$WORKER_YML 2>&1 > /dev/null
-    wget -q -nc ${CLUSTER_DEFINITION_BRANCH}/$WORKER_GPU_YML 2>&1 > /dev/null
-    cd ..
+    curl --silent --show-error -C - ${CLUSTER_DEFINITION_BRANCH}/${CLUSTER_DEFINITIONS_DIR}/$INPUT_YML -o ./$INPUT_YML 2>&1 > /dev/null
+    if [ $? -ne 0 ] ; then
+	exit 12
+    fi
+    curl --silent --show-error -C - ${CLUSTER_DEFINITION_BRANCH}/${CLUSTER_DEFINITIONS_DIR}/$WORKER_YML -o ./$WORKER_YML 2>&1 > /dev/null
+    if [ $? -ne 0 ] ; then
+	exit 13
+    fi
+    curl --silent --show-error -C - ${CLUSTER_DEFINITION_BRANCH}/${CLUSTER_DEFINITIONS_DIR}/$WORKER_GPU_YML -o ./$WORKER_GPU_YML 2>&1 > /dev/null    
+    if [ $? -ne 0 ] ; then
+	exit 14
+    fi
+    cd ../..
 }
 
 
@@ -547,11 +558,13 @@ add_worker()
 
 cpu_worker_size()
 {
-   if [ "$NUM_WORKERS_CPU" == "" ] ; then
-       printf 'Please enter the number of CPU-only workers you want to add (default: 0): '
-       read NUM_WORKERS_CPU
-       if [ "$NUM_WORKERS_CPU" == "" ] ; then
-	   NUM_WORKERS_CPU=0
+   if [ $NON_INTERACT -eq 0 ] ; then	    
+       if [ $NUM_WORKERS_CPU -eq 0 ] ; then
+	   printf 'Please enter the number of CPU-only workers you want to add (default: 0): '
+	   read NUM_WORKERS_CPU
+	   if [ "$NUM_WORKERS_CPU" == "" ] ; then
+	       NUM_WORKERS_CPU=0
+	   fi
        fi
    fi
    i=0
@@ -567,12 +580,14 @@ cpu_worker_size()
 
 gpu_worker_size()
 {
-   if [ "$NUM_WORKERS_GPU" == "" ] ; then    
-     printf 'Please enter the number of GPU-enabled workers you want to add (default: 0): '
-     read NUM_WORKERS_GPU
-     if [ "$NUM_WORKERS_GPU" == "" ] ; then
-       NUM_WORKERS_GPU=0
-     fi
+   if [ $NON_INTERACT -eq 0 ] ; then    
+       if [ $NUM_WORKERS_GPU -eq 0 ] ; then    
+	   printf 'Please enter the number of GPU-enabled workers you want to add (default: 0): '
+	   read NUM_WORKERS_GPU
+	   if [ "$NUM_WORKERS_GPU" == "" ] ; then
+	       NUM_WORKERS_GPU=0
+	   fi
+       fi
    fi
    if [ $NUM_WORKERS_GPU -ne 0 ] ; then
        select_gpu "worker"
@@ -592,9 +607,10 @@ select_gpu()
 {
    printf "Please enter the number of GPUs for the $1 VM(s) (default: 0): "
    read NUM_GPUS_PER_VM
-   if [ "$NUM_GPUS_PER_VM" == "" ] ; then
+   if [ "$NUM_GPUS_PER_VM" == "" ] || [ "$NUM_GPUS_PER_VM" == "0" ] ; then
        NUM_GPUS_PER_VM=0
    else
+     HEAD_GPU=1
      echo ""
      echo "Available GPU types: v100, p100, t4, k80"
      printf 'Please enter the type of GPU: '
@@ -656,6 +672,18 @@ enter_enterprise_credentials()
 	    exit 3
 	fi
     fi
+
+    lines=$(curl --silent -u ${ENTERPRISE_USERNAME}:${ENTERPRISE_PASSWORD} ${ENTERPRISE_DOWNLOAD_URL}/index.html | wc -l | tail -1)
+    if [ $lines -eq 0 ] ; then
+	echo "ERROR."
+	echo "Bad username or password"
+	echo ""
+	exit 1
+    else
+	echo "Username/Password for Nexus OK."
+    fi    
+    
+    
 }
 
 set_name()
@@ -1479,13 +1507,13 @@ _az_create_vm()
    --image $OS_IMAGE --data-disk-sizes-gb $DATA_DISK_SIZE --os-disk-size-gb $BOOT_SIZE \
    --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
    --size $VM_SIZE --location $REGION --zone $AZ_ZONE $ACCELERATOR $AZ_NETWORKING\
-   --ssh-key-value /home/$USER/.ssh/id_rsa.pub    
+   --ssh-key-value ~/.ssh/id_rsa.pub    
 "
   az vm create -n $NAME -g $RESOURCE_GROUP \
    --image $OS_IMAGE --data-disk-sizes-gb $DATA_DISK_SIZE --os-disk-size-gb $BOOT_SIZE \
    --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
    --size $VM_SIZE --location $REGION --zone $AZ_ZONE $ACCELERATOR \
-   --ssh-key-value /home/$USER/.ssh/id_rsa.pub    
+   --ssh-key-value ~/.ssh/id_rsa.pub    
   #   --priority $PRIORITY --max-price 0.06 \
   if [ $? -ne 0 ] ; then
     echo "Problem creating VM. Exiting ..."
@@ -1701,7 +1729,7 @@ list_public_ips()
 cloud_setup()
 {
 
-    RAW_SSH_KEY="${USER}:$(cat /home/$USER/.ssh/id_rsa.pub)"
+    RAW_SSH_KEY="${USER}:$(cat ~/.ssh/id_rsa.pub)"
     ESCAPED_SSH_KEY="$RAW_SSH_KEY"
     
     if [ "$CLOUD" == "gcp" ] ; then
@@ -1732,7 +1760,7 @@ help()
 	      echo " [-dr|--dry-run]  generates cluster definition (YML) files, allowing customization of clusters."
 	      echo " [-drc|--dry-run-create-vms]  creates the VMs, generates cluster definition (YML) files but doesn't run karamel."	      	      
 	      echo " [-g|--num-gpu-workers num] Number of workers (with GPUs) to create for the cluster."
-	      echo " [-gpus|--num-gpus-per-worker num] Number of GPUs per worker."
+	      echo " [-gpus|--num-gpus-per-worker num] Number of GPUs per worker or head node."
 	      echo " [-gt|--gpu-type type]"
 	      echo "                 'v100' Nvidia Tesla V100"
 	      echo "                 'p100' Nvidia Tesla P100"
@@ -1944,8 +1972,8 @@ download_installer
 if [ $DRY_RUN -eq 1 ] ; then
     echo ""
     echo "The cluster definition (YML) files are now available here:"
-    echo "$(pwd)/cluster-defns"
-    ls -l $(pwd)/cluster-defns
+    echo "$(pwd)/$CLUSTER_DEFINITIONS_DIR"
+    ls -l $(pwd)/$CLUSTER_DEFINITIONS_DIR
     echo ""    
     echo "You can customize/edit them and re-run this installer."
     echo ""
@@ -1953,28 +1981,34 @@ if [ $DRY_RUN -eq 1 ] ; then
 fi    
 cloud_setup
 
+if [ $ENTERPRISE -eq 1 ] ; then
+    enter_enterprise_credentials
+fi    
+
+HEAD_GPU=0
+
 if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
     set_name "cpu"
 elif [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then
-    set_name "gpu"    
+    set_name "gpu"
+    HEAD_GPU=1
     if [ $NON_INTERACT -eq 0 ] ; then        
 	select_gpu "head"
     fi
 elif [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
     set_name "head"    
-    if [ $NON_INTERACT -eq 0 ] ; then        
+    if [ $NON_INTERACT -eq 0 ] ; then
 	select_gpu "head"
+    elif [ $NUM_WORKERS_CPU -eq 0 ] && [ $NUM_WORKERS_GPU -eq 0 ] && [ "$GPU_TYPE" != "" ] ; then
+	HEAD_GPU=1
+	echo "Head VM is allocated a GPU"
     fi
 else
     exit_error "Bad install action: $INSTALL_ACTION"
 fi
 
-if [ $ENTERPRISE -eq 1 ] ; then
-    enter_enterprise_credentials
-fi    
-
 if [ $SKIP_CREATE -eq 0 ] ; then
-    if [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then    
+    if [ $HEAD_GPU -eq 1 ] ; then    
 	create_vm_gpu "head"
     else
 	create_vm_cpu "head"
@@ -2007,19 +2041,19 @@ fi
 
 
 echo "Installing installer on $IP"
-scp -o StrictHostKeyChecking=no ./hopsworks-installer.sh ${IP}:
+scp -o StrictHostKeyChecking=no ./.tmp/hopsworks-installer.sh ${IP}:
 if [ $? -ne 0 ] ; then
     echo "Problem copying installer to head server. Exiting..."
     exit 10
 fi    
 
-ssh -t -o StrictHostKeyChecking=no $IP "mkdir -p cluster-defns"
+ssh -t -o StrictHostKeyChecking=no $IP "mkdir -p $CLUSTER_DEFINITIONS_DIR"
 if [ $? -ne 0 ] ; then
-    echo "Problem creating 'cluster-defns' directory on head server. Exiting..."
+    echo "Problem creating $CLUSTER_DEFINITIONS_DIR directory on head server. Exiting..."
     exit 11
 fi    
 
-scp -o StrictHostKeyChecking=no ./cluster-defns/hopsworks-*.yml ${IP}:~/cluster-defns/
+scp -o StrictHostKeyChecking=no ./.tmp/$CLUSTER_DEFINITIONS_DIR/hopsworks-*.yml ${IP}:~/${CLUSTER_DEFINITIONS_DIR}/
 if [ $? -ne 0 ] ; then
     echo "Problem scp'ing cluster definitions to head server. Exiting..."
     exit 12
@@ -2027,8 +2061,8 @@ fi
 
 if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
     
-    ssh -t -o StrictHostKeyChecking=no $IP "if [ ! -e /home/$USER/.ssh/id_rsa.pub ] ; then cat /dev/zero | ssh-keygen -q -N \"\" ; fi"
-    pubkey=$(ssh -t -o StrictHostKeyChecking=no $IP "cat /home/$USER/.ssh/id_rsa.pub")
+    ssh -t -o StrictHostKeyChecking=no $IP "if [ ! -e ~/.ssh/id_rsa.pub ] ; then cat /dev/zero | ssh-keygen -q -N \"\" ; fi"
+    pubkey=$(ssh -t -o StrictHostKeyChecking=no $IP "cat ~/.ssh/id_rsa.pub")
 
     keyfile=".pubkey.pub"
     echo "$pubkey" > $keyfile
@@ -2124,8 +2158,8 @@ NVME_SWITCH=""
 if [ $NUM_NVME_DRIVES_PER_WORKER -gt 0 ] ; then
     NVME_SWITCH=" -nvme $NUM_NVME_DRIVES_PER_WORKER "
 fi
-    echo "ssh -t -o StrictHostKeyChecking=no $IP \"/home/$USER/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH} && sleep 5\""    
-    ssh -t -o StrictHostKeyChecking=no $IP "/home/$USER/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH} && sleep 5"
+    echo "ssh -t -o StrictHostKeyChecking=no $IP \"~/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH} && sleep 5\""    
+    ssh -t -o StrictHostKeyChecking=no $IP "~/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH} && sleep 5"
 
     if [ $? -ne 0 ] ; then
 	echo "Problem running installer. Exiting..."
@@ -2152,7 +2186,7 @@ else
     echo "*                                      *"
     echo "*                                      *"    
     echo " ssh ${IP}"
-    echo " Then, edit your cluster definition /home/$USER/cluster-defns/$YML_FILE"
+    echo " Then, edit your cluster definition ~/$CLUSTER_DEFINITIONS_DIR/$YML_FILE"
     echo " Then run karamel on your new cluster definition: "
     echo " cd karamel-0.6"
     echo " setsid ./bin/karamel -headless -launch ../$YML_FILE > ../installation.log 2>&1 &"

@@ -28,9 +28,8 @@
 ###################################################################################################
 
 HOPSWORKS_REPO=logicalclocks/hopsworks-chef
-HOPSWORKS_BRANCH=1.3
-CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/rakuten_fixes
-#$HOPSWORKS_BRANCH
+HOPSWORKS_BRANCH=master
+CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_BRANCH
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
 NON_INTERACT=0
@@ -87,6 +86,8 @@ KARAMEL_HTTP_PROXY_1=
 KARAMEL_HTTP_PROXY_2=
 KARAMEL_HTTP_PROXY_3=
 PROXY=
+GEM_SERVER=0
+GEM_SERVER_PORT=54321
 
 # $1 = String describing error
 exit_error()
@@ -207,7 +208,7 @@ splash_screen()
     echo "Installing dig ..."
     if [ "$DISTRO" == "Ubuntu" ] ; then
         sudo apt install dnsutils -y  > /dev/null
-    elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
+    elif [ "${DISTRO,,}" == "centos" ] || [ "${DISTRO,,}" == "os" ] ; then
 	sudo yum install bind-utils -y > /dev/null
     fi
   fi
@@ -662,7 +663,7 @@ add_worker()
 	read CPUS
     fi
 
-    if [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
+    if [ "${DISTRO,,}" == "centos" ] || [ "${DISTRO,,}" == "os" ] ; then
 	ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo yum install pciutils -y"
     fi
 
@@ -715,10 +716,6 @@ add_worker()
 	    read ACCEPT
 	    if [ "$ACCEPT" == "y" ] || [ "$ACCEPT" == "yes" ] || [ "$ACCEPT" == "" ] ; then
 		echo "$WORKER_GPUS will be used on this worker."
-		# if [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
-		# 	   echo "Installing kernel-devel on worker.."
-		# 	   ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo yum install \"kernel-devel-uname-r == $(uname -r)\" -y" > /dev/null
-		# fi
 	    else
 		echo "$The GPUs will not be used on this worker."
 		WORKER_GPUS=0
@@ -820,7 +817,7 @@ check_linux()
 	    DISTRO=$(ls -d /etc/[A-Za-z]*[_-][rv]e[lr]* | grep -v \"lsb\" | cut -d'/' -f3 | cut -d'-' -f1 | cut -d'_' -f1 | head -1)
 	    if [ "$DISTRO" == "Ubuntu" ] ; then
 		sudo apt install lsb-core -y
-	    elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
+	    elif [ "${DISTRO,,}" == "centos" ] || [ "${DISTRO,,}" == "os" ] ; then
 		sudo yum install redhat-lsb-core -y
 	    else
 		echo "Could not recognize Linux distro: $DISTRO"
@@ -915,6 +912,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	      echo " [-dc|--download-url] downloads binaries from this URL."
 	      echo " [-du|--download-user username] Username for downloading enterprise binaries."
 	      echo " [-dp|--download-password password] Password for downloading enterprise binaries."
+	      echo " [-gs|--gem-server] Run a local gem server for chef-solo (for air-gapped installations)."	      
 	      echo " [-ni|--non-interactive)] skip license/terms acceptance and all confirmation screens."
 	      echo " [-p|--http-proxy) url] URL of the http(s) proxy server. Only https proxies with valid certs supported."
 	      echo " [-pwd|--password password] sudo password for user running chef recipes."
@@ -1009,6 +1007,9 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	       ;;
     -ni|--non-interactive)
 	      NON_INTERACT=1
+	      ;;
+    -gs|--gem-server)
+	      GEM_SERVER=1
 	      ;;
     -p|--http-proxy)
               shift
@@ -1148,7 +1149,7 @@ if [ $? -ne 0 ] ; then
     if [ "$DISTRO" == "Ubuntu" ] ; then
 	sudo apt update -y
 	sudo apt install openjdk-8-jre-headless -y
-    elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
+    elif [ "${DISTRO,,}" == "centos" ] || [ "${DISTRO,,}" == "os" ] ; then
 	sudo yum install java-1.8.0-openjdk-headless -y
 	sudo yum install wget -y
     else
@@ -1373,8 +1374,13 @@ else
     perl -pi -e "s/__DOWNLOAD__/$DOWNLOAD/" $YML_FILE
     perl -pi -e "s/__KUBERNETES_RECIPES__/$KUBERNETES_RECIPES/" $YML_FILE
     perl -pi -e "s/__KUBE__/$KUBE/" $YML_FILE
-    perl -pi -e "s/__NDB_NVME__/${NDB_NVME}/" $YML_FILE    
+    perl -pi -e "s/__NDB_NVME__/${NDB_NVME}/" $YML_FILE
 
+    RUN_GEM_SERVER=
+    if [ $GEM_SERVER -eq 1 ] ; then
+      RUN_GEM_SERVER="-gemserver http://${IP}:$GEM_SERVER_PORT"
+    fi
+    
     if [ $DRY_RUN -eq 0 ] ; then
 	cd karamel-${KARAMEL_VERSION}
 	echo "Running command from ${PWD}:"
@@ -1385,15 +1391,21 @@ else
         $KARAMEL_HTTP_PROXY_1
         $KARAMEL_HTTP_PROXY_2
         $KARAMEL_HTTP_PROXY_3    
-	setsid ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log 2>&1 &
+	setsid ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD $RUN_GEM_SERVER > ../installation.log 2>&1 &
 	echo ""
 	echo "***********************************************************************************************************"
 	echo ""
 	echo "Installation has started, but may take 1 hour or more.........."
 	echo ""
-	echo "The Karamel installer UI will soon start at:  http://${IP}:9090/index.html"
+	echo "The Karamel installer UI will soon start at private IP:  http://${IP}:9090/index.html"
 	echo "Note: port 9090 must be open for external traffic and Karamel will shutdown when installation finishes."
 	echo ""
+	if [ $GEM_SERVER -eq 1 ] ; then
+	    echo "When installation has completed, stop the gem server using the following commands:"
+	    echo "GEM_PID=\$(sudo netstat -ltpn | grep $GEM_SERVER_PORT | awk '{ print \$7 }' | tail -1 | sed -e 's/\/ruby//')"
+	    echo "sudo kill -9 \$GEM_PID"
+	    echo ""
+	fi
 	echo "====================================================================="
         echo "Hopsworks will later be available at private IP:"
 	echo ""
@@ -1420,8 +1432,6 @@ else
 	echo " Then run karamel on your new cluster definition: "
 	echo " "
 	echo " cd karamel-0.6 && setsid ./bin/karamel -headless -launch ../$YML_FILE > ../installation.log 2>&1 &"
-	echo "****************************************"
-	
+	echo "****************************************"	
     fi
 fi
-
