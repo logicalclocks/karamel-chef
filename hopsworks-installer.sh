@@ -62,8 +62,7 @@ CLOUD=
 NVME=0
 NDB_NVME=
 
-YARN="yarn:
-      cgroups_strict_resource_usage: 'false'"
+YARN="yarn:"
 RM_WORKER=
 ENTERPRISE=0
 KUBERNETES=0
@@ -1272,9 +1271,7 @@ else
     if [ $HAS_GPUS -eq 1 ] ; then
 	YARN="capacity:
       resource_calculator_class: org.apache.hadoop.yarn.util.resource.DominantResourceCalculatorGPU
-    yarn:
-      cgroups_strict_resource_usage: 'false'
-      gpus: '*'"
+    yarn:"
     fi
 
     DNS_IP=$(sudo cat /etc/resolv.conf | grep ^nameserver | awk '{ print $2 }' | tail -1)
@@ -1431,7 +1428,7 @@ else
 	echo " Then, edit your cluster definitions in: /home/$USER/cluster-defns"
 	echo " Then run karamel on your new cluster definition: "
 	echo " "
-	echo " cd karamel-0.6 && setsid ./bin/karamel -headless -launch ../$YML_FILE > ../installation.log 2>&1 &"
+	echo " cd karamel-0.6 && setsid ./bin/karamel -headless -launch ../cluster-defns/$YML_FILE > ../installation.log 2>&1 &"
 	echo "****************************************"	
     fi
 fi

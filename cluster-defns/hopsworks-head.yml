@@ -19,9 +19,8 @@ attrs:
     tls:
       enabled: __TLS__
     __YARN__
-      vcores: __CPUS__
-      memory_mbs: __MEM__
-      detect-hardware-capabilities: false
+      cgroups_strict_resource_usage: 'false'"    
+      detect-hardware-capabilities: true
     rmappsecurity:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
   ndb:
