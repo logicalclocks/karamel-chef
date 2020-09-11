@@ -74,8 +74,8 @@ YML_FILE="hopsworks-installation.yml"
 WORKER_LIST=
 WORKER_IP=
 WORKER_DEFAULTS=
-CPU_WORKER_ID=1
-GPU_WORKER_ID=1
+CPU_WORKER_ID=0
+GPU_WORKER_ID=0
 
 SKIP_CREATE=0
 
@@ -95,7 +95,7 @@ NUM_NVME_DRIVES_PER_WORKER=0
 #################
 REGION=us-east1
 ZONE=us-east1-c
-IMAGE=centos-7-v20200811
+IMAGE=centos-7-v20200902
 IMAGE_PROJECT=centos-cloud
 MACHINE_TYPE=n1-standard-8
 NAME=
@@ -400,8 +400,11 @@ get_ips()
 cpus_gpus()
 {
     if [ "$CLOUD" == "gcp" ] ; then
-	CPUS=$(gcloud compute instances list | awk '{ print $1 }' | grep "^${PREFIX}" | grep -e "cpu[1-99]" |  wc -l)
-	GPUS=$(gcloud compute instances list | awk '{ print $1 }' | grep "^${PREFIX}" | grep -e "gpu[1-99]" |  wc -l)	
+	CPUS=$(gcloud compute instances list | awk '{ print $1 }' | grep "^${PREFIX}" | grep -e "cpu[0-99]" |  wc -l)
+	GPUS=$(gcloud compute instances list | awk '{ print $1 }' | grep "^${PREFIX}" | grep -e "gpu[0-99]" |  wc -l)
+	echo "FOUND CPUS: $CPUS"
+	echo "FOUND GPUS: $GPUS"
+	
     elif [ "$CLOUD" == "azure" ] ; then
 	echo ""
     elif [ "$CLOUD" == "aws" ] ; then
@@ -589,6 +592,11 @@ gpu_worker_size()
 	   fi
        fi
    fi
+
+   if [ "$NUM_WORKERS_GPU" == "" ] ; then
+       NUM_WORKERS_GPU=0
+   fi
+   
    if [ $NUM_WORKERS_GPU -ne 0 ] ; then
        select_gpu "worker"
    fi
@@ -605,28 +613,31 @@ gpu_worker_size()
 
 select_gpu()
 {
-   printf "Please enter the number of GPUs for the $1 VM(s) (default: 0): "
-   read NUM_GPUS_PER_VM
-   if [ "$NUM_GPUS_PER_VM" == "" ] || [ "$NUM_GPUS_PER_VM" == "0" ] ; then
-       NUM_GPUS_PER_VM=0
-   else
-     HEAD_GPU=1
-     echo ""
-     echo "Available GPU types: v100, p100, t4, k80"
-     printf 'Please enter the type of GPU: '
-     read GPU_TYPE
-     case $GPU_TYPE in
-         v100 | p100 | k80 | t4)
-	  echo ""
-	  echo "Number of GPUs per GPU-enabled VM: $NUM_GPUS_PER_VM  GPU type: $GPU_TYPE"
-        ;;
-        *)
-          echo "Invalid GPU choice. Try again."
-          echo ""
-          select_gpu $1
-        ;;
-     esac
-   fi
+    if [ "$NUM_GPUS_PER_VM" == "" ] ; then
+	
+	printf "Please enter the number of GPUs for the $1 VM(s) (default: 0): "
+	read NUM_GPUS_PER_VM
+	if [ "$NUM_GPUS_PER_VM" == "" ] || [ "$NUM_GPUS_PER_VM" == "0" ] ; then
+	    NUM_GPUS_PER_VM=0
+	else
+	    HEAD_GPU=1
+	    echo ""
+	    echo "Available GPU types: v100, p100, t4, k80"
+	    printf 'Please enter the type of GPU: '
+	    read GPU_TYPE
+	    case $GPU_TYPE in
+		v100 | p100 | k80 | t4)
+		    echo ""
+		    echo "Number of GPUs per GPU-enabled VM: $NUM_GPUS_PER_VM  GPU type: $GPU_TYPE"
+		    ;;
+		*)
+		    echo "Invalid GPU choice. Try again."
+		    echo ""
+		    select_gpu $1
+		    ;;
+	    esac
+	fi
+    fi
 }
 
 
@@ -647,9 +658,6 @@ enter_enterprise_credentials()
 	    echo "Exiting."
 	    exit 30
 	fi
-	# Escape URL
-	ENTERPRISE_DOWNLOAD_URL=${ENTERPRISE_DOWNLOAD_URL//\./\\\.}
-	ENTERPRISE_DOWNLOAD_URL=${ENTERPRISE_DOWNLOAD_URL//\//\\\/}
     fi
     if [ "$ENTERPRISE_USERNAME" == "" ] ; then    
         echo ""
@@ -682,13 +690,14 @@ enter_enterprise_credentials()
     else
 	echo "Username/Password for Nexus OK."
     fi    
-    
+    # Escape URL
+    ENTERPRISE_DOWNLOAD_URL=${ENTERPRISE_DOWNLOAD_URL//\./\\\.}
+    ENTERPRISE_DOWNLOAD_URL=${ENTERPRISE_DOWNLOAD_URL//\//\\\/}
     
 }
 
 set_name()
 {
-    #  NAME="${PREFIX}$1${REGION/-/}"
     NAME="${PREFIX}$1"
 }
 
@@ -708,6 +717,8 @@ gcloud_get_ips()
 {
     MY_IPS=$(gcloud compute instances list | grep "$PREFIX")
 
+    echo "MY_IPS: $MY_IPS"
+    
     set_name "head"
     if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
        set_name "cpu"
@@ -717,22 +728,29 @@ gcloud_get_ips()
     
     IP=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
 
+    sleep 3
     cpus_gpus
-    
-    for i in $(seq 1 ${CPUS}) ;
+
+    i=0
+    while [ $i -lt $CPUS ] ; 
     do
 	set_name "cpu${i}"
 	CPU[$i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
 	PRIVATE_CPU[$i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
+	echo "Worker cpu${i} : CPU[$i]"
         echo -e "${NAME}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
+        i=$((i+1))
     done
 
-    for j in $(seq 1 ${GPUS}) ;
+    i=0       
+    while [ $i -lt $GPUS ] ; 
     do
 	set_name "gpu${i}"
-	GPU[$j]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
-	PRIVATE_GPU[$j]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
-        echo -e "${NAME}\t Public IP: ${GPU[${j}]} \t Private IP: ${PRIVATE_GPU[${j}]}"
+	GPU[$i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
+	PRIVATE_GPU[$i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
+	echo "Worker gpu${i} : GPU[$i]"	
+        echo -e "${NAME}\t Public IP: ${GPU[${i}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
+	i=$((i+1))
     done
 }    
 
@@ -995,7 +1013,7 @@ _gcloud_create_vm()
     _gcloud_precreate $1
 echo "    gcloud compute --project=$PROJECT instances create $NAME --zone=$ZONE --machine-type=$MACHINE_TYPE --subnet=$SUBNET --network-tier=$NETWORK_TIER --maintenance-policy=$MAINTENANCE_POLICY $SERVICE_ACCOUNT --no-scopes $ACCELERATOR --tags=$TAGS --image=$IMAGE --image-project=$IMAGE_PROJECT --boot-disk-size=$BOOT_SIZE --boot-disk-type=$BOOT_DISK $LOCAL_DISK --boot-disk-device-name=$NAME --reservation-affinity=$RESERVATION_AFFINITY --metadata=ssh-keys=\"$ESCAPED_SSH_KEY\""
     
-    gcloud compute --project=$PROJECT instances create $NAME --zone=$ZONE --machine-type=$MACHINE_TYPE --subnet=$SUBNET --network-tier=$NETWORK_TIER --maintenance-policy=$MAINTENANCE_POLICY $SERVICE_ACCOUNT --no-scopes $ACCELERATOR --tags=$TAGS --image=$IMAGE --image-project=$IMAGE_PROJECT --boot-disk-size=$BOOT_SIZE --boot-disk-type=$BOOT_DISK $LOCAL_DISK --boot-disk-device-name=$NAME --reservation-affinity=$RESERVATION_AFFINITY --metadata=ssh-keys="$ESCAPED_SSH_KEY"
+    gcloud compute --project=$PROJECT instances create $NAME --zone=$ZONE --machine-type=$MACHINE_TYPE --subnet=$SUBNET --maintenance-policy=$MAINTENANCE_POLICY $SERVICE_ACCOUNT --no-scopes $ACCELERATOR --tags=$TAGS --image=$IMAGE --image-project=$IMAGE_PROJECT --boot-disk-size=$BOOT_SIZE --boot-disk-type=$BOOT_DISK $LOCAL_DISK --boot-disk-device-name=$NAME --metadata=ssh-keys="$ESCAPED_SSH_KEY"
     if [ $? -ne 0 ] ; then
       echo "Problem creating VM. Exiting ..."
       exit 12
@@ -1030,23 +1048,27 @@ az_get_ips()
     echo -e "${NAME}\t Public IP: $IP"
 
     cpus_gpus
-    
-    for i in $(seq 1 ${CPUS}) ;
+
+    i=0
+    while [ $i -lt $CPUS ] ; 
     do
 	set_name "cpu${i}"
 	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table  | grep ^$NAME | awk '{ print $2, $3 }')
 	CPU[$i]=$(echo "$MY_IPS" | awk '{ print $1 }')
 	PRIVATE_CPU[$i]=$(echo "$MY_IPS" | awk '{ print $2 }')
         echo -e "${NAME}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
+	i=$(i+1)
     done
 
-    for j in $(seq 1 ${GPUS}) ;
+    i=0
+    while [ $i -lt $GPUS ] ;     
     do
         set_name "gpu${i}"
 	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table  | grep ^$NAME | awk '{ print $2, $3 }')
 	GPU[$j]=$(echo "$MY_IPS" | awk '{ print $1 }')
 	PRIVATE_GPU[$j]=$(echo "$MY_IPS" | awk '{ print $2 }')
-        echo -e "${NAME}\t Public IP: ${GPU[${j}]} \t Private IP: ${PRIVATE_GPU[${j}]}"
+        echo -e "${NAME}\t Public IP: ${GPU[${i}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
+	i=$(i+1)	
     done
 }    
 
@@ -1530,36 +1552,6 @@ az_delete_vm()
     _az_set_resource_group
     # _az_set_location
 
-    # if [ "$RM_TYPE" == "cluster" ] ; then
-    # 	set_name "head"
-    # 	echo "az vm delete -g $RESOURCE_GROUP -n $NAME --yes --no-wait"
-    # 	az vm delete -g $RESOURCE_GROUP -n $NAME --yes --no-wait
-    #     _check_deletion
-	
-    # 	cpus_gpus
-
-    # 	for i in $(seq 1 ${CPUS}) ;
-    # 	do
-    # 	    set_name "cpu${i}"
-    #         az vm delete -g $RESOURCE_GROUP -n $NAME --yes --no-wait
-    #        _check_deletion	    
-    # 	done
-	
-    # 	for j in $(seq 1 ${GPUS}) ;
-    # 	do
-    # 	    set_name "gpu${i}"
-    #         az vm delete -g $RESOURCE_GROUP --name $NAME --yes --no-wait
-    #        _check_deletion	    
-    # 	done
-    # else
-    # 	set_name "$RM_TYPE"
-    # 	echo "az vm delete -g $RESOURCE_GROUP --name $NAME --yes --no-wait"
-    # 	az vm delete -g $RESOURCE_GROUP --name $NAME --yes --no-wait
-    #     _check_deletion
-    # fi
-
-    # echo "Deleting VM(s) in the background."
-
     az vm delete -g $RESOURCE_GROUP --name $VM_DELETE --yes --no-wait
     
 }
@@ -1955,7 +1947,11 @@ if [ $NON_INTERACT -eq 0 ] ; then
   enter_email
   enter_cloud
   install_action
-  enter_prefix    
+  enter_prefix
+else
+  if [ "$PREFIX" == "" ] ; then
+    PREFIX=$USER
+  fi
 fi
 
 if [ "$CLOUD" != "gcp" ] ; then
@@ -2077,8 +2073,9 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
     if [ $NUM_WORKERS_CPU -eq 0 ] && [ $NUM_WORKERS_GPU -eq 0 ] ; then
 	WORKERS="-w none "
     fi
-    
-    for i in $(seq 1 ${CPUS}) ;
+
+    i=0
+    while [ $i -lt ${CPUS} ] ;
     do
 	host_ip=${CPU[${i}]}
 	echo "I think host_ip is ${CPU[$i]}"
@@ -2100,14 +2097,16 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
 
 	WORKERS="${WORKERS}${PRIVATE_CPU[${i}]},"
 
-	echo "workers: $WORKERS"
+	echo "cpu workers: $WORKERS"
+	i=$((i+1))
     done
 
-    for i in $(seq 1 ${GPUS}) ;
+    i=0
+    while [ $i -lt ${GPUS} ] ;
     do
 	host_ip=${GPU[${i}]}	
-	echo "I think host_ip is ${GPU[$i]}"
-	echo "I think host_ip is ${GPU[${i}]}"
+	echo "I think GPU host_ip is ${GPU[$i]}"
+	echo "I think GPU host_ip is ${GPU[${i}]}"
 	echo "All  hosts ${GPU[*]}"    
 	clear_known_hosts
 	ssh-copy-id -o StrictHostKeyChecking=no -f -i $keyfile ${GPU[${i}]}
@@ -2124,9 +2123,11 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
 
 	WORKERS="${WORKERS}${PRIVATE_GPU[${i}]},"
 
-	echo "workers: $WORKERS"
+	echo "gpu workers: $WORKERS"
+	i=$((i+1))	
     done
     WORKERS=${WORKERS::-1}
+    echo "ALL WORKERS: $WORKERS"
 else
     WORKERS="-w none"
 fi
