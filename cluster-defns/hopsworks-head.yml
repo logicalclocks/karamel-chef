@@ -19,7 +19,7 @@ attrs:
     tls:
       enabled: __TLS__
     __YARN__
-      cgroups_strict_resource_usage: 'false'"    
+      cgroups_strict_resource_usage: false
       detect-hardware-capabilities: true
     rmappsecurity:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
