@@ -1165,7 +1165,7 @@ if [ ! -d cluster-defns ] ; then
     mkdir cluster-defns
 fi
 cd cluster-defns
-# Don't overwrite the YML files, so that users can customize them
+# Do not overwrite the YML files, so that users can customize them
 wget -nc ${CLUSTER_DEFINITION_BRANCH}/$INPUT_YML
 wget -nc ${CLUSTER_DEFINITION_BRANCH}/$WORKER_YML
 wget -nc ${CLUSTER_DEFINITION_BRANCH}/$WORKER_GPU_YML
