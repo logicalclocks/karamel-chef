@@ -91,21 +91,21 @@ GEM_SERVER_PORT=54321
 # $1 = String describing error
 exit_error()
 {
-  #CleanUpTempFiles
+    #CleanUpTempFiles
 
-  echo "" $ECHO_OUT
-  echo "Error number: $1"
-  echo "Exiting hopsworks-installer.sh."
-  echo ""
-  exit 1
+    echo "" $ECHO_OUT
+    echo "Error number: $1"
+    echo "Exiting hopsworks-installer.sh."
+    echo ""
+    exit 1
 }
 
 # $1 = accept phrase (what to accept)
 # caller reads $ENTERED_STRING global variable for result
 enter_string()
 {
-     echo "$1"
-     read ENTERED_STRING
+    echo "$1"
+    read ENTERED_STRING
 }
 
 ###################################################################################################
@@ -114,21 +114,21 @@ enter_string()
 
 clear_screen()
 {
- if [ $NON_INTERACT -eq 0 ] ; then
-   echo ""
-   echo "Press ENTER to continue"
-   read cont < /dev/tty
- fi
- clear
+    if [ $NON_INTERACT -eq 0 ] ; then
+	echo ""
+	echo "Press ENTER to continue"
+	read cont < /dev/tty
+    fi
+    clear
 }
 
 clear_screen_no_skipline()
 {
- if [ $NON_INTERACT -eq 0 ] ; then
-    echo "Press ENTER to continue"
-    read cont < /dev/tty
- fi
- clear
+    if [ $NON_INTERACT -eq 0 ] ; then
+	echo "Press ENTER to continue"
+	read cont < /dev/tty
+    fi
+    clear
 }
 
 
@@ -138,186 +138,186 @@ clear_screen_no_skipline()
 
 splash_screen()
 {
-  clear
-  echo ""
-  echo "Karamel/Hopsworks Installer, Copyright(C) 2020 Logical Clocks AB. All rights reserved."
-  echo ""
-  echo "This program can install Karamel/Chef and/or Hopsworks."
-  echo ""
-  echo "To cancel installation at any time, press CONTROL-C"
-  echo ""
-  echo "You appear to have following setup on this host:"
-  echo "* available memory: $AVAILABLE_MEMORY"
-  echo "* available disk space (on '/' root partition): $AVAILABLE_DISK"
-  echo "* available disk space (under '/mnt' partition): $AVAILABLE_MNT"
-  echo "* available CPUs: $AVAILABLE_CPUS"
-  echo "* available GPUS: $AVAILABLE_GPUS"
-  echo "* your ip is: $IP"
-  echo "* installation user: $USER"
-  echo "* linux distro: $DISTRO"
-  echo "* cluster defn branch: $CLUSTER_DEFINITION_BRANCH"
-  echo "* hopsworks-chef branch: $HOPSWORKS_REPO/$HOPSWORKS_BRANCH"
+    clear
+    echo ""
+    echo "Karamel/Hopsworks Installer, Copyright(C) 2020 Logical Clocks AB. All rights reserved."
+    echo ""
+    echo "This program can install Karamel/Chef and/or Hopsworks."
+    echo ""
+    echo "To cancel installation at any time, press CONTROL-C"
+    echo ""
+    echo "You appear to have following setup on this host:"
+    echo "* available memory: $AVAILABLE_MEMORY"
+    echo "* available disk space (on '/' root partition): $AVAILABLE_DISK"
+    echo "* available disk space (under '/mnt' partition): $AVAILABLE_MNT"
+    echo "* available CPUs: $AVAILABLE_CPUS"
+    echo "* available GPUS: $AVAILABLE_GPUS"
+    echo "* your ip is: $IP"
+    echo "* installation user: $USER"
+    echo "* linux distro: $DISTRO"
+    echo "* cluster defn branch: $CLUSTER_DEFINITION_BRANCH"
+    echo "* hopsworks-chef branch: $HOPSWORKS_REPO/$HOPSWORKS_BRANCH"
 
-  strlen=${#HOSTNAME}
-  if [ $strlen -gt 64 ] ; then
-      echo ""
-      echo "WARNING: hostname is longer 64 chars which can cause problems with OpenSSL: $HOSTNAME"
-      echo ""
-  fi
-
-  if [ $AVAILABLE_MEMORY -lt 29 ] ; then
-      echo ""
-      echo "WARNING: We recommend at least 32GB of RAM. Minimum is 16GB of Ram. You have $AVAILABLE_MEMORY GB of RAM"
-      echo ""
-  fi
-
-  if [[ "$AVAILABLE_DISK" == *"G"* ]]; then
-      space=${AVAILABLE_DISK::-1}
-  else
-      space=${AVAILABLE_DISK}
-  fi
-  if [ $space -lt 60 ] && [ "$AVAILABLE_MNT" == "" ]; then
-      echo ""
-      echo "WARNING: We recommend at least 60GB of disk space on the root partition. Minimum is 50GB of available disk."
-      echo "You have $AVAILABLE_DISK space on '/', and no space on '/mnt'."
-      echo ""
-  fi
-  if [ "$AVAILABLE_MNT" != "" ] ; then
-      if [[ "$AVAILABLE_MNT" == *"G"* ]]; then
-	  mnt=${AVAILABLE_MNT::-1}
-      else
-	  mnt=${AVAILABLE_MNT}
-      fi
-
-      if [ $space -lt 30 ] || [ $mnt < 50 ]; then
-      echo ""
-      echo "WARNING: We recommend at least 30GB of disk space on the root partition as well as at least 50GB on the /mnt partition."
-      echo "You have ${space}G space on '/', and ${mnt}G on '/mnt'."
-      echo ""
-      fi
-  fi
-  if [ $AVAILABLE_CPUS -lt 4 ] ; then
-      echo ""
-      echo "WARNING: Hopsworks needs at least 4 CPUs to be able to run Spark applications."
-      echo ""
-  fi
-
-  which dig > /dev/null
-  if [ $? -ne 0 ] ; then
-    echo "Installing dig ..."
-    if [ "$DISTRO" == "Ubuntu" ] ; then
-        sudo apt install dnsutils -y  > /dev/null
-    elif [ "${DISTRO,,}" == "centos" ] || [ "${DISTRO,,}" == "os" ] ; then
-	sudo yum install bind-utils -y > /dev/null
+    strlen=${#HOSTNAME}
+    if [ $strlen -gt 64 ] ; then
+	echo ""
+	echo "WARNING: hostname is longer 64 chars which can cause problems with OpenSSL: $HOSTNAME"
+	echo ""
     fi
-  fi
-  # If there are multiple FQDNs for this IP, return the last one (this works on Azure)
-  reverse_hostname=$(dig +noall +answer -x $IP | awk '{ print $5 }' | sort -r |  grep -v 'internal.cloudapp.net')
-  # stirp off trailing '.' chracter on the hostname returned
-  reverse_hostname=${reverse_hostname::-1}
-  if [ "$reverse_hostname" != "$HOSTNAME" ] ; then
-      REVERSE_DNS=0
-      echo ""
-      echo "WARNING: Reverse DNS does not work on this host. If you enable 'TLS', it will not work."
-      echo "Hostname: $HOSTNAME"
-      echo "Reverse Hostname: $reverse_hostname"
-      echo "Azure Installatione: please continue, we will try and fix this during the installation."
-#      echo "https://docs.microsoft.com/en-us/azure/dns/private-dns-getstarted-portal"
-#      echo ""
-      echo "On-premises: you have to configure your networking to make reverse-DNS work correctly."
-      echo ""
-  fi
 
-  pgrep mysql > /dev/null
-  if [ $? -eq 0 ] ; then
-      echo ""
-      echo "WARNING: A MySQL service is already running on this host. This could case installation problems."
-      echo -n "A service is running at this pid: "
-      pgrep mysql | tail -1
-      echo ""
-  fi
-  pgrep glassfish-domain1 > /dev/null
-  if [ $? -eq 0 ] ; then
-      echo ""
-      echo "WARNING: A Hopsworks server is already running on this host. This could case installation problems."
-      echo -n "A service is running at this pid: "
-      pgrep glassfish-domain1 | tail -1
-      echo ""
-  fi
-  pgrep airflow > /dev/null
-  if [ $? -eq 0 ] ; then
-      echo ""
-      echo "WARNING: An Airflow server is already running on this host. This could case installation problems."
-      echo -n "A service is running at this pid: "
-      pgrep airflow | tail -1
-      echo ""
-  fi
-  pgrep hadoop > /dev/null
-  if [ $? -eq 0 ] ; then
-      echo ""
-      echo "WARNING: A Hadoop server is already running on this host. This could case installation problems."
-      echo -n "A service is running at this pid: "
-      pgrep hadoop | tail -1
-      echo ""
-  fi
-  pgrep ndb > /dev/null
-  if [ $? -eq 0 ] ; then
-      echo ""
-      echo "WARNING: A MySQL Cluster (NDB) instance is already running on this host. This could case installation problems."
-      echo -n "A service is running at this pid: "
-      pgrep ndb | tail -1
-      echo ""
-  fi
-  clear_screen
+    if [ $AVAILABLE_MEMORY -lt 29 ] ; then
+	echo ""
+	echo "WARNING: We recommend at least 32GB of RAM. Minimum is 16GB of Ram. You have $AVAILABLE_MEMORY GB of RAM"
+	echo ""
+    fi
+
+    if [[ "$AVAILABLE_DISK" == *"G"* ]]; then
+	space=${AVAILABLE_DISK::-1}
+    else
+	space=${AVAILABLE_DISK}
+    fi
+    if [ $space -lt 60 ] && [ "$AVAILABLE_MNT" == "" ]; then
+	echo ""
+	echo "WARNING: We recommend at least 60GB of disk space on the root partition. Minimum is 50GB of available disk."
+	echo "You have $AVAILABLE_DISK space on '/', and no space on '/mnt'."
+	echo ""
+    fi
+    if [ "$AVAILABLE_MNT" != "" ] ; then
+	if [[ "$AVAILABLE_MNT" == *"G"* ]]; then
+	    mnt=${AVAILABLE_MNT::-1}
+	else
+	    mnt=${AVAILABLE_MNT}
+	fi
+
+	if [ $space -lt 30 ] || [ $mnt < 50 ]; then
+	    echo ""
+	    echo "WARNING: We recommend at least 30GB of disk space on the root partition as well as at least 50GB on the /mnt partition."
+	    echo "You have ${space}G space on '/', and ${mnt}G on '/mnt'."
+	    echo ""
+	fi
+    fi
+    if [ $AVAILABLE_CPUS -lt 4 ] ; then
+	echo ""
+	echo "WARNING: Hopsworks needs at least 4 CPUs to be able to run Spark applications."
+	echo ""
+    fi
+
+    which dig > /dev/null
+    if [ $? -ne 0 ] ; then
+	echo "Installing dig ..."
+	if [ "$DISTRO" == "Ubuntu" ] ; then
+            sudo apt install dnsutils -y  > /dev/null
+	elif [ "${DISTRO,,}" == "centos" ] || [ "${DISTRO,,}" == "os" ] ; then
+	    sudo yum install bind-utils -y > /dev/null
+	fi
+    fi
+    # If there are multiple FQDNs for this IP, return the last one (this works on Azure)
+    reverse_hostname=$(dig +noall +answer -x $IP | awk '{ print $5 }' | sort -r |  grep -v 'internal.cloudapp.net')
+    # stirp off trailing '.' chracter on the hostname returned
+    reverse_hostname=${reverse_hostname::-1}
+    if [ "$reverse_hostname" != "$HOSTNAME" ] ; then
+	REVERSE_DNS=0
+	echo ""
+	echo "WARNING: Reverse DNS does not work on this host. If you enable 'TLS', it will not work."
+	echo "Hostname: $HOSTNAME"
+	echo "Reverse Hostname: $reverse_hostname"
+	echo "Azure Installatione: please continue, we will try and fix this during the installation."
+	#      echo "https://docs.microsoft.com/en-us/azure/dns/private-dns-getstarted-portal"
+	#      echo ""
+	echo "On-premises: you have to configure your networking to make reverse-DNS work correctly."
+	echo ""
+    fi
+
+    pgrep mysql > /dev/null
+    if [ $? -eq 0 ] ; then
+	echo ""
+	echo "WARNING: A MySQL service is already running on this host. This could case installation problems."
+	echo -n "A service is running at this pid: "
+	pgrep mysql | tail -1
+	echo ""
+    fi
+    pgrep glassfish-domain1 > /dev/null
+    if [ $? -eq 0 ] ; then
+	echo ""
+	echo "WARNING: A Hopsworks server is already running on this host. This could case installation problems."
+	echo -n "A service is running at this pid: "
+	pgrep glassfish-domain1 | tail -1
+	echo ""
+    fi
+    pgrep airflow > /dev/null
+    if [ $? -eq 0 ] ; then
+	echo ""
+	echo "WARNING: An Airflow server is already running on this host. This could case installation problems."
+	echo -n "A service is running at this pid: "
+	pgrep airflow | tail -1
+	echo ""
+    fi
+    pgrep hadoop > /dev/null
+    if [ $? -eq 0 ] ; then
+	echo ""
+	echo "WARNING: A Hadoop server is already running on this host. This could case installation problems."
+	echo -n "A service is running at this pid: "
+	pgrep hadoop | tail -1
+	echo ""
+    fi
+    pgrep ndb > /dev/null
+    if [ $? -eq 0 ] ; then
+	echo ""
+	echo "WARNING: A MySQL Cluster (NDB) instance is already running on this host. This could case installation problems."
+	echo -n "A service is running at this pid: "
+	pgrep ndb | tail -1
+	echo ""
+    fi
+    clear_screen
 }
 
 
 display_license()
 {
-  echo ""
-  echo "This code is released under the GNU General Public License, Version 3, see:"
-  echo "http://www.gnu.org/licenses/gpl-3.0.txt"
-  echo ""
-  echo "Copyright(C) 2020 Logical Clocks AB. All rights reserved."
-  echo "Logical Clocks AB is furnishing this item \"as is\". Logical Clocks AB does not provide any"
-  echo "warranty of the item whatsoever, whether express, implied, or statutory,"
-  echo "including, but not limited to, any warranty of merchantability or fitness"
-  echo "for a particular purpose or any warranty that the contents of the item will"
-  echo "be error-free. In no respect shall Logical Clocks AB incur any liability for any"
-  echo "damages, including, but limited to, direct, indirect, special, or consequential"
-  echo "damages arising out of, resulting from, or any way connected to the use of the"
-  echo "item, whether or not based upon warranty, contract, tort, or otherwise; "
-  echo "whether or not injury was sustained by persons or property or otherwise;"
-  echo "and whether or not loss was sustained from, or arose out of, the results of,"
-  echo "the item, or any services that may be provided by Logical Clocks AB."
-  echo ""
-  printf 'Do you accept these terms and conditions? [ yes or no ] '
+    echo ""
+    echo "This code is released under the GNU General Public License, Version 3, see:"
+    echo "http://www.gnu.org/licenses/gpl-3.0.txt"
+    echo ""
+    echo "Copyright(C) 2020 Logical Clocks AB. All rights reserved."
+    echo "Logical Clocks AB is furnishing this item \"as is\". Logical Clocks AB does not provide any"
+    echo "warranty of the item whatsoever, whether express, implied, or statutory,"
+    echo "including, but not limited to, any warranty of merchantability or fitness"
+    echo "for a particular purpose or any warranty that the contents of the item will"
+    echo "be error-free. In no respect shall Logical Clocks AB incur any liability for any"
+    echo "damages, including, but limited to, direct, indirect, special, or consequential"
+    echo "damages arising out of, resulting from, or any way connected to the use of the"
+    echo "item, whether or not based upon warranty, contract, tort, or otherwise; "
+    echo "whether or not injury was sustained by persons or property or otherwise;"
+    echo "and whether or not loss was sustained from, or arose out of, the results of,"
+    echo "the item, or any services that may be provided by Logical Clocks AB."
+    echo ""
+    printf 'Do you accept these terms and conditions? [ yes or no ] '
 }
 
 accept_license ()
-  {
+{
     read ACCEPT
     case $ACCEPT in
-      yes | Yes | YES)
+	yes | Yes | YES)
         ;;
 	no | No | NO)
-        echo ""
-        exit 0
-        ;;
-      *)
-        echo ""
-        echo "Please enter either 'yes' or 'no'."
-	printf 'Do you accept these terms and conditions? [ yes or no ] '
-        accept_license
-      ;;
-     esac
+            echo ""
+            exit 0
+            ;;
+	*)
+            echo ""
+            echo "Please enter either 'yes' or 'no'."
+	    printf 'Do you accept these terms and conditions? [ yes or no ] '
+            accept_license
+	    ;;
+    esac
 }
 
 
 get_install_option_help()
 {
 
-INSTALL_OPTION_HELP="
+    INSTALL_OPTION_HELP="
 Install Options Help\n
 ===========================================================================\n
 This program installs Karamel and can also install Hopsworks using Karamel and Chef-Solo.\n
@@ -362,56 +362,56 @@ install_action()
 	printf 'Please enter your choice '1', '2', '3', '4', '5', '6', '7', '8', '9',  'q' \(quit\), or 'h' \(help\) :  '
         read ACCEPT
         case $ACCEPT in
-          1)
-	    INSTALL_ACTION=$INSTALL_LOCALHOST
-            ;;
-          2)
-	    INSTALL_ACTION=$INSTALL_LOCALHOST_TLS
-            ;;
-          3)
-	    INSTALL_ACTION=$INSTALL_CLUSTER
-            ;;
-          4)
-            INSTALL_ACTION=$INSTALL_CLUSTER
-            ENTERPRISE=1
-            ;;
-          5)
-            INSTALL_ACTION=$INSTALL_CLUSTER
-            ENTERPRISE=1
-	    KUBERNETES=1
-            ;;
-          6)
-	    INSTALL_ACTION=$INSTALL_KARAMEL
-            ;;
-          7)
-	    INSTALL_ACTION=$INSTALL_NVIDIA
-            ;;
-          8)
-	    INSTALL_ACTION=$PURGE_HOPSWORKS
-            ;;
-          9)
-	    INSTALL_ACTION=$PURGE_HOPSWORKS_ALL_HOSTS
-            ;;
-          h | H)
-	  clear
-	  get_install_option_help
-	  echo -e $INSTALL_OPTION_HELP
-          clear_screen_no_skipline
-          install_action
-          ;;
-          q | Q)
-          exit_error
-          ;;
-          *)
-            echo ""
-            echo "Invalid Choice: $ACCEPT"
-            echo "Please enter your choice '1', '2', '3', '4', 'q', or 'h'."
-	    clear_screen
-            install_action
-            ;;
-         esac
+            1)
+		INSTALL_ACTION=$INSTALL_LOCALHOST
+		;;
+            2)
+		INSTALL_ACTION=$INSTALL_LOCALHOST_TLS
+		;;
+            3)
+		INSTALL_ACTION=$INSTALL_CLUSTER
+		;;
+            4)
+		INSTALL_ACTION=$INSTALL_CLUSTER
+		ENTERPRISE=1
+		;;
+            5)
+		INSTALL_ACTION=$INSTALL_CLUSTER
+		ENTERPRISE=1
+		KUBERNETES=1
+		;;
+            6)
+		INSTALL_ACTION=$INSTALL_KARAMEL
+		;;
+            7)
+		INSTALL_ACTION=$INSTALL_NVIDIA
+		;;
+            8)
+		INSTALL_ACTION=$PURGE_HOPSWORKS
+		;;
+            9)
+		INSTALL_ACTION=$PURGE_HOPSWORKS_ALL_HOSTS
+		;;
+            h | H)
+		clear
+		get_install_option_help
+		echo -e $INSTALL_OPTION_HELP
+		clear_screen_no_skipline
+		install_action
+		;;
+            q | Q)
+		exit_error
+		;;
+            *)
+		echo ""
+		echo "Invalid Choice: $ACCEPT"
+		echo "Please enter your choice '1', '2', '3', '4', 'q', or 'h'."
+		clear_screen
+		install_action
+		;;
+        esac
 	clear_screen
-   fi
+    fi
 }
 
 
@@ -491,58 +491,58 @@ set_karamel_http_proxy()
 
     if [ $NON_INTERACT -eq 0 ] ; then
 
-      if [ "$proto" == "http://" ] ; then
-  	export http_proxy="${proto}${host}:${port}"	    
-      elif [ "$proto" == "https://" ] ; then
-  	export https_proxy="${proto}${host}:${port}"	    	  
-      fi
-      rm -f index.html	
-      wget http://www.google.com/index.html 2>&1 > /dev/null
-      if [ $? -ne 0 ] ; then
-	  echo "WARNING: There could be a problem with the proxy server setting."	  
-          echo "WARNING: wget (with http proxy 'on') could not download this file: http://www.logicalclocks.com/index.html"
-	  echo "http_proxy=$http_proxy"
-	  echo "https_proxy=$https_proxy"
-	  echo "PROXY=$PROXY"	  
-      fi
-      rm -f index.html
+	if [ "$proto" == "http://" ] ; then
+  	    export http_proxy="${proto}${host}:${port}"	    
+	elif [ "$proto" == "https://" ] ; then
+  	    export https_proxy="${proto}${host}:${port}"	    	  
+	fi
+	rm -f index.html	
+	wget http://www.google.com/index.html 2>&1 > /dev/null
+	if [ $? -ne 0 ] ; then
+	    echo "WARNING: There could be a problem with the proxy server setting."	  
+            echo "WARNING: wget (with http proxy 'on') could not download this file: http://www.logicalclocks.com/index.html"
+	    echo "http_proxy=$http_proxy"
+	    echo "https_proxy=$https_proxy"
+	    echo "PROXY=$PROXY"	  
+	fi
+	rm -f index.html
     fi
 }    
 
 
 check_proxy()
 {
-   echo ""
-   printf "Is the host running this installer behind a http proxy (y/n)? "
-   read ACCEPT
-   case $ACCEPT in
-       y|yes)
-	   # Just take the first http proxy set - https or http, not both https_proxy and http_proxy
-           printf "Enter the URL of the HTTP(S) PROXY: "
-           read PROXY
-           set_karamel_http_proxy
-	   
-	   echo "Your HTTP(S) Proxy host/port is: host: $host and port: $port"
-           printf "Does that look ok (y/n)? (default: 'y') "
-           read OK
-           case $OK in
-               y|yes)
-		 ;;
-              *)
-               clear_screen
-               check_proxy
-           esac
-	   ;;
-       n|no)
-           ;;
-       *)
-           echo ""
-           echo "Invalid Choice: $ACCEPT"
-           echo "Please enter your choice 'y' or 'yes' for yes, 'n' or 'no' for no: "
-	   clear_screen
-           check_proxy
-           ;;
-   esac
+    echo ""
+    printf "Is the host running this installer behind a http proxy (y/n)? "
+    read ACCEPT
+    case $ACCEPT in
+	y|yes)
+	    # Just take the first http proxy set - https or http, not both https_proxy and http_proxy
+            printf "Enter the URL of the HTTP(S) PROXY: "
+            read PROXY
+            set_karamel_http_proxy
+	    
+	    echo "Your HTTP(S) Proxy host/port is: host: $host and port: $port"
+            printf "Does that look ok (y/n)? (default: 'y') "
+            read OK
+            case $OK in
+		y|yes)
+		;;
+		*)
+		    clear_screen
+		    check_proxy
+            esac
+	    ;;
+	n|no)
+            ;;
+	*)
+            echo ""
+            echo "Invalid Choice: $ACCEPT"
+            echo "Please enter your choice 'y' or 'yes' for yes, 'n' or 'no' for no: "
+	    clear_screen
+            check_proxy
+            ;;
+    esac
 }
 
 
@@ -565,28 +565,28 @@ enter_cloud()
 	printf 'Please enter your choice '1', '2', '3', '4' :  '
         read ACCEPT
         case $ACCEPT in
-          1)
-	    CLOUD="on-premises"
-            ;;
-          2)
-	    CLOUD="aws"
-            ;;
-          3)
-   	    CLOUD="gcp"
-            ;;
-          4)
-       	    CLOUD="azure"
-            ;;
-          *)
-            echo ""
-            echo "Invalid Choice: $ACCEPT"
-            echo "Please enter your choice '1', '2', '3', '4'."
-	    clear_screen
-            enter_cloud
-            ;;
-         esac
+            1)
+		CLOUD="on-premises"
+		;;
+            2)
+		CLOUD="aws"
+		;;
+            3)
+   		CLOUD="gcp"
+		;;
+            4)
+       		CLOUD="azure"
+		;;
+            *)
+		echo ""
+		echo "Invalid Choice: $ACCEPT"
+		echo "Please enter your choice '1', '2', '3', '4'."
+		clear_screen
+		enter_cloud
+		;;
+        esac
 	clear_screen
-   fi
+    fi
 }
 
 enter_email()
@@ -609,11 +609,11 @@ enter_email()
 
 update_worker_yml()
 {
-  perl -pi -e "s/__WORKER_ID__/$WORKER_ID/" $tmpYml
-  perl -pi -e "s/__WORKER_IP__/$WORKER_IP/" $tmpYml
-  perl -pi -e "s/__MBS__/$MBS/" $tmpYml
-  perl -pi -e "s/__CPUS__/$CPUS/" $tmpYml
-  cat $tmpYml >> $YML_FILE
+    perl -pi -e "s/__WORKER_ID__/$WORKER_ID/" $tmpYml
+    perl -pi -e "s/__WORKER_IP__/$WORKER_IP/" $tmpYml
+    perl -pi -e "s/__MBS__/$MBS/" $tmpYml
+    perl -pi -e "s/__CPUS__/$CPUS/" $tmpYml
+    cat $tmpYml >> $YML_FILE
 }
 
 add_worker()
@@ -756,39 +756,39 @@ worker_size()
     #PubkeyAuthentication yes
     #AuthorizedKeysFile    .ssh/authorized_keys
     #PasswordAuthentication no
-   printf 'Please enter the number of extra workers you want to add (default: 0): '
-   read NUM_WORKERS
-   if [ "$NUM_WORKERS" == "" ] ; then
-       NUM_WORKERS=0
-   fi
-   i=0
-   while [ $i -lt $NUM_WORKERS ] ;
-   do
-      add_worker
-      i=$((i+1))
-      clear_screen
-   done
+    printf 'Please enter the number of extra workers you want to add (default: 0): '
+    read NUM_WORKERS
+    if [ "$NUM_WORKERS" == "" ] ; then
+	NUM_WORKERS=0
+    fi
+    i=0
+    while [ $i -lt $NUM_WORKERS ] ;
+    do
+	add_worker
+	i=$((i+1))
+	clear_screen
+    done
 }
 
 
 install_dir()
 {
-   root="${AVAILABLE_DISK//G}"
-   mnt="${AVAILABLE_MNT//G}"
+    root="${AVAILABLE_DISK//G}"
+    mnt="${AVAILABLE_MNT//G}"
 
-   if [ "$mnt" != "" ] && [ $mnt -gt $root ] ; then
-       # Azure mounts disks here: /mnt/reosurce
-       if [ "$CLOUD" == "azure" ] ; then
-	   sudo mkdir -p /mnt/resource/hops
-	   sudo rm -rf /srv/hops
-	   sudo ln -s /mnt/resource/hops /srv/hops
-       else
-       # AWS/GCP mount disks here: /mnt
-	   sudo mkdir -p /mnt/hops
-	   sudo rm -rf /srv/hops
-	   sudo ln -s /mnt/hops /srv/hops
-       fi
-   fi
+    if [ "$mnt" != "" ] && [ $mnt -gt $root ] ; then
+	# Azure mounts disks here: /mnt/reosurce
+	if [ "$CLOUD" == "azure" ] ; then
+	    sudo mkdir -p /mnt/resource/hops
+	    sudo rm -rf /srv/hops
+	    sudo ln -s /mnt/resource/hops /srv/hops
+	else
+	    # AWS/GCP mount disks here: /mnt
+	    sudo mkdir -p /mnt/hops
+	    sudo rm -rf /srv/hops
+	    sudo ln -s /mnt/hops /srv/hops
+	fi
+    fi
 }
 
 
@@ -797,9 +797,9 @@ install_dir()
 # called if interrupt signal is handled
 TrapBreak()
 {
-  trap "" HUP INT TERM
-  echo -e "\n\nInstallation cancelled by user!"
-  exit_error $EXIT_SIGNAL_CAUGHT
+    trap "" HUP INT TERM
+    echo -e "\n\nInstallation cancelled by user!"
+    exit_error $EXIT_SIGNAL_CAUGHT
 }
 
 check_linux()
@@ -843,7 +843,7 @@ check_linux()
 			exit_error "Invalid Linux version. Only Centos or Ubuntu supported."
 			;;
 		esac
-	   fi
+	    fi
 	fi
     else
         exit_error "This script only works for Linux."
@@ -852,28 +852,28 @@ check_linux()
 
 check_userid()
 {
-  # Check if user is root
-  USERID=`id | sed -e 's/).*//; s/^.*(//;'`
-  if [ "X$USERID" == "Xroot" ]; then
-    exit_error "This script only works for non-root users."
-  fi
+    # Check if user is root
+    USERID=`id | sed -e 's/).*//; s/^.*(//;'`
+    if [ "X$USERID" == "Xroot" ]; then
+	exit_error "This script only works for non-root users."
+    fi
 }
 
 purge_local()
 {
-   echo "Shutting down services..."
-   if sudo test -f "/srv/hops/kagent/kagent/bin/shutdown-all-local-services.sh"  ; then
-     sudo /srv/hops/kagent/kagent/bin/shutdown-all-local-services.sh -f > /dev/null
-   fi
-   echo "Killing karamel..."
-   pkill java
-   echo "Removing karamel..."
-   rm -rf ~/karamel*
-   echo "Removing cookbooks..."
-   sudo rm -rf ~/.karamel
-   sudo rm -rf /tmp/chef-solo/cookbooks
-   echo "Purging old installation..."
-   sudo rm -rf /srv/hops
+    echo "Shutting down services..."
+    if sudo test -f "/srv/hops/kagent/kagent/bin/shutdown-all-local-services.sh"  ; then
+	sudo /srv/hops/kagent/kagent/bin/shutdown-all-local-services.sh -f > /dev/null
+    fi
+    echo "Killing karamel..."
+    pkill java
+    echo "Removing karamel..."
+    rm -rf ~/karamel*
+    echo "Removing cookbooks..."
+    sudo rm -rf ~/.karamel
+    sudo rm -rf /tmp/chef-solo/cookbooks
+    echo "Purging old installation..."
+    sudo rm -rf /srv/hops
 }
 
 ###################################################################################################
@@ -889,149 +889,149 @@ purge_local()
 
 
 while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
-  case "$1" in
-    -h|--help|-help)
-              echo "usage: [sudo] ./$SCRIPTNAME "
-	      echo " [-h|--help]      help message"
-	      echo " [-i|--install-action localhost|localhost-tls|cluster|enterprise|karamel|purge|purge-all] "
-	      echo "                 'localhost' installs a localhost Hopsworks cluster"
-	      echo "                 'localhost-tls' installs a localhost Hopsworks cluster with TLS enabled"
-	      echo "                 'cluster' installs a multi-host Hopsworks cluster"
-	      echo "                 'enterprise' installs a multi-host Enterprise  Hopsworks cluster"
-	      echo "                 'kubernetes' installs a multi-host Enterprise Hopsworks cluster with Kubernetes"
-	      echo "                 'karamel' installs and starts Karamel"
-	      echo "                 'purge' removes Hopsworks completely from this host"
-	      echo "                 'purge-all' removes Hopsworks completely from ALL hosts"
-	      echo " [-cl|--clean]    removes the karamel installation"
-	      echo " [-dr|--dry-run]  does not run karamel, just generates YML file"
-	      echo " [-nvme|--nvme num_disks] Number of NVMe disks on worker nodes (for NDB/HopsFS)"
-	      echo " [-c|--cloud      on-premises|gcp|aws|azure]"
-	      echo " [-w|--workers    IP1,IP2,...,IPN|none] install on workers with IPs in supplied list (or none). Uses default mem/cpu/gpus for the workers."
-	      echo " [-d|--download-enterprise-url url] downloads enterprise binaries from this URL."
-	      echo " [-dc|--download-url] downloads binaries from this URL."
-	      echo " [-du|--download-user username] Username for downloading enterprise binaries."
-	      echo " [-dp|--download-password password] Password for downloading enterprise binaries."
-	      echo " [-gs|--gem-server] Run a local gem server for chef-solo (for air-gapped installations)."	      
-	      echo " [-ni|--non-interactive)] skip license/terms acceptance and all confirmation screens."
-	      echo " [-p|--http-proxy) url] URL of the http(s) proxy server. Only https proxies with valid certs supported."
-	      echo " [-pwd|--password password] sudo password for user running chef recipes."
-	      echo " [-y|--yml yaml_file] yaml file to run Karamel against."
-	      echo ""
-	      exit 3
-              break
-	      ;;
-    -i|--install-action)
-	      shift
-	      case $1 in
-		 localhost)
-		      INSTALL_ACTION=$INSTALL_LOCALHOST
-  		      ;;
-		 localhost-tls)
-		      INSTALL_ACTION=$INSTALL_LOCALHOST_TLS
-  		      ;;
-		 cluster)
-		      INSTALL_ACTION=$INSTALL_CLUSTER
-		      ;;
-		 enterprise)
-		      INSTALL_ACTION=$INSTALL_CLUSTER
-                      ENTERPRISE=1
-		      ;;
-		 kubernetes)
-		      INSTALL_ACTION=$INSTALL_CLUSTER
-                      ENTERPRISE=1
-                      KUBERNETES=1
-		      ;;
-	         karamel)
-		      INSTALL_ACTION=$INSTALL_KARAMEL
-		      ;;
-	         nvidia)
-		      INSTALL_ACTION=$INSTALL_NVIDIA
-		      ;;
-	         purge)
-		      INSTALL_ACTION=$PURGE_HOPSWORKS
-		      ;;
-	         purge-all)
-		      INSTALL_ACTION=$PURGE_HOPSWORKS_ALL_HOSTS
-		      ;;
-		  *)
-		      echo "Could not recognise option: $1"
-		      exit_error "Failed."
-		 esac
-	       ;;
-    -cl|--clean)
-	      CLEAN_INSTALL_DIR=1
-	      ;;
-    -d|--download-enterprise-url)
-      	      shift
-	      ENTERPRISE_DOWNLOAD_URL=$1
-	      ;;
-    -dc|--download-url)
-      	      shift
-	      DOWNLOAD_URL=$1
-	      ;;
-    -du|--download-username)
-      	      shift
-	      ENTERPRISE_USER=$1
-	      ;;
-    -dp|--download-password)
-      	      shift
-	      ENTERPRISE_PASSWORD=$1
-	      ;;
-    -dr|--dry-run)
-	      DRY_RUN=1
-	      ;;
-    -nvme|---nvme)
-	      shift
-    	      NVME=$1
-     	      ;;
-    -c|--cloud)
-	      shift
-	      case $1 in
-		 on-premises)
-		      CLOUD="on-premises"
-  		      ;;
-		 gcp)
-		      CLOUD="gcp"
-  		      ;;
-		 aws)
-		      CLOUD="awsp"
-		      ;;
-	         azure)
-		      CLOUD="azure"
-		      ;;
-		  *)
-		      echo "Could not recognise option: $1"
-		      exit_error "Failed."
-		 esac
-	       ;;
-    -ni|--non-interactive)
-	      NON_INTERACT=1
-	      ;;
-    -gs|--gem-server)
-	      GEM_SERVER=1
-	      ;;
-    -p|--http-proxy)
-              shift
-              PROXY=$1
-              set_karamel_http_proxy
-	      ;;
-    -w|--workers)
-              shift
-              WORKER_LIST=$1
-              ;;
-    -y|--yml)
-              shift
-              yml=$1
-              ;;
-    -pwd|--password)
-	      shift
-	      SUDO_PWD="-passwd $1"
-	      ;;
-    *)
-	  exit_error "Unrecognized parameter: $1"
-	  ;;
-  esac
-  shift       # Check next set of parameters.
+    case "$1" in
+	-h|--help|-help)
+            echo "usage: [sudo] ./$SCRIPTNAME "
+	    echo " [-h|--help]      help message"
+	    echo " [-i|--install-action localhost|localhost-tls|cluster|enterprise|karamel|purge|purge-all] "
+	    echo "                 'localhost' installs a localhost Hopsworks cluster"
+	    echo "                 'localhost-tls' installs a localhost Hopsworks cluster with TLS enabled"
+	    echo "                 'cluster' installs a multi-host Hopsworks cluster"
+	    echo "                 'enterprise' installs a multi-host Enterprise  Hopsworks cluster"
+	    echo "                 'kubernetes' installs a multi-host Enterprise Hopsworks cluster with Kubernetes"
+	    echo "                 'karamel' installs and starts Karamel"
+	    echo "                 'purge' removes Hopsworks completely from this host"
+	    echo "                 'purge-all' removes Hopsworks completely from ALL hosts"
+	    echo " [-cl|--clean]    removes the karamel installation"
+	    echo " [-dr|--dry-run]  does not run karamel, just generates YML file"
+	    echo " [-nvme|--nvme num_disks] Number of NVMe disks on worker nodes (for NDB/HopsFS)"
+	    echo " [-c|--cloud      on-premises|gcp|aws|azure]"
+	    echo " [-w|--workers    IP1,IP2,...,IPN|none] install on workers with IPs in supplied list (or none). Uses default mem/cpu/gpus for the workers."
+	    echo " [-d|--download-enterprise-url url] downloads enterprise binaries from this URL."
+	    echo " [-dc|--download-url] downloads binaries from this URL."
+	    echo " [-du|--download-user username] Username for downloading enterprise binaries."
+	    echo " [-dp|--download-password password] Password for downloading enterprise binaries."
+	    echo " [-gs|--gem-server] Run a local gem server for chef-solo (for air-gapped installations)."	      
+	    echo " [-ni|--non-interactive)] skip license/terms acceptance and all confirmation screens."
+	    echo " [-p|--http-proxy) url] URL of the http(s) proxy server. Only https proxies with valid certs supported."
+	    echo " [-pwd|--password password] sudo password for user running chef recipes."
+	    echo " [-y|--yml yaml_file] yaml file to run Karamel against."
+	    echo ""
+	    exit 3
+            break
+	    ;;
+	-i|--install-action)
+	    shift
+	    case $1 in
+		localhost)
+		    INSTALL_ACTION=$INSTALL_LOCALHOST
+  		    ;;
+		localhost-tls)
+		    INSTALL_ACTION=$INSTALL_LOCALHOST_TLS
+  		    ;;
+		cluster)
+		    INSTALL_ACTION=$INSTALL_CLUSTER
+		    ;;
+		enterprise)
+		    INSTALL_ACTION=$INSTALL_CLUSTER
+                    ENTERPRISE=1
+		    ;;
+		kubernetes)
+		    INSTALL_ACTION=$INSTALL_CLUSTER
+                    ENTERPRISE=1
+                    KUBERNETES=1
+		    ;;
+	        karamel)
+		    INSTALL_ACTION=$INSTALL_KARAMEL
+		    ;;
+	        nvidia)
+		    INSTALL_ACTION=$INSTALL_NVIDIA
+		    ;;
+	        purge)
+		    INSTALL_ACTION=$PURGE_HOPSWORKS
+		    ;;
+	        purge-all)
+		    INSTALL_ACTION=$PURGE_HOPSWORKS_ALL_HOSTS
+		    ;;
+		*)
+		    echo "Could not recognise option: $1"
+		    exit_error "Failed."
+	    esac
+	    ;;
+	-cl|--clean)
+	    CLEAN_INSTALL_DIR=1
+	    ;;
+	-d|--download-enterprise-url)
+      	    shift
+	    ENTERPRISE_DOWNLOAD_URL=$1
+	    ;;
+	-dc|--download-url)
+      	    shift
+	    DOWNLOAD_URL=$1
+	    ;;
+	-du|--download-username)
+      	    shift
+	    ENTERPRISE_USER=$1
+	    ;;
+	-dp|--download-password)
+      	    shift
+	    ENTERPRISE_PASSWORD=$1
+	    ;;
+	-dr|--dry-run)
+	    DRY_RUN=1
+	    ;;
+	-nvme|---nvme)
+	    shift
+    	    NVME=$1
+     	    ;;
+	-c|--cloud)
+	    shift
+	    case $1 in
+		on-premises)
+		    CLOUD="on-premises"
+  		    ;;
+		gcp)
+		    CLOUD="gcp"
+  		    ;;
+		aws)
+		    CLOUD="awsp"
+		    ;;
+	        azure)
+		    CLOUD="azure"
+		    ;;
+		*)
+		    echo "Could not recognise option: $1"
+		    exit_error "Failed."
+	    esac
+	    ;;
+	-ni|--non-interactive)
+	    NON_INTERACT=1
+	    ;;
+	-gs|--gem-server)
+	    GEM_SERVER=1
+	    ;;
+	-p|--http-proxy)
+            shift
+            PROXY=$1
+            set_karamel_http_proxy
+	    ;;
+	-w|--workers)
+            shift
+            WORKER_LIST=$1
+            ;;
+	-y|--yml)
+            shift
+            yml=$1
+            ;;
+	-pwd|--password)
+	    shift
+	    SUDO_PWD="-passwd $1"
+	    ;;
+	*)
+	    exit_error "Unrecognized parameter: $1"
+	    ;;
+    esac
+    shift       # Check next set of parameters.
 done
 
 
@@ -1053,8 +1053,8 @@ check_userid
 which lspci > /dev/null
 if [ $? -ne 0 ] ; then
     # this only happens on centos
-   echo "Installing pciutils ...."
-   sudo yum install pciutils -y > /dev/null
+    echo "Installing pciutils ...."
+    sudo yum install pciutils -y > /dev/null
 fi
 AVAILABLE_GPUS=$(sudo lspci | grep -i nvidia | wc -l)
 
@@ -1081,11 +1081,11 @@ fi
 install_action
 
 if [ "$INSTALL_ACTION" == "$INSTALL_NVIDIA" ] ; then
-   sudo -- sh -c 'echo "blacklist nouveau
+    sudo -- sh -c 'echo "blacklist nouveau
      options nouveau modeset=0" > /etc/modprobe.d/blacklist-nouveau.conf'
-   sudo update-initramfs -u
-   echo "Rebooting....."
-   sudo reboot
+    sudo update-initramfs -u
+    echo "Rebooting....."
+    sudo reboot
 fi
 
 if [ "$INSTALL_ACTION" == "$PURGE_HOPSWORKS_ALL_HOSTS" ] ; then
@@ -1108,8 +1108,8 @@ if [ "$INSTALL_ACTION" == "$PURGE_HOPSWORKS_ALL_HOSTS" ] ; then
 fi
 
 if [ "$INSTALL_ACTION" == "$PURGE_HOPSWORKS" ] ; then
-   purge_local
-   exit 0
+    purge_local
+    exit 0
 fi
 
 
@@ -1185,12 +1185,12 @@ if [ "$CLOUD" == "azure" ] ; then
     echo "    $SUSPECTED_HOSTNAME"
     echo ""
     if [ $NON_INTERACT -eq 0 ] ; then
-      printf 'Please enter the private DNS hostname for this head node:'
-      echo -n " $SUSPECTED_HOSTNAME):"
-      read PRIVATE_HOSTNAME
+	printf 'Please enter the private DNS hostname for this head node:'
+	echo -n " $SUSPECTED_HOSTNAME):"
+	read PRIVATE_HOSTNAME
     fi
     if [ "$PRIVATE_HOSTNAME" == "" ] ; then
-      PRIVATE_HOSTNAME=$SUSPECTED_HOSTNAME
+	PRIVATE_HOSTNAME=$SUSPECTED_HOSTNAME
     fi
     sudo hostname $PRIVATE_HOSTNAME
 fi
@@ -1210,30 +1210,30 @@ else
 fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] ; then
-  TLS="true
+    TLS="true
       crl_enabled: true
       crl_fetcher_class: org.apache.hadoop.security.ssl.DevRemoteCRLFetcher
       crl_fetcher_interval: 5m
 "
     
-  if [ "$WORKER_LIST" == "" ] ; then
-      worker_size
-  else
-      WORKER_DEFAULTS="true"
-      if [ "$WORKER_LIST" != "none" ] ; then
-	  IFS=',' read -r -a workers <<< "$WORKER_LIST"
-	  echo "Workers:   ${workers[*]}"
-	  for worker in "${workers[@]}"
-	  do
-	      WORKER_IP=$worker
-	      add_worker
-	  done
-      fi
-  fi
+    if [ "$WORKER_LIST" == "" ] ; then
+	worker_size
+    else
+	WORKER_DEFAULTS="true"
+	if [ "$WORKER_LIST" != "none" ] ; then
+	    IFS=',' read -r -a workers <<< "$WORKER_LIST"
+	    echo "Workers:   ${workers[*]}"
+	    for worker in "${workers[@]}"
+	    do
+		WORKER_IP=$worker
+		add_worker
+	    done
+	fi
+    fi
 fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST_TLS" ] ; then
-  TLS="true
+    TLS="true
       crl_enabled: true
       crl_fetcher_class: org.apache.hadoop.security.ssl.DevRemoteCRLFetcher
       crl_fetcher_interval: 5m
@@ -1264,7 +1264,7 @@ else
     fi
 
     if [ $AVAILABLE_GPUS -gt 0 ] ; then
-	    CUDA="cuda:
+	CUDA="cuda:
     accept_nvidia_download_terms: true"
     fi
 
@@ -1295,7 +1295,7 @@ else
     perl -pi -e "s/__CUDA__/$CUDA/" $YML_FILE
 
     if [ "$DOWNLOAD_URL" != "" ] ; then
-       DOWNLOAD="download_url: $DOWNLOAD_URL"
+	DOWNLOAD="download_url: $DOWNLOAD_URL"
     fi
 
     if [ $ENTERPRISE -eq 1 ] ; then
@@ -1360,7 +1360,7 @@ else
 	nvme_devices="${nvme_devices}\\]"
 	
 	# \['/dev/nvme0n1'\]
-       NDB_NVME="nvme:
+	NDB_NVME="nvme:
       devices: $nvme_devices
       format: true
       logfile_size: 100000M
@@ -1375,7 +1375,7 @@ else
 
     RUN_GEM_SERVER=
     if [ $GEM_SERVER -eq 1 ] ; then
-      RUN_GEM_SERVER="-gemserver http://${IP}:$GEM_SERVER_PORT"
+	RUN_GEM_SERVER="-gemserver http://${IP}:$GEM_SERVER_PORT"
     fi
     
     if [ $DRY_RUN -eq 0 ] ; then

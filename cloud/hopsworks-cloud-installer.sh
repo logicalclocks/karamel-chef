@@ -166,31 +166,31 @@ AMI=
 # $1 = String describing error
 exit_error()
 {
-  #CleanUpTempFiles
+    #CleanUpTempFiles
 
-  echo "" $ECHO_OUT
-  echo "Error: $1"
-  echo "Exiting Hopsworks cloud installer."
-  echo ""
-  exit 1
+    echo "" $ECHO_OUT
+    echo "Error: $1"
+    echo "Exiting Hopsworks cloud installer."
+    echo ""
+    exit 1
 }
 
 # called if interrupt signal is handled
 TrapBreak()
 {
-  trap "" HUP INT TERM
-  echo -e "\n\nInstallation cancelled by user!"
-  exit_error $EXIT_SIGNAL_CAUGHT
+    trap "" HUP INT TERM
+    echo -e "\n\nInstallation cancelled by user!"
+    exit_error $EXIT_SIGNAL_CAUGHT
 }
 
 clear_screen()
 {
- if [ $NON_INTERACT -eq 0 ] ; then
-   echo ""
-   echo "Press ENTER to continue"
-   read cont < /dev/tty
- fi
- clear
+    if [ $NON_INTERACT -eq 0 ] ; then
+	echo ""
+	echo "Press ENTER to continue"
+	read cont < /dev/tty
+    fi
+    clear
 }
 
 
@@ -222,90 +222,90 @@ check_linux()
 
 splash_screen()
 {
-  clear
-  echo ""
-  echo "Karamel/Hopsworks Cloud Installer, Copyright(C) 2020 Logical Clocks AB. All rights reserved."
-  echo ""
-  echo "This program creates VMs on GCP/Azure/AWS and installs Hopsworks on the VMs."
-  echo ""
-  echo "To cancel installation at any time, press CONTROL-C"
-  echo ""
+    clear
+    echo ""
+    echo "Karamel/Hopsworks Cloud Installer, Copyright(C) 2020 Logical Clocks AB. All rights reserved."
+    echo ""
+    echo "This program creates VMs on GCP/Azure/AWS and installs Hopsworks on the VMs."
+    echo ""
+    echo "To cancel installation at any time, press CONTROL-C"
+    echo ""
 
-  if [ ! -w `pwd` ]; then
-      echo ""
-      echo "WARNING!"
-      echo "The current directory is not writable and needs to be writeable by this script: $(PWD)"
-      echo "Suggested fix:"
-      echo "sudo chown $USER . && chmod +w ."
-      echo ""
-  fi
-  if [ ! -e ~/.ssh/id_rsa.pub ] ; then
-      echo "ATTENTION."
-      echo "A public ssh key cannot be found at your home directory (~/)"
-      echo "To continue, you need to create one at that path. Is that ok (y/n)?"
-      read ACCEPT
-      if [ "$ACCEPT" == "y" ] ; then
-	  cat /dev/zero | ssh-keygen -q -N "" > /dev/null
-      else
-	  echo "Exiting...."
-	  exit 99
-      fi
-  fi
+    if [ ! -w `pwd` ]; then
+	echo ""
+	echo "WARNING!"
+	echo "The current directory is not writable and needs to be writeable by this script: $(PWD)"
+	echo "Suggested fix:"
+	echo "sudo chown $USER . && chmod +w ."
+	echo ""
+    fi
+    if [ ! -e ~/.ssh/id_rsa.pub ] ; then
+	echo "ATTENTION."
+	echo "A public ssh key cannot be found at your home directory (~/)"
+	echo "To continue, you need to create one at that path. Is that ok (y/n)?"
+	read ACCEPT
+	if [ "$ACCEPT" == "y" ] ; then
+	    cat /dev/zero | ssh-keygen -q -N "" > /dev/null
+	else
+	    echo "Exiting...."
+	    exit 99
+	fi
+    fi
 
-  clear_screen
+    clear_screen
 }
 
 
 display_license()
 {
-  echo ""
-  echo "This code is released under the GNU General Public License, Version 3, see:"
-  echo "http://www.gnu.org/licenses/gpl-3.0.txt"
-  echo ""
-  echo "Copyright(C) 2020 Logical Clocks AB. All rights reserved."
-  echo "Logical Clocks AB is furnishing this item \"as is\". Logical Clocks AB does not provide any"
-  echo "warranty of the item whatsoever, whether express, implied, or statutory,"
-  echo "including, but not limited to, any warranty of merchantability or fitness"
-  echo "for a particular purpose or any warranty that the contents of the item will"
-  echo "be error-free. In no respect shall Logical Clocks AB incur any liability for any"
-  echo "damages, including, but limited to, direct, indirect, special, or consequential"
-  echo "damages arising out of, resulting from, or any way connected to the use of the"
-  echo "item, whether or not based upon warranty, contract, tort, or otherwise; "
-  echo "whether or not injury was sustained by persons or property or otherwise;"
-  echo "and whether or not loss was sustained from, or arose out of, the results of,"
-  echo "the item, or any services that may be provided by Logical Clocks AB."
-  echo ""
-  printf 'Do you accept these terms and conditions? [ yes or no ] '
+    echo ""
+    echo "This code is released under the GNU General Public License, Version 3, see:"
+    echo "http://www.gnu.org/licenses/gpl-3.0.txt"
+    echo ""
+    echo "Copyright(C) 2020 Logical Clocks AB. All rights reserved."
+    echo "Logical Clocks AB is furnishing this item \"as is\". Logical Clocks AB does not provide any"
+    echo "warranty of the item whatsoever, whether express, implied, or statutory,"
+    echo "including, but not limited to, any warranty of merchantability or fitness"
+    echo "for a particular purpose or any warranty that the contents of the item will"
+    echo "be error-free. In no respect shall Logical Clocks AB incur any liability for any"
+    echo "damages, including, but limited to, direct, indirect, special, or consequential"
+    echo "damages arising out of, resulting from, or any way connected to the use of the"
+    echo "item, whether or not based upon warranty, contract, tort, or otherwise; "
+    echo "whether or not injury was sustained by persons or property or otherwise;"
+    echo "and whether or not loss was sustained from, or arose out of, the results of,"
+    echo "the item, or any services that may be provided by Logical Clocks AB."
+    echo ""
+    printf 'Do you accept these terms and conditions? [ yes or no ] '
 }
 
 accept_license ()
-  {
+{
     read ACCEPT
     case $ACCEPT in
-      yes | Yes | YES)
+	yes | Yes | YES)
         ;;
 	no | No | NO)
-        echo ""
-        exit 0
-        ;;
-      *)
-        echo ""
-        echo "Please enter either 'yes' or 'no'."
-	printf 'Do you accept these terms and conditions? [ yes or no ] '
-        accept_license
-      ;;
-     esac
+            echo ""
+            exit 0
+            ;;
+	*)
+            echo ""
+            echo "Please enter either 'yes' or 'no'."
+	    printf 'Do you accept these terms and conditions? [ yes or no ] '
+            accept_license
+	    ;;
+    esac
 }
 
 
 
 clear_screen_no_skipline()
 {
- if [ $NON_INTERACT -eq 0 ] ; then
-    echo "Press ENTER to continue"
-    read cont < /dev/tty
- fi
- clear
+    if [ $NON_INTERACT -eq 0 ] ; then
+	echo "Press ENTER to continue"
+	read cont < /dev/tty
+    fi
+    clear
 }
 
 
@@ -330,49 +330,49 @@ install_action()
 	printf 'Please enter your choice '1', '2', '3', '4', '5',  'q' \(quit\), or 'h' \(help\) :  '
         read ACCEPT
         case $ACCEPT in
-          1)
-	    INSTALL_ACTION=$INSTALL_CPU
-	    ACTION="localhost-tls"
-            ;;
-          2)
-	    INSTALL_ACTION=$INSTALL_GPU
-	    ACTION="localhost-tls"
-            ;;
-          3)
-            INSTALL_ACTION=$INSTALL_CLUSTER
-            ACTION="cluster"
-            ;;
-          4)
-            INSTALL_ACTION=$INSTALL_CLUSTER
-            ACTION="enterprise"
-            ENTERPRISE=1
-            ;;
-          5)
-            INSTALL_ACTION=$INSTALL_CLUSTER
-            ACTION="kubernetes"
-            ENTERPRISE=1
-	    KUBERNETES=1
-            ;;
-          h | H)
-	  clear
-	  get_install_option_help
-	  echo -e $INSTALL_OPTION_HELP
-          clear_screen_no_skipline
-          install_action
-          ;;
-          q | Q)
-          exit_error
-          ;;
-          *)
-            echo ""
-            echo "Invalid Choice: $ACCEPT"
-            echo "Please enter your choice '1', '2', '3', '4', 'q', or 'h'."
-	    clear_screen
-            install_action
-            ;;
+            1)
+		INSTALL_ACTION=$INSTALL_CPU
+		ACTION="localhost-tls"
+		;;
+            2)
+		INSTALL_ACTION=$INSTALL_GPU
+		ACTION="localhost-tls"
+		;;
+            3)
+		INSTALL_ACTION=$INSTALL_CLUSTER
+		ACTION="cluster"
+		;;
+            4)
+		INSTALL_ACTION=$INSTALL_CLUSTER
+		ACTION="enterprise"
+		ENTERPRISE=1
+		;;
+            5)
+		INSTALL_ACTION=$INSTALL_CLUSTER
+		ACTION="kubernetes"
+		ENTERPRISE=1
+		KUBERNETES=1
+		;;
+            h | H)
+		clear
+		get_install_option_help
+		echo -e $INSTALL_OPTION_HELP
+		clear_screen_no_skipline
+		install_action
+		;;
+            q | Q)
+		exit_error
+		;;
+            *)
+		echo ""
+		echo "Invalid Choice: $ACCEPT"
+		echo "Please enter your choice '1', '2', '3', '4', 'q', or 'h'."
+		clear_screen
+		install_action
+		;;
         esac
 	clear_screen
-   fi
+    fi
 }
 
 
@@ -462,28 +462,28 @@ enter_cloud()
 	printf 'Please enter your choice '1', '2', '3', '4' :  '
         read ACCEPT
         case $ACCEPT in
-          1)
-	    CLOUD="on-premises"
-            ;;
-          2)
-	    CLOUD="aws"
-            ;;
-          3)
-   	    CLOUD="gcp"
-            ;;
-          4)
-       	    CLOUD="azure"
-            ;;
-          *)
-            echo ""
-            echo "Invalid Choice: $ACCEPT"
-            echo "Please enter your choice '1', '2', '3', '4'."
-	    clear_screen
-            enter_cloud
-            ;;
+            1)
+		CLOUD="on-premises"
+		;;
+            2)
+		CLOUD="aws"
+		;;
+            3)
+   		CLOUD="gcp"
+		;;
+            4)
+       		CLOUD="azure"
+		;;
+            *)
+		echo ""
+		echo "Invalid Choice: $ACCEPT"
+		echo "Please enter your choice '1', '2', '3', '4'."
+		clear_screen
+		enter_cloud
+		;;
         esac
 	clear_screen
-   fi
+    fi
 }
 
 
@@ -561,53 +561,53 @@ add_worker()
 
 cpu_worker_size()
 {
-   if [ $NON_INTERACT -eq 0 ] ; then	    
-       if [ $NUM_WORKERS_CPU -eq 0 ] ; then
-	   printf 'Please enter the number of CPU-only workers you want to add (default: 0): '
-	   read NUM_WORKERS_CPU
-	   if [ "$NUM_WORKERS_CPU" == "" ] ; then
-	       NUM_WORKERS_CPU=0
-	   fi
-       fi
-   fi
-   i=0
-   while [ $i -lt $NUM_WORKERS_CPU ] ;
-   do
-       echo "Adding CPU worker ${i}"
-       echo ""
-      add_worker 0
-      i=$((i+1))
-   done
+    if [ $NON_INTERACT -eq 0 ] ; then	    
+	if [ $NUM_WORKERS_CPU -eq 0 ] ; then
+	    printf 'Please enter the number of CPU-only workers you want to add (default: 0): '
+	    read NUM_WORKERS_CPU
+	    if [ "$NUM_WORKERS_CPU" == "" ] ; then
+		NUM_WORKERS_CPU=0
+	    fi
+	fi
+    fi
+    i=0
+    while [ $i -lt $NUM_WORKERS_CPU ] ;
+    do
+	echo "Adding CPU worker ${i}"
+	echo ""
+	add_worker 0
+	i=$((i+1))
+    done
 }
 
 
 gpu_worker_size()
 {
-   if [ $NON_INTERACT -eq 0 ] ; then    
-       if [ $NUM_WORKERS_GPU -eq 0 ] ; then    
-	   printf 'Please enter the number of GPU-enabled workers you want to add (default: 0): '
-	   read NUM_WORKERS_GPU
-	   if [ "$NUM_WORKERS_GPU" == "" ] ; then
-	       NUM_WORKERS_GPU=0
-	   fi
-       fi
-   fi
+    if [ $NON_INTERACT -eq 0 ] ; then    
+	if [ $NUM_WORKERS_GPU -eq 0 ] ; then    
+	    printf 'Please enter the number of GPU-enabled workers you want to add (default: 0): '
+	    read NUM_WORKERS_GPU
+	    if [ "$NUM_WORKERS_GPU" == "" ] ; then
+		NUM_WORKERS_GPU=0
+	    fi
+	fi
+    fi
 
-   if [ "$NUM_WORKERS_GPU" == "" ] ; then
-       NUM_WORKERS_GPU=0
-   fi
-   
-   if [ $NUM_WORKERS_GPU -ne 0 ] ; then
-       select_gpu "worker"
-   fi
-   i=0
-   while [ $i -lt $NUM_WORKERS_GPU ] ;
-   do
-       echo "Adding GPU worker $i"
-       echo ""       
-      add_worker $NUM_GPUS_PER_VM 
-      i=$((i+1))
-   done
+    if [ "$NUM_WORKERS_GPU" == "" ] ; then
+	NUM_WORKERS_GPU=0
+    fi
+    
+    if [ $NUM_WORKERS_GPU -ne 0 ] ; then
+	select_gpu "worker"
+    fi
+    i=0
+    while [ $i -lt $NUM_WORKERS_GPU ] ;
+    do
+	echo "Adding GPU worker $i"
+	echo ""       
+	add_worker $NUM_GPUS_PER_VM 
+	i=$((i+1))
+    done
 }
 
 
@@ -721,9 +721,9 @@ gcloud_get_ips()
     
     set_name "head"
     if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
-       set_name "cpu"
+	set_name "cpu"
     elif [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then
-       set_name "gpu"
+	set_name "gpu"
     fi
     
     IP=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
@@ -770,12 +770,12 @@ check_gcp_tools()
 	fi
 
 	if [ "$DISTRO" == "Ubuntu" ] ; then
-          echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
-          sudo apt-get install apt-transport-https ca-certificates gnupg
-          curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
-          sudo apt-get update -y && sudo apt-get install google-cloud-sdk
+            echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+            sudo apt-get install apt-transport-https ca-certificates gnupg
+            curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+            sudo apt-get update -y && sudo apt-get install google-cloud-sdk
 	elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
-          sudo tee -a /etc/yum.repos.d/google-cloud-sdk.repo << EOM
+            sudo tee -a /etc/yum.repos.d/google-cloud-sdk.repo << EOM
 [google-cloud-sdk]
 name=Google Cloud SDK
 baseurl=https://packages.cloud.google.com/yum/repos/cloud-sdk-el7-x86_64
@@ -785,9 +785,9 @@ repo_gpgcheck=1
 gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
        https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
 EOM
-	  yum install google-cloud-sdk -y
+	    yum install google-cloud-sdk -y
         fi
-      gcloud init
+	gcloud init
     fi
 }
 
@@ -887,18 +887,18 @@ gcloud_setup()
 
     gcloud_enter_project
     if [ $NON_INTERACT -eq 0 ] ; then
-       clear_screen
+	clear_screen
     fi
     
     gcloud_enter_region
     if [ $NON_INTERACT -eq 0 ] ; then
-       clear_screen
+	clear_screen
     fi
 
     gcloud_enter_zone    
     
     if [ $NON_INTERACT -eq 0 ] ; then
-      clear_screen
+	clear_screen
     fi
 
     if [ $NON_INTERACT -eq 0 ] ; then    
@@ -980,12 +980,12 @@ _gcloud_precreate()
 	read NUM_NVME_DRIVES_PER_WORKER
 
 	if [ "$NUM_NVME_DRIVES_PER_WORKER" == "" ] ; then
-	  NUM_NVME_DRIVES_PER_WORKER=0
+	    NUM_NVME_DRIVES_PER_WORKER=0
 	fi
 	LOCAL_DISK=
         for (( i=1; i<=${NUM_NVME_DRIVES_PER_WORKER}; i++ ))
 	do
-	  LOCAL_DISK="$LOCAL_DISK --local-ssd=interface=NVME"
+	    LOCAL_DISK="$LOCAL_DISK --local-ssd=interface=NVME"
 	done
 	gcloud_enter_zone	
     fi
@@ -1011,12 +1011,12 @@ gcloud_create_cpu()
 _gcloud_create_vm()
 {
     _gcloud_precreate $1
-echo "    gcloud compute --project=$PROJECT instances create $NAME --zone=$ZONE --machine-type=$MACHINE_TYPE --subnet=$SUBNET --network-tier=$NETWORK_TIER --maintenance-policy=$MAINTENANCE_POLICY $SERVICE_ACCOUNT --no-scopes $ACCELERATOR --tags=$TAGS --image=$IMAGE --image-project=$IMAGE_PROJECT --boot-disk-size=$BOOT_SIZE --boot-disk-type=$BOOT_DISK $LOCAL_DISK --boot-disk-device-name=$NAME --reservation-affinity=$RESERVATION_AFFINITY --metadata=ssh-keys=\"$ESCAPED_SSH_KEY\""
+    echo "    gcloud compute --project=$PROJECT instances create $NAME --zone=$ZONE --machine-type=$MACHINE_TYPE --subnet=$SUBNET --network-tier=$NETWORK_TIER --maintenance-policy=$MAINTENANCE_POLICY $SERVICE_ACCOUNT --no-scopes $ACCELERATOR --tags=$TAGS --image=$IMAGE --image-project=$IMAGE_PROJECT --boot-disk-size=$BOOT_SIZE --boot-disk-type=$BOOT_DISK $LOCAL_DISK --boot-disk-device-name=$NAME --reservation-affinity=$RESERVATION_AFFINITY --metadata=ssh-keys=\"$ESCAPED_SSH_KEY\""
     
     gcloud compute --project=$PROJECT instances create $NAME --zone=$ZONE --machine-type=$MACHINE_TYPE --subnet=$SUBNET --maintenance-policy=$MAINTENANCE_POLICY $SERVICE_ACCOUNT --no-scopes $ACCELERATOR --tags=$TAGS --image=$IMAGE --image-project=$IMAGE_PROJECT --boot-disk-size=$BOOT_SIZE --boot-disk-type=$BOOT_DISK $LOCAL_DISK --boot-disk-device-name=$NAME --metadata=ssh-keys="$ESCAPED_SSH_KEY"
     if [ $? -ne 0 ] ; then
-      echo "Problem creating VM. Exiting ..."
-      exit 12
+	echo "Problem creating VM. Exiting ..."
+	exit 12
     fi
     sleep 4
 }
@@ -1039,9 +1039,9 @@ az_get_ips()
 
     set_name "head"
     if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
-       set_name "cpu"
+	set_name "cpu"
     elif [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then
-       set_name "gpu"
+	set_name "gpu"
     fi
     # 
     IP=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table  | grep ^$NAME | awk '{ print $2 }')
@@ -1119,12 +1119,12 @@ _az_enter_location()
     if [ $NON_INTERACT -eq 0 ] ; then    
 	CHANGE=0
 	if [ "$REGION" != "" ] ; then
- 	  echo ""
-  	  printf "Do you want to keep the current Location $REGION (y/n) (default: y)? "
- 	  read KEEP_LOCATION
-	  if [ "$KEEP_LOCATION" == "n" ] || [ "$KEEP_LOCATION" == "no" ] ; then
-	      CHANGE=1
-	  fi
+ 	    echo ""
+  	    printf "Do you want to keep the current Location $REGION (y/n) (default: y)? "
+ 	    read KEEP_LOCATION
+	    if [ "$KEEP_LOCATION" == "n" ] || [ "$KEEP_LOCATION" == "no" ] ; then
+		CHANGE=1
+	    fi
         else
 	    CHANGE=1
 	fi
@@ -1200,7 +1200,7 @@ _az_enter_resource_group()
 
 _az_set_virtual_network()
 {
-#    VIRTUAL_NETWORK=$(az network vnet list -g $RESOURCE_GROUP | grep "^    \"name\":" | awk '{ print $2 }' | sed -s 's/\"//g' | sed -e 's/,//')
+    #    VIRTUAL_NETWORK=$(az network vnet list -g $RESOURCE_GROUP | grep "^    \"name\":" | awk '{ print $2 }' | sed -s 's/\"//g' | sed -e 's/,//')
     VIRTUAL_NETWORK=$(az network vnet list -g $RESOURCE_GROUP -o table | tail -n +3 | awk '{ print $1 }' | tail -1)
 }
 
@@ -1391,23 +1391,23 @@ gpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/azu
 
     _az_enter_subscription
     if [ $NON_INTERACT -eq 0 ] ; then
-       clear_screen
+	clear_screen
     fi
     _az_enter_location
     if [ $NON_INTERACT -eq 0 ] ; then
-       clear_screen
+	clear_screen
     fi
     _az_enter_resource_group
     if [ $NON_INTERACT -eq 0 ] ; then
-       clear_screen
+	clear_screen
     fi
     _az_enter_virtual_network
     if [ $NON_INTERACT -eq 0 ] ; then
-       clear_screen
+	clear_screen
     fi
     _az_enter_private_dns_zone
     if [ $NON_INTERACT -eq 0 ] ; then
-       clear_screen
+	clear_screen
     fi
 
 }
@@ -1415,8 +1415,8 @@ gpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/azu
 
 az_list_public_ips()
 {
-  _az_set_resource_group    
-  az vm list-ip-addresses -g $RESOURCE_GROUP --output table #--show-details 
+    _az_set_resource_group    
+    az vm list-ip-addresses -g $RESOURCE_GROUP --output table #--show-details 
 }
 
 _az_precreate()
@@ -1523,7 +1523,7 @@ az_create_cpu()
 _az_create_vm()
 {
     _az_precreate $1
-  echo "
+    echo "
   az vm create -n $NAME -g $RESOURCE_GROUP \
    --attach-data-disks \
    --image $OS_IMAGE --data-disk-sizes-gb $DATA_DISK_SIZE --os-disk-size-gb $BOOT_SIZE \
@@ -1531,19 +1531,19 @@ _az_create_vm()
    --size $VM_SIZE --location $REGION --zone $AZ_ZONE $ACCELERATOR $AZ_NETWORKING\
    --ssh-key-value ~/.ssh/id_rsa.pub    
 "
-  az vm create -n $NAME -g $RESOURCE_GROUP \
-   --image $OS_IMAGE --data-disk-sizes-gb $DATA_DISK_SIZE --os-disk-size-gb $BOOT_SIZE \
-   --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
-   --size $VM_SIZE --location $REGION --zone $AZ_ZONE $ACCELERATOR \
-   --ssh-key-value ~/.ssh/id_rsa.pub    
-  #   --priority $PRIORITY --max-price 0.06 \
-  if [ $? -ne 0 ] ; then
-    echo "Problem creating VM. Exiting ..."
-    exit 12
-  fi
-  sleep 20
-  # Shortcut to create a network security group (NSG) add the 443 inbound rule, and applies it to the VM 
-  az vm open-port -g $RESOURCE_GROUP -n $NAME --port 443
+    az vm create -n $NAME -g $RESOURCE_GROUP \
+       --image $OS_IMAGE --data-disk-sizes-gb $DATA_DISK_SIZE --os-disk-size-gb $BOOT_SIZE \
+       --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
+       --size $VM_SIZE --location $REGION --zone $AZ_ZONE $ACCELERATOR \
+       --ssh-key-value ~/.ssh/id_rsa.pub    
+    #   --priority $PRIORITY --max-price 0.06 \
+	if [ $? -ne 0 ] ; then
+	    echo "Problem creating VM. Exiting ..."
+	    exit 12
+	fi
+	sleep 20
+	# Shortcut to create a network security group (NSG) add the 443 inbound rule, and applies it to the VM 
+	az vm open-port -g $RESOURCE_GROUP -n $NAME --port 443
 }
 
 
@@ -1598,7 +1598,7 @@ aws_setup()
 aws_list_public_ips()
 {
     # aws ec2    --output table
-  echo ""
+    echo ""
 }
 
 _aws_precreate()
@@ -1613,7 +1613,7 @@ aws_create_gpu()
 
 aws_create_cpu()
 {
-  echo ""    
+    echo ""    
 }
 
 _aws_create_vm()
@@ -1624,7 +1624,7 @@ _aws_create_vm()
 
 aws_delete_vm()
 {
-  echo ""
+    echo ""
 }
 
 
@@ -1646,13 +1646,13 @@ create_vm_cpu()
     echo "Creating VM...."
     echo ""
     if [ "$CLOUD" == "gcp" ] ; then
-      gcloud_create_cpu $1
+	gcloud_create_cpu $1
     elif [ "$CLOUD" == "azure" ] ; then
-      az_create_cpu $1
+	az_create_cpu $1
     elif [ "$CLOUD" == "aws" ] ; then
-      aws_create_cpu $1
+	aws_create_cpu $1
     else
-      _missing_cloud	
+	_missing_cloud	
     fi
 }
 
@@ -1661,13 +1661,13 @@ create_vm_gpu()
     echo "Creating gpu-enabled VM...."
     echo ""
     if [ "$CLOUD" == "gcp" ] ; then
-      gcloud_create_gpu $1
+	gcloud_create_gpu $1
     elif [ "$CLOUD" == "azure" ] ; then
-      az_create_gpu $1
+	az_create_gpu $1
     elif [ "$CLOUD" == "aws" ] ; then
-      aws_create_gpu $1
+	aws_create_gpu $1
     else
-      _missing_cloud	
+	_missing_cloud	
     fi
     echo ""
     echo "To check the VM status, run:"
@@ -1688,13 +1688,13 @@ delete_vm()
 
     echo "Deleting $VM_DELETE"
     if [ "$CLOUD" == "gcp" ] ; then
-      gcloud_delete_vm
+	gcloud_delete_vm
     elif [ "$CLOUD" == "azure" ] ; then
-      az_delete_vm
+	az_delete_vm
     elif [ "$CLOUD" == "aws" ] ; then
-      aws_delete_vm
+	aws_delete_vm
     else
-      _missing_cloud	
+	_missing_cloud	
     fi
     echo ""
     echo "To check the VM status, run:"
@@ -1708,13 +1708,13 @@ list_public_ips()
     echo "Listing public IPs"
     echo ""
     if [ "$CLOUD" == "gcp" ] ; then
-      gcloud_list_public_ips
+	gcloud_list_public_ips
     elif [ "$CLOUD" == "azure" ] ; then
-      az_list_public_ips
+	az_list_public_ips
     elif [ "$CLOUD" == "aws" ] ; then
 	aws_list_public_ips
     else
-      _missing_cloud	
+	_missing_cloud	
     fi    
 }
 
@@ -1725,13 +1725,13 @@ cloud_setup()
     ESCAPED_SSH_KEY="$RAW_SSH_KEY"
     
     if [ "$CLOUD" == "gcp" ] ; then
-      gcloud_setup
+	gcloud_setup
     elif [ "$CLOUD" == "azure" ] ; then
-      az_setup
+	az_setup
     elif [ "$CLOUD" == "aws" ] ; then
-      aws_setup
+	aws_setup
     else
-      _missing_cloud	
+	_missing_cloud	
     fi    
 }    
 
@@ -1740,187 +1740,187 @@ cloud_setup()
 ###################################################################
 help()
 {
-              echo "usage: $SCRIPTNAME "
-	      echo " [-h|--help]      help message"
-	      echo " [-i|--install-action community|community-gpu|community-cluster|enterprise|kubernetes]"
-	      echo "                 'community' installs Hopsworks Community on a single VM"
-	      echo "                 'community-gpu' installs Hopsworks Community on a single VM with GPU(s)"
-	      echo "                 'community-cluster' installs Hopsworks Community on a multi-VM cluster"
-	      echo "                 'enterprise' installs Hopsworks Enterprise (single VM or multi-VM)"
-	      echo "                 'kubernetes' installs Hopsworks Enterprise (single VM or multi-VM) alson with open-source Kubernetes"
-	      echo " [-c|--cloud gcp|aws|azure] Name of the public cloud "
-	      echo " [-dr|--dry-run]  generates cluster definition (YML) files, allowing customization of clusters."
-	      echo " [-drc|--dry-run-create-vms]  creates the VMs, generates cluster definition (YML) files but doesn't run karamel."	      	      
-	      echo " [-g|--num-gpu-workers num] Number of workers (with GPUs) to create for the cluster."
-	      echo " [-gpus|--num-gpus-per-worker num] Number of GPUs per worker or head node."
-	      echo " [-gt|--gpu-type type]"
-	      echo "                 'v100' Nvidia Tesla V100"
-	      echo "                 'p100' Nvidia Tesla P100"
-	      echo "                 't4' Nvidia Tesla T4"	      
-	      echo "                 'k80' Nvidia K80"	      
-	      echo " [-d|--download-enterprise-url url] downloads enterprise binaries from this URL."
-	      echo " [-dc|--download-url url] downloads binaries from this URL."
-	      echo " [-du|--download-user username] Username for downloading enterprise binaries."
-	      echo " [-dp|--download-password password] Password for downloading enterprise binaries."
-	      echo " [-l|--list-public-ips] List the public ips of all VMs."
-	      echo " [-n|--vm-name-prefix name] The prefix for the VM name created."
-	      echo " [-ni|--non-interactive] skip license/terms acceptance and all confirmation screens."
-	      echo " [-nvme|--nvme num_disks] the number of disks to attach to each worker node"	      
-	      echo " [-rm|--remove] Delete a VM - you will be prompted for the name of the VM to delete."
-	      echo " [-sc|--skip-create] skip creating the VMs, use the existing VM(s) with the same vm_name(s)."
-	      echo " [-w|--num-cpu-workers num] Number of workers (CPU only) to create for the cluster."	      
-	      echo ""
-	      exit 3
+    echo "usage: $SCRIPTNAME "
+    echo " [-h|--help]      help message"
+    echo " [-i|--install-action community|community-gpu|community-cluster|enterprise|kubernetes]"
+    echo "                 'community' installs Hopsworks Community on a single VM"
+    echo "                 'community-gpu' installs Hopsworks Community on a single VM with GPU(s)"
+    echo "                 'community-cluster' installs Hopsworks Community on a multi-VM cluster"
+    echo "                 'enterprise' installs Hopsworks Enterprise (single VM or multi-VM)"
+    echo "                 'kubernetes' installs Hopsworks Enterprise (single VM or multi-VM) alson with open-source Kubernetes"
+    echo " [-c|--cloud gcp|aws|azure] Name of the public cloud "
+    echo " [-dr|--dry-run]  generates cluster definition (YML) files, allowing customization of clusters."
+    echo " [-drc|--dry-run-create-vms]  creates the VMs, generates cluster definition (YML) files but doesn't run karamel."	      	      
+    echo " [-g|--num-gpu-workers num] Number of workers (with GPUs) to create for the cluster."
+    echo " [-gpus|--num-gpus-per-worker num] Number of GPUs per worker or head node."
+    echo " [-gt|--gpu-type type]"
+    echo "                 'v100' Nvidia Tesla V100"
+    echo "                 'p100' Nvidia Tesla P100"
+    echo "                 't4' Nvidia Tesla T4"	      
+    echo "                 'k80' Nvidia K80"	      
+    echo " [-d|--download-enterprise-url url] downloads enterprise binaries from this URL."
+    echo " [-dc|--download-url url] downloads binaries from this URL."
+    echo " [-du|--download-user username] Username for downloading enterprise binaries."
+    echo " [-dp|--download-password password] Password for downloading enterprise binaries."
+    echo " [-l|--list-public-ips] List the public ips of all VMs."
+    echo " [-n|--vm-name-prefix name] The prefix for the VM name created."
+    echo " [-ni|--non-interactive] skip license/terms acceptance and all confirmation screens."
+    echo " [-nvme|--nvme num_disks] the number of disks to attach to each worker node"	      
+    echo " [-rm|--remove] Delete a VM - you will be prompted for the name of the VM to delete."
+    echo " [-sc|--skip-create] skip creating the VMs, use the existing VM(s) with the same vm_name(s)."
+    echo " [-w|--num-cpu-workers num] Number of workers (CPU only) to create for the cluster."	      
+    echo ""
+    exit 3
 
 }
 
 
 while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
-  case "$1" in
-      -h|--help|-help)
-	      help
-	      ;;
-    -i|--install-action)
-	      shift
-	      case $1 in
-		 community)
-		      INSTALL_ACTION=$INSTALL_CPU
-		      ACTION="localhost-tls"
-  		      ;;
-		 community-gpu)
-                      INSTALL_ACTION=$INSTALL_GPU
-		      ACTION="localhost-tls"		     
-  		      ;;
-		 community-cluster)
-                      INSTALL_ACTION=$INSTALL_CLUSTER
-		      ENTERPRISE=0
-		      ACTION="cluster"
-		      ;;
-		 enterprise)
-		      INSTALL_ACTION=$INSTALL_CLUSTER
-                      ENTERPRISE=1
-		      ACTION="enterprise"		      
-		      ;;
-		 kubernetes)
-		      INSTALL_ACTION=$INSTALL_CLUSTER
-                      ENTERPRISE=1
-                      KUBERNETES=1
-		      ACTION="kubernetes"		      
-		      ;;
-		  *)
-		      echo "Could not recognise '-i' option: $1"
-              	      get_install_option_help		      
-		 esac
-	       ;;
-    -c|--cloud)
-	      shift
-	      case $1 in
-		 gcp|aws|azure)
-		      CLOUD=$1
-  		      ;;
-		 *)
-                     echo "Invalid option for '-c' option: $1"
-		     echo "Valid options are: gcp | azure | aws"
-                     exit 44
-		 esac
-	       ;;
-    -d|--download-enterprise-url)
-      	      shift
-	      ENTERPRISE_DOWNLOAD_URL=$1
-	      ;;
-    -dc|--download-url)
-      	      shift
-	      DOWNLOAD_URL=$1
-	      ;;
-    -du|--download-username)
-      	      shift
-	      ENTERPRISE_USERNAME=$1
-	      ;;
-    -dp|--download-password)
-      	      shift
-	      ENTERPRISE_PASSWORD=$1
-	      ;;
-    -dr|--dry-run)
-              DRY_RUN=1
-              ;;
-    -drc|--dry-run-create-vms)
-              DRY_RUN_CREATE_VMS=1
-              ;;
-    -g|--num-gpu-workers)
-              shift
-	      NUM_WORKERS_GPU=$1
-              ;;
-    -gpus|--num-gpus-per-host)
-      	      shift
-              NUM_GPUS_PER_VM=$1
-	      ;;
-    -gt|--gpu-type)
-      	      shift
-	      case $1 in
-		 v100 | p100 | k80)
-		      GPU_TYPE=$1
-  		      ;;
-		  *)
-		      echo "Could not recognise option: $1"
-		      exit_error "Failed."
-	      esac
-	      ;;
-    -nvme|--nvme)
-	      shift
-	      NUM_NVME_DRIVES_PER_WORKER=$1
-              for (( i=1; i<=${NUM_NVME_DRIVES_PER_WORKER}; i++ ))
-	      do
-		  LOCAL_DISK="$LOCAL_DISK --local-ssd=interface=NVME"
-	      done
-     	      ;;
-    -l|--list-public-ips)
-	      DO_LISTING=1
-	      ;;	
-    -ni|--non-interactive)
-	      NON_INTERACT=1
-	      ;;
-    -rm|--remove)
-	RM_TYPE="delete"
-	#VM_DELETE=$1
-	      # case $1 in
-	      # 	 cpu | gpu | cluster)
-	      # 	      RM_TYPE=$1
-  	      # 	      ;;
-	      # 	  *)
-	      # 	      echo "Could not recognise option: $1"
-	      # 	      exit_error "Failed."
-	      #esac
-	      ;;
-    -n|--vm-name-prefix)
-      	      shift
-	      PREFIX=$1
-              ;;
-    -sc|--skip-create)
-      	      SKIP_CREATE=1
-              ;;
-    -p|--http-proxy)
-              shift
-              PROXY=$1
-              proto="$(echo $PROXY | grep :// | sed -e's,^\(.*://\).*,\1,g')"
-	      if [ "$proto" == "http://" ] ; then
-		  export http_proxy=$PROXY
-	      elif [ "$proto" == "https://" ] ; then
-		  export https_proxy=$PROXY
-	      else
-		  echo "Invalid proxy URL: $PROXY"
-		  echo "URL must start with 'https://'  or 'http://'"
-		  exit 20
-	      fi	      
-	      ;;
-    -w|--num-cpu-workers)
-              shift
-	      NUM_WORKERS_CPU=$1
-              ;;
-    *)
-	  exit_error "Unrecognized parameter: $1"
-	  ;;
-  esac
-  shift       # Check next set of parameters.
+    case "$1" in
+	-h|--help|-help)
+	    help
+	    ;;
+	-i|--install-action)
+	    shift
+	    case $1 in
+		community)
+		    INSTALL_ACTION=$INSTALL_CPU
+		    ACTION="localhost-tls"
+  		    ;;
+		community-gpu)
+                    INSTALL_ACTION=$INSTALL_GPU
+		    ACTION="localhost-tls"		     
+  		    ;;
+		community-cluster)
+                    INSTALL_ACTION=$INSTALL_CLUSTER
+		    ENTERPRISE=0
+		    ACTION="cluster"
+		    ;;
+		enterprise)
+		    INSTALL_ACTION=$INSTALL_CLUSTER
+                    ENTERPRISE=1
+		    ACTION="enterprise"		      
+		    ;;
+		kubernetes)
+		    INSTALL_ACTION=$INSTALL_CLUSTER
+                    ENTERPRISE=1
+                    KUBERNETES=1
+		    ACTION="kubernetes"		      
+		    ;;
+		*)
+		    echo "Could not recognise '-i' option: $1"
+              	    get_install_option_help		      
+	    esac
+	    ;;
+	-c|--cloud)
+	    shift
+	    case $1 in
+		gcp|aws|azure)
+		    CLOUD=$1
+  		    ;;
+		*)
+                    echo "Invalid option for '-c' option: $1"
+		    echo "Valid options are: gcp | azure | aws"
+                    exit 44
+	    esac
+	    ;;
+	-d|--download-enterprise-url)
+      	    shift
+	    ENTERPRISE_DOWNLOAD_URL=$1
+	    ;;
+	-dc|--download-url)
+      	    shift
+	    DOWNLOAD_URL=$1
+	    ;;
+	-du|--download-username)
+      	    shift
+	    ENTERPRISE_USERNAME=$1
+	    ;;
+	-dp|--download-password)
+      	    shift
+	    ENTERPRISE_PASSWORD=$1
+	    ;;
+	-dr|--dry-run)
+            DRY_RUN=1
+            ;;
+	-drc|--dry-run-create-vms)
+            DRY_RUN_CREATE_VMS=1
+            ;;
+	-g|--num-gpu-workers)
+            shift
+	    NUM_WORKERS_GPU=$1
+            ;;
+	-gpus|--num-gpus-per-host)
+      	    shift
+            NUM_GPUS_PER_VM=$1
+	    ;;
+	-gt|--gpu-type)
+      	    shift
+	    case $1 in
+		v100 | p100 | k80)
+		    GPU_TYPE=$1
+  		    ;;
+		*)
+		    echo "Could not recognise option: $1"
+		    exit_error "Failed."
+	    esac
+	    ;;
+	-nvme|--nvme)
+	    shift
+	    NUM_NVME_DRIVES_PER_WORKER=$1
+            for (( i=1; i<=${NUM_NVME_DRIVES_PER_WORKER}; i++ ))
+	    do
+		LOCAL_DISK="$LOCAL_DISK --local-ssd=interface=NVME"
+	    done
+     	    ;;
+	-l|--list-public-ips)
+	    DO_LISTING=1
+	    ;;	
+	-ni|--non-interactive)
+	    NON_INTERACT=1
+	    ;;
+	-rm|--remove)
+	    RM_TYPE="delete"
+	    #VM_DELETE=$1
+	    # case $1 in
+	    # 	 cpu | gpu | cluster)
+	    # 	      RM_TYPE=$1
+  	    # 	      ;;
+	    # 	  *)
+	    # 	      echo "Could not recognise option: $1"
+	    # 	      exit_error "Failed."
+	    #esac
+	    ;;
+	-n|--vm-name-prefix)
+      	    shift
+	    PREFIX=$1
+            ;;
+	-sc|--skip-create)
+      	    SKIP_CREATE=1
+            ;;
+	-p|--http-proxy)
+            shift
+            PROXY=$1
+            proto="$(echo $PROXY | grep :// | sed -e's,^\(.*://\).*,\1,g')"
+	    if [ "$proto" == "http://" ] ; then
+		export http_proxy=$PROXY
+	    elif [ "$proto" == "https://" ] ; then
+		export https_proxy=$PROXY
+	    else
+		echo "Invalid proxy URL: $PROXY"
+		echo "URL must start with 'https://'  or 'http://'"
+		exit 20
+	    fi	      
+	    ;;
+	-w|--num-cpu-workers)
+            shift
+	    NUM_WORKERS_CPU=$1
+            ;;
+	*)
+	    exit_error "Unrecognized parameter: $1"
+	    ;;
+    esac
+    shift       # Check next set of parameters.
 done
 
 
@@ -1939,19 +1939,19 @@ if [ $DRY_RUN -eq 1 ] ; then
 fi    
 
 if [ $NON_INTERACT -eq 0 ] ; then    
-  check_linux
-  splash_screen
-  display_license
-  accept_license
-  clear_screen
-  enter_email
-  enter_cloud
-  install_action
-  enter_prefix
+    check_linux
+    splash_screen
+    display_license
+    accept_license
+    clear_screen
+    enter_email
+    enter_cloud
+    install_action
+    enter_prefix
 else
-  if [ "$PREFIX" == "" ] ; then
-    PREFIX=$USER
-  fi
+    if [ "$PREFIX" == "" ] ; then
+	PREFIX=$USER
+    fi
 fi
 
 if [ "$CLOUD" != "gcp" ] ; then
@@ -2159,13 +2159,13 @@ NVME_SWITCH=""
 if [ $NUM_NVME_DRIVES_PER_WORKER -gt 0 ] ; then
     NVME_SWITCH=" -nvme $NUM_NVME_DRIVES_PER_WORKER "
 fi
-    echo "ssh -t -o StrictHostKeyChecking=no $IP \"~/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH} && sleep 5\""    
-    ssh -t -o StrictHostKeyChecking=no $IP "~/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH} && sleep 5"
+echo "ssh -t -o StrictHostKeyChecking=no $IP \"~/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH} && sleep 5\""    
+ssh -t -o StrictHostKeyChecking=no $IP "~/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH} && sleep 5"
 
-    if [ $? -ne 0 ] ; then
-	echo "Problem running installer. Exiting..."
-	exit 2
-    fi
+if [ $? -ne 0 ] ; then
+    echo "Problem running installer. Exiting..."
+    exit 2
+fi
 
 if [ $DRY_RUN_CREATE_VMS -eq 0 ] ; then    
     echo ""
