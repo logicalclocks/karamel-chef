@@ -1270,7 +1270,7 @@ else
 
     if [ $HAS_GPUS -eq 1 ] ; then
 	YARN="capacity:
-      resource_calculator_class: org.apache.hadoop.yarn.util.resource.DominantResourceCalculatorGPU
+      resource_calculator_class: org.apache.hadoop.yarn.util.resource.DominantResourceCalculator
     yarn:"
     fi
 
