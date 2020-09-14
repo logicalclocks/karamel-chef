@@ -92,6 +92,9 @@ VM_DELETE=
 
 NUM_NVME_DRIVES_PER_WORKER=0
 
+HEAD_INSTANCE_TYPE=
+WORKER_INSTANCE_TYPE=
+
 #################
 # GCP Config
 #################
@@ -551,11 +554,19 @@ add_worker()
     WORKER_GPUS=$1
     
     if [ "$WORKER_GPUS" -gt "0" ] ; then
-	set_name "gpu${GPU_WORKER_ID}"
+	if [ $i -lt 10 ] ; then
+	    set_name "gpu0${GPU_WORKER_ID}"
+	else
+	    set_name "gpu${GPU_WORKER_ID}"
+	fi
         create_vm_gpu "worker"
         GPU_WORKER_ID=$((GPU_WORKER_ID+1))	
     else
-	set_name "cpu${CPU_WORKER_ID}"	
+	if [ $i -lt 10 ] ; then
+	    set_name "cpu0${CPU_WORKER_ID}"
+	else
+	    set_name "cpu${CPU_WORKER_ID}"
+	fi
 	create_vm_cpu "worker"
         CPU_WORKER_ID=$((CPU_WORKER_ID+1))		
     fi
@@ -724,7 +735,8 @@ gcloud_get_ips()
 {
     MY_IPS=$(gcloud compute instances list | grep "$PREFIX")
     if [ $DEBUG -eq 1 ] ; then
-	echo "MY_IPS: $MY_IPS"
+	echo "MY_IPS: "
+	echo "$MY_IPS"
     fi
     set_name "head"
     if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
@@ -741,7 +753,11 @@ gcloud_get_ips()
     i=0
     while [ $i -lt $CPUS ] ; 
     do
-	set_name "cpu${i}"
+	if [ $i -lt 10 ] ; then
+	    set_name "cpu0${i}"
+	else
+	    set_name "cpu${i}"	    
+	fi
 	CPU[$i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
 	PRIVATE_CPU[$i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
 	if [ $DEBUG -eq 1 ] ; then
@@ -754,7 +770,11 @@ gcloud_get_ips()
     i=0       
     while [ $i -lt $GPUS ] ; 
     do
-	set_name "gpu${i}"
+	if [ $i -lt 10 ] ; then
+	    set_name "gpu0${i}"
+	else
+	    set_name "gpu${i}"	    
+	fi
 	GPU[$i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
 	PRIVATE_GPU[$i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
 	if [ $DEBUG -eq 1 ] ; then	
@@ -1067,7 +1087,11 @@ az_get_ips()
     i=0
     while [ $i -lt $CPUS ] ; 
     do
-	set_name "cpu${i}"
+	if [ $i -lt 10 ] ; then
+	    set_name "cpu0${i}"
+	else
+	    set_name "cpu${i}"
+	fi
 	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table  | grep ^$NAME | awk '{ print $2, $3 }')
 	CPU[$i]=$(echo "$MY_IPS" | awk '{ print $1 }')
 	PRIVATE_CPU[$i]=$(echo "$MY_IPS" | awk '{ print $2 }')
@@ -1080,7 +1104,11 @@ az_get_ips()
     i=0
     while [ $i -lt $GPUS ] ;     
     do
-        set_name "gpu${i}"
+	if [ $i -lt 10 ] ; then
+	    set_name "gpu0${i}"
+	else
+	    set_name "gpu${i}"
+	fi
 	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table  | grep ^$NAME | awk '{ print $2, $3 }')
 	GPU[$j]=$(echo "$MY_IPS" | awk '{ print $1 }')
 	PRIVATE_GPU[$j]=$(echo "$MY_IPS" | awk '{ print $2 }')
@@ -1784,13 +1812,15 @@ help()
     echo " [-dc|--download-url url] downloads binaries from this URL."
     echo " [-du|--download-user username] Username for downloading enterprise binaries."
     echo " [-dp|--download-password password] Password for downloading enterprise binaries."
+    echo " [-ht|--head-instance-type compute instance type for the head node (lookup name in GCP,Azure)]"    
     echo " [-l|--list-public-ips] List the public ips of all VMs."
     echo " [-n|--vm-name-prefix name] The prefix for the VM name created."
     echo " [-ni|--non-interactive] skip license/terms acceptance and all confirmation screens."
     echo " [-nvme|--nvme num_disks] the number of disks to attach to each worker node"	      
     echo " [-rm|--remove] Delete a VM - you will be prompted for the name of the VM to delete."
     echo " [-sc|--skip-create] skip creating the VMs, use the existing VM(s) with the same vm_name(s)."
-    echo " [-w|--num-cpu-workers num] Number of workers (CPU only) to create for the cluster."	      
+    echo " [-w|--num-cpu-workers num] Number of workers (CPU only) to create for the cluster."
+    echo " [-wt|--worker-instance-type compute instance type for worker nodes (lookup name in GCP,Azure)]"        
     echo ""
     exit 3
 
@@ -1890,6 +1920,14 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 		    exit_error "Failed."
 	    esac
 	    ;;
+	-ht|--head-instance-type)
+      	    shift
+	    HEAD_INSTANCE_TYPE=$1
+            ;;
+	-wt|--worker-instance-type)
+      	    shift
+	    WORKER_INSTANCE_TYPE=$1
+            ;;	    	
 	-nvme|--nvme)
 	    shift
 	    NUM_NVME_DRIVES_PER_WORKER=$1
@@ -1998,6 +2036,9 @@ if [ $ENTERPRISE -eq 1 ] ; then
 fi    
 
 HEAD_GPU=0
+if [ "$HEAD_INSTANCE_TYPE" != "" ] ; then        
+    MACHINE_TYPE=$HEAD_INSTANCE_TYPE
+fi
 
 if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
     set_name "cpu"
@@ -2026,6 +2067,9 @@ if [ $SKIP_CREATE -eq 0 ] ; then
 	create_vm_cpu "head"
     fi
     if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
+	if [ "$WORKER_INSTANCE_TYPE" != "" ] ; then        
+	    MACHINE_TYPE=$WORKER_INSTANCE_TYPE
+	fi
         cpu_worker_size
         gpu_worker_size
     fi
