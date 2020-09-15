@@ -88,6 +88,10 @@ PROXY=
 GEM_SERVER=0
 GEM_SERVER_PORT=54321
 
+NODE_MANAGER_HEAD="      - hops::nm
+"
+
+
 # $1 = String describing error
 exit_error()
 {
@@ -1210,6 +1214,7 @@ else
 fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] ; then
+    NODE_MANAGER_HEAD=""
     TLS="true
       crl_enabled: true
       crl_fetcher_class: org.apache.hadoop.security.ssl.DevRemoteCRLFetcher
@@ -1325,6 +1330,7 @@ else
         echo ""
 	#printf -v DNS_IP "%q\n" "$DNS_IP"
 	DNS_IP=${DNS_IP//\./\\\.}
+	
 	if [ $KUBERNETES -eq 1 ] ; then
 	    KUBE="true"
 	    DOWNLOAD="$DOWNLOAD
@@ -1338,7 +1344,8 @@ else
 	    KUBERNETES_RECIPES="      - kube-hops::hopsworks
       - kube-hops::ca
       - kube-hops::master
-      - kube-hops::addons"
+      - kube-hops::addons
+$NODE_MANAGER_HEAD"
 	fi
         ENTERPRISE_ATTRS="enterprise:
       install: true
@@ -1346,6 +1353,8 @@ else
       username: $ENTERPRISE_USER
       password: $ENTERPRISE_PASSWORD"
 
+    else
+	KUBERNETES_RECIPES="$NODE_MANAGER_HEAD"
     fi
     
     if [ $NVME -gt 0 ] ; then
