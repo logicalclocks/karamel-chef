@@ -139,7 +139,9 @@ VM_HEAD=hd
 VM_WORKER=cpu
 VM_GPU=gpu
 
-VM_SIZE=Standard_E4as_v4
+
+#VM_SIZE=Standard_E4as_v4
+VM_SIZE=Standard_E16s_v3
 ACCELERATOR_VM=Standard_E4as_v4
 OS_IMAGE=UbuntuLTS
 #AZ_NETWORKING="--accelerated-networking true"
@@ -412,7 +414,14 @@ cpus_gpus()
 	    echo "FOUND GPUS: $GPUS"
         fi		
     elif [ "$CLOUD" == "azure" ] ; then
-	echo ""
+	    
+	CPUS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table  | awk '{ print $1 }' | grep "^${PREFIX}" | grep -e "cpu[0-99]" |  wc -l)
+	GPUS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table  | awk '{ print $1 }' | grep "^${PREFIX}" | grep -e "gpu[0-99]" |  wc -l)
+	if [ $DEBUG -eq 1 ] ; then
+	    echo "FOUND CPUS: $CPUS"
+	    echo "FOUND GPUS: $GPUS"
+        fi		
+
     elif [ "$CLOUD" == "aws" ] ; then
 	echo ""	
     fi
@@ -1078,10 +1087,6 @@ az_get_ips()
 	set_name "gpu"
     fi
     
-    IP=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table  | grep ^$NAME | awk '{ print $2 }')
-    if [ $DEBUG -eq 1 ] ; then    
-	echo -e "${NAME}\t Public IP: $IP"
-    fi
     cpus_gpus
 
     i=0
@@ -1526,7 +1531,6 @@ _az_precreate()
 	    printf "Enter the boot disk size in GBs: "
 	    read BOOT_SIZE_GBS
 	fi
-	echo "Boot disk size: ${BOOT_SIZE_GBS}GB"
 	
 	echo ""
 	echo "Data disk size: $DATA_DISK_SIZES_GB"
@@ -1540,7 +1544,6 @@ _az_precreate()
 	    read DATA_DISK_SIZES_GB
 	fi
 	DATA_DISK_SIZE=$DATA_DISK_SIZES_GB
-	echo "Boot disk size: ${DATA_DISK_SIZE}GB"
     fi
     BOOT_SIZE=$BOOT_SIZE_GBS
 }
@@ -1580,6 +1583,7 @@ _az_create_vm()
    --ssh-key-value ~/.ssh/id_rsa.pub    
 "
     fi
+    echo "Creating VM..."
     az vm create -n $NAME -g $RESOURCE_GROUP \
        --image $OS_IMAGE --data-disk-sizes-gb $DATA_DISK_SIZE --os-disk-size-gb $BOOT_SIZE \
        --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
@@ -1691,9 +1695,6 @@ _missing_cloud()
 
 create_vm_cpu()
 {
-    
-    echo "Creating VM...."
-    echo ""
     if [ "$CLOUD" == "gcp" ] ; then
 	gcloud_create_cpu $1
     elif [ "$CLOUD" == "azure" ] ; then
