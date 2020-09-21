@@ -1087,7 +1087,7 @@ az_get_ips()
 	set_name "gpu"
     fi
     
-    IP=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $3 }')
+    IP=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $2 }')
 
     sleep 3
 
@@ -2093,6 +2093,7 @@ while [ "$IP" == "" ] ; do
     sleep 5
 done
 
+echo "Found IP: $IP"
 
 host_ip=$IP
 clear_known_hosts
