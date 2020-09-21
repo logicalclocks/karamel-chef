@@ -415,8 +415,8 @@ cpus_gpus()
         fi		
     elif [ "$CLOUD" == "azure" ] ; then
 	    
-	CPUS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table  | awk '{ print $1 }' | grep "^${PREFIX}" | grep -e "cpu[0-99]" |  wc -l)
-	GPUS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table  | awk '{ print $1 }' | grep "^${PREFIX}" | grep -e "gpu[0-99]" |  wc -l)
+	CPUS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | grep "^${PREFIX}" | grep -e "cpu[0-99]" |  wc -l)
+	GPUS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | grep "^${PREFIX}" | grep -e "gpu[0-99]" |  wc -l)
 	if [ $DEBUG -eq 1 ] ; then
 	    echo "FOUND CPUS: $CPUS"
 	    echo "FOUND GPUS: $GPUS"
@@ -1079,7 +1079,7 @@ gcloud_delete_vm()
 az_get_ips()
 {
     echo "Azure get_ips"
-
+#    MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $2, $3 }')    
     set_name "head"
     if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
 	set_name "cpu"
@@ -1087,11 +1087,16 @@ az_get_ips()
 	set_name "gpu"
     fi
     
+    IP=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $3 }')
+
+    sleep 3
+
     cpus_gpus
 
     i=0
     while [ $i -lt $CPUS ] ; 
     do
+        echo "CPUS: $CPUS   i: $i"	
 	if [ $i -lt 10 ] ; then
 	    set_name "cpu0${i}"
 	else
@@ -1103,7 +1108,7 @@ az_get_ips()
 	if [ $DEBUG -eq 1 ] ; then	
             echo -e "${NAME}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
 	fi
-	i=$(i+1)
+	i=$((i+1))
     done
 
     i=0
@@ -1120,7 +1125,7 @@ az_get_ips()
 	if [ $DEBUG -eq 1 ] ; then	
             echo -e "${NAME}\t Public IP: ${GPU[${i}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
 	fi
-	i=$(i+1)	
+	i=$((i+1))	
     done
 }    
 
@@ -1543,8 +1548,8 @@ _az_precreate()
 	    printf "Enter the data disk size in GBs: "
 	    read DATA_DISK_SIZES_GB
 	fi
-	DATA_DISK_SIZE=$DATA_DISK_SIZES_GB
     fi
+    DATA_DISK_SIZE=$DATA_DISK_SIZES_GB    
     BOOT_SIZE=$BOOT_SIZE_GBS
 }
 
