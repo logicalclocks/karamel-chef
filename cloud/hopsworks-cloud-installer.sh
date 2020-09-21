@@ -141,7 +141,7 @@ VM_GPU=gpu
 
 
 #VM_SIZE=Standard_E4as_v4
-VM_SIZE=Standard_E16s_v3
+VM_SIZE=Standard_E8s_v3
 ACCELERATOR_VM=Standard_E4as_v4
 OS_IMAGE=UbuntuLTS
 #AZ_NETWORKING="--accelerated-networking true"
@@ -1517,13 +1517,6 @@ _az_precreate()
 	    read OS_IMAGE
 	fi
 	echo "OS Image selected: $OS_IMAGE"
-	# az vm image list --all | grep $OS_IMAGE
-	# if [ $? -ne 0 ] ; then
-	# 	echo "Could not find $OS_IMAGE amoung available images (az vm image list --all)"
-	# 	echo "Try again."
-	# 	_az_precreate
-	# 	return
-	# fi
 	
 	echo ""
 	echo "Boot disk size: $BOOT_SIZE_GBS"
