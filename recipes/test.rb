@@ -83,11 +83,6 @@ kibana_endpoint="#{node[:karamel][:default][:private_ips][0]}:#{node[:kibana][:p
 elastic_multinode='centos'
 elastic_singlenode='ubuntu'
 
-if node['test']['community']
-  elastic_multinode='ubuntu'
-  elastic_singlenode='centos'
-end
-
 case node['platform']
 when elastic_multinode
   elastic_endpoint="#{node[:karamel][:default][:private_ips][2]}:#{node[:elastic][:port]}"
