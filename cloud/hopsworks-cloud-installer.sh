@@ -32,8 +32,8 @@
 #                                                                                                 #
 ###################################################################################################
 
-HOPSWORKS_INSTALLER_VERSION=master
-CLUSTER_DEFINITION_VERSION=master
+HOPSWORKS_INSTALLER_VERSION=1.4
+CLUSTER_DEFINITION_VERSION=1.4
 HOPSWORKS_INSTALLER_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_INSTALLER_VERSION
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$CLUSTER_DEFINITION_VERSION
 
