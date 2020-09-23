@@ -131,6 +131,7 @@ RESOURCE_GROUP=hopsworks
 VIRTUAL_NETWORK=hops
 
 # We call Azure's LOCATION "REGION" to make this script more generic
+# az vm create -n ghead --vnet-name hops --size Standard_NC6 --location westeurope --image UbuntuLTS --subnet default --public-ip-address ""
 AZ_ZONE=3
 SUBNET=default
 DNS_PRIVATE_ZONE=h.w
@@ -141,9 +142,12 @@ VM_GPU=gpu
 
 
 #VM_SIZE=Standard_E4as_v4
+# 
 VM_SIZE=Standard_E8s_v3
-ACCELERATOR_VM=Standard_E4as_v4
-OS_IMAGE=UbuntuLTS
+ACCELERATOR_VM=Standard_NC6
+
+OS_IMAGE=OpenLogic:CentOS:7.7:latest
+#UbuntuLTS
 #AZ_NETWORKING="--accelerated-networking true"
 AZ_NETWORKING="--accelerated-networking false"
 #GPUs on Azure
@@ -1088,6 +1092,7 @@ az_get_ips()
     fi
     
     IP=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $2 }')
+    echo "$NAME : $IP"
 
     sleep 3
 
@@ -1120,8 +1125,8 @@ az_get_ips()
 	    set_name "gpu${i}"
 	fi
 	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table  | grep ^$NAME | awk '{ print $2, $3 }')
-	GPU[$j]=$(echo "$MY_IPS" | awk '{ print $1 }')
-	PRIVATE_GPU[$j]=$(echo "$MY_IPS" | awk '{ print $2 }')
+	GPU[$i]=$(echo "$MY_IPS" | awk '{ print $1 }')
+	PRIVATE_GPU[$i]=$(echo "$MY_IPS" | awk '{ print $2 }')
 	if [ $DEBUG -eq 1 ] ; then	
             echo -e "${NAME}\t Public IP: ${GPU[${i}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
 	fi
@@ -1550,21 +1555,29 @@ az_create_gpu()
 {
     if [ "$GPU_TYPE" == "k80" ] ; then
 	ACCELERATOR_ZONE=3
+	ACCELERATOR_VM=Standard_NC6
     elif [ "$GPU_TYPE" == "p100" ] ; then
-	ACCELERATOR_ZONE=2	
+	ACCELERATOR_ZONE=2
+	ACCELERATOR_VM=Standard_NC6s_v2
     elif [ "$GPU_TYPE" == "v100" ] ; then
-	ACCELERATOR_ZONE=1	
+	ACCELERATOR_ZONE=1
+	ACCELERATOR_VM=Standard_NC6s_v3
     else
 	ACCELERATOR_ZONE=3	
     fi
-    VM_SIZE=$ACCELERATOR_VM
-    ACCELERATOR="--size $NUM_GPUS_PER_VM"
+    VM_TYPE=$ACCELERATOR_VM
+#    PUBLIC_IP_ATTR="--public-ip-address \"\""
+    PUBLIC_IP_ATTR="--public-ip-sku Standard"    
+#    AZ_ZONE=
+    AZ_ZONE="-z 3"    
     _az_create_vm $1
 }
 
 az_create_cpu()
 {
-    ACCELERATOR=""
+    VM_TYPE=$VM_SIZE
+    PUBLIC_IP_ATTR="--public-ip-sku Standard"
+    AZ_ZONE="-z 3"
     _az_create_vm $1
 }
 
@@ -1573,38 +1586,38 @@ _az_create_vm()
     _az_precreate $1
     if [ $DEBUG -eq 1 ] ; then    
 	echo "
-  az vm create -n $NAME -g $RESOURCE_GROUP \
-   --attach-data-disks \
-   --image $OS_IMAGE --data-disk-sizes-gb $DATA_DISK_SIZE --os-disk-size-gb $BOOT_SIZE \
-   --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
-   --size $VM_SIZE --location $REGION --zone $AZ_ZONE $ACCELERATOR $AZ_NETWORKING\
-   --ssh-key-value ~/.ssh/id_rsa.pub    
-"
-    fi
-    echo "Creating VM..."
-    az vm create -n $NAME -g $RESOURCE_GROUP \
+    az vm create -n $NAME -g $RESOURCE_GROUP --size $VM_TYPE \
        --image $OS_IMAGE --data-disk-sizes-gb $DATA_DISK_SIZE --os-disk-size-gb $BOOT_SIZE \
        --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
-       --size $VM_SIZE --location $REGION --zone $AZ_ZONE $ACCELERATOR \
-       --ssh-key-value ~/.ssh/id_rsa.pub    
+       --location $REGION \
+       --size $VM_SIZE \
+       --ssh-key-value ~/.ssh/id_rsa.pub $PUBLIC_IP_ATTR $AZ_ZONE
+"
+	# $AZ_NETWORKING \	
 	#   --priority $PRIORITY --max-price 0.06 \
-	    if [ $? -ne 0 ] ; then
-		echo "Problem creating VM. Exiting ..."
-		exit 12
-	    fi
-	    sleep 20
-	    # Shortcut to create a network security group (NSG) add the 443 inbound rule, and applies it to the VM 
-	    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 443
+    fi
+    echo "Creating VM..."
+    az vm create -n $NAME -g $RESOURCE_GROUP --size $VM_TYPE \
+       --image $OS_IMAGE --data-disk-sizes-gb $DATA_DISK_SIZE --os-disk-size-gb $BOOT_SIZE \
+       --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
+       --location $REGION \
+       --size $VM_SIZE \
+       --ssh-key-value ~/.ssh/id_rsa.pub $PUBLIC_IP_ATTR $AZ_ZONE
+
+    if [ $? -ne 0 ] ; then
+	echo "Problem creating VM. Exiting ..."
+	exit 12
+    fi
+    sleep 20
+    # Shortcut to create a network security group (NSG) add the 443 inbound rule, and applies it to the VM 
+    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 443
 }
 
 
 az_delete_vm()
 {
     _az_set_resource_group
-    # _az_set_location
-
     az vm delete -g $RESOURCE_GROUP --name $VM_DELETE --yes --no-wait
-    
 }
 
 

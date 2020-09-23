@@ -708,7 +708,6 @@ add_worker()
     # strip carriage return '\r' from variable to make it a number
     WORKER_GPUS=$(echo $WORKER_GPUS|tr -d '\r')
 
-
     echo ""
     echo "Number of GPUs found on worker: $WORKER_GPUS"
     echo ""
@@ -764,6 +763,10 @@ worker_size()
     read NUM_WORKERS
     if [ "$NUM_WORKERS" == "" ] ; then
 	NUM_WORKERS=0
+    fi
+    if [ $NUM_WORKERS -gt 0 ] ; then
+        # No Nodemanager for Head node
+        NODE_MANAGER_HEAD=""
     fi
     i=0
     while [ $i -lt $NUM_WORKERS ] ;
@@ -1214,13 +1217,7 @@ else
 fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] ; then
-    NODE_MANAGER_HEAD=""
-    TLS="true
-      crl_enabled: true
-      crl_fetcher_class: org.apache.hadoop.security.ssl.DevRemoteCRLFetcher
-      crl_fetcher_interval: 5m
-"
-    
+        
     if [ "$WORKER_LIST" == "" ] ; then
 	worker_size
     else
@@ -1233,8 +1230,16 @@ if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] ; then
 		WORKER_IP=$worker
 		add_worker
 	    done
+	    # No Nodemanager for Head node
+            NODE_MANAGER_HEAD=""
 	fi
     fi
+    
+    TLS="true
+      crl_enabled: true
+      crl_fetcher_class: org.apache.hadoop.security.ssl.DevRemoteCRLFetcher
+      crl_fetcher_interval: 5m
+"    
 fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST_TLS" ] ; then
