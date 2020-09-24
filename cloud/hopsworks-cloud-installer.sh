@@ -33,7 +33,7 @@
 ###################################################################################################
 
 HOPSWORKS_INSTALLER_VERSION=1.4
-CLUSTER_DEFINITION_VERSION=1.4
+CLUSTER_DEFINITION_VERSION=$HOPSWORKS_INSTALLER_VERSION
 HOPSWORKS_INSTALLER_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_INSTALLER_VERSION
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$CLUSTER_DEFINITION_VERSION
 
@@ -573,7 +573,7 @@ add_worker()
 	    set_name "gpu${GPU_WORKER_ID}"
 	fi
         create_vm_gpu "worker"
-        GPU_WORKER_ID=$((GPU_WORKER_ID+1))	
+        GPU_WORKER_ID=$((GPU_WORKER_ID+1))
     else
 	if [ $i -lt 10 ] ; then
 	    set_name "cpu0${CPU_WORKER_ID}"
@@ -1093,7 +1093,8 @@ az_get_ips()
     
     IP=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $2 }')
     echo "$NAME : $IP"
-
+    ssh -t -o StrictHostKeyChecking=no $IP "ssh sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
+    
     sleep 3
 
     cpus_gpus
@@ -1114,6 +1115,7 @@ az_get_ips()
             echo -e "${NAME}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
 	fi
 	i=$((i+1))
+        ssh -t -o StrictHostKeyChecking=no $CPU[$i]  "ssh sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"    
     done
 
     i=0
@@ -1130,7 +1132,8 @@ az_get_ips()
 	if [ $DEBUG -eq 1 ] ; then	
             echo -e "${NAME}\t Public IP: ${GPU[${i}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
 	fi
-	i=$((i+1))	
+	i=$((i+1))
+        ssh -t -o StrictHostKeyChecking=no $GPU[$i]  "ssh sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
     done
 }    
 
@@ -1610,7 +1613,9 @@ _az_create_vm()
     fi
     sleep 20
     # Shortcut to create a network security group (NSG) add the 443 inbound rule, and applies it to the VM 
-    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 443
+    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 443 --priority 900
+    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 4848 --priority 899
+    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 9009 --priority 898
 }
 
 
@@ -2129,7 +2134,6 @@ if [ $? -ne 0 ] ; then
 fi    
 
 if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
-    
     ssh -t -o StrictHostKeyChecking=no $IP "if [ ! -e ~/.ssh/id_rsa.pub ] ; then cat /dev/zero | ssh-keygen -q -N \"\" ; fi"
     pubkey=$(ssh -t -o StrictHostKeyChecking=no $IP "cat ~/.ssh/id_rsa.pub")
 
