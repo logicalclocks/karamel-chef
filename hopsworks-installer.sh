@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 
 ###################################################################################################
 #                                                                                                 #
@@ -22,15 +22,14 @@
 # |_   _|      | || |      | | |                                                                  #
 #   | |  _ __  |_|| |_ __ _| | | ___ _ __                                                         #
 #   | | | '_ \/ __| __/ _` | | |/ _ \ '__|                                                        #
-#  _| |_| | | \__ \ || (_| | | |  __/ |                                                           #       
+#  _| |_| | | \__ \ || (_| | | |  __/ |                                                           #
 # |_____|_| |_|___/\__\__,_|_|_|\___|_|                                                           #
 #                                                                                                 #
 ###################################################################################################
 
 HOPSWORKS_REPO=logicalclocks/hopsworks-chef
-HOPSWORKS_BRANCH=kfserving
-#HOPSWORKS_BRANCH=master
-CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/installer-multinode-fixes
+HOPSWORKS_BRANCH=1.4
+CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_BRANCH
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
 NON_INTERACT=0
@@ -60,20 +59,20 @@ TLS="false"
 REVERSE_DNS=1
 
 CLOUD=
-GCP_NVME=0
+NVME=0
+NDB_NVME=
+
 YARN="yarn:"
 RM_WORKER=
 ENTERPRISE=0
 KUBERNETES=0
 DOWNLOAD=
 KUBERNETES_RECIPES=""
-INPUT_YML="cluster-defns/hopsworks-installer.yml"
+INPUT_YML="cluster-defns/hopsworks-head.yml"
 WORKER_YML="cluster-defns/hopsworks-worker.yml"
 WORKER_GPU_YML="cluster-defns/hopsworks-worker-gpu.yml"
-YML_FILE="cluster-defns/hopsworks-installer-active.yml"
+YML_FILE="cluster-defns/hopsworks-installation.yml"
 ENTERPRISE_ATTRS=
-KUBE="false"
-WORKER_LIST=
 KUBE="false"
 WORKER_LIST=
 WORKER_IP=
@@ -1256,3 +1255,198 @@ if [ "$INSTALL_ACTION" == "$INSTALL_KARAMEL" ]  ; then
     $KARAMEL_HTTP_PROXY_1
     $KARAMEL_HTTP_PROXY_2
     $KARAMEL_HTTP_PROXY_3    
+    setsid ./bin/karamel -headless &
+    echo "To access Karamel, open your browser at: "
+    echo ""
+    echo "http://${ip}:9090/index.html"
+    echo ""
+else
+    if [ $DRY_RUN -eq 0 ] ; then
+	sudo -n true
+	if [ $? -ne 0 ] ; then
+	    echo ""
+	    echo "It appears you need a sudo password for this account."
+            echo "Enter the sudo password for $USER: "
+	    read -s passwd
+            SUDO_PWD="-passwd $passwd"
+	    echo ""
+	fi
+    fi
+
+    if [ $AVAILABLE_GPUS -gt 0 ] ; then
+	CUDA="cuda:
+    accept_nvidia_download_terms: true"
+    fi
+
+    if [ $HAS_GPUS -eq 1 ] ; then
+	YARN="capacity:
+      resource_calculator_class: org.apache.hadoop.yarn.util.resource.DominantResourceCalculator
+    yarn:"
+    fi
+
+    DNS_IP=$(sudo cat /etc/resolv.conf | grep ^nameserver | awk '{ print $2 }' | tail -1)
+    BASE_PWD=$(date | md5sum | head -c${1:-8})
+    GBS=$(expr $AVAILABLE_MEMORY - 2)
+    MEM=$(expr $GBS \* 1024)
+    perl -pi -e "s/__CLOUD__/$CLOUD/" $YML_FILE
+    perl -pi -e "s/__MEM__/$MEM/" $YML_FILE
+    perl -pi -e "s/__PWD__/$BASE_PWD/g" $YML_FILE
+    perl -pi -e "s/__DNS_IP__/$DNS_IP/g" $YML_FILE
+    CPUS=$(expr $AVAILABLE_CPUS - 1)
+    perl -pi -e "s/__CPUS__/$CPUS/" $YML_FILE
+    # escape slashes to use perl -e
+    HOPSWORKS_REPO=$(echo "$HOPSWORKS_REPO"  | sed 's/\//\\\//g')
+    perl -pi -e "s/__GITHUB__/$HOPSWORKS_REPO/" $YML_FILE
+    perl -pi -e "s/__BRANCH__/$HOPSWORKS_BRANCH/" $YML_FILE
+    perl -pi -e "s/__USER__/$USER/" $YML_FILE
+    perl -pi -e "s/__IP__/$IP/" $YML_FILE
+    perl -pi -e "s/__YARN__/$YARN/" $YML_FILE
+    perl -pi -e "s/__TLS__/$TLS/" $YML_FILE
+    perl -pi -e "s/__CUDA__/$CUDA/" $YML_FILE
+
+    if [ "$DOWNLOAD_URL" != "" ] ; then
+	DOWNLOAD="download_url: $DOWNLOAD_URL"
+    fi
+
+    if [ $ENTERPRISE -eq 1 ] ; then
+        TLS="true
+      crl_enabled: true
+      crl_fetcher_class: org.apache.hadoop.security.ssl.DevRemoteCRLFetcher
+      crl_fetcher_interval: 5m
+"	
+	if [ "$ENTERPRISE_DOWNLOAD_URL" = "" ] ; then
+	    echo ""
+            printf "Enter the URL to download the Enterprise Binaries from: "
+	    read ENTERPRISE_DOWNLOAD_URL
+        fi
+	if [ "$ENTERPRISE_USER" = "" ] ; then
+	    echo ""
+            printf "Enter the Enterprise URL username: "
+	    read ENTERPRISE_USER
+        fi
+	if [ "$ENTERPRISE_PASSWORD" = "" ] ; then
+	    echo ""
+            printf "Enter the Enterprise URL password: "
+	    read -s ENTERPRISE_PASSWORD
+        fi
+	# Escape URL
+	ENTERPRISE_DOWNLOAD_URL=${ENTERPRISE_DOWNLOAD_URL//\./\\\.}
+	ENTERPRISE_DOWNLOAD_URL=${ENTERPRISE_DOWNLOAD_URL//\//\\\/}
+        echo ""
+	#printf -v DNS_IP "%q\n" "$DNS_IP"
+	DNS_IP=${DNS_IP//\./\\\.}
+
+	if [ "$DISTRO" == "Ubuntu" ] ; then
+	    DNS_IP="8.8.8.8"
+	fi
+	
+	if [ $KUBERNETES -eq 1 ] ; then
+	    KUBE="true"
+	    DOWNLOAD="$DOWNLOAD
+  kube-hops:
+    pki:
+      verify_hopsworks_cert: false
+    fallback_dns: $DNS_IP
+    master:
+      untaint: true
+"
+	    KUBERNETES_RECIPES="      - kube-hops::hopsworks
+      - kube-hops::ca
+      - kube-hops::master
+      - kube-hops::addons
+$NODE_MANAGER_HEAD"
+	fi
+        ENTERPRISE_ATTRS="enterprise:
+      install: true
+      download_url: $ENTERPRISE_DOWNLOAD_URL
+      username: $ENTERPRISE_USER
+      password: $ENTERPRISE_PASSWORD"
+
+    else
+	KUBERNETES_RECIPES="$NODE_MANAGER_HEAD"
+    fi
+    
+    if [ $NVME -gt 0 ] ; then
+	nvme_devices="\\["
+	i=0
+	while [ $i -lt $NVME ] ;
+	do
+	    i=$((i+1))
+	    nvme_devices="${nvme_devices}'\\/dev\\/nvme0n${i}',"
+	done
+	nvme_devices=$(echo $nvme_devices | sed 's/,$//')
+	nvme_devices="${nvme_devices}\\]"
+	
+	# \['/dev/nvme0n1'\]
+	NDB_NVME="nvme:
+      devices: $nvme_devices
+      format: true
+      logfile_size: 100000M
+      undofile_size: 1000M"
+    fi
+
+    perl -pi -e "s/__ENTERPRISE__/$ENTERPRISE_ATTRS/" $YML_FILE
+    perl -pi -e "s/__DOWNLOAD__/$DOWNLOAD/" $YML_FILE
+    perl -pi -e "s/__KUBERNETES_RECIPES__/$KUBERNETES_RECIPES/" $YML_FILE
+    perl -pi -e "s/__KUBE__/$KUBE/" $YML_FILE
+    perl -pi -e "s/__NDB_NVME__/${NDB_NVME}/" $YML_FILE
+
+    RUN_GEM_SERVER=
+    if [ $GEM_SERVER -eq 1 ] ; then
+	RUN_GEM_SERVER="-gemserver http://${IP}:$GEM_SERVER_PORT"
+    fi
+    
+    if [ $DRY_RUN -eq 0 ] ; then
+	cd karamel-${KARAMEL_VERSION}
+	echo "Running command from ${PWD}:"
+	echo "$KARAMEL_HTTP_PROXY_1"
+	echo "$KARAMEL_HTTP_PROXY_2"
+	echo "$KARAMEL_HTTP_PROXY_3"	
+	echo "setsid ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log 2>&1 &"
+        $KARAMEL_HTTP_PROXY_1
+        $KARAMEL_HTTP_PROXY_2
+        $KARAMEL_HTTP_PROXY_3    
+	setsid ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD $RUN_GEM_SERVER > ../installation.log 2>&1 &
+	echo ""
+	echo "***********************************************************************************************************"
+	echo ""
+	echo "Installation has started, but may take 1 hour or more.........."
+	echo ""
+	echo "The Karamel installer UI will soon start at private IP:  http://${IP}:9090/index.html"
+	echo "Note: port 9090 must be open for external traffic and Karamel will shutdown when installation finishes."
+	echo ""
+	if [ $GEM_SERVER -eq 1 ] ; then
+	    echo "When installation has completed, stop the gem server using the following commands:"
+	    echo "GEM_PID=\$(sudo netstat -ltpn | grep $GEM_SERVER_PORT | awk '{ print \$7 }' | tail -1 | sed -e 's/\/ruby//')"
+	    echo "sudo kill -9 \$GEM_PID"
+	    echo ""
+	fi
+	echo "====================================================================="
+        echo "Hopsworks will later be available at private IP:"
+	echo ""
+	echo "https://${IP}/hopsworks"
+	echo ""
+	echo "====================================================================="
+	echo ""
+	echo "You can view the installation logs with this command:"
+	echo ""
+	echo "tail -f installation.log"
+	echo ""
+	echo "***********************************************************************************************************"
+	cd ..
+    else
+
+	echo ""
+	echo "Skipping this command: "
+	echo "ssh -t -o StrictHostKeyChecking=no $IP \"/home/$USER/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}$WORKERS && sleep 5\""     
+	echo ""
+	echo "****************************************"
+	echo "*                                      *"
+	echo " ssh ${IP}"
+	echo " Then, edit your cluster definitions in: /home/$USER/cluster-defns"
+	echo " Then run karamel on your new cluster definition: "
+	echo " "
+	echo " cd karamel-0.6 && setsid ./bin/karamel -headless -launch ../cluster-defns/$YML_FILE > ../installation.log 2>&1 &"
+	echo "****************************************"	
+    fi
+fi

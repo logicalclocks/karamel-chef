@@ -146,8 +146,9 @@ VM_GPU=gpu
 VM_SIZE=Standard_E8s_v3
 ACCELERATOR_VM=Standard_NC6
 
-OS_IMAGE=OpenLogic:CentOS:7.7:latest
-#UbuntuLTS
+OS_IMAGE=UbuntuLTS
+#OpenLogic:CentOS:7.7:latest
+#
 #AZ_NETWORKING="--accelerated-networking true"
 AZ_NETWORKING="--accelerated-networking false"
 #GPUs on Azure
