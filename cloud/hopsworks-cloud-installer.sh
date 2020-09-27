@@ -32,7 +32,7 @@
 #                                                                                                 #
 ###################################################################################################
 
-HOPSWORKS_INSTALLER_VERSION=1.4
+HOPSWORKS_INSTALLER_VERSION=installer-multinode-fixes
 CLUSTER_DEFINITION_VERSION=$HOPSWORKS_INSTALLER_VERSION
 HOPSWORKS_INSTALLER_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_INSTALLER_VERSION
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$CLUSTER_DEFINITION_VERSION
@@ -146,8 +146,9 @@ VM_GPU=gpu
 VM_SIZE=Standard_E8s_v3
 ACCELERATOR_VM=Standard_NC6
 
-OS_IMAGE=UbuntuLTS
-#OpenLogic:CentOS:7.7:latest
+OS_IMAGE=Canonical:UbuntuServer:18.04-LTS:latest
+#OS_IMAGE=OpenLogic:CentOS:7.5:latest
+#OS_IMAGE=OpenLogic:CentOS:7.7:latest
 #
 #AZ_NETWORKING="--accelerated-networking true"
 AZ_NETWORKING="--accelerated-networking false"
@@ -1094,7 +1095,7 @@ az_get_ips()
     
     IP=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $2 }')
     echo "$NAME : $IP"
-    ssh -t -o StrictHostKeyChecking=no $IP "ssh sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
+    ssh -t -o StrictHostKeyChecking=no $IP "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
     
     sleep 3
 
@@ -1115,8 +1116,8 @@ az_get_ips()
 	if [ $DEBUG -eq 1 ] ; then	
             echo -e "${NAME}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
 	fi
-	i=$((i+1))
-        ssh -t -o StrictHostKeyChecking=no $CPU[$i]  "ssh sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"    
+        ssh -t -o StrictHostKeyChecking=no $CPU[$i]  "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
+	i=$((i+1))	
     done
 
     i=0
@@ -1133,8 +1134,8 @@ az_get_ips()
 	if [ $DEBUG -eq 1 ] ; then	
             echo -e "${NAME}\t Public IP: ${GPU[${i}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
 	fi
-	i=$((i+1))
-        ssh -t -o StrictHostKeyChecking=no $GPU[$i]  "ssh sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
+        ssh -t -o StrictHostKeyChecking=no $GPU[$i]  "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
+	i=$((i+1))	
     done
 }    
 
@@ -1572,8 +1573,7 @@ az_create_gpu()
     VM_TYPE=$ACCELERATOR_VM
 #    PUBLIC_IP_ATTR="--public-ip-address \"\""
     PUBLIC_IP_ATTR="--public-ip-sku Standard"    
-#    AZ_ZONE=
-    AZ_ZONE="-z 3"    
+    AZ_ZONE=
     _az_create_vm $1
 }
 
@@ -1594,7 +1594,6 @@ _az_create_vm()
        --image $OS_IMAGE --data-disk-sizes-gb $DATA_DISK_SIZE --os-disk-size-gb $BOOT_SIZE \
        --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
        --location $REGION \
-       --size $VM_SIZE \
        --ssh-key-value ~/.ssh/id_rsa.pub $PUBLIC_IP_ATTR $AZ_ZONE
 "
 	# $AZ_NETWORKING \	
@@ -1605,7 +1604,6 @@ _az_create_vm()
        --image $OS_IMAGE --data-disk-sizes-gb $DATA_DISK_SIZE --os-disk-size-gb $BOOT_SIZE \
        --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
        --location $REGION \
-       --size $VM_SIZE \
        --ssh-key-value ~/.ssh/id_rsa.pub $PUBLIC_IP_ATTR $AZ_ZONE
 
     if [ $? -ne 0 ] ; then
@@ -1616,7 +1614,7 @@ _az_create_vm()
     # Shortcut to create a network security group (NSG) add the 443 inbound rule, and applies it to the VM 
     az vm open-port -g $RESOURCE_GROUP -n $NAME --port 443 --priority 900
     az vm open-port -g $RESOURCE_GROUP -n $NAME --port 4848 --priority 899
-    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 9009 --priority 898
+    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 9090 --priority 898
 }
 
 

@@ -10,8 +10,6 @@ export ENTERPRISE_USERNAME=$USERNAME
 printf "Enter a name (prefix) for the VM: "
 read name
 
-echo "The cluster name prefix is: $name"
-
 echo "Edit this script to change from k80 GPU type or 1 GPU per worker."
 printf "Enter how many GPU workers you want to have: "
 read gpu_workers
@@ -22,4 +20,5 @@ if ! [[ $gpu_workers =~ $re ]] ; then
     exit 1
 fi
 
-ENTERPRISE_PASSWORD=$PASSWORD ./hopsworks-cloud-installer.sh -n $name -i kubernetes -ni -c azure -d https://nexus.hops.works/repository -w 0 -g $gpu_workers --debug -gt k80 -gpus 1
+#-nvme 1 
+ENTERPRISE_PASSWORD=$PASSWORD ./hopsworks-cloud-installer.sh -n $name -i kubernetes -ni -c gcp -d https://nexus.hops.works/repository -w 0 -g $gpu_workers -gt k80 -gpus 1 --debug
