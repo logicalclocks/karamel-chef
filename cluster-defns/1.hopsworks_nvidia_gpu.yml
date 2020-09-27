@@ -11,7 +11,7 @@ attrs:
   install:
     dir: /srv/hops
   hops:
-    gpus: "true"
+    gpu: "true"
     rmappsecurity:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
   cuda:
