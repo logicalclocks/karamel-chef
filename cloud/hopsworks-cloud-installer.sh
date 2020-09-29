@@ -95,6 +95,8 @@ NUM_NVME_DRIVES_PER_WORKER=0
 HEAD_INSTANCE_TYPE=
 WORKER_INSTANCE_TYPE=
 
+ENTERPRISE_DOWNLOAD_URL=https://nexus.hops.works/repository
+
 #################
 # GCP Config
 #################
@@ -310,6 +312,28 @@ accept_license ()
     esac
 }
 
+accept_enterprise()
+{
+    echo ""
+    echo "You are installing a time-limited version of Hopsworks Enterprise."
+    echo "The license for this version is valid for 60 days from now."
+    echo "Hopsworks  Terms and conditions: https://www.logicalclocks.com/hopsworks-terms-and-conditions "
+    printf "Do you agree to Hopsworks terms and conditions (y/n)? "
+    read ACCEPT
+    case $ACCEPT in
+	y|yes)
+	    echo "Continuing..."
+	    echo ""
+	    ;;
+	n|no)
+	    ;;
+	*)
+	    echo "Next time, enter 'y' or 'yes' to continue."
+	    echo "Exiting..."
+	    exit 3
+	    ;;
+    esac
+}
 
 
 clear_screen_no_skipline()
@@ -359,12 +383,14 @@ install_action()
 		INSTALL_ACTION=$INSTALL_CLUSTER
 		ACTION="enterprise"
 		ENTERPRISE=1
+                accept_enterprise
 		;;
             5)
 		INSTALL_ACTION=$INSTALL_CLUSTER
 		ACTION="kubernetes"
 		ENTERPRISE=1
 		KUBERNETES=1
+                accept_enterprise		
 		;;
             h | H)
 		clear
@@ -460,7 +486,9 @@ enter_email()
 	    exit 1
 	fi
 
-	curl -H "Content-type:application/json" --data @.details http://snurran.sics.se:8443/keyword --connect-timeout 10 > /dev/null 2>&1
+	CREDENTIALS=$(curl -H "Content-type:application/json" --data @.details http://snurran.sics.se:8443/keyword --connect-timeout 10)
+	ENTERPRISE_USERNAME=$(echo $CREDENTIALS | cut -d ":" -f1)	
+	ENTERPRISE_PASSWORD=$(echo $CREDENTIALS | cut -d ":" -f2)
 	clear_screen
     fi
 }
@@ -1116,7 +1144,7 @@ az_get_ips()
 	if [ $DEBUG -eq 1 ] ; then	
             echo -e "${NAME}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
 	fi
-        ssh -t -o StrictHostKeyChecking=no $CPU[$i]  "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
+        ssh -t -o StrictHostKeyChecking=no ${CPU[${i}]}  "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
 	i=$((i+1))	
     done
 
@@ -1134,7 +1162,7 @@ az_get_ips()
 	if [ $DEBUG -eq 1 ] ; then	
             echo -e "${NAME}\t Public IP: ${GPU[${i}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
 	fi
-        ssh -t -o StrictHostKeyChecking=no $GPU[$i]  "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
+        ssh -t -o StrictHostKeyChecking=no ${GPU[${i}]} "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
 	i=$((i+1))	
     done
 }    
@@ -1571,7 +1599,6 @@ az_create_gpu()
 	ACCELERATOR_ZONE=3	
     fi
     VM_TYPE=$ACCELERATOR_VM
-#    PUBLIC_IP_ATTR="--public-ip-address \"\""
     PUBLIC_IP_ATTR="--public-ip-sku Standard"    
     AZ_ZONE=
     _az_create_vm $1
@@ -1867,13 +1894,13 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 		enterprise)
 		    INSTALL_ACTION=$INSTALL_CLUSTER
                     ENTERPRISE=1
-		    ACTION="enterprise"		      
+		    ACTION="enterprise"
 		    ;;
 		kubernetes)
 		    INSTALL_ACTION=$INSTALL_CLUSTER
                     ENTERPRISE=1
                     KUBERNETES=1
-		    ACTION="kubernetes"		      
+		    ACTION="kubernetes"
 		    ;;
 		*)
 		    echo "Could not recognise '-i' option: $1"

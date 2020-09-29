@@ -28,7 +28,7 @@
 ###################################################################################################
 
 HOPSWORKS_REPO=logicalclocks/hopsworks-chef
-HOPSWORKS_BRANCH=kfserving
+HOPSWORKS_BRANCH=master
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_BRANCH
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
@@ -135,6 +135,28 @@ clear_screen_no_skipline()
     clear
 }
 
+accept_enterprise()
+{
+    echo ""
+    echo "You are installing a time-limited version of Hopsworks Enterprise."
+    echo "The license for this version is valid for 60 days from now."
+    echo "Hopsworks  Terms and conditions: https://www.logicalclocks.com/hopsworks-terms-and-conditions "
+    printf "Do you agree to Hopsworks terms and conditions (y/n)? "
+    read ACCEPT
+    case $ACCEPT in
+	y|yes)
+	    echo "Continuing..."
+	    echo ""
+	    ;;
+	n|no)
+	    ;;
+	*)
+	    echo "Next time, enter 'y' or 'yes' to continue."
+	    echo "Exiting..."
+	    exit 3
+	    ;;
+    esac
+}
 
 #######################################################################
 # LICENSING
@@ -378,11 +400,13 @@ install_action()
             4)
 		INSTALL_ACTION=$INSTALL_CLUSTER
 		ENTERPRISE=1
+		accept_enterprise
 		;;
             5)
 		INSTALL_ACTION=$INSTALL_CLUSTER
 		ENTERPRISE=1
 		KUBERNETES=1
+		accept_enterprise		
 		;;
             6)
 		INSTALL_ACTION=$INSTALL_KARAMEL
@@ -608,7 +632,11 @@ enter_email()
 	exit 1
     fi
 
-    curl -H "Content-type:application/json" --data @.details http://snurran.sics.se:8443/keyword --connect-timeout 10 > /dev/null 2>&1
+    #curl -H "Content-type:application/json" --data @.details http://snurran.sics.se:8443/keyword --connect-timeout 10 > /dev/null 2>&1
+    CREDENTIALS=$(curl -H "Content-type:application/json" --data @.details http://snurran.sics.se:8443/keyword --connect-timeout 10)
+    ENTERPRISE_USERNAME=$(echo $CREDENTIALS | cut -d ":" -f1)	
+    ENTERPRISE_PASSWORD=$(echo $CREDENTIALS | cut -d ":" -f2)
+
 }
 
 update_worker_yml()
