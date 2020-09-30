@@ -33,7 +33,7 @@
 ###################################################################################################
 
 HOPSWORKS_INSTALLER_VERSION=master
-CLUSTER_DEFINITION_VERSION=master
+CLUSTER_DEFINITION_VERSION=$HOPSWORKS_INSTALLER_VERSION
 HOPSWORKS_INSTALLER_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_INSTALLER_VERSION
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$CLUSTER_DEFINITION_VERSION
 
@@ -95,6 +95,8 @@ NUM_NVME_DRIVES_PER_WORKER=0
 HEAD_INSTANCE_TYPE=
 WORKER_INSTANCE_TYPE=
 
+ENTERPRISE_DOWNLOAD_URL=https://nexus.hops.works/repository
+
 #################
 # GCP Config
 #################
@@ -131,6 +133,7 @@ RESOURCE_GROUP=hopsworks
 VIRTUAL_NETWORK=hops
 
 # We call Azure's LOCATION "REGION" to make this script more generic
+# az vm create -n ghead --vnet-name hops --size Standard_NC6 --location westeurope --image UbuntuLTS --subnet default --public-ip-address ""
 AZ_ZONE=3
 SUBNET=default
 DNS_PRIVATE_ZONE=h.w
@@ -139,9 +142,16 @@ VM_HEAD=hd
 VM_WORKER=cpu
 VM_GPU=gpu
 
-VM_SIZE=Standard_E4as_v4
-ACCELERATOR_VM=Standard_E4as_v4
-OS_IMAGE=UbuntuLTS
+
+#VM_SIZE=Standard_E4as_v4
+# 
+VM_SIZE=Standard_E8s_v3
+ACCELERATOR_VM=Standard_NC6
+
+OS_IMAGE=Canonical:UbuntuServer:18.04-LTS:latest
+#OS_IMAGE=OpenLogic:CentOS:7.5:latest
+#OS_IMAGE=OpenLogic:CentOS:7.7:latest
+#
 #AZ_NETWORKING="--accelerated-networking true"
 AZ_NETWORKING="--accelerated-networking false"
 #GPUs on Azure
@@ -302,6 +312,28 @@ accept_license ()
     esac
 }
 
+accept_enterprise()
+{
+    echo ""
+    echo "You are installing a time-limited version of Hopsworks Enterprise."
+    echo "The license for this version is valid for 60 days from now."
+    echo "Hopsworks  Terms and conditions: https://www.logicalclocks.com/hopsworks-terms-and-conditions "
+    printf "Do you agree to Hopsworks terms and conditions (y/n)? "
+    read ACCEPT
+    case $ACCEPT in
+	y|yes)
+	    echo "Continuing..."
+	    echo ""
+	    ;;
+	n|no)
+	    ;;
+	*)
+	    echo "Next time, enter 'y' or 'yes' to continue."
+	    echo "Exiting..."
+	    exit 3
+	    ;;
+    esac
+}
 
 
 clear_screen_no_skipline()
@@ -351,12 +383,14 @@ install_action()
 		INSTALL_ACTION=$INSTALL_CLUSTER
 		ACTION="enterprise"
 		ENTERPRISE=1
+                accept_enterprise
 		;;
             5)
 		INSTALL_ACTION=$INSTALL_CLUSTER
 		ACTION="kubernetes"
 		ENTERPRISE=1
 		KUBERNETES=1
+                accept_enterprise		
 		;;
             h | H)
 		clear
@@ -412,7 +446,14 @@ cpus_gpus()
 	    echo "FOUND GPUS: $GPUS"
         fi		
     elif [ "$CLOUD" == "azure" ] ; then
-	echo ""
+	    
+	CPUS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | grep "^${PREFIX}" | grep -e "cpu[0-99]" |  wc -l)
+	GPUS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | grep "^${PREFIX}" | grep -e "gpu[0-99]" |  wc -l)
+	if [ $DEBUG -eq 1 ] ; then
+	    echo "FOUND CPUS: $CPUS"
+	    echo "FOUND GPUS: $GPUS"
+        fi		
+
     elif [ "$CLOUD" == "aws" ] ; then
 	echo ""	
     fi
@@ -445,7 +486,9 @@ enter_email()
 	    exit 1
 	fi
 
-	curl -H "Content-type:application/json" --data @.details http://snurran.sics.se:8443/keyword --connect-timeout 10 > /dev/null 2>&1
+	CREDENTIALS=$(curl -H "Content-type:application/json" --data @.details http://snurran.sics.se:8443/keyword --connect-timeout 10)
+	ENTERPRISE_USERNAME=$(echo $CREDENTIALS | cut -d ":" -f1)	
+	ENTERPRISE_PASSWORD=$(echo $CREDENTIALS | cut -d ":" -f2)
 	clear_screen
     fi
 }
@@ -560,7 +603,7 @@ add_worker()
 	    set_name "gpu${GPU_WORKER_ID}"
 	fi
         create_vm_gpu "worker"
-        GPU_WORKER_ID=$((GPU_WORKER_ID+1))	
+        GPU_WORKER_ID=$((GPU_WORKER_ID+1))
     else
 	if [ $i -lt 10 ] ; then
 	    set_name "cpu0${CPU_WORKER_ID}"
@@ -651,6 +694,7 @@ select_gpu()
 		*)
 		    echo "Invalid GPU choice. Try again."
 		    echo ""
+		    NUM_GPUS_PER_VM=
 		    select_gpu $1
 		    ;;
 	    esac
@@ -1070,7 +1114,7 @@ gcloud_delete_vm()
 az_get_ips()
 {
     echo "Azure get_ips"
-
+#    MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $2, $3 }')    
     set_name "head"
     if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
 	set_name "cpu"
@@ -1078,15 +1122,18 @@ az_get_ips()
 	set_name "gpu"
     fi
     
-    IP=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table  | grep ^$NAME | awk '{ print $2 }')
-    if [ $DEBUG -eq 1 ] ; then    
-	echo -e "${NAME}\t Public IP: $IP"
-    fi
+    IP=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $2 }')
+    echo "$NAME : $IP"
+    ssh -t -o StrictHostKeyChecking=no $IP "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
+    
+    sleep 3
+
     cpus_gpus
 
     i=0
     while [ $i -lt $CPUS ] ; 
     do
+        echo "CPUS: $CPUS   i: $i"	
 	if [ $i -lt 10 ] ; then
 	    set_name "cpu0${i}"
 	else
@@ -1098,7 +1145,8 @@ az_get_ips()
 	if [ $DEBUG -eq 1 ] ; then	
             echo -e "${NAME}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
 	fi
-	i=$(i+1)
+        ssh -t -o StrictHostKeyChecking=no ${CPU[${i}]}  "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
+	i=$((i+1))	
     done
 
     i=0
@@ -1110,12 +1158,13 @@ az_get_ips()
 	    set_name "gpu${i}"
 	fi
 	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table  | grep ^$NAME | awk '{ print $2, $3 }')
-	GPU[$j]=$(echo "$MY_IPS" | awk '{ print $1 }')
-	PRIVATE_GPU[$j]=$(echo "$MY_IPS" | awk '{ print $2 }')
+	GPU[$i]=$(echo "$MY_IPS" | awk '{ print $1 }')
+	PRIVATE_GPU[$i]=$(echo "$MY_IPS" | awk '{ print $2 }')
 	if [ $DEBUG -eq 1 ] ; then	
             echo -e "${NAME}\t Public IP: ${GPU[${i}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
 	fi
-	i=$(i+1)	
+        ssh -t -o StrictHostKeyChecking=no ${GPU[${i}]} "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
+	i=$((i+1))	
     done
 }    
 
@@ -1481,7 +1530,7 @@ _az_precreate()
 	
 	echo ""
 	echo "For the $1 VM:"
-	echo "VM type (size): $VM_SIZE"
+	echo "VM type (size): $VM_TYPE"
 	printf "Is the default VM type OK (y/n)? (default: y) "
 	read KEEP_IMAGE
 	if [ "$KEEP_IMAGE" == "y" ] || [ "$KEEP_IMAGE" == "" ] ; then
@@ -1492,7 +1541,7 @@ _az_precreate()
 	    printf "Enter the VM type: "
 	    read VM_SIZE
 	fi
-	echo "VM type selected: $VM_SIZE"
+	echo "VM type selected: $VM_TYPE"
 
 	
 	echo ""
@@ -1507,13 +1556,6 @@ _az_precreate()
 	    read OS_IMAGE
 	fi
 	echo "OS Image selected: $OS_IMAGE"
-	# az vm image list --all | grep $OS_IMAGE
-	# if [ $? -ne 0 ] ; then
-	# 	echo "Could not find $OS_IMAGE amoung available images (az vm image list --all)"
-	# 	echo "Try again."
-	# 	_az_precreate
-	# 	return
-	# fi
 	
 	echo ""
 	echo "Boot disk size: $BOOT_SIZE_GBS"
@@ -1526,22 +1568,20 @@ _az_precreate()
 	    printf "Enter the boot disk size in GBs: "
 	    read BOOT_SIZE_GBS
 	fi
-	echo "Boot disk size: ${BOOT_SIZE_GBS}GB"
 	
-	echo ""
-	echo "Data disk size: $DATA_DISK_SIZES_GB"
-	printf "Is the additional data disk size (GBs) OK (y/n)? (default: y) "
-	read KEEP_SIZE
-	if [ "$KEEP_SIZE" == "y" ] || [ "$KEEP_SIZE" == "" ] ; then
-	    echo ""
-	else
-	    echo ""
-	    printf "Enter the data disk size in GBs: "
-	    read DATA_DISK_SIZES_GB
-	fi
-	DATA_DISK_SIZE=$DATA_DISK_SIZES_GB
-	echo "Boot disk size: ${DATA_DISK_SIZE}GB"
+	# echo ""
+	# echo "Data disk size: $DATA_DISK_SIZES_GB"
+	# printf "Is the additional data disk size (GBs) OK (y/n)? (default: y) "
+	# read KEEP_SIZE
+	# if [ "$KEEP_SIZE" == "y" ] || [ "$KEEP_SIZE" == "" ] ; then
+	#     echo ""
+	# else
+	#     echo ""
+	#     printf "Enter the data disk size in GBs: "
+	#     read DATA_DISK_SIZES_GB
+	# fi
     fi
+#    DATA_DISK_SIZE=$DATA_DISK_SIZES_GB    
     BOOT_SIZE=$BOOT_SIZE_GBS
 }
 
@@ -1549,21 +1589,27 @@ az_create_gpu()
 {
     if [ "$GPU_TYPE" == "k80" ] ; then
 	ACCELERATOR_ZONE=3
+	ACCELERATOR_VM=Standard_NC6
     elif [ "$GPU_TYPE" == "p100" ] ; then
-	ACCELERATOR_ZONE=2	
+	ACCELERATOR_ZONE=2
+	ACCELERATOR_VM=Standard_NC6s_v2
     elif [ "$GPU_TYPE" == "v100" ] ; then
-	ACCELERATOR_ZONE=1	
+	ACCELERATOR_ZONE=1
+	ACCELERATOR_VM=Standard_NC6s_v3
     else
 	ACCELERATOR_ZONE=3	
     fi
-    VM_SIZE=$ACCELERATOR_VM
-    ACCELERATOR="--size $NUM_GPUS_PER_VM"
+    VM_TYPE=$ACCELERATOR_VM
+    PUBLIC_IP_ATTR="--public-ip-sku Standard"    
+    AZ_ZONE=
     _az_create_vm $1
 }
 
 az_create_cpu()
 {
-    ACCELERATOR=""
+    VM_TYPE=$VM_SIZE
+    PUBLIC_IP_ATTR="--public-ip-sku Standard"
+    AZ_ZONE="-z 3"
     _az_create_vm $1
 }
 
@@ -1572,37 +1618,39 @@ _az_create_vm()
     _az_precreate $1
     if [ $DEBUG -eq 1 ] ; then    
 	echo "
-  az vm create -n $NAME -g $RESOURCE_GROUP \
-   --attach-data-disks \
-   --image $OS_IMAGE --data-disk-sizes-gb $DATA_DISK_SIZE --os-disk-size-gb $BOOT_SIZE \
-   --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
-   --size $VM_SIZE --location $REGION --zone $AZ_ZONE $ACCELERATOR $AZ_NETWORKING\
-   --ssh-key-value ~/.ssh/id_rsa.pub    
-"
-    fi
-    az vm create -n $NAME -g $RESOURCE_GROUP \
-       --image $OS_IMAGE --data-disk-sizes-gb $DATA_DISK_SIZE --os-disk-size-gb $BOOT_SIZE \
+    az vm create -n $NAME -g $RESOURCE_GROUP --size $VM_TYPE \
+       --image $OS_IMAGE --os-disk-size-gb $BOOT_SIZE \
        --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
-       --size $VM_SIZE --location $REGION --zone $AZ_ZONE $ACCELERATOR \
-       --ssh-key-value ~/.ssh/id_rsa.pub    
+       --location $REGION \
+       --ssh-key-value ~/.ssh/id_rsa.pub $PUBLIC_IP_ATTR $AZ_ZONE
+"
+	# --data-disk-sizes-gb $DATA_DISK_SIZE 
+	# $AZ_NETWORKING \	
 	#   --priority $PRIORITY --max-price 0.06 \
-	    if [ $? -ne 0 ] ; then
-		echo "Problem creating VM. Exiting ..."
-		exit 12
-	    fi
-	    sleep 20
-	    # Shortcut to create a network security group (NSG) add the 443 inbound rule, and applies it to the VM 
-	    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 443
+    fi
+    echo "Creating VM..."
+    az vm create -n $NAME -g $RESOURCE_GROUP --size $VM_TYPE \
+       --image $OS_IMAGE --os-disk-size-gb $BOOT_SIZE \
+       --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
+       --location $REGION \
+       --ssh-key-value ~/.ssh/id_rsa.pub $PUBLIC_IP_ATTR $AZ_ZONE
+
+    if [ $? -ne 0 ] ; then
+	echo "Problem creating VM. Exiting ..."
+	exit 12
+    fi
+    sleep 20
+    # Shortcut to create a network security group (NSG) add the 443 inbound rule, and applies it to the VM 
+    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 443 --priority 900
+    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 4848 --priority 899
+    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 9090 --priority 898
 }
 
 
 az_delete_vm()
 {
     _az_set_resource_group
-    # _az_set_location
-
     az vm delete -g $RESOURCE_GROUP --name $VM_DELETE --yes --no-wait
-    
 }
 
 
@@ -1691,9 +1739,6 @@ _missing_cloud()
 
 create_vm_cpu()
 {
-    
-    echo "Creating VM...."
-    echo ""
     if [ "$CLOUD" == "gcp" ] ; then
 	gcloud_create_cpu $1
     elif [ "$CLOUD" == "azure" ] ; then
@@ -1851,13 +1896,13 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 		enterprise)
 		    INSTALL_ACTION=$INSTALL_CLUSTER
                     ENTERPRISE=1
-		    ACTION="enterprise"		      
+		    ACTION="enterprise"
 		    ;;
 		kubernetes)
 		    INSTALL_ACTION=$INSTALL_CLUSTER
                     ENTERPRISE=1
                     KUBERNETES=1
-		    ACTION="kubernetes"		      
+		    ACTION="kubernetes"
 		    ;;
 		*)
 		    echo "Could not recognise '-i' option: $1"
@@ -2087,6 +2132,7 @@ while [ "$IP" == "" ] ; do
     sleep 5
 done
 
+echo "Found IP: $IP"
 
 host_ip=$IP
 clear_known_hosts
@@ -2116,7 +2162,6 @@ if [ $? -ne 0 ] ; then
 fi    
 
 if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
-    
     ssh -t -o StrictHostKeyChecking=no $IP "if [ ! -e ~/.ssh/id_rsa.pub ] ; then cat /dev/zero | ssh-keygen -q -N \"\" ; fi"
     pubkey=$(ssh -t -o StrictHostKeyChecking=no $IP "cat ~/.ssh/id_rsa.pub")
 

@@ -88,6 +88,10 @@ PROXY=
 GEM_SERVER=0
 GEM_SERVER_PORT=54321
 
+NODE_MANAGER_HEAD="      - hops::nm
+"
+
+
 # $1 = String describing error
 exit_error()
 {
@@ -131,6 +135,28 @@ clear_screen_no_skipline()
     clear
 }
 
+accept_enterprise()
+{
+    echo ""
+    echo "You are installing a time-limited version of Hopsworks Enterprise."
+    echo "The license for this version is valid for 60 days from now."
+    echo "Hopsworks  Terms and conditions: https://www.logicalclocks.com/hopsworks-terms-and-conditions "
+    printf "Do you agree to Hopsworks terms and conditions (y/n)? "
+    read ACCEPT
+    case $ACCEPT in
+	y|yes)
+	    echo "Continuing..."
+	    echo ""
+	    ;;
+	n|no)
+	    ;;
+	*)
+	    echo "Next time, enter 'y' or 'yes' to continue."
+	    echo "Exiting..."
+	    exit 3
+	    ;;
+    esac
+}
 
 #######################################################################
 # LICENSING
@@ -374,11 +400,13 @@ install_action()
             4)
 		INSTALL_ACTION=$INSTALL_CLUSTER
 		ENTERPRISE=1
+		accept_enterprise
 		;;
             5)
 		INSTALL_ACTION=$INSTALL_CLUSTER
 		ENTERPRISE=1
 		KUBERNETES=1
+		accept_enterprise		
 		;;
             6)
 		INSTALL_ACTION=$INSTALL_KARAMEL
@@ -604,7 +632,11 @@ enter_email()
 	exit 1
     fi
 
-    curl -H "Content-type:application/json" --data @.details http://snurran.sics.se:8443/keyword --connect-timeout 10 > /dev/null 2>&1
+    #curl -H "Content-type:application/json" --data @.details http://snurran.sics.se:8443/keyword --connect-timeout 10 > /dev/null 2>&1
+    CREDENTIALS=$(curl -H "Content-type:application/json" --data @.details http://snurran.sics.se:8443/keyword --connect-timeout 10)
+    ENTERPRISE_USERNAME=$(echo $CREDENTIALS | cut -d ":" -f1)	
+    ENTERPRISE_PASSWORD=$(echo $CREDENTIALS | cut -d ":" -f2)
+
 }
 
 update_worker_yml()
@@ -704,7 +736,6 @@ add_worker()
     # strip carriage return '\r' from variable to make it a number
     WORKER_GPUS=$(echo $WORKER_GPUS|tr -d '\r')
 
-
     echo ""
     echo "Number of GPUs found on worker: $WORKER_GPUS"
     echo ""
@@ -760,6 +791,10 @@ worker_size()
     read NUM_WORKERS
     if [ "$NUM_WORKERS" == "" ] ; then
 	NUM_WORKERS=0
+    fi
+    if [ $NUM_WORKERS -gt 0 ] ; then
+        # No Nodemanager for Head node
+        NODE_MANAGER_HEAD=""
     fi
     i=0
     while [ $i -lt $NUM_WORKERS ] ;
@@ -1210,12 +1245,7 @@ else
 fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] ; then
-    TLS="true
-      crl_enabled: true
-      crl_fetcher_class: org.apache.hadoop.security.ssl.DevRemoteCRLFetcher
-      crl_fetcher_interval: 5m
-"
-    
+        
     if [ "$WORKER_LIST" == "" ] ; then
 	worker_size
     else
@@ -1228,8 +1258,16 @@ if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] ; then
 		WORKER_IP=$worker
 		add_worker
 	    done
+	    # No Nodemanager for Head node
+            NODE_MANAGER_HEAD=""
 	fi
     fi
+    
+    TLS="true
+      crl_enabled: true
+      crl_fetcher_class: org.apache.hadoop.security.ssl.DevRemoteCRLFetcher
+      crl_fetcher_interval: 5m
+"    
 fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST_TLS" ] ; then
@@ -1325,6 +1363,11 @@ else
         echo ""
 	#printf -v DNS_IP "%q\n" "$DNS_IP"
 	DNS_IP=${DNS_IP//\./\\\.}
+
+	if [ "$DISTRO" == "Ubuntu" ] ; then
+	    DNS_IP="8.8.8.8"
+	fi
+	
 	if [ $KUBERNETES -eq 1 ] ; then
 	    KUBE="true"
 	    DOWNLOAD="$DOWNLOAD
@@ -1338,7 +1381,10 @@ else
 	    KUBERNETES_RECIPES="      - kube-hops::hopsworks
       - kube-hops::ca
       - kube-hops::master
-      - kube-hops::addons"
+      - kube-hops::addons
+$NODE_MANAGER_HEAD"
+	else
+            KUBERNETES_RECIPES="$NODE_MANAGER_HEAD"	    
 	fi
         ENTERPRISE_ATTRS="enterprise:
       install: true
@@ -1346,6 +1392,8 @@ else
       username: $ENTERPRISE_USER
       password: $ENTERPRISE_PASSWORD"
 
+    else
+	KUBERNETES_RECIPES="$NODE_MANAGER_HEAD"
     fi
     
     if [ $NVME -gt 0 ] ; then
