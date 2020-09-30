@@ -1383,6 +1383,8 @@ else
       - kube-hops::master
       - kube-hops::addons
 $NODE_MANAGER_HEAD"
+	else
+            KUBERNETES_RECIPES="$NODE_MANAGER_HEAD"	    
 	fi
         ENTERPRISE_ATTRS="enterprise:
       install: true
