@@ -694,6 +694,7 @@ select_gpu()
 		*)
 		    echo "Invalid GPU choice. Try again."
 		    echo ""
+		    NUM_GPUS_PER_VM=
 		    select_gpu $1
 		    ;;
 	    esac
