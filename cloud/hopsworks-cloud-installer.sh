@@ -1529,7 +1529,7 @@ _az_precreate()
 	
 	echo ""
 	echo "For the $1 VM:"
-	echo "VM type (size): $VM_SIZE"
+	echo "VM type (size): $VM_TYPE"
 	printf "Is the default VM type OK (y/n)? (default: y) "
 	read KEEP_IMAGE
 	if [ "$KEEP_IMAGE" == "y" ] || [ "$KEEP_IMAGE" == "" ] ; then
@@ -1540,7 +1540,7 @@ _az_precreate()
 	    printf "Enter the VM type: "
 	    read VM_SIZE
 	fi
-	echo "VM type selected: $VM_SIZE"
+	echo "VM type selected: $VM_TYPE"
 
 	
 	echo ""
@@ -1568,19 +1568,19 @@ _az_precreate()
 	    read BOOT_SIZE_GBS
 	fi
 	
-	echo ""
-	echo "Data disk size: $DATA_DISK_SIZES_GB"
-	printf "Is the additional data disk size (GBs) OK (y/n)? (default: y) "
-	read KEEP_SIZE
-	if [ "$KEEP_SIZE" == "y" ] || [ "$KEEP_SIZE" == "" ] ; then
-	    echo ""
-	else
-	    echo ""
-	    printf "Enter the data disk size in GBs: "
-	    read DATA_DISK_SIZES_GB
-	fi
+	# echo ""
+	# echo "Data disk size: $DATA_DISK_SIZES_GB"
+	# printf "Is the additional data disk size (GBs) OK (y/n)? (default: y) "
+	# read KEEP_SIZE
+	# if [ "$KEEP_SIZE" == "y" ] || [ "$KEEP_SIZE" == "" ] ; then
+	#     echo ""
+	# else
+	#     echo ""
+	#     printf "Enter the data disk size in GBs: "
+	#     read DATA_DISK_SIZES_GB
+	# fi
     fi
-    DATA_DISK_SIZE=$DATA_DISK_SIZES_GB    
+#    DATA_DISK_SIZE=$DATA_DISK_SIZES_GB    
     BOOT_SIZE=$BOOT_SIZE_GBS
 }
 
@@ -1618,17 +1618,18 @@ _az_create_vm()
     if [ $DEBUG -eq 1 ] ; then    
 	echo "
     az vm create -n $NAME -g $RESOURCE_GROUP --size $VM_TYPE \
-       --image $OS_IMAGE --data-disk-sizes-gb $DATA_DISK_SIZE --os-disk-size-gb $BOOT_SIZE \
+       --image $OS_IMAGE --os-disk-size-gb $BOOT_SIZE \
        --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
        --location $REGION \
        --ssh-key-value ~/.ssh/id_rsa.pub $PUBLIC_IP_ATTR $AZ_ZONE
 "
+	# --data-disk-sizes-gb $DATA_DISK_SIZE 
 	# $AZ_NETWORKING \	
 	#   --priority $PRIORITY --max-price 0.06 \
     fi
     echo "Creating VM..."
     az vm create -n $NAME -g $RESOURCE_GROUP --size $VM_TYPE \
-       --image $OS_IMAGE --data-disk-sizes-gb $DATA_DISK_SIZE --os-disk-size-gb $BOOT_SIZE \
+       --image $OS_IMAGE --os-disk-size-gb $BOOT_SIZE \
        --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
        --location $REGION \
        --ssh-key-value ~/.ssh/id_rsa.pub $PUBLIC_IP_ATTR $AZ_ZONE
