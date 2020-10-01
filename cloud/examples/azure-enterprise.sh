@@ -12,4 +12,5 @@ read name
 
 echo "The cluster name prefix is: $name"
 
-ENTERPRISE_PASSWORD=$PASSWORD ./hopsworks-cloud-installer.sh -n $name -i kubernetes -ni -c gcp -d https://nexus.hops.works/repository -g 2 -gt k80 -gpus 1
+ENTERPRISE_PASSWORD=$PASSWORD ./hopsworks-cloud-installer.sh -n $name -i kubernetes -ni -c azure -d https://nexus.hops.works/repository -w 0 -g 0 --debug
+
