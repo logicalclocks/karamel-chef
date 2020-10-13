@@ -230,7 +230,7 @@ splash_screen()
 
     which dig > /dev/null
     if [ $? -ne 0 ] ; then
-	echo "Installing dig ..."
+	echo "Installing dig..."
 	if [ "$DISTRO" == "Ubuntu" ] ; then
             sudo apt install dnsutils -y  > /dev/null
 	elif [ "${DISTRO,,}" == "centos" ] || [ "${DISTRO,,}" == "os" ] ; then
@@ -483,7 +483,7 @@ set_karamel_http_proxy()
 {
 
     # extract the protocol
-    proto="$(echo $PROXY | grep :// | sed -e's,^\(.*://\).*,\1,g')"
+    proto="$(echo $PROXY | grep :// | sed -e 's,^\(.*://\).*,\1,g')"
     # remove the protocol
     url="$(echo ${PROXY/$proto/})"
     # extract the user (if any)
@@ -641,10 +641,10 @@ enter_email()
 
 update_worker_yml()
 {
-    perl -pi -e "s/__WORKER_ID__/$WORKER_ID/" $tmpYml
-    perl -pi -e "s/__WORKER_IP__/$WORKER_IP/" $tmpYml
-    perl -pi -e "s/__MBS__/$MBS/" $tmpYml
-    perl -pi -e "s/__CPUS__/$CPUS/" $tmpYml
+    sed -i "s/__WORKER_ID__/$WORKER_ID/" $tmpYml
+    sed -i "s/__WORKER_IP__/$WORKER_IP/" $tmpYml
+    sed -i "s/__MBS__/$MBS/" $tmpYml
+    sed -i "s/__CPUS__/$CPUS/" $tmpYml
     cat $tmpYml >> $YML_FILE
 }
 
@@ -681,7 +681,7 @@ add_worker()
     echo "Amount of disk space available on root partition ('/'): $WORKER_DISK"
     echo "Amount of memory available on this worker: $WORKER_MEM MBs"
     if [ "$WORKER_DEFAULTS" != "true" ] ; then
-	printf "Please enter the amout of memory in this worker to be used (GBs): "
+	printf "Please enter the amount of memory in this worker to be used (GBs): "
 	read GBS
 	MBS=$(expr $GBS \* 1024)
     fi
@@ -942,8 +942,8 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	    echo " [-nvme|--nvme num_disks] Number of NVMe disks on worker nodes (for NDB/HopsFS)"
 	    echo " [-c|--cloud      on-premises|gcp|aws|azure]"
 	    echo " [-w|--workers    IP1,IP2,...,IPN|none] install on workers with IPs in supplied list (or none). Uses default mem/cpu/gpus for the workers."
-	    echo " [-d|--download-enterprise-url url] downloads enterprise binaries from this URL."
-	    echo " [-dc|--download-url] downloads binaries from this URL."
+	    echo " [-de|--download-enterprise-url url] downloads enterprise binaries from this URL."
+	    echo " [-dc|--download-community-url] downloads binaries from this URL."
 	    echo " [-du|--download-user username] Username for downloading enterprise binaries."
 	    echo " [-dp|--download-password password] Password for downloading enterprise binaries."
 	    echo " [-gs|--gem-server] Run a local gem server for chef-solo (for air-gapped installations)."	      
@@ -996,11 +996,11 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	-cl|--clean)
 	    CLEAN_INSTALL_DIR=1
 	    ;;
-	-d|--download-enterprise-url)
+	-de|--download-enterprise-url)
       	    shift
 	    ENTERPRISE_DOWNLOAD_URL=$1
 	    ;;
-	-dc|--download-url)
+	-dc|--download-community-url)
       	    shift
 	    DOWNLOAD_URL=$1
 	    ;;
@@ -1107,8 +1107,8 @@ if [ $NON_INTERACT -eq 0 ] ; then
 	    PROXY=$http_proxy
 	    set_karamel_http_proxy
 	fi
+    clear_screen	
     fi
-    clear_screen
     enter_email
     clear_screen
 fi
@@ -1206,10 +1206,10 @@ wget -nc ${CLUSTER_DEFINITION_BRANCH}/$WORKER_YML
 wget -nc ${CLUSTER_DEFINITION_BRANCH}/$WORKER_GPU_YML
 cd ..
 
-if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST_TLS" ]  ; then
-    enter_cloud
-    cp -f $INPUT_YML $YML_FILE
-fi
+#if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST_TLS" ]  ; then
+enter_cloud
+cp -f $INPUT_YML $YML_FILE
+#fi
 
 if [ "$CLOUD" == "azure" ] ; then
     NSLOOKUP=$(nslookup $IP | grep name | awk {' print $4 '} | grep -v 'internal.cloudapp.net')
@@ -1316,21 +1316,21 @@ else
     BASE_PWD=$(date | md5sum | head -c${1:-8})
     GBS=$(expr $AVAILABLE_MEMORY - 2)
     MEM=$(expr $GBS \* 1024)
-    perl -pi -e "s/__CLOUD__/$CLOUD/" $YML_FILE
-    perl -pi -e "s/__MEM__/$MEM/" $YML_FILE
-    perl -pi -e "s/__PWD__/$BASE_PWD/g" $YML_FILE
-    perl -pi -e "s/__DNS_IP__/$DNS_IP/g" $YML_FILE
+    sed -i "s/__CLOUD__/$CLOUD/" $YML_FILE
+    sed -i "s/__MEM__/$MEM/" $YML_FILE
+    sed -i "s/__PWD__/$BASE_PWD/g" $YML_FILE
+    sed -i "s/__DNS_IP__/$DNS_IP/g" $YML_FILE
     CPUS=$(expr $AVAILABLE_CPUS - 1)
-    perl -pi -e "s/__CPUS__/$CPUS/" $YML_FILE
+    sed -i "s/__CPUS__/$CPUS/" $YML_FILE
     # escape slashes to use perl -e
     HOPSWORKS_REPO=$(echo "$HOPSWORKS_REPO"  | sed 's/\//\\\//g')
-    perl -pi -e "s/__GITHUB__/$HOPSWORKS_REPO/" $YML_FILE
-    perl -pi -e "s/__BRANCH__/$HOPSWORKS_BRANCH/" $YML_FILE
-    perl -pi -e "s/__USER__/$USER/" $YML_FILE
-    perl -pi -e "s/__IP__/$IP/" $YML_FILE
-    perl -pi -e "s/__YARN__/$YARN/" $YML_FILE
-    perl -pi -e "s/__TLS__/$TLS/" $YML_FILE
-    perl -pi -e "s/__CUDA__/$CUDA/" $YML_FILE
+    sed -i "s/__GITHUB__/$HOPSWORKS_REPO/" $YML_FILE
+    sed -i "s/__BRANCH__/$HOPSWORKS_BRANCH/" $YML_FILE
+    sed -i "s/__USER__/$USER/" $YML_FILE
+    sed -i "s/__IP__/$IP/" $YML_FILE
+    sed -i "s/__YARN__/$YARN/" $YML_FILE
+    sed -i "s/__TLS__/$TLS/" $YML_FILE
+    sed -i "s/__CUDA__/$CUDA/" $YML_FILE
 
     if [ "$DOWNLOAD_URL" != "" ] ; then
 	DOWNLOAD="download_url: $DOWNLOAD_URL"
@@ -1415,11 +1415,11 @@ $NODE_MANAGER_HEAD"
       undofile_size: 1000M"
     fi
 
-    perl -pi -e "s/__ENTERPRISE__/$ENTERPRISE_ATTRS/" $YML_FILE
-    perl -pi -e "s/__DOWNLOAD__/$DOWNLOAD/" $YML_FILE
-    perl -pi -e "s/__KUBERNETES_RECIPES__/$KUBERNETES_RECIPES/" $YML_FILE
-    perl -pi -e "s/__KUBE__/$KUBE/" $YML_FILE
-    perl -pi -e "s/__NDB_NVME__/${NDB_NVME}/" $YML_FILE
+    sed -i "s/__ENTERPRISE__/$ENTERPRISE_ATTRS/" $YML_FILE
+    sed -i "s/__DOWNLOAD__/$DOWNLOAD/" $YML_FILE
+    sed -i "s/__KUBERNETES_RECIPES__/$KUBERNETES_RECIPES/" $YML_FILE
+    sed -i "s/__KUBE__/$KUBE/" $YML_FILE
+    sed -i "s/__NDB_NVME__/${NDB_NVME}/" $YML_FILE
 
     RUN_GEM_SERVER=
     if [ $GEM_SERVER -eq 1 ] ; then
