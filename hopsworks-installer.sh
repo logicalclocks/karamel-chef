@@ -84,6 +84,9 @@ CUDA=
 KARAMEL_HTTP_PROXY_1=
 KARAMEL_HTTP_PROXY_2=
 KARAMEL_HTTP_PROXY_3=
+KARAMEL_HTTP_PROXY_4=
+KARAMEL_HTTP_PROXY_5=
+KARAMEL_HTTP_PROXY_6=
 PROXY=
 GEM_SERVER=0
 GEM_SERVER_PORT=54321
@@ -233,10 +236,21 @@ splash_screen()
 	echo "Installing dig..."
 	if [ "$DISTRO" == "Ubuntu" ] ; then
             sudo apt install dnsutils -y  > /dev/null
-	elif [ "${DISTRO,,}" == "centos" ] || [ "${DISTRO,,}" == "os" ] ; then
+#	elif [ "${DISTRO,,}" == "centos" ] || [ "${DISTRO,,}" == "os" ] ; then
+	else
 	    sudo yum install bind-utils -y > /dev/null
 	fi
     fi
+    which perl > /dev/null
+    if [ $? -ne 0 ] ; then
+	echo "Installing perl..."
+	if [ "$DISTRO" == "Ubuntu" ] ; then
+            sudo apt install perl -y  > /dev/null	    
+	else
+	    sudo yum install perl -y > /dev/null	    
+	fi
+    fi
+    
     # If there are multiple FQDNs for this IP, return the last one (this works on Azure)
     reverse_hostname=$(dig +noall +answer -x $IP | awk '{ print $5 }' | sort -r |  grep -v 'internal.cloudapp.net')
     # stirp off trailing '.' chracter on the hostname returned
@@ -503,38 +517,47 @@ set_karamel_http_proxy()
 	    port=-1
 	fi
     fi
-    if [ "$proto" == "http://" ] ; then
-        KARAMEL_HTTP_PROXY_1="export http_proxy=${proto}${host}:${port}"
-        KARAMEL_HTTP_PROXY_2="export http_proxy_host=$host"
-        KARAMEL_HTTP_PROXY_3="export http_proxy_port=$port"		
+
+    if [ "$proto" == "http://" ] || [ "$proto" == "https://" ] ; then
+	KARAMEL_HTTP_PROXY_1="export http_proxy=${proto}${host}:${port}"
+	KARAMEL_HTTP_PROXY_2="export http_proxy_host=$host"
+        KARAMEL_HTTP_PROXY_3="export http_proxy_port=$port"
     elif [ "$proto" == "https://" ] ; then
         KARAMEL_HTTP_PROXY_1="export https_proxy=${proto}${host}:${port}"
         KARAMEL_HTTP_PROXY_2="export https_proxy_host=$host"
-        KARAMEL_HTTP_PROXY_3="export https_proxy_port=$port"		
-	
+        KARAMEL_HTTP_PROXY_3="export https_proxy_port=$port"
     else
-	echo "Error. Unrecognized http(s) proxy protocol: $proto is a problem from $PROXY"
-	exit 15
+        echo "Error. Unrecognized http(s) proxy protocol: $proto is a problem from $PROXY"
+        exit 15
     fi
+    
+    # if [ "$proto" == "http://" ] || [ "$proto" == "https://" ] ; then
+    #     KARAMEL_HTTP_PROXY_1="export http_proxy=${proto}${host}:${port}"
+    #     KARAMEL_HTTP_PROXY_2="export http_proxy_host=$host"
+    #     KARAMEL_HTTP_PROXY_3="export http_proxy_port=$port"
+    #     KARAMEL_HTTP_PROXY_4="export https_proxy=${proto}${host}:${port}"
+    #     KARAMEL_HTTP_PROXY_5="export https_proxy_host=$host"
+    #     KARAMEL_HTTP_PROXY_6="export https_proxy_port=$port"
+    # fi
 
-    if [ $NON_INTERACT -eq 0 ] ; then
 
-	if [ "$proto" == "http://" ] ; then
-  	    export http_proxy="${proto}${host}:${port}"	    
-	elif [ "$proto" == "https://" ] ; then
-  	    export https_proxy="${proto}${host}:${port}"	    	  
-	fi
-	rm -f index.html	
-	wget http://www.google.com/index.html 2>&1 > /dev/null
-	if [ $? -ne 0 ] ; then
-	    echo "WARNING: There could be a problem with the proxy server setting."	  
-            echo "WARNING: wget (with http proxy 'on') could not download this file: http://www.logicalclocks.com/index.html"
-	    echo "http_proxy=$http_proxy"
-	    echo "https_proxy=$https_proxy"
-	    echo "PROXY=$PROXY"	  
-	fi
-	rm -f index.html
+    if [ "$proto" == "http://" ] ; then
+  	export http_proxy="${proto}${host}:${port}"	    
+    elif [ "$proto" == "https://" ] ; then
+  	export https_proxy="${proto}${host}:${port}"	    	  
     fi
+    rm -f index.html	
+    wget --timeout=10 http://www.google.com/index.html 2>&1 > /dev/null
+    if [ $? -ne 0 ] ; then
+	echo "WARNING: There could be a problem with the proxy server setting."	  
+        echo "WARNING: wget (with http proxy 'on') could not download this file: http://www.logicalclocks.com/index.html"
+	echo "http_proxy=$http_proxy"
+	echo "https_proxy=$https_proxy"
+	echo "PROXY=$PROXY"	  
+    fi
+    rm -f index.html
+    echo "http_proxy: $http_proxy"
+    echo "https_proxy: $https_proxy"	
 }    
 
 
@@ -1099,18 +1122,17 @@ if [ $NON_INTERACT -eq 0 ] ; then
     display_license
     accept_license
     clear_screen
-
     # Check if a proxy server is needed to access the internet.
     # If yes, set the http(s)_proxy environment variable when starting karamel
-    if [ "$PROXY" != "" ] ; then
-	if [ "$http_proxy" != "" ] || [ "$https_proxy" != "" ] ; then
-	    PROXY=$http_proxy
-	    set_karamel_http_proxy
-	fi
-    clear_screen	
+    if [ "$PROXY" == "" ] ; then
+      check_proxy	
     fi
+    clear_screen    
     enter_email
     clear_screen
+fi
+if [ "$http_proxy" != "" ] || [ "$https_proxy" != "" ] ; then
+   set_karamel_http_proxy
 fi
 
 install_action
@@ -1206,10 +1228,8 @@ wget -nc ${CLUSTER_DEFINITION_BRANCH}/$WORKER_YML
 wget -nc ${CLUSTER_DEFINITION_BRANCH}/$WORKER_GPU_YML
 cd ..
 
-#if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST" ] || [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST_TLS" ]  ; then
 enter_cloud
 cp -f $INPUT_YML $YML_FILE
-#fi
 
 if [ "$CLOUD" == "azure" ] ; then
     NSLOOKUP=$(nslookup $IP | grep name | awk {' print $4 '} | grep -v 'internal.cloudapp.net')
@@ -1282,7 +1302,10 @@ if [ "$INSTALL_ACTION" == "$INSTALL_KARAMEL" ]  ; then
     cd karamel-${KARAMEL_VERSION}
     $KARAMEL_HTTP_PROXY_1
     $KARAMEL_HTTP_PROXY_2
-    $KARAMEL_HTTP_PROXY_3    
+    $KARAMEL_HTTP_PROXY_3
+    # $KARAMEL_HTTP_PROXY_4
+    # $KARAMEL_HTTP_PROXY_5
+    # $KARAMEL_HTTP_PROXY_6    
     setsid ./bin/karamel -headless &
     echo "To access Karamel, open your browser at: "
     echo ""
@@ -1316,21 +1339,21 @@ else
     BASE_PWD=$(date | md5sum | head -c${1:-8})
     GBS=$(expr $AVAILABLE_MEMORY - 2)
     MEM=$(expr $GBS \* 1024)
-    sed -i "s/__CLOUD__/$CLOUD/" $YML_FILE
-    sed -i "s/__MEM__/$MEM/" $YML_FILE
-    sed -i "s/__PWD__/$BASE_PWD/g" $YML_FILE
-    sed -i "s/__DNS_IP__/$DNS_IP/g" $YML_FILE
+    perl -pi -e "s/__CLOUD__/$CLOUD/" $YML_FILE
+    perl -pi -e "s/__MEM__/$MEM/" $YML_FILE
+    perl -pi -e "s/__PWD__/$BASE_PWD/g" $YML_FILE
+    perl -pi -e "s/__DNS_IP__/$DNS_IP/g" $YML_FILE
     CPUS=$(expr $AVAILABLE_CPUS - 1)
-    sed -i "s/__CPUS__/$CPUS/" $YML_FILE
+    perl -pi -e "s/__CPUS__/$CPUS/" $YML_FILE
     # escape slashes to use perl -e
     HOPSWORKS_REPO=$(echo "$HOPSWORKS_REPO"  | sed 's/\//\\\//g')
-    sed -i "s/__GITHUB__/$HOPSWORKS_REPO/" $YML_FILE
-    sed -i "s/__BRANCH__/$HOPSWORKS_BRANCH/" $YML_FILE
-    sed -i "s/__USER__/$USER/" $YML_FILE
-    sed -i "s/__IP__/$IP/" $YML_FILE
-    sed -i "s/__YARN__/$YARN/" $YML_FILE
-    sed -i "s/__TLS__/$TLS/" $YML_FILE
-    sed -i "s/__CUDA__/$CUDA/" $YML_FILE
+    perl -pi -e "s/__GITHUB__/$HOPSWORKS_REPO/" $YML_FILE
+    perl -pi -e "s/__BRANCH__/$HOPSWORKS_BRANCH/" $YML_FILE
+    perl -pi -e "s/__USER__/$USER/" $YML_FILE
+    perl -pi -e "s/__IP__/$IP/" $YML_FILE
+    perl -pi -e "s/__YARN__/$YARN/" $YML_FILE
+    perl -pi -e "s/__TLS__/$TLS/" $YML_FILE
+    perl -pi -e "s/__CUDA__/$CUDA/" $YML_FILE
 
     if [ "$DOWNLOAD_URL" != "" ] ; then
 	DOWNLOAD="download_url: $DOWNLOAD_URL"
@@ -1415,11 +1438,11 @@ $NODE_MANAGER_HEAD"
       undofile_size: 1000M"
     fi
 
-    sed -i "s/__ENTERPRISE__/$ENTERPRISE_ATTRS/" $YML_FILE
-    sed -i "s/__DOWNLOAD__/$DOWNLOAD/" $YML_FILE
-    sed -i "s/__KUBERNETES_RECIPES__/$KUBERNETES_RECIPES/" $YML_FILE
-    sed -i "s/__KUBE__/$KUBE/" $YML_FILE
-    sed -i "s/__NDB_NVME__/${NDB_NVME}/" $YML_FILE
+    perl -pi -e "s/__ENTERPRISE__/$ENTERPRISE_ATTRS/" $YML_FILE
+    perl -pi -e "s/__DOWNLOAD__/$DOWNLOAD/" $YML_FILE
+    perl -pi -e "s/__KUBERNETES_RECIPES__/$KUBERNETES_RECIPES/" $YML_FILE
+    perl -pi -e "s/__KUBE__/$KUBE/" $YML_FILE
+    perl -pi -e "s/__NDB_NVME__/${NDB_NVME}/" $YML_FILE
 
     RUN_GEM_SERVER=
     if [ $GEM_SERVER -eq 1 ] ; then
@@ -1431,11 +1454,17 @@ $NODE_MANAGER_HEAD"
 	echo "Running command from ${PWD}:"
 	echo "$KARAMEL_HTTP_PROXY_1"
 	echo "$KARAMEL_HTTP_PROXY_2"
-	echo "$KARAMEL_HTTP_PROXY_3"	
+	echo "$KARAMEL_HTTP_PROXY_3"
+#	echo "$KARAMEL_HTTP_PROXY_4"
+#	echo "$KARAMEL_HTTP_PROXY_5"
+#	echo "$KARAMEL_HTTP_PROXY_6"			
 	echo "setsid ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log 2>&1 &"
         $KARAMEL_HTTP_PROXY_1
         $KARAMEL_HTTP_PROXY_2
-        $KARAMEL_HTTP_PROXY_3    
+        $KARAMEL_HTTP_PROXY_3
+#	$KARAMEL_HTTP_PROXY_4
+#	$KARAMEL_HTTP_PROXY_5
+#	$KARAMEL_HTTP_PROXY_6    
 	setsid ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD $RUN_GEM_SERVER > ../installation.log 2>&1 &
 	echo ""
 	echo "***********************************************************************************************************"
