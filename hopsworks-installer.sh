@@ -518,7 +518,8 @@ set_karamel_http_proxy()
 	fi
     fi
 
-    if [ "$proto" == "http://" ] || [ "$proto" == "https://" ] ; then
+    if [ "$proto" == "http://" ] ; then
+     #|| [ "$proto" == "https://" ] ; then
 	KARAMEL_HTTP_PROXY_1="export http_proxy=${proto}${host}:${port}"
 	KARAMEL_HTTP_PROXY_2="export http_proxy_host=$host"
         KARAMEL_HTTP_PROXY_3="export http_proxy_port=$port"
@@ -547,7 +548,7 @@ set_karamel_http_proxy()
   	export https_proxy="${proto}${host}:${port}"	    	  
     fi
     rm -f index.html	
-    wget --timeout=10 http://www.google.com/index.html 2>&1 > /dev/null
+    http_proxy="${proto}${host}:${port}" wget --timeout=10 http://www.google.com/index.html 2>&1 > /dev/null
     if [ $? -ne 0 ] ; then
 	echo "WARNING: There could be a problem with the proxy server setting."	  
         echo "WARNING: wget (with http proxy 'on') could not download this file: http://www.logicalclocks.com/index.html"
@@ -1117,6 +1118,7 @@ fi
 AVAILABLE_GPUS=$(sudo lspci | grep -i nvidia | wc -l)
 
 
+SKIP_CHECK_PROXY=0
 if [ $NON_INTERACT -eq 0 ] ; then
     splash_screen
     display_license
@@ -1125,14 +1127,17 @@ if [ $NON_INTERACT -eq 0 ] ; then
     # Check if a proxy server is needed to access the internet.
     # If yes, set the http(s)_proxy environment variable when starting karamel
     if [ "$PROXY" == "" ] ; then
-      check_proxy	
+	check_proxy
+	SKIP_CHECK_PROXY=1
+      clear_screen
     fi
-    clear_screen    
     enter_email
     clear_screen
 fi
 if [ "$http_proxy" != "" ] || [ "$https_proxy" != "" ] ; then
-   set_karamel_http_proxy
+   if [ $SKIP_CHECK_PROXY -eq 0 ] ; then
+       set_karamel_http_proxy
+   fi
 fi
 
 install_action
