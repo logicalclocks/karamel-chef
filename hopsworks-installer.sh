@@ -493,9 +493,8 @@ install_action()
 # iptables -A INPUT -i lo -j ACCEPT
 # iptables -A OUTPUT -o lo -j ACCEPT
 
-set_karamel_http_proxy()
+parse_proxy()
 {
-
     # extract the protocol
     proto="$(echo $PROXY | grep :// | sed -e 's,^\(.*://\).*,\1,g')"
     # remove the protocol
@@ -518,28 +517,42 @@ set_karamel_http_proxy()
 	fi
     fi
 
+}
+
+
+set_karamel_http_proxy()
+{
+    parse_proxy
+
     if [ "$proto" == "http://" ] ; then
-     #|| [ "$proto" == "https://" ] ; then
-	KARAMEL_HTTP_PROXY_1="export http_proxy=${proto}${host}:${port}"
-	KARAMEL_HTTP_PROXY_2="export http_proxy_host=$host"
+	http_proxy=$PROXY
+    	KARAMEL_HTTP_PROXY_1="export http_proxy=${proto}${host}:${port}"
+    	KARAMEL_HTTP_PROXY_2="export http_proxy_host=$host"
         KARAMEL_HTTP_PROXY_3="export http_proxy_port=$port"
+	if [ "$https_proxy" != "" ] ; then
+	   PROXY=$https_proxy
+           parse_proxy	    
+           KARAMEL_HTTP_PROXY_4="export https_proxy=${proto}${host}:${port}"
+           KARAMEL_HTTP_PROXY_5="export https_proxy_host=$host"
+           KARAMEL_HTTP_PROXY_6="export https_proxy_port=$port"
+	fi
     elif [ "$proto" == "https://" ] ; then
-        KARAMEL_HTTP_PROXY_1="export https_proxy=${proto}${host}:${port}"
-        KARAMEL_HTTP_PROXY_2="export https_proxy_host=$host"
-        KARAMEL_HTTP_PROXY_3="export https_proxy_port=$port"
+	https_proxy=$PROXY	
+        KARAMEL_HTTP_PROXY_4="export https_proxy=${proto}${host}:${port}"
+        KARAMEL_HTTP_PROXY_5="export https_proxy_host=$host"
+        KARAMEL_HTTP_PROXY_6="export https_proxy_port=$port"
+	if [ "$http_proxy" != "" ] ; then
+	   PROXY=$http_proxy
+           parse_proxy	    
+       	   KARAMEL_HTTP_PROXY_1="export http_proxy=${proto}${host}:${port}"
+    	   KARAMEL_HTTP_PROXY_2="export http_proxy_host=$host"
+           KARAMEL_HTTP_PROXY_3="export http_proxy_port=$port"
+	fi
     else
         echo "Error. Unrecognized http(s) proxy protocol: $proto is a problem from $PROXY"
         exit 15
     fi
     
-    # if [ "$proto" == "http://" ] || [ "$proto" == "https://" ] ; then
-    #     KARAMEL_HTTP_PROXY_1="export http_proxy=${proto}${host}:${port}"
-    #     KARAMEL_HTTP_PROXY_2="export http_proxy_host=$host"
-    #     KARAMEL_HTTP_PROXY_3="export http_proxy_port=$port"
-    #     KARAMEL_HTTP_PROXY_4="export https_proxy=${proto}${host}:${port}"
-    #     KARAMEL_HTTP_PROXY_5="export https_proxy_host=$host"
-    #     KARAMEL_HTTP_PROXY_6="export https_proxy_port=$port"
-    # fi
 
 
     if [ "$proto" == "http://" ] ; then
@@ -572,18 +585,6 @@ check_proxy()
 	    # Just take the first http proxy set - https or http, not both https_proxy and http_proxy
             printf "Enter the URL of the HTTP(S) PROXY: "
             read PROXY
-            set_karamel_http_proxy
-	    
-	    echo "Your HTTP(S) Proxy host/port is: host: $host and port: $port"
-            printf "Does that look ok (y/n)? (default: 'y') "
-            read OK
-            case $OK in
-		y|yes)
-		;;
-		*)
-		    clear_screen
-		    check_proxy
-            esac
 	    ;;
 	n|no)
             ;;
@@ -945,6 +946,13 @@ purge_local()
 ###################################################################################################
 ###################################################################################################
 
+if [ "$http_proxy" != "" ]; then
+    PROXY=$http_proxy
+fi
+if [ "$https_proxy" != "" ]; then
+    PROXY=$https_proxy
+fi
+    
 
 
 while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
@@ -1072,7 +1080,6 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	-p|--http-proxy)
             shift
             PROXY=$1
-            set_karamel_http_proxy
 	    ;;
 	-w|--workers)
             shift
@@ -1118,7 +1125,6 @@ fi
 AVAILABLE_GPUS=$(sudo lspci | grep -i nvidia | wc -l)
 
 
-SKIP_CHECK_PROXY=0
 if [ $NON_INTERACT -eq 0 ] ; then
     splash_screen
     display_license
@@ -1126,18 +1132,13 @@ if [ $NON_INTERACT -eq 0 ] ; then
     clear_screen
     # Check if a proxy server is needed to access the internet.
     # If yes, set the http(s)_proxy environment variable when starting karamel
-    if [ "$PROXY" == "" ] ; then
-	check_proxy
-	SKIP_CHECK_PROXY=1
-      clear_screen
-    fi
+    check_proxy
+    clear_screen
     enter_email
     clear_screen
 fi
-if [ "$http_proxy" != "" ] || [ "$https_proxy" != "" ] ; then
-   if [ $SKIP_CHECK_PROXY -eq 0 ] ; then
-       set_karamel_http_proxy
-   fi
+if [ "$PROXY" != "" ] ; then
+    set_karamel_http_proxy
 fi
 
 install_action
@@ -1308,9 +1309,9 @@ if [ "$INSTALL_ACTION" == "$INSTALL_KARAMEL" ]  ; then
     $KARAMEL_HTTP_PROXY_1
     $KARAMEL_HTTP_PROXY_2
     $KARAMEL_HTTP_PROXY_3
-    # $KARAMEL_HTTP_PROXY_4
-    # $KARAMEL_HTTP_PROXY_5
-    # $KARAMEL_HTTP_PROXY_6    
+    $KARAMEL_HTTP_PROXY_4
+    $KARAMEL_HTTP_PROXY_5
+    $KARAMEL_HTTP_PROXY_6    
     setsid ./bin/karamel -headless &
     echo "To access Karamel, open your browser at: "
     echo ""
@@ -1361,9 +1362,11 @@ else
     perl -pi -e "s/__CUDA__/$CUDA/" $YML_FILE
 
     if [ "$DOWNLOAD_URL" != "" ] ; then
+	DOWNLOAD_URL=${DOWNLOAD_URL//\./\\\.}
+	DOWNLOAD_URL=${DOWNLOAD_URL//\//\\\/}
 	DOWNLOAD="download_url: $DOWNLOAD_URL"
     fi
-
+    
     if [ $ENTERPRISE -eq 1 ] ; then
         TLS="true
       crl_enabled: true
@@ -1389,7 +1392,8 @@ else
 	ENTERPRISE_DOWNLOAD_URL=${ENTERPRISE_DOWNLOAD_URL//\./\\\.}
 	ENTERPRISE_DOWNLOAD_URL=${ENTERPRISE_DOWNLOAD_URL//\//\\\/}
         echo ""
-	#printf -v DNS_IP "%q\n" "$DNS_IP"
+
+	# Escape URL for Perl
 	DNS_IP=${DNS_IP//\./\\\.}
 
 	if [ "$DISTRO" == "Ubuntu" ] ; then
@@ -1460,16 +1464,16 @@ $NODE_MANAGER_HEAD"
 	echo "$KARAMEL_HTTP_PROXY_1"
 	echo "$KARAMEL_HTTP_PROXY_2"
 	echo "$KARAMEL_HTTP_PROXY_3"
-#	echo "$KARAMEL_HTTP_PROXY_4"
-#	echo "$KARAMEL_HTTP_PROXY_5"
-#	echo "$KARAMEL_HTTP_PROXY_6"			
+	echo "$KARAMEL_HTTP_PROXY_4"
+	echo "$KARAMEL_HTTP_PROXY_5"
+	echo "$KARAMEL_HTTP_PROXY_6"			
 	echo "setsid ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log 2>&1 &"
         $KARAMEL_HTTP_PROXY_1
         $KARAMEL_HTTP_PROXY_2
         $KARAMEL_HTTP_PROXY_3
-#	$KARAMEL_HTTP_PROXY_4
-#	$KARAMEL_HTTP_PROXY_5
-#	$KARAMEL_HTTP_PROXY_6    
+	$KARAMEL_HTTP_PROXY_4
+	$KARAMEL_HTTP_PROXY_5
+	$KARAMEL_HTTP_PROXY_6    
 	setsid ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD $RUN_GEM_SERVER > ../installation.log 2>&1 &
 	echo ""
 	echo "***********************************************************************************************************"
