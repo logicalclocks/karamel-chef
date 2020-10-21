@@ -28,7 +28,7 @@
 ###################################################################################################
 
 HOPSWORKS_REPO=logicalclocks/hopsworks-chef
-HOPSWORKS_BRANCH=master
+HOPSWORKS_BRANCH=1.4
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_BRANCH
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
@@ -236,7 +236,7 @@ splash_screen()
 	echo "Installing dig..."
 	if [ "$DISTRO" == "Ubuntu" ] ; then
             sudo apt install dnsutils -y  > /dev/null
-#	elif [ "${DISTRO,,}" == "centos" ] || [ "${DISTRO,,}" == "os" ] ; then
+	    #	elif [ "${DISTRO,,}" == "centos" ] || [ "${DISTRO,,}" == "os" ] ; then
 	else
 	    sudo yum install bind-utils -y > /dev/null
 	fi
@@ -530,24 +530,25 @@ set_karamel_http_proxy()
     	KARAMEL_HTTP_PROXY_2="export http_proxy_host=$host"
         KARAMEL_HTTP_PROXY_3="export http_proxy_port=$port"
 	if [ "$https_proxy" != "" ] ; then
-	   PROXY=$https_proxy
-           parse_proxy	    
-           KARAMEL_HTTP_PROXY_4="export https_proxy=${proto}${host}:${port}"
-           KARAMEL_HTTP_PROXY_5="export https_proxy_host=$host"
-           KARAMEL_HTTP_PROXY_6="export https_proxy_port=$port"
+	    PROXY=$https_proxy
+            parse_proxy	    
 	fi
+        KARAMEL_HTTP_PROXY_4="export https_proxy=${proto}${host}:${port}"
+        KARAMEL_HTTP_PROXY_5="export https_proxy_host=$host"
+        KARAMEL_HTTP_PROXY_6="export https_proxy_port=$port"
+	
     elif [ "$proto" == "https://" ] ; then
 	https_proxy=$PROXY	
         KARAMEL_HTTP_PROXY_4="export https_proxy=${proto}${host}:${port}"
         KARAMEL_HTTP_PROXY_5="export https_proxy_host=$host"
         KARAMEL_HTTP_PROXY_6="export https_proxy_port=$port"
 	if [ "$http_proxy" != "" ] ; then
-	   PROXY=$http_proxy
-           parse_proxy	    
-       	   KARAMEL_HTTP_PROXY_1="export http_proxy=${proto}${host}:${port}"
-    	   KARAMEL_HTTP_PROXY_2="export http_proxy_host=$host"
-           KARAMEL_HTTP_PROXY_3="export http_proxy_port=$port"
-	fi
+	    PROXY=$http_proxy
+            parse_proxy	    
+        fi
+   	KARAMEL_HTTP_PROXY_1="export http_proxy=${proto}${host}:${port}"
+    	KARAMEL_HTTP_PROXY_2="export http_proxy_host=$host"
+        KARAMEL_HTTP_PROXY_3="export http_proxy_port=$port"
     else
         echo "Error. Unrecognized http(s) proxy protocol: $proto is a problem from $PROXY"
         exit 15
@@ -560,6 +561,7 @@ set_karamel_http_proxy()
     elif [ "$proto" == "https://" ] ; then
   	export https_proxy="${proto}${host}:${port}"	    	  
     fi
+    
     rm -f index.html	
     http_proxy="${proto}${host}:${port}" wget --timeout=10 http://www.google.com/index.html 2>&1 > /dev/null
     if [ $? -ne 0 ] ; then
@@ -569,6 +571,7 @@ set_karamel_http_proxy()
 	echo "https_proxy=$https_proxy"
 	echo "PROXY=$PROXY"	  
     fi
+    
     rm -f index.html
     echo "http_proxy: $http_proxy"
     echo "https_proxy: $https_proxy"	
@@ -952,7 +955,7 @@ fi
 if [ "$https_proxy" != "" ]; then
     PROXY=$https_proxy
 fi
-    
+
 
 
 while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
@@ -1271,7 +1274,7 @@ else
 fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] ; then
-        
+    
     if [ "$WORKER_LIST" == "" ] ; then
 	worker_size
     else
