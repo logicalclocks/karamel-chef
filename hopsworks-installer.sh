@@ -28,7 +28,7 @@
 ###################################################################################################
 
 HOPSWORKS_REPO=logicalclocks/hopsworks-chef
-HOPSWORKS_BRANCH=1.4
+HOPSWORKS_BRANCH=master
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_BRANCH
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
@@ -978,7 +978,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	    echo " [-c|--cloud      on-premises|gcp|aws|azure]"
 	    echo " [-w|--workers    IP1,IP2,...,IPN|none] install on workers with IPs in supplied list (or none). Uses default mem/cpu/gpus for the workers."
 	    echo " [-de|--download-enterprise-url url] downloads enterprise binaries from this URL."
-	    echo " [-dc|--download-community-url] downloads binaries from this URL."
+	    echo " [-dc|--download-opensource-url url] downloads open-source binaries from this URL."
 	    echo " [-du|--download-user username] Username for downloading enterprise binaries."
 	    echo " [-dp|--download-password password] Password for downloading enterprise binaries."
 	    echo " [-gs|--gem-server] Run a local gem server for chef-solo (for air-gapped installations)."	      
