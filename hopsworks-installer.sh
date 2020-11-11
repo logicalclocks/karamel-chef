@@ -723,10 +723,10 @@ add_worker()
     fi
 
     if [ "${DISTRO,,}" == "centos" ] || [ "${DISTRO,,}" == "os" ] ; then
-	ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo yum install pciutils -y"
+	ssh -t -o StrictHostKeyChecking=no $WORKER_IP "echo \"$SUDO_PWD\" | sudo -S yum install pciutils -y"
     fi
 
-    WORKER_MNT=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo df -h | grep '/mnt' | awk '{ print $4 }'")
+    WORKER_MNT=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "echo \"$SUDO_PWD\" | sudo -S df -h | grep '/mnt' | awk '{ print $4 }'")
 
     re='^[0-9]+$'
 
@@ -748,19 +748,19 @@ add_worker()
 	else
 	    PRIVATE_HOSTNAME=$SUSPECTED_HOSTNAME
 	fi
-	ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo hostname $PRIVATE_HOSTNAME"
+	ssh -t -o StrictHostKeyChecking=no $WORKER_IP "echo \"$SUDO_PWD\" | sudo -S hostname $PRIVATE_HOSTNAME"
 
 
 	if [[ $WORKER_MNT =~ $re ]] ; then
-            ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo rm -rf /srv/hops; sudo mkdir -p /mnt/resource/hops; sudo ln -s /mnt/resource/hops /srv/hops"
+            ssh -t -o StrictHostKeyChecking=no $WORKER_IP "echo \"$SUDO_PWD\" | sudo -S rm -rf /srv/hops; sudo mkdir -p /mnt/resource/hops; sudo ln -s /mnt/resource/hops /srv/hops"
 	fi
     else
 	if [[ $WORKER_MNT =~ $re ]] ; then
-            ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo rm -rf /srv/hops; sudo mkdir -p /mnt/hops; sudo ln -s /mnt/hops /srv/hops"
+            ssh -t -o StrictHostKeyChecking=no $WORKER_IP "echo \"$SUDO_PWD\" | sudo -S rm -rf /srv/hops; sudo mkdir -p /mnt/hops; sudo ln -s /mnt/hops /srv/hops"
 	fi
     fi
 
-    WORKER_GPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo lspci | grep -i nvidia | wc -l")
+    WORKER_GPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "echo \"$SUDO_PWD\" | sudo -S lspci | grep -i nvidia | wc -l")
     # strip carriage return '\r' from variable to make it a number
     WORKER_GPUS=$(echo $WORKER_GPUS|tr -d '\r')
 
@@ -1094,7 +1094,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
             ;;
 	-pwd|--password)
 	    shift
-	    SUDO_PWD="-passwd $1"
+	    SUDO_PWD="$1"
 	    ;;
 	*)
 	    exit_error "Unrecognized parameter: $1"
@@ -1462,6 +1462,11 @@ $NODE_MANAGER_HEAD"
     fi
     
     if [ $DRY_RUN -eq 0 ] ; then
+	if [ "$SUDO_PWD" != "" ] ; then
+            THE_PWD="-passwd $SUDO_PWD"
+	else
+	    THE_PWD=
+	fi
 	cd karamel-${KARAMEL_VERSION}
 	echo "Running command from ${PWD}:"
 	echo "$KARAMEL_HTTP_PROXY_1"
@@ -1470,14 +1475,14 @@ $NODE_MANAGER_HEAD"
 	echo "$KARAMEL_HTTP_PROXY_4"
 	echo "$KARAMEL_HTTP_PROXY_5"
 	echo "$KARAMEL_HTTP_PROXY_6"			
-	echo "setsid ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD > ../installation.log 2>&1 &"
+	echo "setsid ./bin/karamel -headless -launch ../$YML_FILE $THE_PWD > ../installation.log 2>&1 &"
         $KARAMEL_HTTP_PROXY_1
         $KARAMEL_HTTP_PROXY_2
         $KARAMEL_HTTP_PROXY_3
 	$KARAMEL_HTTP_PROXY_4
 	$KARAMEL_HTTP_PROXY_5
 	$KARAMEL_HTTP_PROXY_6    
-	setsid ./bin/karamel -headless -launch ../$YML_FILE $SUDO_PWD $RUN_GEM_SERVER > ../installation.log 2>&1 &
+	setsid ./bin/karamel -headless -launch ../$YML_FILE $THE_PWD $RUN_GEM_SERVER > ../installation.log 2>&1 &
 	echo ""
 	echo "***********************************************************************************************************"
 	echo ""
