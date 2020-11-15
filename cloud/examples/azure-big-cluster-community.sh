@@ -7,4 +7,4 @@ printf "Enter a name (prefix) for the VM: "
 read name
 
 cd ..
-./hopsworks-cloud-installer.sh -i community-cluster -c gcp -w $NUM_WORKERS -ni -n debug --head-instance-type n1-standard-16 -n $name --worker-instance-type $WORKER_INSTANCE_TYPE $@
+./hopsworks-cloud-installer.sh -i community-cluster -c azure -w $NUM_WORKERS -ni -n debug --head-instance-type n1-standard-16 -n $name --worker-instance-type $WORKER_INSTANCE_TYPE $@
