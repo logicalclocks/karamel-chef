@@ -28,7 +28,7 @@
 ###################################################################################################
 
 HOPSWORKS_REPO=logicalclocks/hopsworks-chef
-HOPSWORKS_BRANCH=master
+HOPSWORKS_BRANCH=2.0
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_BRANCH
 KARAMEL_VERSION=0.6
 INSTALL_ACTION=
@@ -723,10 +723,10 @@ add_worker()
     fi
 
     if [ "${DISTRO,,}" == "centos" ] || [ "${DISTRO,,}" == "os" ] ; then
-	ssh -t -o StrictHostKeyChecking=no $WORKER_IP "echo \"$SUDO_PWD\" | sudo -S yum install pciutils -y"
+	ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo yum install pciutils -y"
     fi
 
-    WORKER_MNT=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "echo \"$SUDO_PWD\" | sudo -S df -h | grep '/mnt' | awk '{ print $4 }'")
+    WORKER_MNT=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo df -h | grep '/mnt' | awk '{ print $4 }'")
 
     re='^[0-9]+$'
 
@@ -748,19 +748,19 @@ add_worker()
 	else
 	    PRIVATE_HOSTNAME=$SUSPECTED_HOSTNAME
 	fi
-	ssh -t -o StrictHostKeyChecking=no $WORKER_IP "echo \"$SUDO_PWD\" | sudo -S hostname $PRIVATE_HOSTNAME"
+	ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo hostname $PRIVATE_HOSTNAME"
 
 
 	if [[ $WORKER_MNT =~ $re ]] ; then
-            ssh -t -o StrictHostKeyChecking=no $WORKER_IP "echo \"$SUDO_PWD\" | sudo -S rm -rf /srv/hops; sudo mkdir -p /mnt/resource/hops; sudo ln -s /mnt/resource/hops /srv/hops"
+            ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo rm -rf /srv/hops; sudo mkdir -p /mnt/resource/hops; sudo ln -s /mnt/resource/hops /srv/hops"
 	fi
     else
 	if [[ $WORKER_MNT =~ $re ]] ; then
-            ssh -t -o StrictHostKeyChecking=no $WORKER_IP "echo \"$SUDO_PWD\" | sudo -S rm -rf /srv/hops; sudo mkdir -p /mnt/hops; sudo ln -s /mnt/hops /srv/hops"
+            ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo rm -rf /srv/hops; sudo mkdir -p /mnt/hops; sudo ln -s /mnt/hops /srv/hops"
 	fi
     fi
 
-    WORKER_GPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "echo \"$SUDO_PWD\" | sudo -S lspci | grep -i nvidia | wc -l")
+    WORKER_GPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo lspci | grep -i nvidia | wc -l")
     # strip carriage return '\r' from variable to make it a number
     WORKER_GPUS=$(echo $WORKER_GPUS|tr -d '\r')
 
@@ -1328,7 +1328,7 @@ else
 	    echo "It appears you need a sudo password for this account."
             echo "Enter the sudo password for $USER: "
 	    read -s passwd
-            SUDO_PWD="-passwd $passwd"
+            SUDO_PWD="$passwd"
 	    echo ""
 	fi
     fi
