@@ -128,9 +128,9 @@ when 'ubuntu'
     timeout node['karamel']['test_timeout']
     # Run hopsworks unit tests
     code <<-EOH
-      set -e 
+      set -e
       mkdir -pm 777 #{node['test']['hopsworks']['report_dir']}/ut
-      mvn test
+      mvn test -Dmaven.test.failure.ignore=true
       find . -name "*.xml" | grep "surefire-reports" | xargs cp -t #{node['test']['hopsworks']['report_dir']}/ut
     EOH
   end
@@ -168,7 +168,7 @@ when 'ubuntu'
                   'DB_HOST' => "127.0.0.1",
                   'BROWSER' => "firefox"})
     code <<-FIREFOX
-      mvn clean install -P-web,mysql
+      mvn clean install -P-web,mysql -Dmaven.test.failure.ignore=true
       cd hopsworks-IT/target/failsafe-reports
       for file in *.xml ; do cp $file #{node['test']['hopsworks']['report_dir']}/firefox-${file} ; done
     FIREFOX
@@ -184,7 +184,7 @@ when 'ubuntu'
                   'DB_HOST' => "127.0.0.1",
                   'BROWSER' => "chrome"})
     code <<-CHROME
-      mvn clean install -P-web,mysql
+      mvn clean install -P-web,mysql -Dmaven.test.failure.ignore=true
       cd hopsworks-IT/target/failsafe-reports
       for file in *.xml ; do cp $file #{node['test']['hopsworks']['report_dir']}/chrome-${file} ; done
     CHROME
