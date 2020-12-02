@@ -245,12 +245,12 @@ splash_screen()
     if [ $? -ne 0 ] ; then
 	echo "Installing perl..."
 	if [ "$DISTRO" == "Ubuntu" ] ; then
-            sudo apt install perl -y  > /dev/null	    
+            sudo apt install perl -y  > /dev/null
 	else
-	    sudo yum install perl -y > /dev/null	    
+	    sudo yum install perl -y > /dev/null
 	fi
     fi
-    
+
     # If there are multiple FQDNs for this IP, return the last one (this works on Azure)
     reverse_hostname=$(dig +noall +answer -x $IP | awk '{ print $5 }' | sort -r |  grep -v 'internal.cloudapp.net')
     # stirp off trailing '.' chracter on the hostname returned
@@ -420,7 +420,7 @@ install_action()
 		INSTALL_ACTION=$INSTALL_CLUSTER
 		ENTERPRISE=1
 		KUBERNETES=1
-		accept_enterprise		
+		accept_enterprise
 		;;
             6)
 		INSTALL_ACTION=$INSTALL_KARAMEL
@@ -531,20 +531,20 @@ set_karamel_http_proxy()
         KARAMEL_HTTP_PROXY_3="export http_proxy_port=$port"
 	if [ "$https_proxy" != "" ] ; then
 	    PROXY=$https_proxy
-            parse_proxy	    
+            parse_proxy
 	fi
         KARAMEL_HTTP_PROXY_4="export https_proxy=${proto}${host}:${port}"
         KARAMEL_HTTP_PROXY_5="export https_proxy_host=$host"
         KARAMEL_HTTP_PROXY_6="export https_proxy_port=$port"
-	
+
     elif [ "$proto" == "https://" ] ; then
-	https_proxy=$PROXY	
+	https_proxy=$PROXY
         KARAMEL_HTTP_PROXY_4="export https_proxy=${proto}${host}:${port}"
         KARAMEL_HTTP_PROXY_5="export https_proxy_host=$host"
         KARAMEL_HTTP_PROXY_6="export https_proxy_port=$port"
 	if [ "$http_proxy" != "" ] ; then
 	    PROXY=$http_proxy
-            parse_proxy	    
+            parse_proxy
         fi
    	KARAMEL_HTTP_PROXY_1="export http_proxy=${proto}${host}:${port}"
     	KARAMEL_HTTP_PROXY_2="export http_proxy_host=$host"
@@ -553,29 +553,29 @@ set_karamel_http_proxy()
         echo "Error. Unrecognized http(s) proxy protocol: $proto is a problem from $PROXY"
         exit 15
     fi
-    
+
 
 
     if [ "$proto" == "http://" ] ; then
-  	export http_proxy="${proto}${host}:${port}"	    
+  	export http_proxy="${proto}${host}:${port}"
     elif [ "$proto" == "https://" ] ; then
-  	export https_proxy="${proto}${host}:${port}"	    	  
+  	export https_proxy="${proto}${host}:${port}"
     fi
-    
-    rm -f index.html	
+
+    rm -f index.html
     http_proxy="${proto}${host}:${port}" wget --timeout=10 http://www.google.com/index.html 2>&1 > /dev/null
     if [ $? -ne 0 ] ; then
-	echo "WARNING: There could be a problem with the proxy server setting."	  
+	echo "WARNING: There could be a problem with the proxy server setting."
         echo "WARNING: wget (with http proxy 'on') could not download this file: http://www.logicalclocks.com/index.html"
 	echo "http_proxy=$http_proxy"
 	echo "https_proxy=$https_proxy"
-	echo "PROXY=$PROXY"	  
+	echo "PROXY=$PROXY"
     fi
-    
+
     rm -f index.html
     echo "http_proxy: $http_proxy"
-    echo "https_proxy: $https_proxy"	
-}    
+    echo "https_proxy: $https_proxy"
+}
 
 
 check_proxy()
@@ -622,7 +622,7 @@ enter_cloud()
         read ACCEPT
         case $ACCEPT in
             1)
-		CLOUD="on-premises"
+		CLOUD="none"
 		;;
             2)
 		CLOUD="aws"
@@ -662,7 +662,7 @@ enter_email()
 
     #curl -H "Content-type:application/json" --data @.details http://snurran.sics.se:8443/keyword --connect-timeout 10 > /dev/null 2>&1
     CREDENTIALS=$(curl -H "Content-type:application/json" --data @.details http://snurran.sics.se:8443/keyword --connect-timeout 10)
-    ENTERPRISE_USERNAME=$(echo $CREDENTIALS | cut -d ":" -f1)	
+    ENTERPRISE_USERNAME=$(echo $CREDENTIALS | cut -d ":" -f1)
     ENTERPRISE_PASSWORD=$(echo $CREDENTIALS | cut -d ":" -f2)
 
 }
@@ -981,7 +981,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	    echo " [-dc|--download-opensource-url url] downloads open-source binaries from this URL."
 	    echo " [-du|--download-user username] Username for downloading enterprise binaries."
 	    echo " [-dp|--download-password password] Password for downloading enterprise binaries."
-	    echo " [-gs|--gem-server] Run a local gem server for chef-solo (for air-gapped installations)."	      
+	    echo " [-gs|--gem-server] Run a local gem server for chef-solo (for air-gapped installations)."
 	    echo " [-ni|--non-interactive)] skip license/terms acceptance and all confirmation screens."
 	    echo " [-p|--http-proxy) url] URL of the http(s) proxy server. Only https proxies with valid certs supported."
 	    echo " [-pwd|--password password] sudo password for user running chef recipes."
@@ -1058,7 +1058,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	    shift
 	    case $1 in
 		on-premises)
-		    CLOUD="on-premises"
+		    CLOUD="none"
   		    ;;
 		gcp)
 		    CLOUD="gcp"
@@ -1274,7 +1274,7 @@ else
 fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] ; then
-    
+
     if [ "$WORKER_LIST" == "" ] ; then
 	worker_size
     else
@@ -1291,12 +1291,12 @@ if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] ; then
             NODE_MANAGER_HEAD=""
 	fi
     fi
-    
+
     TLS="true
       crl_enabled: true
       crl_fetcher_class: org.apache.hadoop.security.ssl.DevRemoteCRLFetcher
       crl_fetcher_interval: 5m
-"    
+"
 fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST_TLS" ] ; then
@@ -1314,7 +1314,7 @@ if [ "$INSTALL_ACTION" == "$INSTALL_KARAMEL" ]  ; then
     $KARAMEL_HTTP_PROXY_3
     $KARAMEL_HTTP_PROXY_4
     $KARAMEL_HTTP_PROXY_5
-    $KARAMEL_HTTP_PROXY_6    
+    $KARAMEL_HTTP_PROXY_6
     setsid ./bin/karamel -headless &
     echo "To access Karamel, open your browser at: "
     echo ""
@@ -1369,13 +1369,13 @@ else
 	DOWNLOAD_URL=${DOWNLOAD_URL//\//\\\/}
 	DOWNLOAD="download_url: $DOWNLOAD_URL"
     fi
-    
+
     if [ $ENTERPRISE -eq 1 ] ; then
         TLS="true
       crl_enabled: true
       crl_fetcher_class: org.apache.hadoop.security.ssl.DevRemoteCRLFetcher
       crl_fetcher_interval: 5m
-"	
+"
 	if [ "$ENTERPRISE_DOWNLOAD_URL" = "" ] ; then
 	    echo ""
             printf "Enter the URL to download the Enterprise Binaries from: "
@@ -1402,7 +1402,7 @@ else
 	if [ "$DISTRO" == "Ubuntu" ] ; then
 	    DNS_IP="8.8.8.8"
 	fi
-	
+
 	if [ $KUBERNETES -eq 1 ] ; then
 	    KUBE="true"
 	    DOWNLOAD="$DOWNLOAD
@@ -1419,7 +1419,7 @@ else
       - kube-hops::addons
 $NODE_MANAGER_HEAD"
 	else
-            KUBERNETES_RECIPES="$NODE_MANAGER_HEAD"	    
+            KUBERNETES_RECIPES="$NODE_MANAGER_HEAD"
 	fi
         ENTERPRISE_ATTRS="enterprise:
       install: true
@@ -1430,7 +1430,7 @@ $NODE_MANAGER_HEAD"
     else
 	KUBERNETES_RECIPES="$NODE_MANAGER_HEAD"
     fi
-    
+
     if [ $NVME -gt 0 ] ; then
 	nvme_devices="\\["
 	i=0
@@ -1441,7 +1441,7 @@ $NODE_MANAGER_HEAD"
 	done
 	nvme_devices=$(echo $nvme_devices | sed 's/,$//')
 	nvme_devices="${nvme_devices}\\]"
-	
+
 	# \['/dev/nvme0n1'\]
 	NDB_NVME="nvme:
       devices: $nvme_devices
@@ -1460,7 +1460,7 @@ $NODE_MANAGER_HEAD"
     if [ $GEM_SERVER -eq 1 ] ; then
 	RUN_GEM_SERVER="-gemserver http://${IP}:$GEM_SERVER_PORT"
     fi
-    
+
     if [ $DRY_RUN -eq 0 ] ; then
 	if [ "$SUDO_PWD" != "" ] ; then
             THE_PWD="-passwd $SUDO_PWD"
@@ -1474,14 +1474,14 @@ $NODE_MANAGER_HEAD"
 	echo "$KARAMEL_HTTP_PROXY_3"
 	echo "$KARAMEL_HTTP_PROXY_4"
 	echo "$KARAMEL_HTTP_PROXY_5"
-	echo "$KARAMEL_HTTP_PROXY_6"			
+	echo "$KARAMEL_HTTP_PROXY_6"
 	echo "setsid ./bin/karamel -headless -launch ../$YML_FILE $THE_PWD > ../installation.log 2>&1 &"
         $KARAMEL_HTTP_PROXY_1
         $KARAMEL_HTTP_PROXY_2
         $KARAMEL_HTTP_PROXY_3
 	$KARAMEL_HTTP_PROXY_4
 	$KARAMEL_HTTP_PROXY_5
-	$KARAMEL_HTTP_PROXY_6    
+	$KARAMEL_HTTP_PROXY_6
 	setsid ./bin/karamel -headless -launch ../$YML_FILE $THE_PWD $RUN_GEM_SERVER > ../installation.log 2>&1 &
 	echo ""
 	echo "***********************************************************************************************************"
@@ -1514,7 +1514,7 @@ $NODE_MANAGER_HEAD"
 
 	echo ""
 	echo "Skipping this command: "
-	echo "ssh -t -o StrictHostKeyChecking=no $IP \"/home/$USER/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}$WORKERS && sleep 5\""     
+	echo "ssh -t -o StrictHostKeyChecking=no $IP \"/home/$USER/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}$WORKERS && sleep 5\""
 	echo ""
 	echo "****************************************"
 	echo "*                                      *"
@@ -1523,6 +1523,6 @@ $NODE_MANAGER_HEAD"
 	echo " Then run karamel on your new cluster definition: "
 	echo " "
 	echo " cd karamel-0.6 && setsid ./bin/karamel -headless -launch ../cluster-defns/$YML_FILE > ../installation.log 2>&1 &"
-	echo "****************************************"	
+	echo "****************************************"
     fi
 fi
