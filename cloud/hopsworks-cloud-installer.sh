@@ -446,7 +446,6 @@ cpus_gpus()
 	    echo "FOUND GPUS: $GPUS"
         fi		
     elif [ "$CLOUD" == "azure" ] ; then
-	    
 	CPUS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | grep "^${PREFIX}" | grep -e "cpu[0-99]" |  wc -l)
 	GPUS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | grep "^${PREFIX}" | grep -e "gpu[0-99]" |  wc -l)
 	if [ $DEBUG -eq 1 ] ; then
@@ -1267,37 +1266,39 @@ _az_enter_resource_group()
 	    echo ""
 	    printf "Enter the Resource Group: "
 	    read RESOURCE_GROUP
-
-	    az group exists $RESOURCE_GROUP
-	    if [ $? -ne 0 ] ; then
-		echo "Creating ResourceGroup: $RESOURCE_GROUP in $RESOURCE_GROUP"
-		az group create --name $RESOURCE_GROUP --location $REGION
-		if [ $? -ne 0 ] ; then
-		    echo "Problem creating resource group: $RESOURCE_GROUP"
-		    echo "Exiting..."
-		    exit 12
-		fi
-
-		
-		az configure --defaults group=$RESOURCE_GROUP
-		if [ $? -ne 0 ] ; then
-		    echo "Invalid resource group: $RESOURCE_GROUP"
-		    echo "Enter a valid resource group name."
-		    echo ""	
-		    _az_enter_resource_group
-          	    return		    
-		fi
-	    fi
 	fi
     fi
-    echo "Resource Group is: $RESOURCE_GROUP"
+    az group exists -n $RESOURCE_GROUP | tail -1 | grep -i False
+    if [ $? -eq 0 ] ; then
+	echo "Creating ResourceGroup: $RESOURCE_GROUP in $RESOURCE_GROUP"
+	az group create --name $RESOURCE_GROUP --location $REGION
+	if [ $? -ne 0 ] ; then
+	    echo "Problem creating resource group: $RESOURCE_GROUP"
+	    echo "Exiting..."
+	    exit 12
+	fi
+
+	
+	az configure --defaults group=$RESOURCE_GROUP
+	if [ $? -ne 0 ] ; then
+	    echo "Invalid resource group: $RESOURCE_GROUP"
+	    echo "Enter a valid resource group name."
+	    echo ""	
+	    _az_enter_resource_group
+            return		    
+	fi
+    else
+	echo "Found Resource Group: $RESOURCE_GROUP"
+    fi
 }    
 
 
 _az_set_virtual_network()
 {
-    #    VIRTUAL_NETWORK=$(az network vnet list -g $RESOURCE_GROUP | grep "^    \"name\":" | awk '{ print $2 }' | sed -s 's/\"//g' | sed -e 's/,//')
-    VIRTUAL_NETWORK=$(az network vnet list -g $RESOURCE_GROUP -o table | tail -n +3 | awk '{ print $1 }' | tail -1)
+    VIRTUAL_NETWORK_DEFAULT=$(az network vnet list -g $RESOURCE_GROUP -o table | tail -n +3 | awk '{ print $1 }' | tail -1)
+    if [ "$VIRTUAL_NETWORK_DEFAULT" != "" ] ; then
+	VIRTUAL_NETWORK=$VIRTUAL_NETWORK_DEFAULT
+    fi
 }
 
 _az_enter_virtual_network()
@@ -1321,41 +1322,33 @@ _az_enter_virtual_network()
 	    echo ""
 	    printf "Enter the Virtual Network: "
 	    read VIRTUAL_NETWORK
-
-	    az network vnet show -n $VIRTUAL_NETWORK 2>&1 > /dev/null
-	    if [ $? -ne 0 ] ; then
-		echo "Creating ResourceGroup: $VIRTUAL_NETWORK in $VIRTUAL_NETWORK"
-                az network vnet create -g $RESOURCE_GROUP -n $VIRTUAL_NETWORK --address-prefixes $ADDRESS_PREFIXES --subnet-name $SUBNET \
-		   --subnet-prefixes $SUBNET_PREFIXES --location $REGION		
-		if [ $? -ne 0 ] ; then
-		    echo "Problem creating resource group: $VIRTUAL_NETWORK"
-		    echo "Exiting..."
-		    exit 22
-		fi
-
-		
-		az configure --defaults group=$VIRTUAL_NETWORK
-		if [ $? -ne 0 ] ; then
-		    echo "Invalid resource group: $VIRTUAL_NETWORK"
-		    echo "Enter a valid resource group name."
-		    echo ""	
-		    _az_enter_resource_group
-          	    return		    
-		fi
-	    fi
 	fi
     fi
-    echo "Virtual network is: $VIRTUAL_NETWORK"
+    az network vnet show -g $RESOURCE_GROUP -n $VIRTUAL_NETWORK 2>&1 > /dev/null
+    if [ $? -ne 0 ] ; then
+        echo "az network vnet create -g $RESOURCE_GROUP -n $VIRTUAL_NETWORK --address-prefixes $ADDRESS_PREFIXES --subnet-name $SUBNET --subnet-prefixes $SUBNET_PREFIXES --location $REGION"
+        az network vnet create -g $RESOURCE_GROUP -n $VIRTUAL_NETWORK --address-prefixes $ADDRESS_PREFIXES --subnet-name $SUBNET \
+	   --subnet-prefixes $SUBNET_PREFIXES --location $REGION		
+	if [ $? -ne 0 ] ; then
+	    echo "Problem creating virtual network: $VIRTUAL_NETWORK in resource group: $RESOURCE_GROUP"
+	    echo "Exiting..."
+	    exit 22
+	fi
+    else
+	echo "Found virtual network: $VIRTUAL_NETWORK in Resource Group $RESOURCE_GROUP"
+    fi
 }    
 
 
 _az_set_private_dns_zone()
 {
-    DNS_PRIVATE_ZONE=$(az network private-dns zone list -g $RESOURCE_GROUP |  grep "$RESOURCE_GROUP" | awk '{ print $1 }')
-    if [ "$DNS_PRIVATE_ZONE" == "" ] ; then
-	DNS_VN_LINK=""
-    else
-	DNS_VN_LINK=$(az network private-dns link vnet list -g $RESOURCE_GROUP -z $DNS_PRIVATE_ZONE |  grep "$RESOURCE_GROUP" | awk '{ print $1 }')
+    DNS_PRIVATE_ZONE_DEFAULT=$(az network private-dns zone list -g $RESOURCE_GROUP |  grep "$RESOURCE_GROUP" | awk '{ print $1 }')
+    if [ "$DNS_PRIVATE_ZONE_DEFAULT" != "" ] ; then
+	DNS_VN_LINK_DEFAULT=$(az network private-dns link vnet list -g $RESOURCE_GROUP -z $DNS_PRIVATE_ZONE |  grep "$RESOURCE_GROUP" | awk '{ print $1 }')
+	if [ "$DNS_VN_LINK_DEFAULT" != "" ] ; then
+	    DNS_VN_LINK=$DNS_VN_LINK_DEFAULT
+	fi
+	DNS_PRIVATE_ZONE=$DNS_PRIVATE_ZONE_DEFAULT
     fi
 }
 
@@ -1387,20 +1380,6 @@ _az_enter_private_dns_zone()
 	    _az_enter_private_dns_zone
 	    return	    
 	fi
-
-	az network private-dns zone show -g $RESOURCE_GROUP -n $DNS_PRIVATE_ZONE 2>&1 > /dev/null
-	
-	if [ $? -ne 0 ] ; then
-	    echo ""
-	    echo "Could not find DNS private zone, creating...."
-	    az network private-dns zone create -g $RESOURCE_GROUP -n $DNS_PRIVATE_ZONE  --location $REGION
-	    if [ $? -ne 0 ] ; then
-		echo "Problem creating the DNS private zone: $DNS_PRIVATE_ZONE"
-		echo "Exiting..."
-		exit 33
-	    fi
-	fi
-
 	
 	LINK_CHANGE=0
 	if [ "$DNS_VN_LINK" != "" ] ; then
@@ -1418,26 +1397,46 @@ _az_enter_private_dns_zone()
 	    printf "Enter the name for the private DNS Zone to Virtual Network link: "
 	    read DNS_VN_LINK
 	fi
+
 	if [ "$DNS_VN_LINK" == "" ] ; then
 	    echo "Error: Private DNS Zone virtual Network link cannot be empty"
 	    _az_enter_private_dns_zone
 	    return
 	fi
-
-	az network private-dns link vnet show -n $DNS_VN_LINK -g $RESOURCE_GROUP -z $DNS_PRIVATE_ZONE 2>&1 > /dev/null
-	if [ $? -ne 0 ] ; then
-	    echo ""
-	    echo "Could not find DNS private zone Virtual Network Link, creating...."
-	    az network private-dns link vnet create -g $RESOURCE_GROUP -n $DNS_VN_LINK -z $DNS_PRIVATE_ZONE -v $VIRTUAL_NETWORK -e true
-	    if [ $? -ne 0 ] ; then
-		echo "Problem creating the DNS private zone - virtual network link: $DNS_VN_LINK"
-		echo "Exiting..."
-		exit 44
-            fi
-        fi
 	
     fi
-    echo "Private DNS Zone and VN Link are: ${DNS_PRIVATE_ZONE}/${DNS_VN_LINK}"
+
+    az network private-dns zone show -g $RESOURCE_GROUP -n $DNS_PRIVATE_ZONE 2>&1 > /dev/null
+	
+    if [ $? -ne 0 ] ; then
+	echo ""
+	echo "Could not find DNS private zone, creating...."
+	echo "az network private-dns zone create -g $RESOURCE_GROUP -n $DNS_PRIVATE_ZONE"
+	az network private-dns zone create -g $RESOURCE_GROUP -n $DNS_PRIVATE_ZONE
+	if [ $? -ne 0 ] ; then
+	    echo "Problem creating the DNS private zone: $DNS_PRIVATE_ZONE in resource group $RESOURCE_GROUP"
+	    echo "Exiting..."
+	    exit 33
+	fi
+    else
+	echo "Found DNS_PRIVATE_ZONE $DNS_PRIVATE_ZONE in Resource Group  $RESOURCE_GROUP"
+    fi
+
+    
+    az network private-dns link vnet show -n $DNS_VN_LINK -g $RESOURCE_GROUP -z $DNS_PRIVATE_ZONE 2>&1 > /dev/null
+    if [ $? -ne 0 ] ; then
+	echo ""
+	echo "Could not find DNS private zone Virtual Network Link, creating...."
+        echo "az network private-dns link vnet create -g $RESOURCE_GROUP -n $DNS_VN_LINK -z $DNS_PRIVATE_ZONE -v $VIRTUAL_NETWORK -e true"
+	az network private-dns link vnet create -g $RESOURCE_GROUP -n $DNS_VN_LINK -z $DNS_PRIVATE_ZONE -v $VIRTUAL_NETWORK -e true
+	if [ $? -ne 0 ] ; then
+	    echo "Problem creating the DNS private zone - virtual network link: $DNS_VN_LINK  in resource group $RESOURCE_GROUP"
+	    echo "Exiting..."
+	    exit 44
+        fi
+    else
+	echo "Found DNS_VN_LINK ${DNS_PRIVATE_ZONE}/${DNS_VN_LINK} in Resource Group  $RESOURCE_GROUP"
+    fi
 }    
 
 
@@ -1627,7 +1626,7 @@ _az_create_vm()
 	# --data-disk-sizes-gb $DATA_DISK_SIZE 
 	# $AZ_NETWORKING \	
 	#   --priority $PRIORITY --max-price 0.06 \
-    fi
+	    fi
     echo "Creating VM..."
     az vm create -n $NAME -g $RESOURCE_GROUP --size $VM_TYPE \
        --image $OS_IMAGE --os-disk-size-gb $BOOT_SIZE \
@@ -1651,6 +1650,11 @@ az_delete_vm()
 {
     _az_set_resource_group
     az vm delete -g $RESOURCE_GROUP --name $VM_DELETE --yes --no-wait
+    echo "Do you want to delete the resource group $RESOURCE_GROUP (y/n)?"
+    read ACCEPT
+    if [ "$ACCEPT" == "y" ] ; then
+	az group delete -n $RESOURCE_GROUP --yes --no-wait
+    fi
 }
 
 
@@ -1853,8 +1857,8 @@ help()
     echo "                 'p100' Nvidia Tesla P100"
     echo "                 't4' Nvidia Tesla T4"	      
     echo "                 'k80' Nvidia K80"	      
-    echo " [-d|--download-enterprise-url url] downloads enterprise binaries from this URL."
-    echo " [-dc|--download-url url] downloads binaries from this URL."
+    echo " [-de|--download-enterprise-url url] downloads enterprise binaries from this URL."
+    echo " [-dc|--download-opensource-url url] downloads open-source binaries from this URL."
     echo " [-du|--download-user username] Username for downloading enterprise binaries."
     echo " [-dp|--download-password password] Password for downloading enterprise binaries."
     echo " [-ht|--head-instance-type compute instance type for the head node (lookup name in GCP,Azure)]"    
@@ -1921,11 +1925,11 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
                     exit 44
 	    esac
 	    ;;
-	-d|--download-enterprise-url)
+	-de|--download-enterprise-url)
       	    shift
 	    ENTERPRISE_DOWNLOAD_URL=$1
 	    ;;
-	-dc|--download-url)
+	-dc|--download-opensource-url)
       	    shift
 	    DOWNLOAD_URL=$1
 	    ;;
@@ -2248,7 +2252,7 @@ fi
 if [ $ENTERPRISE -eq 1 ] ; then
     DOWNLOAD=""
     if [ "$ENTERPRISE_DOWNLOAD_URL" != "" ] ; then
-	DOWNLOAD="-d $ENTERPRISE_DOWNLOAD_URL "
+	DOWNLOAD="-de $ENTERPRISE_DOWNLOAD_URL "
     fi
     if [ "$ENTERPRISE_USERNAME" != "" ] ; then
 	DOWNLOAD_USERNAME="-du $ENTERPRISE_USERNAME "

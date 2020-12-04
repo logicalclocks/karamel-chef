@@ -42,7 +42,7 @@ Requirements:
 Enterprise Installation
 ----------------------------------
 
-You will need to get the <username> and <password> from sales@logicalclocks.com.
+You will need to get the `<username>` and `<password>` from sales@logicalclocks.com.
 The example commands below will install Enterprise Hopsworks on GCP:
 
 export ENTERPRISE_DOWNLOAD_URL=https://nexus.hops.works/repository
