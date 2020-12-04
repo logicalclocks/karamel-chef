@@ -1274,7 +1274,6 @@ else
 fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] ; then
-
     if [ "$WORKER_LIST" == "" ] ; then
 	worker_size
     else

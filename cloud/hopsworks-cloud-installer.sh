@@ -32,7 +32,7 @@
 #                                                                                                 #
 ###################################################################################################
 
-HOPSWORKS_INSTALLER_VERSION=2.0
+HOPSWORKS_INSTALLER_VERSION=master
 CLUSTER_DEFINITION_VERSION=$HOPSWORKS_INSTALLER_VERSION
 HOPSWORKS_INSTALLER_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_INSTALLER_VERSION
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$CLUSTER_DEFINITION_VERSION
@@ -446,7 +446,6 @@ cpus_gpus()
 	    echo "FOUND GPUS: $GPUS"
         fi		
     elif [ "$CLOUD" == "azure" ] ; then
-	
 	CPUS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | grep "^${PREFIX}" | grep -e "cpu[0-99]" |  wc -l)
 	GPUS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | grep "^${PREFIX}" | grep -e "gpu[0-99]" |  wc -l)
 	if [ $DEBUG -eq 1 ] ; then
@@ -1114,7 +1113,7 @@ gcloud_delete_vm()
 az_get_ips()
 {
     echo "Azure get_ips"
-    #    MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $2, $3 }')    
+#    MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $2, $3 }')    
     set_name "head"
     if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
 	set_name "cpu"
@@ -1581,7 +1580,7 @@ _az_precreate()
 	#     read DATA_DISK_SIZES_GB
 	# fi
     fi
-    #    DATA_DISK_SIZE=$DATA_DISK_SIZES_GB    
+#    DATA_DISK_SIZE=$DATA_DISK_SIZES_GB    
     BOOT_SIZE=$BOOT_SIZE_GBS
 }
 
@@ -1651,7 +1650,6 @@ az_delete_vm()
 {
     _az_set_resource_group
     az vm delete -g $RESOURCE_GROUP --name $VM_DELETE --yes --no-wait
-
     echo "Do you want to delete the resource group $RESOURCE_GROUP (y/n)?"
     read ACCEPT
     if [ "$ACCEPT" == "y" ] ; then
