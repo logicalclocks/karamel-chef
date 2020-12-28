@@ -1243,7 +1243,10 @@ _az_enter_location()
 
 _az_set_resource_group()
 {
-    RESOURCE_GROUP=$(az configure -o table -l | tail -n +3 | tail -n +1 | grep ^group | awk '{ print $3 }')
+    RESOURCE_GROUP_DEFAULT=$(az configure -o table -l | tail -n +3 | tail -n +1 | grep ^group | awk '{ print $3 }')
+    if [ "$DEFAULT_RESOURCE_GROUP" != "" ] ; then
+	RESOURCE_GROUP=$RESOURCE_GROUP_DEFAULT
+    fi
 }
 
 _az_enter_resource_group()
@@ -1342,9 +1345,9 @@ _az_enter_virtual_network()
 
 _az_set_private_dns_zone()
 {
-    DNS_PRIVATE_ZONE_DEFAULT=$(az network private-dns zone list -g $RESOURCE_GROUP |  grep "$RESOURCE_GROUP" | awk '{ print $1 }')
+    DNS_PRIVATE_ZONE_DEFAULT=$(az network private-dns zone list -g $RESOURCE_GROUP -o table |  grep "$RESOURCE_GROUP" | awk '{ print $1 }')
     if [ "$DNS_PRIVATE_ZONE_DEFAULT" != "" ] ; then
-	DNS_VN_LINK_DEFAULT=$(az network private-dns link vnet list -g $RESOURCE_GROUP -z $DNS_PRIVATE_ZONE |  grep "$RESOURCE_GROUP" | awk '{ print $1 }')
+	DNS_VN_LINK_DEFAULT=$(az network private-dns link vnet list -g $RESOURCE_GROUP -z $DNS_PRIVATE_ZONE -o table |  grep "$RESOURCE_GROUP" | awk '{ print $1 }')
 	if [ "$DNS_VN_LINK_DEFAULT" != "" ] ; then
 	    DNS_VN_LINK=$DNS_VN_LINK_DEFAULT
 	fi
