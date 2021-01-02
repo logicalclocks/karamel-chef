@@ -149,7 +149,7 @@ when 'ubuntu'
       bundle install
       rspec --format RspecJunitFormatter --out #{node['test']['hopsworks']['report_dir']}/ubuntu.xml --pattern "**{,/*/**}/*it_spec.rb"
       EOH
-    elsif ::File.file?("lambo_rspec.py")
+    elsif ::File.file?("#{node['test']['hopsworks']['test_dir']}/lambo_rspec.py")
       # Hardcode this for the moment so that we are able to keep the old testing in parallel
       code <<-EOH
         bundle install
@@ -215,7 +215,7 @@ when 'centos'
       bundle install
       rspec --format RspecJunitFormatter --out #{node['test']['hopsworks']['report_dir']}/centos.xml --pattern "**{,/*/**}/*it_spec.rb"
       EOH
-    elsif ::File.file?("lambo_rspec.py")
+    elsif ::File.file?("#{node['test']['hopsworks']['test_dir']}/lambo_rspec.py")
       # Hardcode this for the moment so that we are able to keep the old testing in parallel
       code <<-EOH
         bundle install
