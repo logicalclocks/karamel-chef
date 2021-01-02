@@ -149,6 +149,12 @@ when 'ubuntu'
       bundle install
       rspec --format RspecJunitFormatter --out #{node['test']['hopsworks']['report_dir']}/ubuntu.xml --pattern "**{,/*/**}/*it_spec.rb"
       EOH
+    elsif ::File.file?("lambo_rspec.py")
+      # Hardcode this for the moment so that we are able to keep the old testing in parallel
+      code <<-EOH
+        bundle install
+        /srv/hops/anaconda/anaconda/envs/airflow/bin/python lambo_rspec.py -proc 5 -out #{node['test']['hopsworks']['report_dir']}
+      EOH
     else
       # Run regular ruby tests, excluding integration tests
       code <<-EOH
@@ -208,6 +214,12 @@ when 'centos'
       set -e
       bundle install
       rspec --format RspecJunitFormatter --out #{node['test']['hopsworks']['report_dir']}/centos.xml --pattern "**{,/*/**}/*it_spec.rb"
+      EOH
+    elsif ::File.file?("lambo_rspec.py")
+      # Hardcode this for the moment so that we are able to keep the old testing in parallel
+      code <<-EOH
+        bundle install
+        /srv/hops/anaconda/anaconda/envs/airflow/bin/python lambo_rspec.py -proc 5 -out #{node['test']['hopsworks']['report_dir']}
       EOH
     else
       # Run regular ruby tests, excluding integration tests
