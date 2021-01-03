@@ -153,7 +153,7 @@ when 'ubuntu'
       # Hardcode this for the moment so that we are able to keep the old testing in parallel
       code <<-EOH
         bundle install
-        /srv/hops/anaconda/anaconda/envs/airflow/bin/python lambo_rspec.py -proc 5 -out #{node['test']['hopsworks']['report_dir']}
+        /srv/hops/anaconda/anaconda/envs/airflow/bin/python lambo_rspec.py -proc 6 -out #{node['test']['hopsworks']['report_dir']} -os #{node['platform']}
       EOH
     else
       # Run regular ruby tests, excluding integration tests
@@ -219,7 +219,7 @@ when 'centos'
       # Hardcode this for the moment so that we are able to keep the old testing in parallel
       code <<-EOH
         bundle install
-        /srv/hops/anaconda/anaconda/envs/airflow/bin/python lambo_rspec.py -proc 5 -out #{node['test']['hopsworks']['report_dir']}
+        /srv/hops/anaconda/anaconda/envs/airflow/bin/python lambo_rspec.py -proc 6 -out #{node['test']['hopsworks']['report_dir']} -os #{node['platform']}
       EOH
     else
       # Run regular ruby tests, excluding integration tests
