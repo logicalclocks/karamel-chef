@@ -76,7 +76,7 @@ Vagrant.configure("2") do |config|
 
     config.vm.provision :shell, :inline => common
     config.vm.provision :chef_solo do |chef|
-        chef.version = "13.4.19"
+        chef.version = "13.12.14"
         chef.cookbooks_path = "cookbooks"
         chef.json = {
           "karamel" => {
