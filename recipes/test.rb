@@ -1,3 +1,10 @@
+directory "/home/vagrant" do
+  owner "vagrant"
+  group "vagrant"
+  mode '0755'
+  action :create
+end
+
 case node['platform']
 when 'ubuntu'
   package ['bundler', 'firefox', 'libappindicator3-1', 'fonts-liberation', 'libxss1', 'xdg-utils', 'libreadline-dev', 'zlib1g-dev', 'libgbm1', 'libnspr4', 'libnss3']
