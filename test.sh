@@ -6,8 +6,6 @@ ports=
 #http_port=8080
 
 VBOX_MANAGE=/usr/bin/VBoxManage
-OCTETS="192.168."
-ORIGINAL_OCTETS=${OCTETS}"56"
 
 function replace_port() {
     res=0
@@ -61,31 +59,12 @@ function parse_ports() {
 }
 
 function change_subnet() {
-  priv_subnets=($($VBOX_MANAGE list hostonlyifs | grep "IPAddress:" | awk -F' ' '{print $2}' | awk -F'.' '{print $3}'))
+  OCTETS="192.168."
+  ORIGINAL_OCTETS=${OCTETS}"56"
+  new_octets=${OCTETS}$(($BUILD_NUMBER % 253 + 1))
 
-  if [ ${#priv_subnets[@]} -gt 0 ]; then
-    new_subnet=-1
-    while [ $new_subnet -eq -1 ]
-    do
-      tentative=$(($RANDOM % 255))
-      present=0
-      for i in "${priv_subnets[@]}"
-      do
-        if [ "$i" == "$tentative" ]; then
-          present=1
-          break
-        fi
-      done
-      if [ $present -eq 0 ]; then
-        new_subnet=$tentative
-      fi
-    done
-
-    new_octets=${OCTETS}${new_subnet}
-    sed -i "s/${ORIGINAL_OCTETS}/${new_octets}/g" Vagrantfile
-    sed -i "s/${ORIGINAL_OCTETS}/${new_octets}/g" cluster.yml
-  fi
-
+  sed -i "s/${ORIGINAL_OCTETS}/${new_octets}/g" Vagrantfile
+  sed -i "s/${ORIGINAL_OCTETS}/${new_octets}/g" cluster.yml
 }
 
 PORTS=1

@@ -128,9 +128,9 @@ when 'ubuntu'
     timeout node['karamel']['test_timeout']
     # Run hopsworks unit tests
     code <<-EOH
-      set -e 
+      set -e
       mkdir -pm 777 #{node['test']['hopsworks']['report_dir']}/ut
-      mvn test
+      mvn test -Dmaven.test.failure.ignore=true
       find . -name "*.xml" | grep "surefire-reports" | xargs cp -t #{node['test']['hopsworks']['report_dir']}/ut
     EOH
   end
@@ -148,6 +148,12 @@ when 'ubuntu'
       code <<-EOH
       bundle install
       rspec --format RspecJunitFormatter --out #{node['test']['hopsworks']['report_dir']}/ubuntu.xml --pattern "**{,/*/**}/*it_spec.rb"
+      EOH
+    elsif ::File.file?("#{node['test']['hopsworks']['test_dir']}/lambo_rspec.py")
+      # Hardcode this for the moment so that we are able to keep the old testing in parallel
+      code <<-EOH
+        bundle install
+        /srv/hops/anaconda/anaconda/envs/airflow/bin/python lambo_rspec.py -proc 6 -out #{node['test']['hopsworks']['report_dir']} -os #{node['platform']}
       EOH
     else
       # Run regular ruby tests, excluding integration tests
@@ -168,7 +174,7 @@ when 'ubuntu'
                   'DB_HOST' => "127.0.0.1",
                   'BROWSER' => "firefox"})
     code <<-FIREFOX
-      mvn clean install -P-web,mysql
+      mvn clean install -P-web,mysql -Dmaven.test.failure.ignore=true
       cd hopsworks-IT/target/failsafe-reports
       for file in *.xml ; do cp $file #{node['test']['hopsworks']['report_dir']}/firefox-${file} ; done
     FIREFOX
@@ -184,7 +190,7 @@ when 'ubuntu'
                   'DB_HOST' => "127.0.0.1",
                   'BROWSER' => "chrome"})
     code <<-CHROME
-      mvn clean install -P-web,mysql
+      mvn clean install -P-web,mysql -Dmaven.test.failure.ignore=true
       cd hopsworks-IT/target/failsafe-reports
       for file in *.xml ; do cp $file #{node['test']['hopsworks']['report_dir']}/chrome-${file} ; done
     CHROME
@@ -208,6 +214,12 @@ when 'centos'
       set -e
       bundle install
       rspec --format RspecJunitFormatter --out #{node['test']['hopsworks']['report_dir']}/centos.xml --pattern "**{,/*/**}/*it_spec.rb"
+      EOH
+    elsif ::File.file?("#{node['test']['hopsworks']['test_dir']}/lambo_rspec.py")
+      # Hardcode this for the moment so that we are able to keep the old testing in parallel
+      code <<-EOH
+        bundle install
+        /srv/hops/anaconda/anaconda/envs/airflow/bin/python lambo_rspec.py -proc 6 -out #{node['test']['hopsworks']['report_dir']} -os #{node['platform']}
       EOH
     else
       # Run regular ruby tests, excluding integration tests
