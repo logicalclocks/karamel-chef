@@ -28,9 +28,11 @@
 ###################################################################################################
 
 HOPSWORKS_REPO=logicalclocks/hopsworks-chef
-HOPSWORKS_BRANCH=2.0
+HOPSWORKS_BRANCH=2.1
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_BRANCH
 KARAMEL_VERSION=0.6
+ENTERPRISE_DOWNLOAD_URL=https://nexus.hops.works/repository
+
 INSTALL_ACTION=
 NON_INTERACT=0
 SCRIPTNAME=`basename $0`
@@ -218,7 +220,7 @@ splash_screen()
 	    mnt=${AVAILABLE_MNT}
 	fi
 
-	if [ $space -lt 30 ] || [ $mnt < 50 ]; then
+	if [ $space -lt 30 ] || [ $mnt -lt 50 ]; then
 	    echo ""
 	    echo "WARNING: We recommend at least 30GB of disk space on the root partition as well as at least 50GB on the /mnt partition."
 	    echo "You have ${space}G space on '/', and ${mnt}G on '/mnt'."
@@ -660,8 +662,8 @@ enter_email()
 	exit 1
     fi
 
-    #curl -H "Content-type:application/json" --data @.details http://snurran.sics.se:8443/keyword --connect-timeout 10 > /dev/null 2>&1
-    CREDENTIALS=$(curl -H "Content-type:application/json" --data @.details http://snurran.sics.se:8443/keyword --connect-timeout 10)
+    #curl -H "Content-type:application/json" --data @.details http://karamel.io:8443/keyword --connect-timeout 10 > /dev/null 2>&1
+    CREDENTIALS=$(curl -H "Content-type:application/json" --data @.details http://karamel.io:8443/keyword --connect-timeout 10)
     ENTERPRISE_USERNAME=$(echo $CREDENTIALS | cut -d ":" -f1)
     ENTERPRISE_PASSWORD=$(echo $CREDENTIALS | cut -d ":" -f2)
 
@@ -1274,7 +1276,6 @@ else
 fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] ; then
-
     if [ "$WORKER_LIST" == "" ] ; then
 	worker_size
     else
@@ -1383,14 +1384,30 @@ else
         fi
 	if [ "$ENTERPRISE_USER" = "" ] ; then
 	    echo ""
-            printf "Enter the Enterprise URL username: "
+            printf "Enter the Enterprise username: "
 	    read ENTERPRISE_USER
         fi
 	if [ "$ENTERPRISE_PASSWORD" = "" ] ; then
 	    echo ""
-            printf "Enter the Enterprise URL password: "
+            printf "Enter the Enterprise password: "
 	    read -s ENTERPRISE_PASSWORD
         fi
+        echo ""
+        
+        # validate the enterprise credentials before starting the installation
+        lines=$(curl --silent -u ${ENTERPRISE_USER}:${ENTERPRISE_PASSWORD} ${ENTERPRISE_DOWNLOAD_URL}/index.html | wc -l | tail -1)
+        if [ $lines -eq 0 ] ; then
+	    echo "ERROR."
+            echo "Enterprise Download URL was: ${ENTRPRISE_DOWNLOAD_URL}"
+            echo "Username: ${ENTERPRISE_USER}"
+	    echo "Bad username or password"
+	    echo ""
+	    exit 1
+        else
+	    echo "Enterprise Username/Password Accepted."
+        fi    
+
+        
 	# Escape URL
 	ENTERPRISE_DOWNLOAD_URL=${ENTERPRISE_DOWNLOAD_URL//\./\\\.}
 	ENTERPRISE_DOWNLOAD_URL=${ENTERPRISE_DOWNLOAD_URL//\//\\\/}

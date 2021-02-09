@@ -32,7 +32,7 @@
 #                                                                                                 #
 ###################################################################################################
 
-HOPSWORKS_INSTALLER_VERSION=2.0
+HOPSWORKS_INSTALLER_VERSION=2.1
 CLUSTER_DEFINITION_VERSION=$HOPSWORKS_INSTALLER_VERSION
 HOPSWORKS_INSTALLER_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_INSTALLER_VERSION
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$CLUSTER_DEFINITION_VERSION
@@ -446,7 +446,6 @@ cpus_gpus()
 	    echo "FOUND GPUS: $GPUS"
         fi		
     elif [ "$CLOUD" == "azure" ] ; then
-	
 	CPUS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | grep "^${PREFIX}" | grep -e "cpu[0-99]" |  wc -l)
 	GPUS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | grep "^${PREFIX}" | grep -e "gpu[0-99]" |  wc -l)
 	if [ $DEBUG -eq 1 ] ; then
@@ -486,7 +485,7 @@ enter_email()
 	    exit 1
 	fi
 
-	CREDENTIALS=$(curl -H "Content-type:application/json" --data @.details http://snurran.sics.se:8443/keyword --connect-timeout 10)
+	CREDENTIALS=$(curl -H "Content-type:application/json" --data @.details http://karamel.io:8443/keyword --connect-timeout 10)
 	ENTERPRISE_USERNAME=$(echo $CREDENTIALS | cut -d ":" -f1)	
 	ENTERPRISE_PASSWORD=$(echo $CREDENTIALS | cut -d ":" -f2)
 	clear_screen
@@ -750,7 +749,7 @@ enter_enterprise_credentials()
 	echo ""
 	exit 1
     else
-	echo "Username/Password for Nexus OK."
+	echo "Enterprise Username/Password Accepted."
     fi    
     # Escape URL
     ENTERPRISE_DOWNLOAD_URL=${ENTERPRISE_DOWNLOAD_URL//\./\\\.}
@@ -1114,7 +1113,7 @@ gcloud_delete_vm()
 az_get_ips()
 {
     echo "Azure get_ips"
-    #    MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $2, $3 }')    
+#    MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $2, $3 }')    
     set_name "head"
     if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
 	set_name "cpu"
@@ -1244,7 +1243,10 @@ _az_enter_location()
 
 _az_set_resource_group()
 {
-    RESOURCE_GROUP=$(az configure -o table -l | tail -n +3 | tail -n +1 | grep ^group | awk '{ print $3 }')
+    RESOURCE_GROUP_DEFAULT=$(az configure -o table -l | tail -n +3 | tail -n +1 | grep ^group | awk '{ print $3 }')
+    if [ "$DEFAULT_RESOURCE_GROUP" != "" ] ; then
+	RESOURCE_GROUP=$RESOURCE_GROUP_DEFAULT
+    fi
 }
 
 _az_enter_resource_group()
@@ -1343,9 +1345,9 @@ _az_enter_virtual_network()
 
 _az_set_private_dns_zone()
 {
-    DNS_PRIVATE_ZONE_DEFAULT=$(az network private-dns zone list -g $RESOURCE_GROUP |  grep "$RESOURCE_GROUP" | awk '{ print $1 }')
+    DNS_PRIVATE_ZONE_DEFAULT=$(az network private-dns zone list -g $RESOURCE_GROUP -o table |  grep "$RESOURCE_GROUP" | awk '{ print $1 }')
     if [ "$DNS_PRIVATE_ZONE_DEFAULT" != "" ] ; then
-	DNS_VN_LINK_DEFAULT=$(az network private-dns link vnet list -g $RESOURCE_GROUP -z $DNS_PRIVATE_ZONE |  grep "$RESOURCE_GROUP" | awk '{ print $1 }')
+	DNS_VN_LINK_DEFAULT=$(az network private-dns link vnet list -g $RESOURCE_GROUP -z $DNS_PRIVATE_ZONE -o table |  grep "$RESOURCE_GROUP" | awk '{ print $1 }')
 	if [ "$DNS_VN_LINK_DEFAULT" != "" ] ; then
 	    DNS_VN_LINK=$DNS_VN_LINK_DEFAULT
 	fi
@@ -1581,7 +1583,7 @@ _az_precreate()
 	#     read DATA_DISK_SIZES_GB
 	# fi
     fi
-    #    DATA_DISK_SIZE=$DATA_DISK_SIZES_GB    
+#    DATA_DISK_SIZE=$DATA_DISK_SIZES_GB    
     BOOT_SIZE=$BOOT_SIZE_GBS
 }
 
@@ -1651,7 +1653,6 @@ az_delete_vm()
 {
     _az_set_resource_group
     az vm delete -g $RESOURCE_GROUP --name $VM_DELETE --yes --no-wait
-
     echo "Do you want to delete the resource group $RESOURCE_GROUP (y/n)?"
     read ACCEPT
     if [ "$ACCEPT" == "y" ] ; then
@@ -1850,7 +1851,6 @@ help()
     echo "                 'kubernetes' installs Hopsworks Enterprise (single VM or multi-VM) alson with open-source Kubernetes"
     echo " [-c|--cloud gcp|aws|azure] Name of the public cloud "
     echo " [--debug] Verbose logging for this script"
-    echo " [-dr|--dry-run]  generates cluster definition (YML) files, allowing customization of clusters."
     echo " [-drc|--dry-run-create-vms]  creates the VMs, generates cluster definition (YML) files but doesn't run karamel."	      	      
     echo " [-g|--num-gpu-workers num] Number of workers (with GPUs) to create for the cluster."
     echo " [-gpus|--num-gpus-per-worker num] Number of GPUs per worker or head node."
@@ -1946,9 +1946,6 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
       	    shift
 	    ENTERPRISE_PASSWORD=$1
 	    ;;
-	-dr|--dry-run)
-            DRY_RUN=1
-            ;;
 	-drc|--dry-run-create-vms)
             DRY_RUN_CREATE_VMS=1
             ;;
@@ -2243,7 +2240,11 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
 	fi
 	i=$((i+1))	
     done
-    WORKERS=${WORKERS::-1}
+
+    if [ "$WORKERS" != "-w none " ] ; then
+        WORKERS=${WORKERS::-1}
+    fi
+    
     if [ $DEBUG -eq 1 ] ; then    
 	echo "ALL WORKERS: $WORKERS"
     fi
