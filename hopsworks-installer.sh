@@ -660,7 +660,7 @@ enter_email()
 	exit 1
     fi
 
-    #curl -H "Content-type:application/json" --data @.details http://snurran.sics.se:8443/keyword --connect-timeout 10 > /dev/null 2>&1
+    #curl -s -H "Content-type:application/json" --data @.details http://snurran.sics.se:8443/keyword --connect-timeout 10 > /dev/null 2>&1
     CREDENTIALS=$(curl -H "Content-type:application/json" --data @.details http://snurran.sics.se:8443/keyword --connect-timeout 10)
     ENTERPRISE_USERNAME=$(echo $CREDENTIALS | cut -d ":" -f1)
     ENTERPRISE_PASSWORD=$(echo $CREDENTIALS | cut -d ":" -f2)

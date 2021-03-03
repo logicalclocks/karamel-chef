@@ -1,5 +1,6 @@
 #!/bin/bash
 
+email="blah"
 ###################################################################################################
 #                                                                                                 #
 # This code is released under the GNU General Public License, Version 3, see for details:         #
@@ -129,8 +130,8 @@ ACTION=
 # Azure Config
 ###################
 SUBSCRIPTION=
-RESOURCE_GROUP=hopsworks
-VIRTUAL_NETWORK=hops
+RESOURCE_GROUP=
+VIRTUAL_NETWORK=
 
 # We call Azure's LOCATION "REGION" to make this script more generic
 # az vm create -n ghead --vnet-name hops --size Standard_NC6 --location westeurope --image UbuntuLTS --subnet default --public-ip-address ""
@@ -1244,7 +1245,9 @@ _az_enter_location()
 
 _az_set_resource_group()
 {
-    RESOURCE_GROUP=$(az configure -o table -l | tail -n +3 | tail -n +1 | grep ^group | awk '{ print $3 }')
+    if [ "$RESOURCE_GROUP" = "" ] ; then
+        RESOURCE_GROUP=$(az configure -o table -l | tail -n +3 | tail -n +1 | grep ^group | awk '{ print $3 }')
+    fi
 }
 
 _az_enter_resource_group()
@@ -1296,9 +1299,12 @@ _az_enter_resource_group()
 
 _az_set_virtual_network()
 {
-    VIRTUAL_NETWORK_DEFAULT=$(az network vnet list -g $RESOURCE_GROUP -o table | tail -n +3 | awk '{ print $1 }' | tail -1)
-    if [ "$VIRTUAL_NETWORK_DEFAULT" != "" ] ; then
-	VIRTUAL_NETWORK=$VIRTUAL_NETWORK_DEFAULT
+
+    if [ "$VIRTUAL_NETWORK" == "" ] ; then    
+      VIRTUAL_NETWORK_DEFAULT=$(az network vnet list -g $RESOURCE_GROUP -o table | tail -n +3 | awk '{ print $1 }' | tail -1)
+      if [ "$VIRTUAL_NETWORK_DEFAULT" != "" ] ; then
+  	VIRTUAL_NETWORK=$VIRTUAL_NETWORK_DEFAULT
+      fi
     fi
 }
 
@@ -1343,13 +1349,17 @@ _az_enter_virtual_network()
 
 _az_set_private_dns_zone()
 {
-    DNS_PRIVATE_ZONE_DEFAULT=$(az network private-dns zone list -g $RESOURCE_GROUP |  grep "$RESOURCE_GROUP" | awk '{ print $1 }')
-    if [ "$DNS_PRIVATE_ZONE_DEFAULT" != "" ] ; then
-	DNS_VN_LINK_DEFAULT=$(az network private-dns link vnet list -g $RESOURCE_GROUP -z $DNS_PRIVATE_ZONE |  grep "$RESOURCE_GROUP" | awk '{ print $1 }')
-	if [ "$DNS_VN_LINK_DEFAULT" != "" ] ; then
-	    DNS_VN_LINK=$DNS_VN_LINK_DEFAULT
-	fi
-	DNS_PRIVATE_ZONE=$DNS_PRIVATE_ZONE_DEFAULT
+    if [ "$DNS_PRIVATE_ZONE" == "" ] ; then
+        DNS_PRIVATE_ZONE_DEFAULT=$(az network private-dns zone list -g $RESOURCE_GROUP |  grep "$RESOURCE_GROUP" | awk '{ print $1 }')
+        if [ "$DNS_PRIVATE_ZONE_DEFAULT" != "" ] ; then
+	    DNS_PRIVATE_ZONE=$DNS_PRIVATE_ZONE_DEFAULT
+        fi
+    fi
+    if [ "$DNS_VN_LINK" == "" ] ; then
+      DNS_VN_LINK_DEFAULT=$(az network private-dns link vnet list -g $RESOURCE_GROUP -z $DNS_PRIVATE_ZONE |  grep "$RESOURCE_GROUP" | awk '{ print $1 }')
+      if [ "$DNS_VN_LINK_DEFAULT" != "" ] ; then
+        DNS_VN_LINK=$DNS_VN_LINK_DEFAULT
+      fi
     fi
 }
 
@@ -1867,12 +1877,19 @@ help()
     echo " [-l|--list-public-ips] List the public ips of all VMs."
     echo " [-n|--vm-name-prefix name] The prefix for the VM name created."
     echo " [-ni|--non-interactive] skip license/terms acceptance and all confirmation screens."
-    echo " [-nvme|--nvme num_disks] the number of disks to attach to each worker node"	      
     echo " [-rm|--remove] Delete a VM - you will be prompted for the name of the VM to delete."
     echo " [-sc|--skip-create] skip creating the VMs, use the existing VM(s) with the same vm_name(s)."
     echo " [-w|--num-cpu-workers num] Number of workers (CPU only) to create for the cluster."
-    echo " [-wt|--worker-instance-type compute instance type for worker nodes (lookup name in GCP,Azure)]"        
+    echo " [-wt|--worker-instance-type compute instance type for worker nodes (lookup name in GCP,Azure)]"
     echo ""
+    echo "Azure options"
+    echo " [-alink|--azure-dns-virtual-network-link link] Azure private DNS Zone to virtual network link name."
+    echo " [-adns|--azure-private-dns-zone fqdn] Azure private DNS Zone fqdn."	
+    echo " [-avn|--azure-virtual-network network] Azure virtual network to use."
+    echo " [-arg|--azure-resource-group group] Azure resource group to use."
+    echo ""
+    echo "GCP options"
+    echo " [-nvme|--nvme num_disks] the number of disks to attach to each worker node"	          
     exit 3
 
 }
@@ -1926,6 +1943,23 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 		    echo "Valid options are: gcp | azure | aws"
                     exit 44
 	    esac
+	    ;;
+
+	-alink|--azure-dns-virtual-network-link)
+	    shift
+	    DNS_VN_LINK=$1
+            ;;
+	-avn|--azure-virtual-network)
+	    shift
+	    VIRTUAL_NETWORK=$1
+	    ;;
+	-arg|--azure-resource-group)
+	    shift
+	    RESOURCE_GROUP=$1
+	    ;;
+	-adns|--azure-private-dns-zone)
+	    shift
+	    DNS_PRIVATE_ZONE=$1
 	    ;;
 	-de|--download-enterprise-url)
       	    shift
