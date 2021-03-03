@@ -102,7 +102,6 @@ groups:
       - kkafka
       - epipe
       - hopsworks
-      - hopsmonitor
       - hopslog
       - hopslog::_filebeat-spark
       - hopslog::_filebeat-serving
@@ -113,6 +112,7 @@ groups:
       - hive2
       - hops_airflow
       - hops_airflow::sqoop
+      - hopsmonitor      
       - hopsmonitor::prometheus
       - hopsmonitor::alertmanager
       - hopsmonitor::node_exporter
