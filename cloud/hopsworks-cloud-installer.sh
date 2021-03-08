@@ -7,7 +7,7 @@ email="blah"
 # http://www.gnu.org/licenses/gpl-3.0.txt                                                         #
 #                                                                                                 #
 #                                                                                                 #
-# Copyright (c) Logical Clocks AB, 2020.                                                          #
+# Copyright (c) Logical Clocks AB, 2021.                                                          #
 # All Rights Reserved.                                                                            #
 #                                                                                                 #
 ###################################################################################################

@@ -6,7 +6,7 @@
 # http://www.gnu.org/licenses/gpl-3.0.txt                                                         #
 #                                                                                                 #
 #                                                                                                 #
-# Copyright (c) Logical Clocks AB, 2020.                                                          #
+# Copyright (c) Logical Clocks AB, 2021.                                                          #
 # All Rights Reserved.                                                                            #
 #                                                                                                 #
 ###################################################################################################
@@ -27,8 +27,8 @@
 #                                                                                                 #
 ###################################################################################################
 
-HOPSWORKS_REPO=logicalclocks/hopsworks-chef
-HOPSWORKS_BRANCH=master
+HOPSWORKS_REPO=logicalclocks/ndb-chef
+HOPSWORKS_BRANCH=rondb
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_BRANCH
 KARAMEL_VERSION=0.6
 ENTERPRISE_DOWNLOAD_URL=https://nexus.hops.works/repository
@@ -51,12 +51,8 @@ DRY_RUN=0
 CLEAN_INSTALL_DIR=0
 SUDO_PWD=
 INSTALL_LOCALHOST=1
-INSTALL_LOCALHOST_TLS=2
-INSTALL_CLUSTER=3
-INSTALL_KARAMEL=4
-INSTALL_NVIDIA=5
-PURGE_HOPSWORKS=7
-PURGE_HOPSWORKS_ALL_HOSTS=8
+INSTALL_CLUSTER=2
+PURGE_HOPSWORKS_ALL_HOSTS=3
 TLS="false"
 REVERSE_DNS=1
 
@@ -66,22 +62,20 @@ NDB_NVME=
 
 YARN="yarn:"
 RM_WORKER=
-ENTERPRISE=0
-KUBERNETES=0
+
 DOWNLOAD=
-KUBERNETES_RECIPES=""
-INPUT_YML="cluster-defns/hopsworks-head.yml"
-WORKER_YML="cluster-defns/hopsworks-worker.yml"
-WORKER_GPU_YML="cluster-defns/hopsworks-worker-gpu.yml"
-YML_FILE="cluster-defns/hopsworks-installation.yml"
+
+INPUT_YML="cluster-defns/rondb-head.yml"
+WORKER_YML="cluster-defns/rondb-worker.yml"
+YML_FILE="cluster-defns/ronbdb-installation.yml"
 ENTERPRISE_ATTRS=
-KUBE="false"
+
 WORKER_LIST=
 WORKER_IP=
 WORKER_DEFAULTS=
-HAS_GPUS=0
-AVAILABLE_GPUS=
-CUDA=
+
+
+NUM_REPLICAS=1
 
 KARAMEL_HTTP_PROXY_1=
 KARAMEL_HTTP_PROXY_2=
@@ -383,58 +377,23 @@ install_action()
 	echo ""
         echo "What would you like to do?"
 	echo ""
-	echo "(1) Install a single-host Hopsworks cluster."
+	echo "(1) Install a single-host RonDB database."
 	echo ""
-	echo "(2) Install a single-host Hopsworks cluster with TLS enabled."
+	echo "(2) Install a multi-host RonDB database."
 	echo ""
-	echo "(3) Install a multi-host Hopsworks cluster with TLS enabled."
+	echo "(3) Purge (uninstall) RonDB from ALL hosts."
 	echo ""
-	echo "(4) Install an Enterprise Hopsworks cluster."
-	echo ""
-	echo "(5) Install an Enterprise Hopsworks cluster with Kubernetes"
-	echo ""
-	echo "(6) Install and start Karamel."
-	echo ""
-	echo "(7) Install Nvidia drivers and reboot server."
-	echo ""
-	echo "(8) Purge (uninstall) Hopsworks from this host."
-	echo ""
-	echo "(9) Purge (uninstall) Hopsworks from ALL hosts."
-	echo ""
-	printf 'Please enter your choice '1', '2', '3', '4', '5', '6', '7', '8', '9',  'q' \(quit\), or 'h' \(help\) :  '
+	printf 'Please enter your choice '1', '2', '3',  'q' \(quit\), or 'h' \(help\) :  '
         read ACCEPT
         case $ACCEPT in
             1)
 		INSTALL_ACTION=$INSTALL_LOCALHOST
 		;;
             2)
-		INSTALL_ACTION=$INSTALL_LOCALHOST_TLS
+		INSTALL_ACTION=$INSTALL_CLUSTER
 		;;
             3)
-		INSTALL_ACTION=$INSTALL_CLUSTER
-		;;
-            4)
-		INSTALL_ACTION=$INSTALL_CLUSTER
-		ENTERPRISE=1
-		accept_enterprise
-		;;
-            5)
-		INSTALL_ACTION=$INSTALL_CLUSTER
-		ENTERPRISE=1
-		KUBERNETES=1
-		accept_enterprise
-		;;
-            6)
-		INSTALL_ACTION=$INSTALL_KARAMEL
-		;;
-            7)
-		INSTALL_ACTION=$INSTALL_NVIDIA
-		;;
-            8)
-		INSTALL_ACTION=$PURGE_HOPSWORKS
-		;;
-            9)
-		INSTALL_ACTION=$PURGE_HOPSWORKS_ALL_HOSTS
+		INSTALL_ACTION=$PURGE_ALL_HOSTS
 		;;
             h | H)
 		clear
@@ -449,7 +408,7 @@ install_action()
             *)
 		echo ""
 		echo "Invalid Choice: $ACCEPT"
-		echo "Please enter your choice '1', '2', '3', '4', 'q', or 'h'."
+		echo "Please enter your choice '1', '2', '3', 'q', or 'h'."
 		clear_screen
 		install_action
 		;;
@@ -817,6 +776,16 @@ worker_size()
     #PubkeyAuthentication yes
     #AuthorizedKeysFile    .ssh/authorized_keys
     #PasswordAuthentication no
+
+    printf 'Please enter the number of database replicas (default: 1): '
+    read NUM_REPLICAS
+    if [ "$NUM_REPLICAS" == "" ] ; then
+	NUM_REPLICAS=0
+    fi
+    echo ""
+    echo "Number of replicas is: $NUM_REPLICAS"
+    clear_screen
+    
     printf 'Please enter the number of extra workers you want to add (default: 0): '
     read NUM_WORKERS
     if [ "$NUM_WORKERS" == "" ] ; then
@@ -985,6 +954,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	    echo " [-dp|--download-password password] Password for downloading enterprise binaries."
 	    echo " [-gs|--gem-server] Run a local gem server for chef-solo (for air-gapped installations)."
 	    echo " [-ni|--non-interactive)] skip license/terms acceptance and all confirmation screens."
+            echo " [-r|--num-replicas num] specify the number of database replicas to use."
 	    echo " [-p|--http-proxy) url] URL of the http(s) proxy server. Only https proxies with valid certs supported."
 	    echo " [-pwd|--password password] sudo password for user running chef recipes."
 	    echo " [-y|--yml yaml_file] yaml file to run Karamel against."
@@ -1079,6 +1049,11 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	-ni|--non-interactive)
 	    NON_INTERACT=1
 	    ;;
+	-r|--num-replicas)
+      	    shift
+	    NUM_REPLICAS=$1
+	    ;;
+        
 	-gs|--gem-server)
 	    GEM_SERVER=1
 	    ;;
@@ -1157,7 +1132,7 @@ if [ "$INSTALL_ACTION" == "$INSTALL_NVIDIA" ] ; then
 fi
 
 if [ "$INSTALL_ACTION" == "$PURGE_HOPSWORKS_ALL_HOSTS" ] ; then
-    IPS=$(grep 'ip:' hopsworks-installation.yml | awk '{ print $2 }')
+    IPS=$(grep 'ip:' $YML_FILE | awk '{ print $2 }')
     for ip in $IPS ; do
 	echo ""
 	echo "Purging on host: $ip"
@@ -1371,82 +1346,6 @@ else
 	DOWNLOAD="download_url: $DOWNLOAD_URL"
     fi
 
-    if [ $ENTERPRISE -eq 1 ] ; then
-        TLS="true
-      crl_enabled: true
-      crl_fetcher_class: org.apache.hadoop.security.ssl.DevRemoteCRLFetcher
-      crl_fetcher_interval: 5m
-"
-	if [ "$ENTERPRISE_DOWNLOAD_URL" = "" ] ; then
-	    echo ""
-            printf "Enter the URL to download the Enterprise Binaries from: "
-	    read ENTERPRISE_DOWNLOAD_URL
-        fi
-	if [ "$ENTERPRISE_USER" = "" ] ; then
-	    echo ""
-            printf "Enter the Enterprise username: "
-	    read ENTERPRISE_USER
-        fi
-	if [ "$ENTERPRISE_PASSWORD" = "" ] ; then
-	    echo ""
-            printf "Enter the Enterprise password: "
-	    read -s ENTERPRISE_PASSWORD
-        fi
-        echo ""
-        
-        # validate the enterprise credentials before starting the installation
-        lines=$(curl --silent -u ${ENTERPRISE_USER}:${ENTERPRISE_PASSWORD} ${ENTERPRISE_DOWNLOAD_URL}/index.html | wc -l | tail -1)
-        if [ $lines -eq 0 ] ; then
-	    echo "ERROR."
-            echo "Enterprise Download URL was: ${ENTRPRISE_DOWNLOAD_URL}"
-            echo "Username: ${ENTERPRISE_USER}"
-	    echo "Bad username or password"
-	    echo ""
-	    exit 1
-        else
-	    echo "Enterprise Username/Password Accepted."
-        fi    
-
-        
-	# Escape URL
-	ENTERPRISE_DOWNLOAD_URL=${ENTERPRISE_DOWNLOAD_URL//\./\\\.}
-	ENTERPRISE_DOWNLOAD_URL=${ENTERPRISE_DOWNLOAD_URL//\//\\\/}
-        echo ""
-
-	# Escape URL for Perl
-	DNS_IP=${DNS_IP//\./\\\.}
-
-	if [ "$DISTRO" == "Ubuntu" ] ; then
-	    DNS_IP="8.8.8.8"
-	fi
-
-	if [ $KUBERNETES -eq 1 ] ; then
-	    KUBE="true"
-	    DOWNLOAD="$DOWNLOAD
-  kube-hops:
-    pki:
-      verify_hopsworks_cert: false
-    fallback_dns: $DNS_IP
-    master:
-      untaint: true
-"
-	    KUBERNETES_RECIPES="      - kube-hops::hopsworks
-      - kube-hops::ca
-      - kube-hops::master
-      - kube-hops::addons
-$NODE_MANAGER_HEAD"
-	else
-            KUBERNETES_RECIPES="$NODE_MANAGER_HEAD"
-	fi
-        ENTERPRISE_ATTRS="enterprise:
-      install: true
-      download_url: $ENTERPRISE_DOWNLOAD_URL
-      username: $ENTERPRISE_USER
-      password: $ENTERPRISE_PASSWORD"
-
-    else
-	KUBERNETES_RECIPES="$NODE_MANAGER_HEAD"
-    fi
 
     if [ $NVME -gt 0 ] ; then
 	nvme_devices="\\["
@@ -1467,10 +1366,8 @@ $NODE_MANAGER_HEAD"
       undofile_size: 1000M"
     fi
 
-    perl -pi -e "s/__ENTERPRISE__/$ENTERPRISE_ATTRS/" $YML_FILE
+
     perl -pi -e "s/__DOWNLOAD__/$DOWNLOAD/" $YML_FILE
-    perl -pi -e "s/__KUBERNETES_RECIPES__/$KUBERNETES_RECIPES/" $YML_FILE
-    perl -pi -e "s/__KUBE__/$KUBE/" $YML_FILE
     perl -pi -e "s/__NDB_NVME__/${NDB_NVME}/" $YML_FILE
 
     RUN_GEM_SERVER=
