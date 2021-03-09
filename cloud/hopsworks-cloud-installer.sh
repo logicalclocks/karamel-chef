@@ -33,7 +33,7 @@ email="blah"
 #                                                                                                 #
 ###################################################################################################
 
-HOPSWORKS_INSTALLER_VERSION=master
+HOPSWORKS_INSTALLER_VERSION=2.1
 CLUSTER_DEFINITION_VERSION=$HOPSWORKS_INSTALLER_VERSION
 HOPSWORKS_INSTALLER_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_INSTALLER_VERSION
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$CLUSTER_DEFINITION_VERSION
@@ -1243,7 +1243,6 @@ _az_enter_location()
 
 _az_set_resource_group()
 {
-
     if [ "$RESOURCE_GROUP" = "" ] ; then
         RESOURCE_GROUP=$(az configure -o table -l | tail -n +3 | tail -n +1 | grep ^group | awk '{ print $3 }')
     fi
