@@ -2,13 +2,13 @@ name: Hops
 gce:
   type: n1-standard-8
   zone: europe-west1-b
-  image: ubuntu-1804-bionic-v20190918
+  image: ubuntu-1804-bionic-vmaster90918
   diskSize: 100
 
 cookbooks:
   hops:
     github: "logicalclocks/hops-hadoop-chef"
-    branch: "2.1"
+    branch: "master"
 
 attrs:
   install:
