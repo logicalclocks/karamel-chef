@@ -1349,7 +1349,6 @@ _az_enter_virtual_network()
 
 _az_set_private_dns_zone()
 {
-<<<<<<< HEAD
     if [ "$DNS_PRIVATE_ZONE" == "" ] ; then
         DNS_PRIVATE_ZONE_DEFAULT=$(az network private-dns zone list -g $RESOURCE_GROUP |  grep "$RESOURCE_GROUP" | awk '{ print $1 }')
         if [ "$DNS_PRIVATE_ZONE_DEFAULT" != "" ] ; then
@@ -1361,15 +1360,6 @@ _az_set_private_dns_zone()
       if [ "$DNS_VN_LINK_DEFAULT" != "" ] ; then
         DNS_VN_LINK=$DNS_VN_LINK_DEFAULT
       fi
-=======
-    DNS_PRIVATE_ZONE_DEFAULT=$(az network private-dns zone list -g $RESOURCE_GROUP -o table |  grep "$RESOURCE_GROUP" | awk '{ print $1 }')
-    if [ "$DNS_PRIVATE_ZONE_DEFAULT" != "" ] ; then
-	DNS_VN_LINK_DEFAULT=$(az network private-dns link vnet list -g $RESOURCE_GROUP -z $DNS_PRIVATE_ZONE -o table |  grep "$RESOURCE_GROUP" | awk '{ print $1 }')
-	if [ "$DNS_VN_LINK_DEFAULT" != "" ] ; then
-	    DNS_VN_LINK=$DNS_VN_LINK_DEFAULT
-	fi
-	DNS_PRIVATE_ZONE=$DNS_PRIVATE_ZONE_DEFAULT
->>>>>>> 13c6c10c93aa98d27d466e312c8de3ad533f617e
     fi
 }
 
