@@ -87,6 +87,9 @@ PROXY=
 GEM_SERVER=0
 GEM_SERVER_PORT=54321
 
+OS_VERSION=0
+
+
 NODE_MANAGER_HEAD="      - hops::nm
 "
 
@@ -180,6 +183,7 @@ splash_screen()
     echo "* your ip is: $IP"
     echo "* installation user: $USER"
     echo "* linux distro: $DISTRO"
+    echo "* version: $OS_VERSION"    
     echo "* cluster defn branch: $CLUSTER_DEFINITION_BRANCH"
     echo "* hopsworks-chef branch: $HOPSWORKS_REPO/$HOPSWORKS_BRANCH"
 
@@ -844,12 +848,13 @@ check_linux()
 	# If available, use LSB to identify distribution
 	if [ -f /etc/lsb-release -o -d /etc/lsb-release.d ]; then
 	    DISTRO=$(lsb_release -i | cut -d: -f2 | sed s/'^\t'//)
+            OS_VERSION=$(lsb_release -d | awk {' print $3 '} | cut -d. -f1)
 	    # Otherwise, use release info file
 	else
 	    DISTRO=$(ls -d /etc/[A-Za-z]*[_-][rv]e[lr]* | grep -v \"lsb\" | cut -d'/' -f3 | cut -d'-' -f1 | cut -d'_' -f1 | head -1)
 	    if [ "$DISTRO" == "Ubuntu" ] ; then
 		sudo apt install lsb-core -y
-                UBUNTU_VERSION=$(lsb_release -d | awk {' print $3 '} | cut -d. -f1)
+                OS_VERSION=$(lsb_release -d | awk {' print $3 '} | cut -d. -f1)
 	    elif [ "${DISTRO,,}" == "centos" ] || [ "${DISTRO,,}" == "os" ] ; then
 		sudo yum install redhat-lsb-core -y
 	    else
@@ -1158,7 +1163,7 @@ fi
 
 # generate a pub/private keypair if none exists
 if [ ! -e ~/.ssh/id_rsa.pub ] ; then
-    if [ "$DISTRO" == "Ubuntu" ] && [ $UBUNTU_VERSION -gt 18 ] ; then
+    if [ "$DISTRO" == "Ubuntu" ] && [ $OS_VERSION -gt 18 ] ; then
        cat /dev/zero | ssh-keygen -m PEM -q -N "" > /dev/null
     else
        cat /dev/zero | ssh-keygen -q -N "" > /dev/null
