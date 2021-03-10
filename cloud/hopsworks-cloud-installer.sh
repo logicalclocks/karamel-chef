@@ -355,17 +355,11 @@ install_action()
 	echo ""
         echo "What would you like to do?"
 	echo ""
-	echo "(1) Install single-host Hopsworks Community (CPU only)."
+	echo "(1) Install single-host RonDB Cluster."
 	echo ""
-	echo "(2) Install single-host Hopsworks Community (with GPU(s))."
+	echo "(3) Install a multi-host RonDB cluster."
 	echo ""
-	echo "(3) Install a multi-host Hopsworks Community cluster."
-	echo ""
-	echo "(4) Install a Hopsworks Enterprise cluster."
-	echo ""
-	echo "(5) Install a Hopsworks Enterprise cluster with Kubernetes"
-	echo ""
-	printf 'Please enter your choice '1', '2', '3', '4', '5',  'q' \(quit\), or 'h' \(help\) :  '
+	printf 'Please enter your choice '1', '2', 'q' \(quit\), or 'h' \(help\) :  '
         read ACCEPT
         case $ACCEPT in
             1)
@@ -373,25 +367,8 @@ install_action()
 		ACTION="localhost-tls"
 		;;
             2)
-		INSTALL_ACTION=$INSTALL_GPU
-		ACTION="localhost-tls"
-		;;
-            3)
 		INSTALL_ACTION=$INSTALL_CLUSTER
 		ACTION="cluster"
-		;;
-            4)
-		INSTALL_ACTION=$INSTALL_CLUSTER
-		ACTION="enterprise"
-		ENTERPRISE=1
-                accept_enterprise
-		;;
-            5)
-		INSTALL_ACTION=$INSTALL_CLUSTER
-		ACTION="kubernetes"
-		ENTERPRISE=1
-		KUBERNETES=1
-                accept_enterprise		
 		;;
             h | H)
 		clear
@@ -406,7 +383,7 @@ install_action()
             *)
 		echo ""
 		echo "Invalid Choice: $ACCEPT"
-		echo "Please enter your choice '1', '2', '3', '4', 'q', or 'h'."
+		echo "Please enter your choice '1', '2', 'q', or 'h'."
 		clear_screen
 		install_action
 		;;
@@ -1349,7 +1326,6 @@ _az_enter_virtual_network()
 
 _az_set_private_dns_zone()
 {
-<<<<<<< HEAD
     if [ "$DNS_PRIVATE_ZONE" == "" ] ; then
         DNS_PRIVATE_ZONE_DEFAULT=$(az network private-dns zone list -g $RESOURCE_GROUP |  grep "$RESOURCE_GROUP" | awk '{ print $1 }')
         if [ "$DNS_PRIVATE_ZONE_DEFAULT" != "" ] ; then
@@ -1361,15 +1337,6 @@ _az_set_private_dns_zone()
       if [ "$DNS_VN_LINK_DEFAULT" != "" ] ; then
         DNS_VN_LINK=$DNS_VN_LINK_DEFAULT
       fi
-=======
-    DNS_PRIVATE_ZONE_DEFAULT=$(az network private-dns zone list -g $RESOURCE_GROUP -o table |  grep "$RESOURCE_GROUP" | awk '{ print $1 }')
-    if [ "$DNS_PRIVATE_ZONE_DEFAULT" != "" ] ; then
-	DNS_VN_LINK_DEFAULT=$(az network private-dns link vnet list -g $RESOURCE_GROUP -z $DNS_PRIVATE_ZONE -o table |  grep "$RESOURCE_GROUP" | awk '{ print $1 }')
-	if [ "$DNS_VN_LINK_DEFAULT" != "" ] ; then
-	    DNS_VN_LINK=$DNS_VN_LINK_DEFAULT
-	fi
-	DNS_PRIVATE_ZONE=$DNS_PRIVATE_ZONE_DEFAULT
->>>>>>> 13c6c10c93aa98d27d466e312c8de3ad533f617e
     fi
 }
 

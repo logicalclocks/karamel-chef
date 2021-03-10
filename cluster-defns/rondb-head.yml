@@ -31,4 +31,4 @@ groups:
       - ndb::mysqld
       - hopsmonitor::node_exporter
       - hopsmonitor::mysqld_exporter
-      __DATANODE_ON_HEAD__
+      __DB_ON_HEAD__
