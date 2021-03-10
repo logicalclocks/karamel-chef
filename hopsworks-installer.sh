@@ -263,7 +263,7 @@ splash_screen()
 	echo "WARNING: Reverse DNS does not work on this host. If you enable 'TLS', it will not work."
 	echo "Hostname: $HOSTNAME"
 	echo "Reverse Hostname: $reverse_hostname"
-	echo "Azure Installatione: please continue, we will try and fix this during the installation."
+	echo "Azure installation: please continue, we will try and fix this during the installation."
 	#      echo "https://docs.microsoft.com/en-us/azure/dns/private-dns-getstarted-portal"
 	#      echo ""
 	echo "On-premises: you have to configure your networking to make reverse-DNS work correctly."
