@@ -1184,7 +1184,7 @@ fi
 
 # generate a pub/private keypair if none exists
 if [ ! -e ~/.ssh/id_rsa.pub ] ; then
-    if [ "$DISTRO" == "Ubuntu" ] && [ $UBUNTU_VERSION > 18 ] ; then
+    if [ "$DISTRO" == "Ubuntu" ] && [ $UBUNTU_VERSION -gt 18 ] ; then
         cat /dev/zero | ssh-keygen -m PEM -q -N "" > /dev/null
     else
         cat /dev/zero | ssh-keygen -q -N "" > /dev/null        
