@@ -881,6 +881,7 @@ check_linux()
 	    DISTRO=$(ls -d /etc/[A-Za-z]*[_-][rv]e[lr]* | grep -v \"lsb\" | cut -d'/' -f3 | cut -d'-' -f1 | cut -d'_' -f1 | head -1)
 	    if [ "$DISTRO" == "Ubuntu" ] ; then
 		sudo apt install lsb-core -y
+                UBUNTU_VERSION=$(lsb_release -d | awk {' print $3 '} | cut -d. -f1)
 	    elif [ "${DISTRO,,}" == "centos" ] || [ "${DISTRO,,}" == "os" ] ; then
 		sudo yum install redhat-lsb-core -y
 	    else
@@ -1183,7 +1184,11 @@ fi
 
 # generate a pub/private keypair if none exists
 if [ ! -e ~/.ssh/id_rsa.pub ] ; then
-    cat /dev/zero | ssh-keygen -q -N "" > /dev/null
+    if [ "$DISTRO" == "Ubuntu" ] && [ $UBUNTU_VERSION > 18 ] ; then
+        cat /dev/zero | ssh-keygen -m PEM -q -N "" > /dev/null
+    else
+        cat /dev/zero | ssh-keygen -q -N "" > /dev/null        
+    fi
 else
     echo "Found existing id_rsa.pub"
 fi
