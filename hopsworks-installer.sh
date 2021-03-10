@@ -848,13 +848,13 @@ check_linux()
 	# If available, use LSB to identify distribution
 	if [ -f /etc/lsb-release -o -d /etc/lsb-release.d ]; then
 	    DISTRO=$(lsb_release -i | cut -d: -f2 | sed s/'^\t'//)
-            OS_VERSION=$(lsb_release -d | awk {' print $3 '} | cut -d. -f1)
+            OS_VERSION=$(lsb_release -d | grep -o -E '[0-9]+' | head -1)
 	    # Otherwise, use release info file
 	else
 	    DISTRO=$(ls -d /etc/[A-Za-z]*[_-][rv]e[lr]* | grep -v \"lsb\" | cut -d'/' -f3 | cut -d'-' -f1 | cut -d'_' -f1 | head -1)
 	    if [ "$DISTRO" == "Ubuntu" ] ; then
 		sudo apt install lsb-core -y
-                OS_VERSION=$(lsb_release -d | awk {' print $3 '} | cut -d. -f1)
+                OS_VERSION=$(lsb_release -d | grep -o -E '[0-9]+' | head -1)                
 	    elif [ "${DISTRO,,}" == "centos" ] || [ "${DISTRO,,}" == "os" ] ; then
 		sudo yum install redhat-lsb-core -y
 	    else
