@@ -41,10 +41,8 @@ CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karame
 DEBUG=0
 
 declare -a CPU
-declare -a GPU
-
 declare -a PRIVATE_CPU
-declare -a PRIVATE_GPU
+
 
 SCRIPTNAME=$0
 
@@ -57,7 +55,6 @@ DOWNLOAD_URL=
 PREFIX=
 host_ip=
 INSTALL_CPU=0
-INSTALL_GPU=1
 INSTALL_CLUSTER=2
 
 NON_INTERACT=0
@@ -71,22 +68,16 @@ HEAD_VM_TYPE=head_cpu
 CLUSTER_DEFINITIONS_DIR="cluster-defns"
 INPUT_YML="hopsworks-head.yml"
 WORKER_YML="hopsworks-worker.yml"
-WORKER_GPU_YML="hopsworks-worker-gpu.yml"
 YML_FILE="hopsworks-installation.yml"
 
 WORKER_LIST=
 WORKER_IP=
 WORKER_DEFAULTS=
 CPU_WORKER_ID=0
-GPU_WORKER_ID=0
 
 SKIP_CREATE=0
 
-NUM_GPUS_PER_VM=
-GPU_TYPE=
-
 NUM_WORKERS_CPU=0
-NUM_WORKERS_GPU=0
 
 CLOUD=
 VM_DELETE=
@@ -141,13 +132,12 @@ DNS_PRIVATE_ZONE=h.w
 DNS_VN_LINK=hopslink
 VM_HEAD=hd
 VM_WORKER=cpu
-VM_GPU=gpu
 
 
 #VM_SIZE=Standard_E4as_v4
 # 
 VM_SIZE=Standard_E8s_v3
-ACCELERATOR_VM=Standard_NC6
+
 
 OS_IMAGE=Canonical:UbuntuServer:18.04-LTS:latest
 #OS_IMAGE=OpenLogic:CentOS:7.5:latest
@@ -155,9 +145,7 @@ OS_IMAGE=Canonical:UbuntuServer:18.04-LTS:latest
 #
 #AZ_NETWORKING="--accelerated-networking true"
 AZ_NETWORKING="--accelerated-networking false"
-#GPUs on Azure
-# GPUs are often limited to a particular zone in a region, so only enter a value here if you know the zone where the GPUs are located
-ACCELERATOR_ZONE=3
+
 
 ADDRESS_PREFIXES="10.0.0.0/16"
 SUBNET_PREFIXES="10.0.0.0/24"
@@ -418,17 +406,13 @@ cpus_gpus()
 {
     if [ "$CLOUD" == "gcp" ] ; then
 	CPUS=$(gcloud compute instances list | awk '{ print $1 }' | grep "^${PREFIX}" | grep -e "cpu[0-99]" |  wc -l)
-	GPUS=$(gcloud compute instances list | awk '{ print $1 }' | grep "^${PREFIX}" | grep -e "gpu[0-99]" |  wc -l)
 	if [ $DEBUG -eq 1 ] ; then
 	    echo "FOUND CPUS: $CPUS"
-	    echo "FOUND GPUS: $GPUS"
         fi		
     elif [ "$CLOUD" == "azure" ] ; then
 	CPUS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | grep "^${PREFIX}" | grep -e "cpu[0-99]" |  wc -l)
-	GPUS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | grep "^${PREFIX}" | grep -e "gpu[0-99]" |  wc -l)
 	if [ $DEBUG -eq 1 ] ; then
 	    echo "FOUND CPUS: $CPUS"
-	    echo "FOUND GPUS: $GPUS"
         fi		
 
     elif [ "$CLOUD" == "aws" ] ; then
@@ -559,10 +543,6 @@ download_installer() {
     if [ $? -ne 0 ] ; then
 	exit 13
     fi
-    curl --silent --show-error -C - ${CLUSTER_DEFINITION_BRANCH}/${CLUSTER_DEFINITIONS_DIR}/$WORKER_GPU_YML -o ./$WORKER_GPU_YML 2>&1 > /dev/null    
-    if [ $? -ne 0 ] ; then
-	exit 14
-    fi
     cd ../..
 }
 
@@ -571,17 +551,6 @@ download_installer() {
 
 add_worker()
 {
-    WORKER_GPUS=$1
-    
-    if [ "$WORKER_GPUS" -gt "0" ] ; then
-	if [ $i -lt 10 ] ; then
-	    set_name "gpu0${GPU_WORKER_ID}"
-	else
-	    set_name "gpu${GPU_WORKER_ID}"
-	fi
-        create_vm_gpu "worker"
-        GPU_WORKER_ID=$((GPU_WORKER_ID+1))
-    else
 	if [ $i -lt 10 ] ; then
 	    set_name "cpu0${CPU_WORKER_ID}"
 	else
@@ -589,7 +558,6 @@ add_worker()
 	fi
 	create_vm_cpu "worker"
         CPU_WORKER_ID=$((CPU_WORKER_ID+1))		
-    fi
 }
 
 
@@ -614,69 +582,6 @@ cpu_worker_size()
 	add_worker 0
 	i=$((i+1))
     done
-}
-
-
-gpu_worker_size()
-{
-    if [ $NON_INTERACT -eq 0 ] ; then    
-	if [ $NUM_WORKERS_GPU -eq 0 ] ; then    
-	    printf 'Please enter the number of GPU-enabled workers you want to add (default: 0): '
-	    read NUM_WORKERS_GPU
-	    if [ "$NUM_WORKERS_GPU" == "" ] ; then
-		NUM_WORKERS_GPU=0
-	    fi
-	fi
-    fi
-
-    if [ "$NUM_WORKERS_GPU" == "" ] ; then
-	NUM_WORKERS_GPU=0
-    fi
-    
-    if [ $NUM_WORKERS_GPU -ne 0 ] ; then
-	select_gpu "worker"
-    fi
-    i=0
-    while [ $i -lt $NUM_WORKERS_GPU ] ;
-    do
-	if [ $DEBUG -eq 1 ] ; then	
-	    echo "Adding GPU worker $i"
-	    echo ""
-	fi
-	add_worker $NUM_GPUS_PER_VM 
-	i=$((i+1))
-    done
-}
-
-
-select_gpu()
-{
-    if [ "$NUM_GPUS_PER_VM" == "" ] ; then
-	
-	printf "Please enter the number of GPUs for the $1 VM(s) (default: 0): "
-	read NUM_GPUS_PER_VM
-	if [ "$NUM_GPUS_PER_VM" == "" ] || [ "$NUM_GPUS_PER_VM" == "0" ] ; then
-	    NUM_GPUS_PER_VM=0
-	else
-	    HEAD_GPU=1
-	    echo ""
-	    echo "Available GPU types: v100, p100, t4, k80"
-	    printf 'Please enter the type of GPU: '
-	    read GPU_TYPE
-	    case $GPU_TYPE in
-		v100 | p100 | k80 | t4)
-		    echo ""
-		    echo "Number of GPUs per GPU-enabled VM: $NUM_GPUS_PER_VM  GPU type: $GPU_TYPE"
-		    ;;
-		*)
-		    echo "Invalid GPU choice. Try again."
-		    echo ""
-		    NUM_GPUS_PER_VM=
-		    select_gpu $1
-		    ;;
-	    esac
-	fi
-    fi
 }
 
 
@@ -762,8 +667,6 @@ gcloud_get_ips()
     set_name "head"
     if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
 	set_name "cpu"
-    elif [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then
-	set_name "gpu"
     fi
     
     IP=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
@@ -788,22 +691,6 @@ gcloud_get_ips()
         i=$((i+1))
     done
 
-    i=0       
-    while [ $i -lt $GPUS ] ; 
-    do
-	if [ $i -lt 10 ] ; then
-	    set_name "gpu0${i}"
-	else
-	    set_name "gpu${i}"	    
-	fi
-	GPU[$i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
-	PRIVATE_GPU[$i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
-	if [ $DEBUG -eq 1 ] ; then	
-	    echo "Worker gpu${i} : GPU[$i]"	
-            echo -e "${NAME}\t Public IP: ${GPU[${i}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
-	fi
-	i=$((i+1))
-    done
 }    
 
 
@@ -1044,13 +931,6 @@ _gcloud_precreate()
     BOOT_SIZE="${BOOT_SIZE_GBS}GB"
 }
 
-gcloud_create_gpu()
-{
-    GCP_GPU_TYPE=nvidia-tesla-${GPU_TYPE}
-    ACCELERATOR="--accelerator=type=${GCP_GPU_TYPE},count=${NUM_GPUS_PER_VM} "    
-    _gcloud_create_vm $1
-}
-
 gcloud_create_cpu()
 {
     ACCELERATOR=""    
@@ -1092,11 +972,7 @@ az_get_ips()
 {
     echo "Azure get_ips"
     set_name "head"
-    if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
-	set_name "cpu"
-    elif [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then
-	set_name "gpu"
-    fi
+    set_name "cpu"
     
     IP=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $3 }')
     echo "$NAME : $IP"
@@ -1125,23 +1001,6 @@ az_get_ips()
 	i=$((i+1))	
     done
 
-    i=0
-    while [ $i -lt $GPUS ] ;     
-    do
-	if [ $i -lt 10 ] ; then
-	    set_name "gpu0${i}"
-	else
-	    set_name "gpu${i}"
-	fi
-	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table  | grep ^$NAME | awk '{ print $2, $3 }')
-	GPU[$i]=$(echo "$MY_IPS" | awk '{ print $3 }')
-	PRIVATE_GPU[$i]=$(echo "$MY_IPS" | awk '{ print $2 }')
-	if [ $DEBUG -eq 1 ] ; then	
-            echo -e "${NAME}\t Public IP: ${GPU[${i}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
-	fi
-        ssh -t -o StrictHostKeyChecking=no ${GPU[${i}]} "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
-	i=$((i+1))	
-    done
 }    
 
 
@@ -1571,26 +1430,6 @@ _az_precreate()
     BOOT_SIZE=$BOOT_SIZE_GBS
 }
 
-az_create_gpu()
-{
-    if [ "$GPU_TYPE" == "k80" ] ; then
-	ACCELERATOR_ZONE=3
-	ACCELERATOR_VM=Standard_NC6
-    elif [ "$GPU_TYPE" == "p100" ] ; then
-	ACCELERATOR_ZONE=2
-	ACCELERATOR_VM=Standard_NC6s_v2
-    elif [ "$GPU_TYPE" == "v100" ] ; then
-	ACCELERATOR_ZONE=1
-	ACCELERATOR_VM=Standard_NC6s_v3
-    else
-	ACCELERATOR_ZONE=3	
-    fi
-    VM_TYPE=$ACCELERATOR_VM
-    PUBLIC_IP_ATTR="--public-ip-sku Standard"    
-    AZ_ZONE=
-    _az_create_vm $1
-}
-
 az_create_cpu()
 {
     VM_TYPE=$VM_SIZE
@@ -1694,11 +1533,6 @@ _aws_precreate()
     echo ""
 }
 
-aws_create_gpu()
-{
-    echo ""    
-}
-
 aws_create_cpu()
 {
     echo ""    
@@ -1739,25 +1573,6 @@ create_vm_cpu()
     else
 	_missing_cloud	
     fi
-}
-
-create_vm_gpu()
-{
-    echo "Creating gpu-enabled VM...."
-    echo ""
-    if [ "$CLOUD" == "gcp" ] ; then
-	gcloud_create_gpu $1
-    elif [ "$CLOUD" == "azure" ] ; then
-	az_create_gpu $1
-    elif [ "$CLOUD" == "aws" ] ; then
-	aws_create_gpu $1
-    else
-	_missing_cloud	
-    fi
-    echo ""
-    echo "To check the VM status, run:"
-    echo "./hopsworks-cloud-installer.sh -l -c gcp|azure|aws"
-    echo ""
 }
 
 
@@ -1827,22 +1642,12 @@ help()
 {
     echo "usage: $SCRIPTNAME "
     echo " [-h|--help]      help message"
-    echo " [-i|--install-action community|community-gpu|community-cluster|enterprise|kubernetes]"
-    echo "                 'community' installs Hopsworks Community on a single VM"
-    echo "                 'community-gpu' installs Hopsworks Community on a single VM with GPU(s)"
-    echo "                 'community-cluster' installs Hopsworks Community on a multi-VM cluster"
-    echo "                 'enterprise' installs Hopsworks Enterprise (single VM or multi-VM)"
-    echo "                 'kubernetes' installs Hopsworks Enterprise (single VM or multi-VM) alson with open-source Kubernetes"
+    echo " [-i|--install-action community|cluster]"
+    echo "                 'community' installs RonDB on a single VM"
+    echo "                 'cluster' installs RonDB Community on a multi-VM cluster"
     echo " [-c|--cloud gcp|aws|azure] Name of the public cloud "
     echo " [--debug] Verbose logging for this script"
     echo " [-drc|--dry-run-create-vms]  creates the VMs, generates cluster definition (YML) files but doesn't run karamel."	      	      
-    echo " [-g|--num-gpu-workers num] Number of workers (with GPUs) to create for the cluster."
-    echo " [-gpus|--num-gpus-per-worker num] Number of GPUs per worker or head node."
-    echo " [-gt|--gpu-type type]"
-    echo "                 'v100' Nvidia Tesla V100"
-    echo "                 'p100' Nvidia Tesla P100"
-    echo "                 't4' Nvidia Tesla T4"	      
-    echo "                 'k80' Nvidia K80"	      
     echo " [-de|--download-enterprise-url url] downloads enterprise binaries from this URL."
     echo " [-dc|--download-opensource-url url] downloads open-source binaries from this URL."
     echo " [-du|--download-user username] Username for downloading enterprise binaries."
@@ -1881,25 +1686,10 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 		    INSTALL_ACTION=$INSTALL_CPU
 		    ACTION="localhost-tls"
   		    ;;
-		community-gpu)
-                    INSTALL_ACTION=$INSTALL_GPU
-		    ACTION="localhost-tls"		     
-  		    ;;
-		community-cluster)
+		cluster)
                     INSTALL_ACTION=$INSTALL_CLUSTER
 		    ENTERPRISE=0
 		    ACTION="cluster"
-		    ;;
-		enterprise)
-		    INSTALL_ACTION=$INSTALL_CLUSTER
-                    ENTERPRISE=1
-		    ACTION="enterprise"
-		    ;;
-		kubernetes)
-		    INSTALL_ACTION=$INSTALL_CLUSTER
-                    ENTERPRISE=1
-                    KUBERNETES=1
-		    ACTION="kubernetes"
 		    ;;
 		*)
 		    echo "Could not recognise '-i' option: $1"
@@ -1957,25 +1747,6 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	-drc|--dry-run-create-vms)
             DRY_RUN_CREATE_VMS=1
             ;;
-	-g|--num-gpu-workers)
-            shift
-	    NUM_WORKERS_GPU=$1
-            ;;
-	-gpus|--num-gpus-per-host)
-      	    shift
-            NUM_GPUS_PER_VM=$1
-	    ;;
-	-gt|--gpu-type)
-      	    shift
-	    case $1 in
-		v100 | p100 | k80)
-		    GPU_TYPE=$1
-  		    ;;
-		*)
-		    echo "Could not recognise option: $1"
-		    exit_error "Failed."
-	    esac
-	    ;;
 	-ht|--head-instance-type)
       	    shift
 	    HEAD_INSTANCE_TYPE=$1
@@ -2098,12 +1869,6 @@ fi
 
 if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
     set_name "cpu"
-elif [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then
-    set_name "gpu"
-    HEAD_GPU=1
-    if [ $NON_INTERACT -eq 0 ] ; then        
-	select_gpu "head"
-    fi
 elif [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
     set_name "head"    
     if [ $NON_INTERACT -eq 0 ] ; then
@@ -2117,17 +1882,12 @@ else
 fi
 
 if [ $SKIP_CREATE -eq 0 ] ; then
-    if [ $HEAD_GPU -eq 1 ] ; then    
-	create_vm_gpu "head"
-    else
-	create_vm_cpu "head"
-    fi
+    create_vm_cpu "head"
     if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
 	if [ "$WORKER_INSTANCE_TYPE" != "" ] ; then        
 	    MACHINE_TYPE=$WORKER_INSTANCE_TYPE
 	fi
         cpu_worker_size
-        gpu_worker_size
     fi
 else
     echo "Skipping VM creation...."
@@ -2186,7 +1946,7 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
 
     WORKERS="-w "
 
-    if [ $NUM_WORKERS_CPU -eq 0 ] && [ $NUM_WORKERS_GPU -eq 0 ] ; then
+    if [ $NUM_WORKERS_CPU -eq 0 ] ; then
 	WORKERS="-w none "
     fi
 
@@ -2218,35 +1978,6 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
 	    echo "cpu workers: $WORKERS"
 	fi
 	i=$((i+1))
-    done
-
-    i=0
-    while [ $i -lt ${GPUS} ] ;
-    do
-	host_ip=${GPU[${i}]}
-	if [ $DEBUG -eq 1 ] ; then	
-	    echo "I think GPU host_ip is ${GPU[$i]}"
-	    echo "I think GPU host_ip is ${GPU[${i}]}"
-	    echo "All  hosts ${GPU[*]}"
-	fi
-	clear_known_hosts
-	ssh-copy-id -o StrictHostKeyChecking=no -f -i $keyfile ${GPU[${i}]}
-	ssh -t -o StrictHostKeyChecking=no $IP "ssh -t -o StrictHostKeyChecking=no ${PRIVATE_GPU[${i}]} \"pwd\""
-	if [ $? -ne 0 ] ; then
-	    echo ""
-	    echo "Error. Public key SSH from $IP to ${PRIVATE_GPU[${i}]} not working."
-	    echo "Exiting..."
-	    echo ""
-	    exit 9
-	else
-	    echo "Success: SSH from $IP to ${PRIVATE_GPU[${i}]}"
-	fi
-
-	WORKERS="${WORKERS}${PRIVATE_GPU[${i}]},"
-	if [ $DEBUG -eq 1 ] ; then
-	    echo "gpu workers: $WORKERS"
-	fi
-	i=$((i+1))	
     done
 
     if [ "$WORKERS" != "-w none " ] ; then

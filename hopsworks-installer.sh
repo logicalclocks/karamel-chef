@@ -67,7 +67,7 @@ DOWNLOAD=
 
 INPUT_YML="cluster-defns/rondb-head.yml"
 WORKER_YML="cluster-defns/rondb-worker.yml"
-YML_FILE="cluster-defns/ronbdb-installation.yml"
+YML_FILE="cluster-defns/rondb-installation.yml"
 ENTERPRISE_ATTRS=
 
 WORKER_LIST=
@@ -89,7 +89,7 @@ GEM_SERVER_PORT=54321
 
 OS_VERSION=0
 
-DB_ON_HEAD="      - ndb::ndbd
+DB_ON_HEAD="- ndb::ndbd
 "
 
 
@@ -919,15 +919,10 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	-h|--help|-help)
             echo "usage: [sudo] ./$SCRIPTNAME "
 	    echo " [-h|--help]      help message"
-	    echo " [-i|--install-action localhost|localhost-tls|cluster|enterprise|karamel|purge|purge-all] "
-	    echo "                 'localhost' installs a localhost Hopsworks cluster"
-	    echo "                 'localhost-tls' installs a localhost Hopsworks cluster with TLS enabled"
-	    echo "                 'cluster' installs a multi-host Hopsworks cluster"
-	    echo "                 'enterprise' installs a multi-host Enterprise  Hopsworks cluster"
-	    echo "                 'kubernetes' installs a multi-host Enterprise Hopsworks cluster with Kubernetes"
-	    echo "                 'karamel' installs and starts Karamel"
-	    echo "                 'purge' removes Hopsworks completely from this host"
-	    echo "                 'purge-all' removes Hopsworks completely from ALL hosts"
+	    echo " [-i|--install-action community|cluster|purge] "
+	    echo "                 'community' installs a RonDB database on a single host"
+	    echo "                 'cluster' installs a RonDB cluster"            
+	    echo "                 'purge' removes RonDB completely from ALL hosts"
 	    echo " [-cl|--clean]    removes the karamel installation"
 	    echo " [-dr|--dry-run]  does not run karamel, just generates YML file"
 	    echo " [-nvme|--nvme num_disks] Number of NVMe disks on worker nodes (for NDB/HopsFS)"
@@ -950,13 +945,10 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	-i|--install-action)
 	    shift
 	    case $1 in
-		localhost)
-		    INSTALL_ACTION=$INSTALL_LOCALHOST
-  		    ;;
-		localhost-tls)
+		community)
 		    INSTALL_ACTION=$INSTALL_LOCALHOST_TLS
   		    ;;
-		cluster)
+		community-cluster)
 		    INSTALL_ACTION=$INSTALL_CLUSTER
 		    ;;
 	        purge-all)
@@ -1080,7 +1072,7 @@ if [ $NON_INTERACT -eq 0 ] ; then
     # If yes, set the http(s)_proxy environment variable when starting karamel
     check_proxy
     clear_screen
-    enter_email
+#    enter_email
     clear_screen
 fi
 if [ "$PROXY" != "" ] ; then
@@ -1184,7 +1176,7 @@ if [ "$CLOUD" == "azure" ] ; then
     echo ""
     if [ $NON_INTERACT -eq 0 ] ; then
 	printf 'Please enter the private DNS hostname for this head node:'
-	echo -n " $SUSPECTED_HOSTNAME):"
+	echo -n " $SUSPECTED_HOSTNAME :"
 	read PRIVATE_HOSTNAME
     fi
     if [ "$PRIVATE_HOSTNAME" == "" ] ; then

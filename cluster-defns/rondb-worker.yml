@@ -6,4 +6,4 @@
 
     recipes:
       - ndb::ndbd
-      - hopsmonitor::node_exporter
+#      - hopsmonitor::node_exporter
