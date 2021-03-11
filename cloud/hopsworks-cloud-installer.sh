@@ -66,9 +66,10 @@ KUBERNETES=0
 HEAD_VM_TYPE=head_cpu
 
 CLUSTER_DEFINITIONS_DIR="cluster-defns"
-INPUT_YML="hopsworks-head.yml"
-WORKER_YML="hopsworks-worker.yml"
-YML_FILE="hopsworks-installation.yml"
+INPUT_YML="rondb-head.yml"
+WORKER_YML="rondb-data-node.yml"
+API_NODE_YML="rondb-api-node.yml"
+YML_FILE="rondb-installation.yml"
 
 WORKER_LIST=
 WORKER_IP=
@@ -345,7 +346,7 @@ install_action()
 	echo ""
 	echo "(1) Install single-host RonDB Cluster."
 	echo ""
-	echo "(3) Install a multi-host RonDB cluster."
+	echo "(2) Install a multi-host RonDB cluster."
 	echo ""
 	printf 'Please enter your choice '1', '2', 'q' \(quit\), or 'h' \(help\) :  '
         read ACCEPT
@@ -518,7 +519,8 @@ download_installer() {
 
     mkdir -p .tmp
     cd .tmp
-    
+
+    echo "curl --silent --show-error -C - ${HOPSWORKS_INSTALLER_BRANCH}/hopsworks-installer.sh -o ./hopsworks-installer.sh 2>&1 > /dev/null"
     curl --silent --show-error -C - ${HOPSWORKS_INSTALLER_BRANCH}/hopsworks-installer.sh -o ./hopsworks-installer.sh 2>&1 > /dev/null
     if [ $? -ne 0 ] ; then
 	echo "Could not download hopsworks-installer.sh"
@@ -1648,10 +1650,6 @@ help()
     echo " [-c|--cloud gcp|aws|azure] Name of the public cloud "
     echo " [--debug] Verbose logging for this script"
     echo " [-drc|--dry-run-create-vms]  creates the VMs, generates cluster definition (YML) files but doesn't run karamel."	      	      
-    echo " [-de|--download-enterprise-url url] downloads enterprise binaries from this URL."
-    echo " [-dc|--download-opensource-url url] downloads open-source binaries from this URL."
-    echo " [-du|--download-user username] Username for downloading enterprise binaries."
-    echo " [-dp|--download-password password] Password for downloading enterprise binaries."
     echo " [-ht|--head-instance-type compute instance type for the head node (lookup name in GCP,Azure)]"    
     echo " [-l|--list-public-ips] List the public ips of all VMs."
     echo " [-n|--vm-name-prefix name] The prefix for the VM name created."
