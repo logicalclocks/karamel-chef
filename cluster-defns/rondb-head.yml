@@ -10,7 +10,6 @@ cookbooks:
 attrs:
   __DOWNLOAD__
   install:
-    dir: /srv/hops
     cloud: __CLOUD__
   ndb:
     __NDB_NVME__  

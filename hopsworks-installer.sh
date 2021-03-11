@@ -66,7 +66,8 @@ RM_WORKER=
 DOWNLOAD=
 
 INPUT_YML="cluster-defns/rondb-head.yml"
-WORKER_YML="cluster-defns/rondb-worker.yml"
+WORKER_YML="cluster-defns/rondb-data-node.yml"
+API_NODE_YML="cluster-defns/rondb-api-node.yml"
 YML_FILE="cluster-defns/rondb-installation.yml"
 ENTERPRISE_ATTRS=
 
