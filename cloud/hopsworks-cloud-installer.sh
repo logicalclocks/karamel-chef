@@ -353,7 +353,7 @@ install_action()
         case $ACCEPT in
             1)
 		INSTALL_ACTION=$INSTALL_CPU
-		ACTION="localhost-tls"
+		ACTION="community"
 		;;
             2)
 		INSTALL_ACTION=$INSTALL_CLUSTER
@@ -1682,7 +1682,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	    case $1 in
 		community)
 		    INSTALL_ACTION=$INSTALL_CPU
-		    ACTION="localhost-tls"
+		    ACTION="community"
   		    ;;
 		cluster)
                     INSTALL_ACTION=$INSTALL_CLUSTER
