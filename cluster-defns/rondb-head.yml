@@ -11,6 +11,8 @@ attrs:
   __DOWNLOAD__
   install:
     cloud: __CLOUD__
+  services:
+    enabled: true
   kagent:
     enabled: false
   mysql:
