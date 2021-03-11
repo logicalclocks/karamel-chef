@@ -1091,7 +1091,6 @@ gcloud_delete_vm()
 az_get_ips()
 {
     echo "Azure get_ips"
-#    MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $2, $3 }')    
     set_name "head"
     if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
 	set_name "cpu"
@@ -1099,7 +1098,7 @@ az_get_ips()
 	set_name "gpu"
     fi
     
-    IP=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $2 }')
+    IP=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $3 }')
     echo "$NAME : $IP"
     ssh -t -o StrictHostKeyChecking=no $IP "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
     
@@ -1117,7 +1116,7 @@ az_get_ips()
 	    set_name "cpu${i}"
 	fi
 	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table  | grep ^$NAME | awk '{ print $2, $3 }')
-	CPU[$i]=$(echo "$MY_IPS" | awk '{ print $1 }')
+	CPU[$i]=$(echo "$MY_IPS" | awk '{ print $3 }')
 	PRIVATE_CPU[$i]=$(echo "$MY_IPS" | awk '{ print $2 }')
 	if [ $DEBUG -eq 1 ] ; then	
             echo -e "${NAME}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
@@ -1135,7 +1134,7 @@ az_get_ips()
 	    set_name "gpu${i}"
 	fi
 	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table  | grep ^$NAME | awk '{ print $2, $3 }')
-	GPU[$i]=$(echo "$MY_IPS" | awk '{ print $1 }')
+	GPU[$i]=$(echo "$MY_IPS" | awk '{ print $3 }')
 	PRIVATE_GPU[$i]=$(echo "$MY_IPS" | awk '{ print $2 }')
 	if [ $DEBUG -eq 1 ] ; then	
             echo -e "${NAME}\t Public IP: ${GPU[${i}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
