@@ -28,7 +28,7 @@
 ###################################################################################################
 
 HOPSWORKS_REPO=logicalclocks/ndb-chef
-HOPSWORKS_BRANCH=master
+HOPSWORKS_BRANCH=rondb
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_BRANCH
 KARAMEL_VERSION=0.6
 ENTERPRISE_DOWNLOAD_URL=https://nexus.hops.works/repository
@@ -949,10 +949,10 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 		community)
 		    INSTALL_ACTION=$INSTALL_LOCALHOST_TLS
   		    ;;
-		community-cluster)
+		cluster)
 		    INSTALL_ACTION=$INSTALL_CLUSTER
 		    ;;
-	        purge-all)
+	        purge)
 		    INSTALL_ACTION=$PURGE_HOPSWORKS_ALL_HOSTS
 		    ;;
 		*)
@@ -1249,6 +1249,8 @@ perl -pi -e "s/__GITHUB__/$HOPSWORKS_REPO/" $YML_FILE
 perl -pi -e "s/__BRANCH__/$HOPSWORKS_BRANCH/" $YML_FILE
 perl -pi -e "s/__USER__/$USER/" $YML_FILE
 perl -pi -e "s/__IP__/$IP/" $YML_FILE
+
+perl -pi -e "s/__NUM_REPLICAS__/$NUM_REPLICAS/" $YML_FILE
 
 perl -pi -e "s/__DB_ON_HEAD__/$DB_ON_HEAD/" $YML_FILE
 

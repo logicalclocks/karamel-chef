@@ -61,8 +61,6 @@ NON_INTERACT=0
 DRY_RUN=0
 DRY_RUN_CREATE_VMS=0
 
-ENTERPRISE=0
-KUBERNETES=0
 HEAD_VM_TYPE=head_cpu
 
 CLUSTER_DEFINITIONS_DIR="cluster-defns"
@@ -87,8 +85,6 @@ NUM_NVME_DRIVES_PER_WORKER=0
 
 HEAD_INSTANCE_TYPE=
 WORKER_INSTANCE_TYPE=
-
-ENTERPRISE_DOWNLOAD_URL=https://nexus.hops.works/repository
 
 #################
 # GCP Config
@@ -448,9 +444,6 @@ enter_email()
 	    exit 1
 	fi
 
-	CREDENTIALS=$(curl -H "Content-type:application/json" --data @.details http://karamel.io:8443/keyword --connect-timeout 10)
-	ENTERPRISE_USERNAME=$(echo $CREDENTIALS | cut -d ":" -f1)	
-	ENTERPRISE_PASSWORD=$(echo $CREDENTIALS | cut -d ":" -f2)
 	clear_screen
     fi
 }
@@ -520,7 +513,6 @@ download_installer() {
     mkdir -p .tmp
     cd .tmp
 
-    echo "curl --silent --show-error -C - ${HOPSWORKS_INSTALLER_BRANCH}/hopsworks-installer.sh -o ./hopsworks-installer.sh 2>&1 > /dev/null"
     curl --silent --show-error -C - ${HOPSWORKS_INSTALLER_BRANCH}/hopsworks-installer.sh -o ./hopsworks-installer.sh 2>&1 > /dev/null
     if [ $? -ne 0 ] ; then
 	echo "Could not download hopsworks-installer.sh"
@@ -587,60 +579,6 @@ cpu_worker_size()
 }
 
 
-
-enter_enterprise_credentials()
-{
-    if [ -e env.sh ] ; then
-	. env.sh	
-	echo "Found env.sh for enterprise binaries"
-    fi    
-
-    if [ "$ENTERPRISE_DOWNLOAD_URL" == "" ] ; then
-        echo ""
-        printf "Enter the URL for downloading the Enterprise binaries: "
-        read ENTERPRISE_DOWNLOAD_URL
-        if [ "$ENTERPRISE_DOWNLOAD_URL" == "" ] ; then
-	    echo "Enterprise URL cannot be empty"
-	    echo "Exiting."
-	    exit 30
-	fi
-    fi
-    if [ "$ENTERPRISE_USERNAME" == "" ] ; then    
-        echo ""
-        printf "Enter the username for downloading the Enterprise binaries: "
-        read ENTERPRISE_USERNAME
-        if [ "$ENTERPRISE_USERNAME" == "" ] ; then
-	    echo "Enterprise username cannot be empty"
-	    echo "Exiting."
-	    exit 32
-	fi
-    fi
-    if [ "$ENTERPRISE_PASSWORD" == "" ] ; then    
-        echo ""
-        printf "Enter the password for the user ($ENTERPRISE_USERNAME): "
-        read -s ENTERPRISE_PASSWORD
-	echo ""
-        if [ "$ENTERPRISE_PASSWORD" == "" ] ; then
-	    echo "The password cannot be empty"
-	    echo "Exiting."
-	    exit 3
-	fi
-    fi
-
-    lines=$(curl --silent -u ${ENTERPRISE_USERNAME}:${ENTERPRISE_PASSWORD} ${ENTERPRISE_DOWNLOAD_URL}/index.html | wc -l | tail -1)
-    if [ $lines -eq 0 ] ; then
-	echo "ERROR."
-	echo "Bad username or password"
-	echo ""
-	exit 1
-    else
-	echo "Enterprise Username/Password Accepted."
-    fi    
-    # Escape URL
-    ENTERPRISE_DOWNLOAD_URL=${ENTERPRISE_DOWNLOAD_URL//\./\\\.}
-    ENTERPRISE_DOWNLOAD_URL=${ENTERPRISE_DOWNLOAD_URL//\//\\\/}
-    
-}
 
 set_name()
 {
@@ -1679,15 +1617,13 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	    ;;
 	-i|--install-action)
 	    shift
+            ACTION=$1            
 	    case $1 in
 		community)
 		    INSTALL_ACTION=$INSTALL_CPU
-		    ACTION="community"
   		    ;;
 		cluster)
                     INSTALL_ACTION=$INSTALL_CLUSTER
-		    ENTERPRISE=0
-		    ACTION="cluster"
 		    ;;
 		*)
 		    echo "Could not recognise '-i' option: $1"
@@ -1723,24 +1659,12 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	    shift
 	    DNS_PRIVATE_ZONE=$1
 	    ;;
-	-de|--download-enterprise-url)
-      	    shift
-	    ENTERPRISE_DOWNLOAD_URL=$1
-	    ;;
 	-dc|--download-opensource-url)
       	    shift
 	    DOWNLOAD_URL=$1
 	    ;;
 	--debug)
 	    DEBUG=1
-	    ;;
-	-du|--download-username)
-      	    shift
-	    ENTERPRISE_USERNAME=$1
-	    ;;
-	-dp|--download-password)
-      	    shift
-	    ENTERPRISE_PASSWORD=$1
 	    ;;
 	-drc|--dry-run-create-vms)
             DRY_RUN_CREATE_VMS=1
@@ -1855,10 +1779,6 @@ if [ $DRY_RUN -eq 1 ] ; then
     exit 0
 fi    
 cloud_setup
-
-if [ $ENTERPRISE -eq 1 ] ; then
-    enter_enterprise_credentials
-fi    
 
 HEAD_GPU=0
 if [ "$HEAD_INSTANCE_TYPE" != "" ] ; then        
@@ -1987,19 +1907,6 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
     fi
 else
     WORKERS="-w none"
-fi
-
-if [ $ENTERPRISE -eq 1 ] ; then
-    DOWNLOAD=""
-    if [ "$ENTERPRISE_DOWNLOAD_URL" != "" ] ; then
-	DOWNLOAD="-de $ENTERPRISE_DOWNLOAD_URL "
-    fi
-    if [ "$ENTERPRISE_USERNAME" != "" ] ; then
-	DOWNLOAD_USERNAME="-du $ENTERPRISE_USERNAME "
-    fi
-    if [ "$ENTERPRISE_PASSWORD" != "" ] ; then
-	DOWNLOAD_PASSWORD="-dp $ENTERPRISE_PASSWORD "
-    fi
 fi
 
 if [ $DEBUG -eq 1 ] ; then	
