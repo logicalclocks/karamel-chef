@@ -33,7 +33,7 @@ email="blah"
 #                                                                                                 #
 ###################################################################################################
 
-HOPSWORKS_INSTALLER_VERSION=master
+HOPSWORKS_INSTALLER_VERSION=rondb
 CLUSTER_DEFINITION_VERSION=$HOPSWORKS_INSTALLER_VERSION
 HOPSWORKS_INSTALLER_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_INSTALLER_VERSION
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$CLUSTER_DEFINITION_VERSION
@@ -1926,7 +1926,7 @@ if [ $? -ne 0 ] ; then
     exit 11
 fi    
 
-scp -o StrictHostKeyChecking=no ./.tmp/$CLUSTER_DEFINITIONS_DIR/hopsworks-*.yml ${IP}:~/${CLUSTER_DEFINITIONS_DIR}/
+scp -o StrictHostKeyChecking=no ./.tmp/$CLUSTER_DEFINITIONS_DIR/rondb-*.yml ${IP}:~/${CLUSTER_DEFINITIONS_DIR}/
 if [ $? -ne 0 ] ; then
     echo "Problem scp'ing cluster definitions to head server. Exiting..."
     exit 12
