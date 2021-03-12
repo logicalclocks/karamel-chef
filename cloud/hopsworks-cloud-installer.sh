@@ -7,7 +7,7 @@ email="blah"
 # http://www.gnu.org/licenses/gpl-3.0.txt                                                         #
 #                                                                                                 #
 #                                                                                                 #
-# Copyright (c) Logical Clocks AB, 2020.                                                          #
+# Copyright (c) Logical Clocks AB, 2021.                                                          #
 # All Rights Reserved.                                                                            #
 #                                                                                                 #
 ###################################################################################################
@@ -64,15 +64,13 @@ NON_INTERACT=0
 DRY_RUN=0
 DRY_RUN_CREATE_VMS=0
 
-ENTERPRISE=0
-KUBERNETES=0
 HEAD_VM_TYPE=head_cpu
 
 CLUSTER_DEFINITIONS_DIR="cluster-defns"
-INPUT_YML="hopsworks-head.yml"
-WORKER_YML="hopsworks-worker.yml"
-WORKER_GPU_YML="hopsworks-worker-gpu.yml"
-YML_FILE="hopsworks-installation.yml"
+INPUT_YML="rondb-head.yml"
+WORKER_YML="rondb-data-node.yml"
+WORKER_GPU_YML="rondb-api-node.yml"
+YML_FILE="rondb-installation.yml"
 
 WORKER_LIST=
 WORKER_IP=
@@ -146,8 +144,8 @@ VM_GPU=gpu
 
 #VM_SIZE=Standard_E4as_v4
 # 
-VM_SIZE=Standard_E8s_v3
-ACCELERATOR_VM=Standard_NC6
+VM_SIZE=Standard_E4as_v4
+ACCELERATOR_VM=Standard_E8s_v3
 
 OS_IMAGE=Canonical:UbuntuServer:18.04-LTS:latest
 #OS_IMAGE=OpenLogic:CentOS:7.5:latest
@@ -355,43 +353,20 @@ install_action()
 	echo ""
         echo "What would you like to do?"
 	echo ""
-	echo "(1) Install single-host Hopsworks Community (CPU only)."
+	echo "(1) Install single-host RonDB."
 	echo ""
-	echo "(2) Install single-host Hopsworks Community (with GPU(s))."
+	echo "(2) Install clustered RonDB (multiple hosts)."
 	echo ""
-	echo "(3) Install a multi-host Hopsworks Community cluster."
-	echo ""
-	echo "(4) Install a Hopsworks Enterprise cluster."
-	echo ""
-	echo "(5) Install a Hopsworks Enterprise cluster with Kubernetes"
-	echo ""
-	printf 'Please enter your choice '1', '2', '3', '4', '5',  'q' \(quit\), or 'h' \(help\) :  '
+	printf 'Please enter your choice '1', '2', 'q' \(quit\), or 'h' \(help\) :  '
         read ACCEPT
         case $ACCEPT in
             1)
 		INSTALL_ACTION=$INSTALL_CPU
-		ACTION="localhost-tls"
+		ACTION="community"
 		;;
             2)
-		INSTALL_ACTION=$INSTALL_GPU
-		ACTION="localhost-tls"
-		;;
-            3)
 		INSTALL_ACTION=$INSTALL_CLUSTER
 		ACTION="cluster"
-		;;
-            4)
-		INSTALL_ACTION=$INSTALL_CLUSTER
-		ACTION="enterprise"
-		ENTERPRISE=1
-                accept_enterprise
-		;;
-            5)
-		INSTALL_ACTION=$INSTALL_CLUSTER
-		ACTION="kubernetes"
-		ENTERPRISE=1
-		KUBERNETES=1
-                accept_enterprise		
 		;;
             h | H)
 		clear
@@ -406,7 +381,7 @@ install_action()
             *)
 		echo ""
 		echo "Invalid Choice: $ACCEPT"
-		echo "Please enter your choice '1', '2', '3', '4', 'q', or 'h'."
+		echo "Please enter your choice '1', '2', 'q', or 'h'."
 		clear_screen
 		install_action
 		;;
@@ -620,7 +595,7 @@ cpu_worker_size()
 {
     if [ $NON_INTERACT -eq 0 ] ; then	    
 	if [ $NUM_WORKERS_CPU -eq 0 ] ; then
-	    printf 'Please enter the number of CPU-only workers you want to add (default: 0): '
+	    printf 'Please enter the number of database nodes you want to add (default: 0): '
 	    read NUM_WORKERS_CPU
 	    if [ "$NUM_WORKERS_CPU" == "" ] ; then
 		NUM_WORKERS_CPU=0
@@ -644,7 +619,7 @@ gpu_worker_size()
 {
     if [ $NON_INTERACT -eq 0 ] ; then    
 	if [ $NUM_WORKERS_GPU -eq 0 ] ; then    
-	    printf 'Please enter the number of GPU-enabled workers you want to add (default: 0): '
+	    printf 'Please enter the number of API nodes (MySQL servers) you want to add (default: 0): '
 	    read NUM_WORKERS_GPU
 	    if [ "$NUM_WORKERS_GPU" == "" ] ; then
 		NUM_WORKERS_GPU=0
@@ -656,9 +631,6 @@ gpu_worker_size()
 	NUM_WORKERS_GPU=0
     fi
     
-    if [ $NUM_WORKERS_GPU -ne 0 ] ; then
-	select_gpu "worker"
-    fi
     i=0
     while [ $i -lt $NUM_WORKERS_GPU ] ;
     do
@@ -672,91 +644,6 @@ gpu_worker_size()
 }
 
 
-select_gpu()
-{
-    if [ "$NUM_GPUS_PER_VM" == "" ] ; then
-	
-	printf "Please enter the number of GPUs for the $1 VM(s) (default: 0): "
-	read NUM_GPUS_PER_VM
-	if [ "$NUM_GPUS_PER_VM" == "" ] || [ "$NUM_GPUS_PER_VM" == "0" ] ; then
-	    NUM_GPUS_PER_VM=0
-	else
-	    HEAD_GPU=1
-	    echo ""
-	    echo "Available GPU types: v100, p100, t4, k80"
-	    printf 'Please enter the type of GPU: '
-	    read GPU_TYPE
-	    case $GPU_TYPE in
-		v100 | p100 | k80 | t4)
-		    echo ""
-		    echo "Number of GPUs per GPU-enabled VM: $NUM_GPUS_PER_VM  GPU type: $GPU_TYPE"
-		    ;;
-		*)
-		    echo "Invalid GPU choice. Try again."
-		    echo ""
-		    NUM_GPUS_PER_VM=
-		    select_gpu $1
-		    ;;
-	    esac
-	fi
-    fi
-}
-
-
-
-enter_enterprise_credentials()
-{
-    if [ -e env.sh ] ; then
-	. env.sh	
-	echo "Found env.sh for enterprise binaries"
-    fi    
-
-    if [ "$ENTERPRISE_DOWNLOAD_URL" == "" ] ; then
-        echo ""
-        printf "Enter the URL for downloading the Enterprise binaries: "
-        read ENTERPRISE_DOWNLOAD_URL
-        if [ "$ENTERPRISE_DOWNLOAD_URL" == "" ] ; then
-	    echo "Enterprise URL cannot be empty"
-	    echo "Exiting."
-	    exit 30
-	fi
-    fi
-    if [ "$ENTERPRISE_USERNAME" == "" ] ; then    
-        echo ""
-        printf "Enter the username for downloading the Enterprise binaries: "
-        read ENTERPRISE_USERNAME
-        if [ "$ENTERPRISE_USERNAME" == "" ] ; then
-	    echo "Enterprise username cannot be empty"
-	    echo "Exiting."
-	    exit 32
-	fi
-    fi
-    if [ "$ENTERPRISE_PASSWORD" == "" ] ; then    
-        echo ""
-        printf "Enter the password for the user ($ENTERPRISE_USERNAME): "
-        read -s ENTERPRISE_PASSWORD
-	echo ""
-        if [ "$ENTERPRISE_PASSWORD" == "" ] ; then
-	    echo "The password cannot be empty"
-	    echo "Exiting."
-	    exit 3
-	fi
-    fi
-
-    lines=$(curl --silent -u ${ENTERPRISE_USERNAME}:${ENTERPRISE_PASSWORD} ${ENTERPRISE_DOWNLOAD_URL}/index.html | wc -l | tail -1)
-    if [ $lines -eq 0 ] ; then
-	echo "ERROR."
-	echo "Bad username or password"
-	echo ""
-	exit 1
-    else
-	echo "Enterprise Username/Password Accepted."
-    fi    
-    # Escape URL
-    ENTERPRISE_DOWNLOAD_URL=${ENTERPRISE_DOWNLOAD_URL//\./\\\.}
-    ENTERPRISE_DOWNLOAD_URL=${ENTERPRISE_DOWNLOAD_URL//\//\\\/}
-    
-}
 
 set_name()
 {
@@ -1596,18 +1483,6 @@ _az_precreate()
 
 az_create_gpu()
 {
-    if [ "$GPU_TYPE" == "k80" ] ; then
-	ACCELERATOR_ZONE=3
-	ACCELERATOR_VM=Standard_NC6
-    elif [ "$GPU_TYPE" == "p100" ] ; then
-	ACCELERATOR_ZONE=2
-	ACCELERATOR_VM=Standard_NC6s_v2
-    elif [ "$GPU_TYPE" == "v100" ] ; then
-	ACCELERATOR_ZONE=1
-	ACCELERATOR_VM=Standard_NC6s_v3
-    else
-	ACCELERATOR_ZONE=3	
-    fi
     VM_TYPE=$ACCELERATOR_VM
     PUBLIC_IP_ATTR="--public-ip-sku Standard"    
     AZ_ZONE=
@@ -1850,26 +1725,14 @@ help()
 {
     echo "usage: $SCRIPTNAME "
     echo " [-h|--help]      help message"
-    echo " [-i|--install-action community|community-gpu|community-cluster|enterprise|kubernetes]"
-    echo "                 'community' installs Hopsworks Community on a single VM"
-    echo "                 'community-gpu' installs Hopsworks Community on a single VM with GPU(s)"
-    echo "                 'community-cluster' installs Hopsworks Community on a multi-VM cluster"
-    echo "                 'enterprise' installs Hopsworks Enterprise (single VM or multi-VM)"
-    echo "                 'kubernetes' installs Hopsworks Enterprise (single VM or multi-VM) alson with open-source Kubernetes"
+    echo " [-i|--install-action community|cluster]"
+    echo "                 'community' installs RonDB on a single VM"
+    echo "                 'cluster' installs RonDB on a multi-VM cluster"
     echo " [-c|--cloud gcp|aws|azure] Name of the public cloud "
     echo " [--debug] Verbose logging for this script"
     echo " [-drc|--dry-run-create-vms]  creates the VMs, generates cluster definition (YML) files but doesn't run karamel."	      	      
-    echo " [-g|--num-gpu-workers num] Number of workers (with GPUs) to create for the cluster."
-    echo " [-gpus|--num-gpus-per-worker num] Number of GPUs per worker or head node."
-    echo " [-gt|--gpu-type type]"
-    echo "                 'v100' Nvidia Tesla V100"
-    echo "                 'p100' Nvidia Tesla P100"
-    echo "                 't4' Nvidia Tesla T4"	      
-    echo "                 'k80' Nvidia K80"	      
-    echo " [-de|--download-enterprise-url url] downloads enterprise binaries from this URL."
+    echo " [-na|--num-api-nodes num] Number of workers (with GPUs) to create for the cluster."
     echo " [-dc|--download-opensource-url url] downloads open-source binaries from this URL."
-    echo " [-du|--download-user username] Username for downloading enterprise binaries."
-    echo " [-dp|--download-password password] Password for downloading enterprise binaries."
     echo " [-ht|--head-instance-type compute instance type for the head node (lookup name in GCP,Azure)]"    
     echo " [-l|--list-public-ips] List the public ips of all VMs."
     echo " [-n|--vm-name-prefix name] The prefix for the VM name created."
@@ -1902,27 +1765,11 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	    case $1 in
 		community)
 		    INSTALL_ACTION=$INSTALL_CPU
-		    ACTION="localhost-tls"
+		    ACTION="community"
   		    ;;
-		community-gpu)
-                    INSTALL_ACTION=$INSTALL_GPU
-		    ACTION="localhost-tls"		     
-  		    ;;
-		community-cluster)
+		cluster)
                     INSTALL_ACTION=$INSTALL_CLUSTER
-		    ENTERPRISE=0
 		    ACTION="cluster"
-		    ;;
-		enterprise)
-		    INSTALL_ACTION=$INSTALL_CLUSTER
-                    ENTERPRISE=1
-		    ACTION="enterprise"
-		    ;;
-		kubernetes)
-		    INSTALL_ACTION=$INSTALL_CLUSTER
-                    ENTERPRISE=1
-                    KUBERNETES=1
-		    ACTION="kubernetes"
 		    ;;
 		*)
 		    echo "Could not recognise '-i' option: $1"
@@ -1958,10 +1805,6 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	    shift
 	    DNS_PRIVATE_ZONE=$1
 	    ;;
-	-de|--download-enterprise-url)
-      	    shift
-	    ENTERPRISE_DOWNLOAD_URL=$1
-	    ;;
 	-dc|--download-opensource-url)
       	    shift
 	    DOWNLOAD_URL=$1
@@ -1969,36 +1812,13 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	--debug)
 	    DEBUG=1
 	    ;;
-	-du|--download-username)
-      	    shift
-	    ENTERPRISE_USERNAME=$1
-	    ;;
-	-dp|--download-password)
-      	    shift
-	    ENTERPRISE_PASSWORD=$1
-	    ;;
 	-drc|--dry-run-create-vms)
             DRY_RUN_CREATE_VMS=1
             ;;
-	-g|--num-gpu-workers)
+	-na|--num-api-nodes)
             shift
 	    NUM_WORKERS_GPU=$1
             ;;
-	-gpus|--num-gpus-per-host)
-      	    shift
-            NUM_GPUS_PER_VM=$1
-	    ;;
-	-gt|--gpu-type)
-      	    shift
-	    case $1 in
-		v100 | p100 | k80)
-		    GPU_TYPE=$1
-  		    ;;
-		*)
-		    echo "Could not recognise option: $1"
-		    exit_error "Failed."
-	    esac
-	    ;;
 	-ht|--head-instance-type)
       	    shift
 	    HEAD_INSTANCE_TYPE=$1
@@ -2110,10 +1930,6 @@ if [ $DRY_RUN -eq 1 ] ; then
 fi    
 cloud_setup
 
-if [ $ENTERPRISE -eq 1 ] ; then
-    enter_enterprise_credentials
-fi    
-
 HEAD_GPU=0
 if [ "$HEAD_INSTANCE_TYPE" != "" ] ; then        
     MACHINE_TYPE=$HEAD_INSTANCE_TYPE
@@ -2124,17 +1940,8 @@ if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
 elif [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then
     set_name "gpu"
     HEAD_GPU=1
-    if [ $NON_INTERACT -eq 0 ] ; then        
-	select_gpu "head"
-    fi
 elif [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
     set_name "head"    
-    if [ $NON_INTERACT -eq 0 ] ; then
-	select_gpu "head"
-    elif [ $NUM_WORKERS_CPU -eq 0 ] && [ $NUM_WORKERS_GPU -eq 0 ] && [ "$GPU_TYPE" != "" ] ; then
-	HEAD_GPU=1
-	echo "Head VM is allocated a GPU"
-    fi
 else
     exit_error "Bad install action: $INSTALL_ACTION"
 fi
@@ -2281,19 +2088,6 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
     fi
 else
     WORKERS="-w none"
-fi
-
-if [ $ENTERPRISE -eq 1 ] ; then
-    DOWNLOAD=""
-    if [ "$ENTERPRISE_DOWNLOAD_URL" != "" ] ; then
-	DOWNLOAD="-de $ENTERPRISE_DOWNLOAD_URL "
-    fi
-    if [ "$ENTERPRISE_USERNAME" != "" ] ; then
-	DOWNLOAD_USERNAME="-du $ENTERPRISE_USERNAME "
-    fi
-    if [ "$ENTERPRISE_PASSWORD" != "" ] ; then
-	DOWNLOAD_PASSWORD="-dp $ENTERPRISE_PASSWORD "
-    fi
 fi
 
 if [ $DEBUG -eq 1 ] ; then	

@@ -1,0 +1,9 @@
+  worker__WORKER_ID__:
+    size: 1
+    baremetal:
+      ip: __WORKER_IP__
+    attrs:
+
+    recipes:
+      - ndb::mysqld
+#      - hopsmonitor::node_exporter

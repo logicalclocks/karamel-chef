@@ -1,0 +1,34 @@
+name: RonDBHead
+baremetal:
+    username: __USER__
+
+cookbooks:
+  hopsworks:
+    github: __GITHUB__
+    branch: __BRANCH__
+
+attrs:
+  __DOWNLOAD__
+  install:
+    cloud: __CLOUD__
+  services:
+    enabled: true
+  kagent:
+    enabled: false
+  mysql:
+      password: __PWD___202
+  ndb:
+    NoOfReplicas: __NUM_REPLICAS__
+    __NDB_NVME__      
+
+groups:
+  metaserver:
+    size: 1
+    baremetal:
+      ip: __IP__
+    recipes:
+      - ndb::mgmd
+      - ndb::mysqld
+#      - hopsmonitor::node_exporter
+#      - hopsmonitor::mysqld_exporter
+      __DATABASE_NODE_HEAD__
