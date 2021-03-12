@@ -1789,12 +1789,6 @@ if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
     set_name "cpu"
 elif [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
     set_name "head"    
-    if [ $NON_INTERACT -eq 0 ] ; then
-	select_gpu "head"
-    elif [ $NUM_WORKERS_CPU -eq 0 ] && [ $NUM_WORKERS_GPU -eq 0 ] && [ "$GPU_TYPE" != "" ] ; then
-	HEAD_GPU=1
-	echo "Head VM is allocated a GPU"
-    fi
 else
     exit_error "Bad install action: $INSTALL_ACTION"
 fi
