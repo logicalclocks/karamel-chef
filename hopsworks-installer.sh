@@ -99,8 +99,7 @@ GEM_SERVER_PORT=54321
 OS_VERSION=0
 NUM_REPLICAS=1
 
-DATABASE_NODE_HEAD="- ndb::ndbd
-"
+DATABASE_NODE_HEAD="- ndb::ndbd"
 
 
 # $1 = String describing error
@@ -779,8 +778,7 @@ worker_size()
     fi
     if [ "$NUM_WORKERS" -gt "0" ] ; then
         # No Nodemanager for Head node
-        DATABASE_NODE_HEAD="
-"
+        DATABASE_NODE_HEAD=""
     fi
     i=0
     while [ $i -lt $NUM_WORKERS ] ;
@@ -1201,8 +1199,7 @@ if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] ; then
 		add_worker
 	    done
 	    # No Nodemanager for Head node
-            DATABASE_NODE_HEAD="
-"
+            DATABASE_NODE_HEAD=""
 	fi
     fi
 
