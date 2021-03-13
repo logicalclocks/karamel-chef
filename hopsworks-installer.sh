@@ -77,7 +77,7 @@ YARN="yarn:"
 RM_WORKER=
 DOWNLOAD=
 INPUT_YML="cluster-defns/rondb-head.yml"
-WORKER_YML="cluster-defns/rondb-data-ndo.yml"
+WORKER_YML="cluster-defns/rondb-data-node.yml"
 WORKER_GPU_YML="cluster-defns/rondb-api-node.yml"
 
 YML_FILE="cluster-defns/rondb-installation.yml"
@@ -709,7 +709,7 @@ add_worker()
 	fi
     fi
 
-    WORKER_GPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo lspci | grep -i nvidia | wc -l")
+    WORKER_GPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "ls -l ~/.api-node | wc -l")
     # strip carriage return '\r' from variable to make it a number
     WORKER_GPUS=$(echo $WORKER_GPUS|tr -d '\r')
 
@@ -727,8 +727,6 @@ add_worker()
 		echo "$The GPUs will not be used on this worker."
 		WORKER_GPUS=0
 	    fi
-	    #       else
-	    #	   ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo yum install \"kernel-devel-uname-r == $(uname -r)\" -y" > /dev/null
 	fi
     else
 	echo "No worker GPUs available"

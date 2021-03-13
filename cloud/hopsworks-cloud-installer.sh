@@ -2104,7 +2104,8 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
 	else
 	    echo "Success: SSH from $IP to ${PRIVATE_GPU[${i}]}"
 	fi
-
+	ssh -t -o StrictHostKeyChecking=no $IP "ssh -t -o StrictHostKeyChecking=no ${PRIVATE_CPU[${i}]} \"touch .api-node\""
+        
 	WORKERS="${WORKERS}${PRIVATE_GPU[${i}]},"
 	if [ $DEBUG -eq 1 ] ; then
 	    echo "gpu workers: $WORKERS"
