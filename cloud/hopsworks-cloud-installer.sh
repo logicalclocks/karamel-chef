@@ -443,8 +443,8 @@ cpus_gpus()
 
 clear_known_hosts()
 {
-    echo "ssh-keygen -f "~/.ssh/known_hosts" -R $host_ip"
-    ssh-keygen -f ~/.ssh/known_hosts -R $host_ip
+    echo "ssh-keygen -R $host_ip -f \"~/.ssh/known_hosts\""
+    ssh-keygen -R $host_ip -f ~/.ssh/known_hosts
     if [ $? -ne 0 ] ; then
 	echo ""	
 	echo "WARN: Could not clean up known_hosts file"
