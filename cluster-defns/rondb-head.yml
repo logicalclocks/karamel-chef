@@ -8,7 +8,6 @@ cookbooks:
     branch: __BRANCH__
 
 attrs:
-  __DOWNLOAD__
   install:
     cloud: __CLOUD__
   services:
@@ -20,7 +19,7 @@ attrs:
   ndb:
     NoOfReplicas: __NUM_REPLICAS__
     __NDB_NVME__      
-
+  __DOWNLOAD__
 groups:
   metaserver:
     size: 1
