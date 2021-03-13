@@ -32,4 +32,3 @@ groups:
 #      - hopsmonitor::node_exporter
 #      - hopsmonitor::mysqld_exporter
       __DATABASE_NODE_HEAD__
- 

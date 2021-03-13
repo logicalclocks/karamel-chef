@@ -777,9 +777,10 @@ worker_size()
     if [ "$NUM_WORKERS" == "" ] ; then
 	NUM_WORKERS=0
     fi
-    if [ $NUM_WORKERS -gt 0 ] ; then
+    if [ "$NUM_WORKERS" -gt "0" ] ; then
         # No Nodemanager for Head node
-        DATABASE_NODE_HEAD=""
+        DATABASE_NODE_HEAD="
+"
     fi
     i=0
     while [ $i -lt $NUM_WORKERS ] ;
@@ -1200,7 +1201,8 @@ if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] ; then
 		add_worker
 	    done
 	    # No Nodemanager for Head node
-            DATABASE_NODE_HEAD=""
+            DATABASE_NODE_HEAD="
+"
 	fi
     fi
 
@@ -1264,7 +1266,7 @@ fi
 
 perl -pi -e "s/__DOWNLOAD__/$DOWNLOAD/" $YML_FILE
 perl -pi -e "s/__NDB_NVME__/${NDB_NVME}/" $YML_FILE
-perl -pi -e "s/__DATABASE_NODE_HEAD__/$DATABASE_NODE_HEAD/" $YML_FILE
+perl -pi -e "s/__DATABASE_NODE_HEAD__/${DATABASE_NODE_HEAD}/" $YML_FILE
 perl -pi -e "s/__NUM_REPLICAS__/$NUM_REPLICAS/" $YML_FILE
 
 RUN_GEM_SERVER=
