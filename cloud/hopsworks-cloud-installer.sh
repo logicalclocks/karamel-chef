@@ -96,13 +96,15 @@ WORKER_INSTANCE_TYPE=
 
 ENTERPRISE_DOWNLOAD_URL=https://nexus.hops.works/repository
 
+NUM_GPUS_PER_VM=1
+
 #################
 # GCP Config
 #################
 REGION=us-east1
 ZONE=us-east1-c
-IMAGE=centos-7-v20200910
-IMAGE_PROJECT=centos-cloud
+GCP_IMAGE=centos-7-v20200910
+GCP_IMAGE_PROJECT=centos-cloud
 MACHINE_TYPE=n1-standard-8
 NAME=
 PROJECT=
@@ -144,14 +146,14 @@ VM_GPU=gpu
 
 #VM_SIZE=Standard_E4as_v4
 # 
-VM_SIZE=Standard_E4as_v4
+VM_SIZE=Standard_E8s_v3
 ACCELERATOR_VM=Standard_E8s_v3
 
-OS_IMAGE=Canonical:UbuntuServer:18.04-LTS:latest
+AZ_IMAGE=Canonical:UbuntuServer:18.04-LTS:latest
 OS_VERSION=18
 
-#OS_IMAGE=OpenLogic:CentOS:7.5:latest
-#OS_IMAGE=OpenLogic:CentOS:7.7:latest
+#AZ_IMAGE=OpenLogic:CentOS:7.5:latest
+#AZ_IMAGE=OpenLogic:CentOS:7.7:latest
 #
 #AZ_NETWORKING="--accelerated-networking true"
 AZ_NETWORKING="--accelerated-networking false"
@@ -222,9 +224,9 @@ check_linux()
 	    # Otherwise, use release info file
 	else
 	    DISTRO=$(ls -d /etc/[A-Za-z]*[_-][rv]e[lr]* | grep -v \"lsb\" | cut -d'/' -f3 | cut -d'-' -f1 | cut -d'_' -f1 | head -1)
-	    if [ "$DISTRO" == "Ubuntu" ] ; then
+	    if [[ "$DISTRO" =~ "Ubuntu" ]] ; then
 		sudo apt install lsb-core -y
-	    elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
+	    elif [[ "$DISTRO" =~ "centos" ]] || [[ "$DISTRO" == "os" ]] ; then
 		sudo yum install redhat-lsb-core -y
 	    else
 		echo "Could not recognize Linux distro: $DISTRO"
@@ -261,7 +263,7 @@ splash_screen()
 	echo "To continue, you need to create one at that path. Is that ok (y/n)?"
 	read ACCEPT
 	if [ "$ACCEPT" == "y" ] ; then
-            if [[ $(OS_IMAGE) =~ "Ubuntu" ]] && [[ $OS_VERSION -gt 18 ]] ; then            
+            if [[ $(AZ_IMAGE) =~ "Ubuntu" ]] && [[ $OS_VERSION -gt 18 ]] ; then            
 	        cat /dev/zero | ssh-keygen -m PEM -q -N "" > /dev/null
             else
                 cat /dev/zero | ssh-keygen -q -N "" > /dev/null                
@@ -443,6 +445,10 @@ cpus_gpus()
 
 clear_known_hosts()
 {
+    if [ "$host_ip" == "" ] ; then
+        echo "Could not resolve the host_ip: $host_ip"
+        exit 23
+    fi
     echo "ssh-keygen -R $host_ip -f \"~/.ssh/known_hosts\""
     ssh-keygen -R $host_ip -f ~/.ssh/known_hosts
     if [ $? -ne 0 ] ; then
@@ -577,7 +583,7 @@ add_worker()
 {
     WORKER_GPUS=$1
     
-    if [ "$WORKER_GPUS" -gt "0" ] ; then
+    if [ $WORKER_GPUS -gt 0 ] ; then
 	if [ $i -lt 10 ] ; then
 	    set_name "gpu0${GPU_WORKER_ID}"
 	else
@@ -737,12 +743,12 @@ check_gcp_tools()
 	    exit 44
 	fi
 
-	if [ "$DISTRO" == "Ubuntu" ] ; then
+	if [[ "$DISTRO" =~ "Ubuntu" ]] ; then
             echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
             sudo apt-get install apt-transport-https ca-certificates gnupg
             curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
             sudo apt-get update -y && sudo apt-get install google-cloud-sdk
-	elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
+	elif [[ "$DISTRO" =~ "centos" ]] || [[ "$DISTRO" =~ "os" ]] ; then
             sudo tee -a /etc/yum.repos.d/google-cloud-sdk.repo << EOM
 [google-cloud-sdk]
 name=Google Cloud SDK
@@ -874,27 +880,27 @@ gcloud_setup()
 	read SELECT_IMAGE
 
 	if [ "$SELECT_IMAGE" == "" ] || [ "$SELECT_IMAGE" == "centos" ] ; then
-	    IMAGE=centos-7-v20200714
-	    IMAGE_PROJECT=centos-cloud
+	    GCP_IMAGE=centos-7-v20200714
+	    GCP_IMAGE_PROJECT=centos-cloud
 	elif [ "$SELECT_IMAGE" == "ubuntu" ] ; then
-	    IMAGE=ubuntu-1804-bionic-v20200716
-	    IMAGE_PROJECT=ubuntu-os-cloud
+	    GCP_IMAGE=ubuntu-1804-bionic-v20200716
+	    GCP_IMAGE_PROJECT=ubuntu-os-cloud
 	else
 	    echo "Examples of IMAGE are:"
-	    echo "IMAGE=centos-7-v20200714"
-	    echo "IMAGE=ubuntu-1804-bionic-v20200716"
+	    echo "GCP_IMAGE=centos-7-v20200714"
+	    echo "GCP_IMAGE=ubuntu-1804-bionic-v20200716"
 	    echo ""
 	    printf "Enter the IMAGE: "
 	    read IMAGE
 	    echo "Examples of IMAGE/IMAGE_PROJECT are:"
-	    echo "IMAGE_PROJECT=centoos-cloud"
-	    echo "IMAGE_PROJECT=ubuntu-os-cloud"
+	    echo "GCP_IMAGE_PROJECT=centoos-cloud"
+	    echo "GCP_IMAGE_PROJECT=ubuntu-os-cloud"
 	    printf "Enter the IMAGE_PROJECT: "
-	    read IMAGE_PROJECT
+	    read GCP_IMAGE_PROJECT
 	fi
 	echo
-	echo "Active IMAGE is: $IMAGE"
-	echo "Active IMAGE_PROJECT is: $IMAGE_PROJECT"
+	echo "Active IMAGE is: $GCP_IMAGE"
+	echo "Active GCP_IMAGE_PROJECT is: $GCP_IMAGE_PROJECT"
 	echo ""    
 	clear_screen
     fi
@@ -978,13 +984,13 @@ _gcloud_create_vm()
 {
     _gcloud_precreate $1
     if [ $DEBUG -eq 1 ] ; then
-	echo "    gcloud compute --project=$PROJECT instances create $NAME --zone=$ZONE --machine-type=$MACHINE_TYPE --subnet=$SUBNET--maintenance-policy=$MAINTENANCE_POLICY $SERVICE_ACCOUNT --no-scopes $ACCELERATOR --tags=$TAGS --image=$IMAGE --image-project=$IMAGE_PROJECT --boot-disk-size=$BOOT_SIZE --boot-disk-type=$BOOT_DISK $LOCAL_DISK --boot-disk-device-name=$NAME --metadata=ssh-keys=\"$ESCAPED_SSH_KEY\""
+	echo "    gcloud compute --project=$PROJECT instances create $NAME --zone=$ZONE --machine-type=$MACHINE_TYPE --subnet=$SUBNET--maintenance-policy=$MAINTENANCE_POLICY $SERVICE_ACCOUNT --no-scopes $ACCELERATOR --tags=$TAGS --image=$GCP_IMAGE --image-project=$GCP_IMAGE_PROJECT --boot-disk-size=$BOOT_SIZE --boot-disk-type=$BOOT_DISK $LOCAL_DISK --boot-disk-device-name=$NAME --metadata=ssh-keys=\"$ESCAPED_SSH_KEY\""
     fi
 
     #  --network-tier=$NETWORK_TIER
     #  --reservation-affinity=$RESERVATION_AFFINITY
     
-    gcloud compute --project=$PROJECT instances create $NAME --zone=$ZONE --machine-type=$MACHINE_TYPE --subnet=$SUBNET --maintenance-policy=$MAINTENANCE_POLICY $SERVICE_ACCOUNT --no-scopes $ACCELERATOR --tags=$TAGS --image=$IMAGE --image-project=$IMAGE_PROJECT --boot-disk-size=$BOOT_SIZE --boot-disk-type=$BOOT_DISK $LOCAL_DISK --boot-disk-device-name=$NAME --metadata=ssh-keys="$ESCAPED_SSH_KEY"
+    gcloud compute --project=$PROJECT instances create $NAME --zone=$ZONE --machine-type=$MACHINE_TYPE --subnet=$SUBNET --maintenance-policy=$MAINTENANCE_POLICY $SERVICE_ACCOUNT --no-scopes $ACCELERATOR --tags=$TAGS --image=$GCP_IMAGE --image-project=$GCP_IMAGE_PROJECT --boot-disk-size=$BOOT_SIZE --boot-disk-type=$BOOT_DISK $LOCAL_DISK --boot-disk-device-name=$NAME --metadata=ssh-keys="$ESCAPED_SSH_KEY"
     if [ $? -ne 0 ] ; then
 	echo "Problem creating VM. Exiting ..."
 	exit 12
@@ -1031,7 +1037,8 @@ az_get_ips()
 	else
 	    set_name "cpu${i}"
 	fi
-	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table  | grep ^$NAME | awk '{ print $2, $3 }')
+	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3  | grep ^$NAME | awk '{ print $2, $3 }')
+        echo "MY_IPS: $MY_IPS"
 	CPU[$i]=$(echo "$MY_IPS" | awk '{ print $3 }')
 	PRIVATE_CPU[$i]=$(echo "$MY_IPS" | awk '{ print $2 }')
 	if [ $DEBUG -eq 1 ] ; then	
@@ -1049,7 +1056,7 @@ az_get_ips()
 	else
 	    set_name "gpu${i}"
 	fi
-	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table  | grep ^$NAME | awk '{ print $2, $3 }')
+	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $2, $3 }')
 	GPU[$i]=$(echo "$MY_IPS" | awk '{ print $3 }')
 	PRIVATE_GPU[$i]=$(echo "$MY_IPS" | awk '{ print $2 }')
 	if [ $DEBUG -eq 1 ] ; then	
@@ -1359,7 +1366,7 @@ az_setup()
 	    exit 45
 	fi
 
-	if [ "$DISTRO" == "Ubuntu" ] ; then
+	if [ "$DISTRO" =~ "Ubuntu" ] ; then
 	    sudo apt-get update -y
 	    sudo apt-get install ca-certificates curl apt-transport-https lsb-release gnupg -y
 	    curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null
@@ -1367,7 +1374,7 @@ az_setup()
 	    echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
 	    sudo apt-get update -y
 	    sudo apt-get install azure-cli -y
-	elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "os" ] ; then
+	elif [[ "$DISTRO" =~ "centos" ]] || [[ "$DISTRO" == "os" ]] ; then
             sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
 	    sudo sh -c 'echo -e "[azure-cli]
 name=Azure CLI
@@ -1448,16 +1455,16 @@ _az_precreate()
 	
 	echo ""
 	echo "For the $1 VM:"
-	echo "OS Image: $OS_IMAGE"
+	echo "OS Image: $AZ_IMAGE"
 	printf "Is the default image type OK (y/n)? (default: y) "
 	read KEEP_IMAGE
 	if [ "$KEEP_IMAGE" == "n" ] || [ "$KEEP_IMAGE" == "no" ] ; then
 	    echo ""
 	    echo "Example OS image types: UbuntuLTS, CentoS"
 	    printf "Enter the OS image type: "
-	    read OS_IMAGE
+	    read AZ_IMAGE
 	fi
-	echo "OS Image selected: $OS_IMAGE"
+	echo "OS Image selected: $AZ_IMAGE"
 	
 	echo ""
 	echo "Boot disk size: $BOOT_SIZE_GBS"
@@ -1509,7 +1516,7 @@ _az_create_vm()
     if [ $DEBUG -eq 1 ] ; then    
 	echo "
     az vm create -n $NAME -g $RESOURCE_GROUP --size $VM_TYPE \
-       --image $OS_IMAGE --os-disk-size-gb $BOOT_SIZE \
+       --image $AZ_IMAGE --os-disk-size-gb $BOOT_SIZE \
        --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
        --location $REGION \
        --ssh-key-value ~/.ssh/id_rsa.pub $PUBLIC_IP_ATTR $AZ_ZONE
@@ -1520,7 +1527,7 @@ _az_create_vm()
 	    fi
     echo "Creating VM..."
     az vm create -n $NAME -g $RESOURCE_GROUP --size $VM_TYPE \
-       --image $OS_IMAGE --os-disk-size-gb $BOOT_SIZE \
+       --image $AZ_IMAGE --os-disk-size-gb $BOOT_SIZE \
        --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
        --location $REGION \
        --ssh-key-value ~/.ssh/id_rsa.pub $PUBLIC_IP_ATTR $AZ_ZONE
@@ -1975,6 +1982,7 @@ fi
 
 IP=
 while [ "$IP" == "" ] ; do
+    echo "Getting IPs"
     get_ips
     sleep 5
 done
@@ -1984,9 +1992,9 @@ echo "Found IP: $IP"
 host_ip=$IP
 clear_known_hosts
 
-if [[ "$IMAGE" == *"centos"* ]]; then
-    ssh -t -o StrictHostKeyChecking=no $IP "sudo yum install wget -y > /dev/null"
-fi    
+#if [[ "$GCP_IMAGE" =~ "centos" ]] || [[ "$AZ_IMAGE" =~ "centos" ]] ; then
+#    ssh -t -o StrictHostKeyChecking=no $IP "sudo yum install wget -y > /dev/null"
+#fi    
 
 
 echo "Installing installer on $IP"
@@ -2010,7 +2018,8 @@ fi
 
 if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
 
-    if [[ $(OS_IMAGE) =~ "Ubuntu" ]] && [[ $OS_VERSION -gt 18 ]] ; then
+    #    if [[ $(AZ_IMAGE) =~ "Ubuntu" ]] && [[ $OS_VERSION -gt 18 ]] ; then
+    if [[ $OS_VERSION -gt 18 ]] ; then    
        ssh -t -o StrictHostKeyChecking=no $IP "if [ ! -e ~/.ssh/id_rsa.pub ] ; then cat /dev/zero | ssh-keygen -m PEM -q -N \"\" ; fi"
     else
        ssh -t -o StrictHostKeyChecking=no $IP "if [ ! -e ~/.ssh/id_rsa.pub ] ; then cat /dev/zero | ssh-keygen -q -N \"\" ; fi"
