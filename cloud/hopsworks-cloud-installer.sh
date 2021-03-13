@@ -38,7 +38,7 @@ CLUSTER_DEFINITION_VERSION=$HOPSWORKS_INSTALLER_VERSION
 HOPSWORKS_INSTALLER_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_INSTALLER_VERSION
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$CLUSTER_DEFINITION_VERSION
 
-DEBUG=0
+DEBUG=1
 
 declare -a CPU
 declare -a GPU
@@ -811,7 +811,6 @@ gcloud_get_ips()
 	CPU[$i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
 	PRIVATE_CPU[$i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
 	if [ $DEBUG -eq 1 ] ; then
-	    echo "Worker cpu${i} : CPU[$i]"
             echo -e "${NAME}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
 	fi	    
         i=$((i+1))
@@ -1145,13 +1144,21 @@ az_get_ips()
 	    set_name "cpu${i}"
 	fi
 	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table  | tail -n +3 | grep ^$NAME | awk '{ print $2, $3 }')
-	CPU[$i]=$(echo "$MY_IPS" | awk '{ print $3 }')
-	PRIVATE_CPU[$i]=$(echo "$MY_IPS" | awk '{ print $2 }')
+        if [ $DEBUG -eq 1 ] ; then
+          echo "MY_IPS: "
+          echo "$MY_IPS"
+        fi
+	CPU[$i]=$(echo "$MY_IPS" | awk '{ print $2 }')
+	PRIVATE_CPU[$i]=$(echo "$MY_IPS" | awk '{ print $1 }')
+
 	if [ $DEBUG -eq 1 ] ; then	
             echo -e "${NAME}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
 	fi
         ssh -t -o StrictHostKeyChecking=no ${CPU[${i}]}  "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
-	i=$((i+1))	
+	i=$((i+1))
+        if [ $DEBUG -eq 1 ] ; then
+            echo "CPU$i : $PRIVATE_CPU[$i] "
+        fi        
     done
 
     i=0
@@ -1163,13 +1170,20 @@ az_get_ips()
 	    set_name "gpu${i}"
 	fi
 	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $2, $3 }')
-	GPU[$i]=$(echo "$MY_IPS" | awk '{ print $3 }')
-	PRIVATE_GPU[$i]=$(echo "$MY_IPS" | awk '{ print $2 }')
+        if [ $DEBUG -eq 1 ] ; then
+          echo "MY_IPS: "
+          echo "$MY_IPS"
+        fi        
+	GPU[$i]=$(echo "$MY_IPS" | awk '{ print $2 }')
+	PRIVATE_GPU[$i]=$(echo "$MY_IPS" | awk '{ print $1 }')
 	if [ $DEBUG -eq 1 ] ; then	
             echo -e "${NAME}\t Public IP: ${GPU[${i}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
 	fi
         ssh -t -o StrictHostKeyChecking=no ${GPU[${i}]} "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
-	i=$((i+1))	
+	i=$((i+1))
+        if [ $DEBUG -eq 1 ] ; then
+            echo "GPU$i : $PRIVATE_GPU[$i] "
+        fi        
     done
 }    
 
@@ -2229,7 +2243,7 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
     while [ $i -lt ${CPUS} ] ;
     do
 	host_ip=${CPU[${i}]}
-	if [ $DEBUG -eq 1 ] ; then	
+	if [ $DEBUG -eq 1 ] ; then
 	    echo "I think host_ip is ${CPU[$i]}"
 	    echo "I think host_ip is ${CPU[${i}]}"
 	    echo "All  hosts ${CPU[*]}"
