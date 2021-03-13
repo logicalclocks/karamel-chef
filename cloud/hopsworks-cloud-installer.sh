@@ -2195,7 +2195,7 @@ if [ $? -ne 0 ] ; then
     exit 11
 fi    
 
-scp -o StrictHostKeyChecking=no ./.tmp/$CLUSTER_DEFINITIONS_DIR/rondb-*.yml ${IP}:~/${CLUSTER_DEFINITIONS_DIR}/
+scp -o StrictHostKeyChecking=no ./.tmp/$CLUSTER_DEFINITIONS_DIR/hopsworks-*.yml ${IP}:~/${CLUSTER_DEFINITIONS_DIR}/
 if [ $? -ne 0 ] ; then
     echo "Problem scp'ing cluster definitions to head server. Exiting..."
     exit 12
