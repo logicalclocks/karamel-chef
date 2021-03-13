@@ -1200,7 +1200,7 @@ if [ "$INSTALL_ACTION" == "$INSTALL_CLUSTER" ] ; then
 		add_worker
 	    done
 	    # No Nodemanager for Head node
-            DATABASE_NODE_HEAD""
+            DATABASE_NODE_HEAD=""
 	fi
     fi
 
