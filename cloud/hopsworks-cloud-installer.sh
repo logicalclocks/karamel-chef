@@ -1144,7 +1144,7 @@ az_get_ips()
 	else
 	    set_name "cpu${i}"
 	fi
-	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table  | grep ^$NAME | awk '{ print $2, $3 }')
+	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table  | tail -n +3 | grep ^$NAME | awk '{ print $2, $3 }')
 	CPU[$i]=$(echo "$MY_IPS" | awk '{ print $3 }')
 	PRIVATE_CPU[$i]=$(echo "$MY_IPS" | awk '{ print $2 }')
 	if [ $DEBUG -eq 1 ] ; then	
@@ -1162,7 +1162,7 @@ az_get_ips()
 	else
 	    set_name "gpu${i}"
 	fi
-	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table  | grep ^$NAME | awk '{ print $2, $3 }')
+	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $2, $3 }')
 	GPU[$i]=$(echo "$MY_IPS" | awk '{ print $3 }')
 	PRIVATE_GPU[$i]=$(echo "$MY_IPS" | awk '{ print $2 }')
 	if [ $DEBUG -eq 1 ] ; then	
