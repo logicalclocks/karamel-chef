@@ -150,6 +150,8 @@ VM_SIZE=Standard_E8s_v3
 ACCELERATOR_VM=Standard_NC6
 
 OS_IMAGE=Canonical:UbuntuServer:18.04-LTS:latest
+OS_VERSION=18
+
 #OS_IMAGE=OpenLogic:CentOS:7.5:latest
 #OS_IMAGE=OpenLogic:CentOS:7.7:latest
 #
@@ -261,7 +263,11 @@ splash_screen()
 	echo "To continue, you need to create one at that path. Is that ok (y/n)?"
 	read ACCEPT
 	if [ "$ACCEPT" == "y" ] ; then
-	    cat /dev/zero | ssh-keygen -q -N "" > /dev/null
+            if [[ $(OS_IMAGE) =~ "Ubuntu" ]] && [[ $OS_VERSION -gt 18 ]] ; then            
+	        cat /dev/zero | ssh-keygen -m PEM -q -N "" > /dev/null
+            else
+                cat /dev/zero | ssh-keygen -q -N "" > /dev/null                
+            fi
 	else
 	    echo "Exiting...."
 	    exit 99
@@ -2189,14 +2195,20 @@ if [ $? -ne 0 ] ; then
     exit 11
 fi    
 
-scp -o StrictHostKeyChecking=no ./.tmp/$CLUSTER_DEFINITIONS_DIR/hopsworks-*.yml ${IP}:~/${CLUSTER_DEFINITIONS_DIR}/
+scp -o StrictHostKeyChecking=no ./.tmp/$CLUSTER_DEFINITIONS_DIR/rondb-*.yml ${IP}:~/${CLUSTER_DEFINITIONS_DIR}/
 if [ $? -ne 0 ] ; then
     echo "Problem scp'ing cluster definitions to head server. Exiting..."
     exit 12
 fi    
 
 if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
-    ssh -t -o StrictHostKeyChecking=no $IP "if [ ! -e ~/.ssh/id_rsa.pub ] ; then cat /dev/zero | ssh-keygen -q -N \"\" ; fi"
+
+    if [[ $(OS_IMAGE) =~ "Ubuntu" ]] && [[ $OS_VERSION -gt 18 ]] ; then
+       ssh -t -o StrictHostKeyChecking=no $IP "if [ ! -e ~/.ssh/id_rsa.pub ] ; then cat /dev/zero | ssh-keygen -m PEM -q -N \"\" ; fi"
+    else
+       ssh -t -o StrictHostKeyChecking=no $IP "if [ ! -e ~/.ssh/id_rsa.pub ] ; then cat /dev/zero | ssh-keygen -q -N \"\" ; fi"
+    fi
+
     pubkey=$(ssh -t -o StrictHostKeyChecking=no $IP "cat ~/.ssh/id_rsa.pub")
 
     keyfile=".pubkey.pub"
