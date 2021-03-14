@@ -557,6 +557,7 @@ download_installer() {
 	exit 3
     fi
     chmod +x hopsworks-installer.sh
+    mv hopsworks-installer.sh rondb-installer.sh
 
     mkdir -p $CLUSTER_DEFINITIONS_DIR
     cd $CLUSTER_DEFINITIONS_DIR
