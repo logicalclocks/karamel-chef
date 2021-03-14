@@ -1766,7 +1766,7 @@ help()
     echo " [-rm|--remove] Delete a VM - you will be prompted for the name of the VM to delete."
     echo " [-sc|--skip-create] skip creating the VMs, use the existing VM(s) with the same vm_name(s)."
     echo " [-sz|--image-size] Image for Database nodes (auzre of gcp image)."        
-    echo " [-d|--num-data-nodes num] Number of Database Nodes to create for the cluster."
+    echo " [-w|--num-data-nodes num] Number of Database Nodes to create for the cluster."
     echo " [-dt|--database-node-instance-type compute instance type for worker nodes (lookup name in GCP,Azure)]"
     echo ""
     echo "Azure options"
@@ -1896,7 +1896,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 		exit 20
 	    fi	      
 	    ;;
-	-d|--num-data-nodes)
+	-w|--num-data-nodes)
             shift
 	    NUM_WORKERS_CPU=$1
             ;;

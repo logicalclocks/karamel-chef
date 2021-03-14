@@ -929,7 +929,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	    echo " [-dr|--dry-run]  does not run karamel, just generates YML file"
 	    echo " [-nvme|--nvme num_disks] Number of NVMe disks on worker nodes (for NDB/HopsFS)"
 	    echo " [-c|--cloud      on-premises|gcp|aws|azure]"
-	    echo " [-w|--workers    IP1,IP2,...,IPN|none] install on workers with IPs in supplied list (or none). Uses default mem/cpu/gpus for the workers."
+	    echo " [-w|--num-database-nodes    IP1,IP2,...,IPN|none] install on workers with IPs in supplied list (or none). Uses default mem/cpu/gpus for the workers."
 	    echo " [-dc|--download-opensource-url url] downloads open-source binaries from this URL."
 	    echo " [-gs|--gem-server] Run a local gem server for chef-solo (for air-gapped installations)."
 	    echo " [-ni|--non-interactive)] skip license/terms acceptance and all confirmation screens."
