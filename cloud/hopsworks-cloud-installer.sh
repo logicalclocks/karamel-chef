@@ -970,8 +970,9 @@ _gcloud_precreate()
 
 gcloud_create_gpu()
 {
-    GCP_GPU_TYPE=nvidia-tesla-${GPU_TYPE}
-    ACCELERATOR="--accelerator=type=${GCP_GPU_TYPE},count=${NUM_GPUS_PER_VM} "    
+#    GCP_GPU_TYPE=nvidia-tesla-${GPU_TYPE}
+    #    ACCELERATOR="--accelerator=type=${GCP_GPU_TYPE},count=${NUM_GPUS_PER_VM} "
+    #GCP_IMAGE=ACCELERATOR_VM
     _gcloud_create_vm $1
 }
 
@@ -1767,7 +1768,8 @@ help()
     echo " [-ni|--non-interactive] skip license/terms acceptance and all confirmation screens."
     echo " [-rm|--remove] Delete a VM - you will be prompted for the name of the VM to delete."
     echo " [-sc|--skip-create] skip creating the VMs, use the existing VM(s) with the same vm_name(s)."
-    echo " [-sz|--image-size] Image for Database nodes (auzre of gcp image)."        
+    echo " [-sz|--data-node-image-size] Image for Database nodes (auzre of gcp image)."
+    echo " [-sa|--api-node-image-size] Image for API nodes (auzre of gcp image)."            
     echo " [-w|--num-data-nodes num] Number of Database Nodes to create for the cluster."
     echo " [-dt|--database-node-instance-type compute instance type for worker nodes (lookup name in GCP,Azure)]"
     echo " [-r|--num-replicas num] specify the number of database replicas to use."            
@@ -1835,9 +1837,13 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	    shift
 	    DNS_PRIVATE_ZONE=$1
 	    ;;
-        -sz|--image-size)
+        -sz|--data-node-image-size)
 	    shift
 	    VM_SIZE=$1
+	    ;;            
+        -sa|--api-node-image-size)
+	    shift
+	    ACCELERATOR_VM=$1
 	    ;;            
 	-dc|--download-opensource-url)
       	    shift
