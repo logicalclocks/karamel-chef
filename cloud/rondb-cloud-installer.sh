@@ -1764,6 +1764,7 @@ help()
     echo " [-ni|--non-interactive] skip license/terms acceptance and all confirmation screens."
     echo " [-rm|--remove] Delete a VM - you will be prompted for the name of the VM to delete."
     echo " [-sc|--skip-create] skip creating the VMs, use the existing VM(s) with the same vm_name(s)."
+    echo " [-sz|--image-size] Image for Database nodes (auzre of gcp image)."        
     echo " [-w|--num-cpu-workers num] Number of workers (CPU only) to create for the cluster."
     echo " [-wt|--worker-instance-type compute instance type for worker nodes (lookup name in GCP,Azure)]"
     echo ""
@@ -1830,6 +1831,10 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	    shift
 	    DNS_PRIVATE_ZONE=$1
 	    ;;
+        -sz|--image-size)
+	    shift
+	    VM_SIZE=$1
+	    ;;            
 	-dc|--download-opensource-url)
       	    shift
 	    DOWNLOAD_URL=$1
