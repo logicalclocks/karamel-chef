@@ -545,9 +545,9 @@ download_installer() {
     mkdir -p .tmp
     cd .tmp
     
-    curl --silent --show-error -C - ${HOPSWORKS_INSTALLER_BRANCH}/rondb-installer.sh -o ./rondb-installer.sh 2>&1 > /dev/null
+    curl --silent --show-error -C - ${HOPSWORKS_INSTALLER_BRANCH}/hopsworks-installer.sh -o ./hopsworks-installer.sh 2>&1 > /dev/null
     if [ $? -ne 0 ] ; then
-	echo "Could not download rondb-installer.sh"
+	echo "Could not download hopsworks-installer.sh"
 	echo "WARNING: There could be a problem with your proxy server settings."	  
         echo "You need to export either the http_proxy or https_proxy enviornment variables."
 	echo "Current settings:"
@@ -556,7 +556,7 @@ download_installer() {
 	echo "PROXY=$PROXY"
 	exit 3
     fi
-    chmod +x rondb-installer.sh
+    chmod +x hopsworks-installer.sh
 
     mkdir -p $CLUSTER_DEFINITIONS_DIR
     cd $CLUSTER_DEFINITIONS_DIR
@@ -2015,7 +2015,7 @@ clear_known_hosts
 
 
 echo "Installing installer on $IP"
-scp -o StrictHostKeyChecking=no ./.tmp/rondb-installer.sh ${IP}:
+scp -o StrictHostKeyChecking=no ./.tmp/hopsworks-installer.sh ${IP}:
 if [ $? -ne 0 ] ; then
     echo "Problem copying installer to head server. Exiting..."
     exit 10
@@ -2145,9 +2145,9 @@ if [ $NUM_NVME_DRIVES_PER_WORKER -gt 0 ] ; then
     NVME_SWITCH=" -nvme $NUM_NVME_DRIVES_PER_WORKER "
 fi
 if [ $DEBUG -eq 1 ] ; then	
-    echo "ssh -t -o StrictHostKeyChecking=no $IP \"~/rondb-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH} && sleep 5\""
+    echo "ssh -t -o StrictHostKeyChecking=no $IP \"~/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH} && sleep 5\""
 fi
-ssh -t -o StrictHostKeyChecking=no $IP "~/rondb-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH} && sleep 5"
+ssh -t -o StrictHostKeyChecking=no $IP "~/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH} && sleep 5"
 
 if [ $? -ne 0 ] ; then
     echo "Problem running installer. Exiting..."

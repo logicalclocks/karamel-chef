@@ -1073,8 +1073,8 @@ if [ "$INSTALL_ACTION" == "$PURGE_HOPSWORKS_ALL_HOSTS" ] ; then
     for ip in $IPS ; do
 	echo ""
 	echo "Purging on host: $ip"
-	scp rondb-installer.sh ${ip}:
-	ssh $ip "./rondb-installer.sh -i purge -ni"
+	scp hopsworks-installer.sh ${ip}:
+	ssh $ip "./hopsworks-installer.sh -i purge -ni"
     done
 
     # Only delete local files after other hosts
@@ -1324,7 +1324,7 @@ else
 
     echo ""
     echo "Skipping this command: "
-    echo "ssh -t -o StrictHostKeyChecking=no $IP \"/home/$USER/rondb-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}$WORKERS && sleep 5\""
+    echo "ssh -t -o StrictHostKeyChecking=no $IP \"/home/$USER/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}$WORKERS && sleep 5\""
     echo ""
     echo "****************************************"
     echo "*                                      *"
