@@ -548,9 +548,9 @@ download_installer() {
     mkdir -p .tmp
     cd .tmp
     
-    curl --silent --show-error -C - ${HOPSWORKS_INSTALLER_BRANCH}/hopsworks-installer.sh -o ./hopsworks-installer.sh 2>&1 > /dev/null
+    curl --silent --show-error -C - ${HOPSWORKS_INSTALLER_BRANCH}/hopsworks-installer.sh -o ./rondb-installer.sh 2>&1 > /dev/null
     if [ $? -ne 0 ] ; then
-	echo "Could not download hopsworks-installer.sh"
+	echo "Could not download rondb-installer.sh"
 	echo "WARNING: There could be a problem with your proxy server settings."	  
         echo "You need to export either the http_proxy or https_proxy enviornment variables."
 	echo "Current settings:"
@@ -559,8 +559,7 @@ download_installer() {
 	echo "PROXY=$PROXY"
 	exit 3
     fi
-    chmod +x hopsworks-installer.sh
-    mv hopsworks-installer.sh rondb-installer.sh
+    chmod +x rondb-installer.sh
 
     mkdir -p $CLUSTER_DEFINITIONS_DIR
     cd $CLUSTER_DEFINITIONS_DIR
@@ -1683,7 +1682,7 @@ create_vm_gpu()
     fi
     echo ""
     echo "To check the VM status, run:"
-    echo "./hopsworks-cloud-installer.sh -l -c gcp|azure|aws"
+    echo "./rondb-cloud-installer.sh -l -c gcp|azure|aws"
     echo ""
 }
 
@@ -1710,7 +1709,7 @@ delete_vm()
     fi
     echo ""
     echo "To check the VM status, run:"
-    echo "./hopsworks-cloud-installer.sh -l -c gcp|azure|aws"
+    echo "./rondb-cloud-installer.sh -l -c gcp|azure|aws"
     echo ""
     
 }
@@ -2024,7 +2023,7 @@ clear_known_hosts
 
 
 echo "Installing installer on $IP"
-scp -o StrictHostKeyChecking=no ./.tmp/hopsworks-installer.sh ${IP}:
+scp -o StrictHostKeyChecking=no ./.tmp/rondb-installer.sh ${IP}:
 if [ $? -ne 0 ] ; then
     echo "Problem copying installer to head server. Exiting..."
     exit 10
@@ -2154,9 +2153,9 @@ if [ $NUM_NVME_DRIVES_PER_WORKER -gt 0 ] ; then
     NVME_SWITCH=" -nvme $NUM_NVME_DRIVES_PER_WORKER "
 fi
 if [ $DEBUG -eq 1 ] ; then	
-    echo "ssh -t -o StrictHostKeyChecking=no $IP \"~/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH} && sleep 5\""
+    echo "ssh -t -o StrictHostKeyChecking=no $IP \"~/rondb-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH} && sleep 5\""
 fi
-ssh -t -o StrictHostKeyChecking=no $IP "~/hopsworks-installer.sh -r $NUM_REPLICAS -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH} && sleep 5"
+ssh -t -o StrictHostKeyChecking=no $IP "~/rondb-installer.sh -r $NUM_REPLICAS -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH} && sleep 5"
 
 if [ $? -ne 0 ] ; then
     echo "Problem running installer. Exiting..."
@@ -2170,8 +2169,6 @@ if [ $DRY_RUN_CREATE_VMS -eq 0 ] ; then
     echo "* Public IP access to Karamel at:      *"
     echo "  http://${IP}:9090/index.html   "
     echo "*                                      *"
-    echo "* Public IP access to Hopsworks at:    *"
-    echo "  https://${IP}/hopsworks   "
     echo "*                                      *"
     echo "* View installation progress:          *"
     echo " ssh ${IP} \"tail -f installation.log\"   "

@@ -1073,8 +1073,8 @@ if [ "$INSTALL_ACTION" == "$PURGE_HOPSWORKS_ALL_HOSTS" ] ; then
     for ip in $IPS ; do
 	echo ""
 	echo "Purging on host: $ip"
-	scp hopsworks-installer.sh ${ip}:
-	ssh $ip "./hopsworks-installer.sh -i purge -ni"
+	scp rondb-installer.sh ${ip}:
+	ssh $ip "./rondb-installer.sh -i purge -ni"
     done
 
     # Only delete local files after other hosts
