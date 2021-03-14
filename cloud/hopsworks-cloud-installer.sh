@@ -98,6 +98,9 @@ ENTERPRISE_DOWNLOAD_URL=https://nexus.hops.works/repository
 
 NUM_GPUS_PER_VM=1
 
+
+NUM_REPLICAS=1
+
 #################
 # GCP Config
 #################
@@ -1768,6 +1771,7 @@ help()
     echo " [-sz|--image-size] Image for Database nodes (auzre of gcp image)."        
     echo " [-w|--num-data-nodes num] Number of Database Nodes to create for the cluster."
     echo " [-dt|--database-node-instance-type compute instance type for worker nodes (lookup name in GCP,Azure)]"
+    echo " [-r|--num-replicas num] specify the number of database replicas to use."            
     echo ""
     echo "Azure options"
     echo " [-alink|--azure-dns-virtual-network-link link] Azure private DNS Zone to virtual network link name."
@@ -1881,6 +1885,10 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
             ;;
 	-sc|--skip-create)
       	    SKIP_CREATE=1
+            ;;
+	-r|--num-replicas)
+      	    shift
+      	    NUM_REPLICAS=$1
             ;;
 	-p|--http-proxy)
             shift
@@ -2148,7 +2156,7 @@ fi
 if [ $DEBUG -eq 1 ] ; then	
     echo "ssh -t -o StrictHostKeyChecking=no $IP \"~/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH} && sleep 5\""
 fi
-ssh -t -o StrictHostKeyChecking=no $IP "~/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH} && sleep 5"
+ssh -t -o StrictHostKeyChecking=no $IP "~/hopsworks-installer.sh -r $NUM_REPLICAS -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH} && sleep 5"
 
 if [ $? -ne 0 ] ; then
     echo "Problem running installer. Exiting..."
