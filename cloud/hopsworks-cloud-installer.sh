@@ -38,7 +38,7 @@ CLUSTER_DEFINITION_VERSION=$HOPSWORKS_INSTALLER_VERSION
 HOPSWORKS_INSTALLER_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_INSTALLER_VERSION
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$CLUSTER_DEFINITION_VERSION
 
-DEBUG=1
+DEBUG=0
 
 declare -a CPU
 declare -a GPU
@@ -1757,7 +1757,7 @@ help()
     echo " [-c|--cloud gcp|aws|azure] Name of the public cloud "
     echo " [--debug] Verbose logging for this script"
     echo " [-drc|--dry-run-create-vms]  creates the VMs, generates cluster definition (YML) files but doesn't run karamel."	      	      
-    echo " [-na|--num-api-nodes num] Number of workers (with GPUs) to create for the cluster."
+    echo " [-a|--num-api-nodes num] Number of API nodes (MySQL Servers) to create for the cluster."
     echo " [-dc|--download-opensource-url url] downloads open-source binaries from this URL."
     echo " [-ht|--head-instance-type compute instance type for the head node (lookup name in GCP,Azure)]"    
     echo " [-l|--list-public-ips] List the public ips of all VMs."
@@ -1766,8 +1766,8 @@ help()
     echo " [-rm|--remove] Delete a VM - you will be prompted for the name of the VM to delete."
     echo " [-sc|--skip-create] skip creating the VMs, use the existing VM(s) with the same vm_name(s)."
     echo " [-sz|--image-size] Image for Database nodes (auzre of gcp image)."        
-    echo " [-w|--num-cpu-workers num] Number of workers (CPU only) to create for the cluster."
-    echo " [-wt|--worker-instance-type compute instance type for worker nodes (lookup name in GCP,Azure)]"
+    echo " [-d|--num-data-nodes num] Number of Database Nodes to create for the cluster."
+    echo " [-dt|--database-node-instance-type compute instance type for worker nodes (lookup name in GCP,Azure)]"
     echo ""
     echo "Azure options"
     echo " [-alink|--azure-dns-virtual-network-link link] Azure private DNS Zone to virtual network link name."
@@ -1846,7 +1846,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	-drc|--dry-run-create-vms)
             DRY_RUN_CREATE_VMS=1
             ;;
-	-na|--num-api-nodes)
+	-a|--num-api-nodes)
             shift
 	    NUM_WORKERS_GPU=$1
             ;;
@@ -1854,7 +1854,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
       	    shift
 	    HEAD_INSTANCE_TYPE=$1
             ;;
-	-wt|--worker-instance-type)
+	-dt|--worker-instance-type)
       	    shift
 	    WORKER_INSTANCE_TYPE=$1
             ;;	    	
@@ -1896,7 +1896,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 		exit 20
 	    fi	      
 	    ;;
-	-w|--num-cpu-workers)
+	-d|--num-data-nodes)
             shift
 	    NUM_WORKERS_CPU=$1
             ;;
