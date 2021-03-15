@@ -42,7 +42,7 @@
 ###################################################################################################
 
 HOPSWORKS_REPO=logicalclocks/ndb-chef
-HOPSWORKS_BRANCH=rondb
+HOPSWORKS_BRANCH=rondb_v2
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_BRANCH
 KARAMEL_VERSION=0.6
 
