@@ -1548,7 +1548,7 @@ $NODE_MANAGER_HEAD"
 	echo " Then, edit your cluster definitions in: /home/$USER/cluster-defns"
 	echo " Then run karamel on your new cluster definition: "
 	echo " "
-	echo " cd karamel-0.6 && setsid ./bin/karamel -headless -launch ../cluster-defns/$YML_FILE > ../installation.log 2>&1 &"
+	echo " cd karamel-0.6 && setsid ./bin/karamel -headless -launch ../$YML_FILE > ../installation.log 2>&1 &"
 	echo "****************************************"
     fi
 fi
