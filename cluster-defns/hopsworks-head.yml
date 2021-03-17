@@ -28,7 +28,9 @@ attrs:
   ndb:
     __NDB_NVME__  
     NoOfReplicas: 1
-    DataMemory: 4096
+    LockPagesInMainMemory: 0
+    TotalMemoryConfig: 4G
+    NumCPUs: 4
   alertmanager:
     email:
       to: sre@logicalclocks.com
