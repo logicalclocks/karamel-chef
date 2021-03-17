@@ -20,6 +20,10 @@ attrs:
     num_replicas: 2
     yarn:
       aux_services: "mapreduce_shuffle"
+  ndb:
+    LockPagesInMainMemory: 0
+    TotalMemoryConfig: 4G
+    NumCPUs: 4
 
 groups: 
   namenodes:

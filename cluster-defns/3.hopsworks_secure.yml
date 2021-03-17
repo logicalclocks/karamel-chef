@@ -41,6 +41,11 @@ attrs:
       audit:
         enable_rest: "true"
         enable_transport: "false"
+  ndb:
+    LockPagesInMainMemory: 0
+    TotalMemoryConfig: 4G
+    NumCPUs: 4
+
 groups:
   namenodes:
     size: 1

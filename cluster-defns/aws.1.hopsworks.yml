@@ -49,6 +49,10 @@ attrs:
       elastic_exporter:
         username: "elasticexporter"
         password: "elasticexporterpass"
+  ndb:
+    LockPagesInMainMemory: 0
+    TotalMemoryConfig: 4G
+    NumCPUs: 4
 groups:
   n:
     size: 1
