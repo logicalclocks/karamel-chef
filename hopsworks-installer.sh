@@ -1433,6 +1433,8 @@ else
 	    KUBE="true"
 	    DOWNLOAD="$DOWNLOAD
   kube-hops:
+    kfserving:
+      enabled: false
     pki:
       verify_hopsworks_cert: false
     fallback_dns: $DNS_IP

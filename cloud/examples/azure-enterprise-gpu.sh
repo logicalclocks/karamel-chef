@@ -22,4 +22,4 @@ if ! [[ $gpu_workers =~ $re ]] ; then
     exit 1
 fi
 
-ENTERPRISE_PASSWORD=$PASSWORD ./hopsworks-cloud-installer.sh -n $name -i kubernetes -ni -c azure -de https://nexus.hops.works/repository -w 0 -g $gpu_workers --debug -gt k80 -gpus 1
+ENTERPRISE_PASSWORD=$PASSWORD ./hopsworks-cloud-installer.sh -n $name -i kubernetes -ni -c azure -de https://nexus.hops.works/repository -w 0 -g $gpu_workers --debug -gt k80 -gpus 1  -avn hops -arg hopsworks

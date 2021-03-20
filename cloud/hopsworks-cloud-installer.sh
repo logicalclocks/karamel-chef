@@ -38,7 +38,7 @@ CLUSTER_DEFINITION_VERSION=$HOPSWORKS_INSTALLER_VERSION
 HOPSWORKS_INSTALLER_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_INSTALLER_VERSION
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$CLUSTER_DEFINITION_VERSION
 
-DEBUG=1
+DEBUG=0
 
 declare -a CPU
 declare -a GPU
@@ -96,7 +96,7 @@ NUM_NVME_DRIVES_PER_WORKER=0
 HEAD_INSTANCE_TYPE=
 WORKER_INSTANCE_TYPE=
 
-ENTERPRISE_DOWNLOAD_URL=https://nexus.hops.works/repository
+ENTERPRISE_DOWNLOAD_URL="https://nexus.hops.works/repository"
 
 #################
 # GCP Config
@@ -149,10 +149,9 @@ VM_GPU=gpu
 VM_SIZE=Standard_E8s_v3
 ACCELERATOR_VM=Standard_NC6
 
-OS_IMAGE=Canonical:UbuntuServer:18.04-LTS:latest
+OS_IMAGE="Canonical:UbuntuServer:18.04-LTS:latest"
 OS_VERSION=18
 
-#OS_IMAGE=OpenLogic:CentOS:7.5:latest
 #OS_IMAGE=OpenLogic:CentOS:7.7:latest
 #
 #AZ_NETWORKING="--accelerated-networking true"
@@ -1126,7 +1125,7 @@ az_get_ips()
 	set_name "gpu"
     fi
     
-    IP=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $3 }')
+    IP=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $2 }')
     echo "$NAME : $IP"
     ssh -t -o StrictHostKeyChecking=no $IP "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
     
@@ -1148,8 +1147,8 @@ az_get_ips()
           echo "MY_IPS: "
           echo "$MY_IPS"
         fi
-	CPU[$i]=$(echo "$MY_IPS" | awk '{ print $2 }')
-	PRIVATE_CPU[$i]=$(echo "$MY_IPS" | awk '{ print $1 }')
+	CPU[$i]=$(echo "$MY_IPS" | awk '{ print $1 }')
+	PRIVATE_CPU[$i]=$(echo "$MY_IPS" | awk '{ print $2 }')
 
 	if [ $DEBUG -eq 1 ] ; then	
             echo -e "${NAME}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
@@ -1174,8 +1173,8 @@ az_get_ips()
           echo "MY_IPS: "
           echo "$MY_IPS"
         fi        
-	GPU[$i]=$(echo "$MY_IPS" | awk '{ print $2 }')
-	PRIVATE_GPU[$i]=$(echo "$MY_IPS" | awk '{ print $1 }')
+	GPU[$i]=$(echo "$MY_IPS" | awk '{ print $1 }')
+	PRIVATE_GPU[$i]=$(echo "$MY_IPS" | awk '{ print $2 }')
 	if [ $DEBUG -eq 1 ] ; then	
             echo -e "${NAME}\t Public IP: ${GPU[${i}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
 	fi
@@ -2151,7 +2150,7 @@ elif [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
     set_name "head"    
     if [ $NON_INTERACT -eq 0 ] ; then
 	select_gpu "head"
-    elif [ $NUM_WORKERS_CPU -eq 0 ] && [ $NUM_WORKERS_GPU -eq 0 ] && [ "$GPU_TYPE" != "" ] ; then
+    elif [ "$NUM_WORKERS_CPU" -eq "0" ] && [ "$NUM_WORKERS_GPU" -eq "0" ] && [ "$GPU_TYPE" != "" ] ; then
 	HEAD_GPU=1
 	echo "Head VM is allocated a GPU"
     fi
@@ -2217,11 +2216,11 @@ fi
 
 if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
 
-    if [[ $(OS_IMAGE) =~ "Ubuntu" ]] && [[ $OS_VERSION -gt 18 ]] ; then
+#    if [[ $(OS_IMAGE) =~ "Ubuntu" ]] && [[ $OS_VERSION -gt 18 ]] ; then
        ssh -t -o StrictHostKeyChecking=no $IP "if [ ! -e ~/.ssh/id_rsa.pub ] ; then cat /dev/zero | ssh-keygen -m PEM -q -N \"\" ; fi"
-    else
-       ssh -t -o StrictHostKeyChecking=no $IP "if [ ! -e ~/.ssh/id_rsa.pub ] ; then cat /dev/zero | ssh-keygen -q -N \"\" ; fi"
-    fi
+#    else
+#       ssh -t -o StrictHostKeyChecking=no $IP "if [ ! -e ~/.ssh/id_rsa.pub ] ; then cat /dev/zero | ssh-keygen -q -N \"\" ; fi"
+#    fi
 
     pubkey=$(ssh -t -o StrictHostKeyChecking=no $IP "cat ~/.ssh/id_rsa.pub")
 
@@ -2306,6 +2305,9 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
 	echo "ALL WORKERS: $WORKERS"
     fi
 else
+    if [ $DEBUG -eq 1 ] ; then    
+	echo "Not a cluster installation, setting workers to 'none'"
+    fi
     WORKERS="-w none"
 fi
 
