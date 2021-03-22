@@ -1125,7 +1125,7 @@ az_get_ips()
 	set_name "gpu"
     fi
     
-    IP=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $3 }')
+    IP=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $2 }')
     echo "$NAME : $IP"
     ssh -t -o StrictHostKeyChecking=no $IP "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
     
@@ -1142,7 +1142,7 @@ az_get_ips()
 	else
 	    set_name "cpu${i}"
 	fi
-	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table  | tail -n +3 | grep ^$NAME | awk '{ print $3, $2 }')
+	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table  | tail -n +3 | grep ^$NAME | awk '{ print $2, $3 }')
         if [ $DEBUG -eq 1 ] ; then
           echo "MY_IPS: "
           echo "$MY_IPS"
@@ -1168,7 +1168,7 @@ az_get_ips()
 	else
 	    set_name "gpu${i}"
 	fi
-	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $3, $2 }')
+	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $2, $3 }')
         if [ $DEBUG -eq 1 ] ; then
           echo "MY_IPS: "
           echo "$MY_IPS"
