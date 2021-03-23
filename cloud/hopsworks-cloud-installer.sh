@@ -1127,7 +1127,7 @@ az_get_ips()
     
     IP=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $2 }')
     echo "$NAME : $IP"
-    ssh -t -o StrictHostKeyChecking=no $IP "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
+    ssh -t -o StrictHostKeyChecking=no $IP "sudo hostnamectl set-hostname ${NAME}.${DNS_PRIVATE_ZONE}"
     
     sleep 3
 
@@ -1153,7 +1153,7 @@ az_get_ips()
 	if [ $DEBUG -eq 1 ] ; then	
             echo -e "${NAME}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
 	fi
-        ssh -t -o StrictHostKeyChecking=no ${CPU[${i}]}  "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
+        ssh -t -o StrictHostKeyChecking=no ${CPU[${i}]}  "sudo hostnamectl set-hostname ${NAME}.${DNS_PRIVATE_ZONE}"
 	i=$((i+1))
         if [ $DEBUG -eq 1 ] ; then
             echo "CPU$i : $PRIVATE_CPU[$i] "
@@ -1178,7 +1178,7 @@ az_get_ips()
 	if [ $DEBUG -eq 1 ] ; then	
             echo -e "${NAME}\t Public IP: ${GPU[${i}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
 	fi
-        ssh -t -o StrictHostKeyChecking=no ${GPU[${i}]} "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
+        ssh -t -o StrictHostKeyChecking=no ${GPU[${i}]} "sudo hostnamectl set-hostname ${NAME}.${DNS_PRIVATE_ZONE}"
 	i=$((i+1))
         if [ $DEBUG -eq 1 ] ; then
             echo "GPU$i : $PRIVATE_GPU[$i] "
