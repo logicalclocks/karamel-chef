@@ -82,8 +82,8 @@ GPU_WORKER_ID=0
 
 SKIP_CREATE=0
 
-NUM_GPUS_PER_VM=
-GPU_TYPE=
+NUM_GPUS_PER_VM=0
+GPU_TYPE=k80
 
 NUM_WORKERS_CPU=0
 NUM_WORKERS_GPU=0
@@ -135,7 +135,9 @@ VIRTUAL_NETWORK=
 
 # We call Azure's LOCATION "REGION" to make this script more generic
 # az vm create -n ghead --vnet-name hops --size Standard_NC6 --location westeurope --image UbuntuLTS --subnet default --public-ip-address ""
-AZ_ZONE=3
+AZ_ZONE=
+#AZ_ZONE=3
+
 SUBNET=default
 DNS_PRIVATE_ZONE=h.w
 DNS_VN_LINK=hopslink
@@ -661,9 +663,6 @@ gpu_worker_size()
 	NUM_WORKERS_GPU=0
     fi
     
-    if [ $NUM_WORKERS_GPU -ne 0 ] ; then
-	select_gpu "worker"
-    fi
     i=0
     while [ $i -lt $NUM_WORKERS_GPU ] ;
     do
@@ -671,6 +670,7 @@ gpu_worker_size()
 	    echo "Adding GPU worker $i"
 	    echo ""
 	fi
+        select_gpu "worker"
 	add_worker $NUM_GPUS_PER_VM 
 	i=$((i+1))
     done
@@ -679,31 +679,31 @@ gpu_worker_size()
 
 select_gpu()
 {
-    if [ "$NUM_GPUS_PER_VM" == "" ] ; then
-	
-	printf "Please enter the number of GPUs for the $1 VM(s) (default: 0): "
-	read NUM_GPUS_PER_VM
-	if [ "$NUM_GPUS_PER_VM" == "" ] || [ "$NUM_GPUS_PER_VM" == "0" ] ; then
-	    NUM_GPUS_PER_VM=0
-	else
-	    HEAD_GPU=1
-	    echo ""
-	    echo "Available GPU types: v100, p100, t4, k80"
-	    printf 'Please enter the type of GPU: '
-	    read GPU_TYPE
-	    case $GPU_TYPE in
-		v100 | p100 | k80 | t4)
-		    echo ""
-		    echo "Number of GPUs per GPU-enabled VM: $NUM_GPUS_PER_VM  GPU type: $GPU_TYPE"
-		    ;;
-		*)
-		    echo "Invalid GPU choice. Try again."
-		    echo ""
-		    NUM_GPUS_PER_VM=
-		    select_gpu $1
-		    ;;
-	    esac
-	fi
+    if [ $NON_INTERACT -eq 0 ] ; then    
+        printf "Please enter the number of GPUs for the $1 VM(s) (default: $NUM_GPUS_PER_VM): "
+        read NUM_GPUS
+        if [ "$NUM_GPUS" != "" ] ; then
+            NUM_GPUS_PER_VM=$NUM_GPUS
+        fi
+        if [ "$NUM_GPUS_PER_VM" -ne "0" ] ; then
+            echo ""
+            echo ""
+            echo "Available GPU types: v100, p100, t4, k80"
+            printf 'Please enter the type of GPU: '
+            read GPU_TYPE
+            case $GPU_TYPE in
+	        v100 | p100 | k80 | t4)
+	            echo ""
+	            echo "Number of GPUs per GPU-enabled VM: $NUM_GPUS_PER_VM  GPU type: $GPU_TYPE"
+	            ;;
+	        *)
+	            echo "Invalid GPU choice. Try again."
+	            echo ""
+	            NUM_GPUS_PER_VM=
+	            select_gpu $1
+	            ;;
+            esac
+        fi
     fi
 }
 
@@ -1567,7 +1567,7 @@ _az_precreate()
 	    echo ""
 	    echo "Example image types: Standard_E4as_v4, Standard_NV6_Promo, etc"
 	    printf "Enter the VM type: "
-	    read VM_SIZE
+	    read VM_TYPE
 	fi
 	echo "VM type selected: $VM_TYPE"
 
@@ -1625,7 +1625,8 @@ az_create_gpu()
 	ACCELERATOR_ZONE=1
 	ACCELERATOR_VM=Standard_NC6s_v3
     else
-	ACCELERATOR_ZONE=3	
+	ACCELERATOR_ZONE=3
+	ACCELERATOR_VM=Standard_NC6        
     fi
     VM_TYPE=$ACCELERATOR_VM
     PUBLIC_IP_ATTR="--public-ip-sku Standard"    
@@ -1637,7 +1638,7 @@ az_create_cpu()
 {
     VM_TYPE=$VM_SIZE
     PUBLIC_IP_ATTR="--public-ip-sku Standard"
-    AZ_ZONE="-z 3"
+    #AZ_ZONE="-z 3"
     _az_create_vm $1
 }
 
@@ -2143,7 +2144,8 @@ if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
 elif [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then
     set_name "gpu"
     HEAD_GPU=1
-    if [ $NON_INTERACT -eq 0 ] ; then        
+    if [ $NON_INTERACT -eq 0 ] ; then
+        echo "Important: GPUs on the head node are not usable by Kubernetes, only Hops."
 	select_gpu "head"
     fi
 elif [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then

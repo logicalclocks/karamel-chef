@@ -1503,7 +1503,7 @@ $NODE_MANAGER_HEAD"
 	echo "$KARAMEL_HTTP_PROXY_4"
 	echo "$KARAMEL_HTTP_PROXY_5"
 	echo "$KARAMEL_HTTP_PROXY_6"
-	echo "setsid ./bin/karamel -headless -launch ../$YML_FILE $THE_PWD > ../installation.log 2>&1 &"
+	echo "setsid ./bin/karamel -headless -launch ../${YML_FILE} $THE_PWD $RUN_GEM_SERVER > ../installation.log 2>&1 &"
         $KARAMEL_HTTP_PROXY_1
         $KARAMEL_HTTP_PROXY_2
         $KARAMEL_HTTP_PROXY_3
@@ -1550,7 +1550,7 @@ $NODE_MANAGER_HEAD"
 	echo " Then, edit your cluster definitions in: /home/$USER/cluster-defns"
 	echo " Then run karamel on your new cluster definition: "
 	echo " "
-	echo " cd karamel-0.6 && setsid ./bin/karamel -headless -launch ../$YML_FILE > ../installation.log 2>&1 &"
+	echo " cd karamel-0.6 && setsid ./bin/karamel -headless -launch ../${YML_FILE} > ../installation.log 2>&1 &"
 	echo "****************************************"
     fi
 fi
