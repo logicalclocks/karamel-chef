@@ -100,6 +100,7 @@ groups:
       - hopsmonitor::node_exporter
       - elastic
       - consul::slave
+      - onlinefs
   datanode2:
     size: 1
     baremetal:
@@ -122,3 +123,4 @@ groups:
       - tensorflow
       - hopsmonitor::node_exporter
       - consul::slave
+      - onlinefs

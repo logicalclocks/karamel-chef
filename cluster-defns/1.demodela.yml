@@ -58,3 +58,4 @@ groups:
       - dela
       - consul::master
       - hops::docker_registry
+      - onlinefs
