@@ -1429,6 +1429,11 @@ else
 	    DNS_IP="8.8.8.8"
 	fi
 
+	if [ "$CLOUD" == "azure" ] ; then
+		# Add Azure DNS static IP address
+		DNS_IP="168.63.129.16 ${DNS_IP}"
+	fi
+
 	if [ $KUBERNETES -eq 1 ] ; then
 	    KUBE="true"
 	    DOWNLOAD="$DOWNLOAD
