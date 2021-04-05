@@ -164,7 +164,7 @@ splash_screen()
     echo "* available disk space (on '/' root partition): $AVAILABLE_DISK"
     echo "* available disk space (under '/mnt' partition): $AVAILABLE_MNT"
     echo "* available CPUs: $AVAILABLE_CPUS"
-    echo "* available GPUS: $AVAILABLE_GPUS"
+    echo "* available APIS: $AVAILABLE_GPUS"
     echo "* your ip is: $IP"
     echo "* installation user: $USER"
     echo "* linux distro: $DISTRO"
@@ -733,7 +733,7 @@ add_worker()
 
     tmpYml="cluster-defns/.worker.yml"
     if [ "$WORKER_GPUS" -gt "0" ] ; then
-	echo "GPU Worker YML"
+	echo "API Worker YML"
 	cat $WORKER_GPU_YML > $tmpYml
 	update_worker_yml
     else
@@ -929,7 +929,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	    echo " [-dr|--dry-run]  does not run karamel, just generates YML file"
 	    echo " [-nvme|--nvme num_disks] Number of NVMe disks on worker nodes (for NDB/HopsFS)"
 	    echo " [-c|--cloud      on-premises|gcp|aws|azure]"
-	    echo " [-w|--num-database-nodes    IP1,IP2,...,IPN|none] install on workers with IPs in supplied list (or none). Uses default mem/cpu/gpus for the workers."
+	    echo " [-w|--num-database-nodes    IP1,IP2,...,IPN|none] install on workers with IPs in supplied list (or none). Uses default mem/cpu/apis for the workers."
 	    echo " [-dc|--download-opensource-url url] downloads open-source binaries from this URL."
 	    echo " [-gs|--gem-server] Run a local gem server for chef-solo (for air-gapped installations)."
 	    echo " [-ni|--non-interactive)] skip license/terms acceptance and all confirmation screens."

@@ -106,7 +106,8 @@ NUM_REPLICAS=1
 #################
 REGION=us-east1
 ZONE=us-east1-c
-GCP_IMAGE=centos-7-v20200910
+CENTOS_IMAGE=centos-7-v20210401
+GCP_IMAGE=$CENTOS_IMAGE
 GCP_IMAGE_PROJECT=centos-cloud
 MACHINE_TYPE=n1-standard-8
 NAME=
@@ -427,14 +428,14 @@ cpus_gpus()
 {
     if [ "$CLOUD" == "gcp" ] ; then
 	CPUS=$(gcloud compute instances list | awk '{ print $1 }' | grep "^${PREFIX}" | grep -e "cpu[0-99]" |  wc -l)
-	GPUS=$(gcloud compute instances list | awk '{ print $1 }' | grep "^${PREFIX}" | grep -e "gpu[0-99]" |  wc -l)
+	GPUS=$(gcloud compute instances list | awk '{ print $1 }' | grep "^${PREFIX}" | grep -e "api[0-99]" |  wc -l)
 	if [ $DEBUG -eq 1 ] ; then
 	    echo "FOUND CPUS: $CPUS"
 	    echo "FOUND GPUS: $GPUS"
         fi		
     elif [ "$CLOUD" == "azure" ] ; then
 	CPUS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | grep "^${PREFIX}" | grep -e "cpu[0-99]" |  wc -l)
-	GPUS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | grep "^${PREFIX}" | grep -e "gpu[0-99]" |  wc -l)
+	GPUS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | grep "^${PREFIX}" | grep -e "api[0-99]" |  wc -l)
 	if [ $DEBUG -eq 1 ] ; then
 	    echo "FOUND CPUS: $CPUS"
 	    echo "FOUND GPUS: $GPUS"
@@ -590,9 +591,9 @@ add_worker()
     
     if [ $WORKER_GPUS -gt 0 ] ; then
 	if [ $i -lt 10 ] ; then
-	    set_name "gpu0${GPU_WORKER_ID}"
+	    set_name "api0${GPU_WORKER_ID}"
 	else
-	    set_name "gpu${GPU_WORKER_ID}"
+	    set_name "api${GPU_WORKER_ID}"
 	fi
         create_vm_gpu "worker"
         GPU_WORKER_ID=$((GPU_WORKER_ID+1))
@@ -692,7 +693,7 @@ gcloud_get_ips()
     if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
 	set_name "cpu"
     elif [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then
-	set_name "gpu"
+	set_name "api"
     fi
     
     IP=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
@@ -720,9 +721,9 @@ gcloud_get_ips()
     while [ $i -lt $GPUS ] ; 
     do
 	if [ $i -lt 10 ] ; then
-	    set_name "gpu0${i}"
+	    set_name "api0${i}"
 	else
-	    set_name "gpu${i}"	    
+	    set_name "api${i}"	    
 	fi
 	GPU[$i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
 	PRIVATE_GPU[$i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
@@ -781,8 +782,9 @@ gcloud_set_env()
 gcloud_enter_region()
 {
     if [ $NON_INTERACT -eq 0 ] ; then
+        echo ""
+	printf "Current active region: "        
 	gcloud config get-value compute/region
-	echo ""
 	printf "Do you want to use the current active region (y/n)? (default: y) "
 	read KEEP_REGION
 
@@ -804,8 +806,9 @@ gcloud_enter_region()
 gcloud_enter_zone()
 {
     if [ $NON_INTERACT -eq 0 ] ; then
+        echo ""
+	printf "Current active zone: "        
 	gcloud config get-value compute/zone
-	echo ""
 	printf "Do you want to use the current active zone (y/n)? (default: y) "
 	read KEEP_ZONE
 
@@ -826,9 +829,10 @@ gcloud_enter_zone()
 
 gcloud_enter_project()
 {
-    if [ $NON_INTERACT -eq 0 ] ; then    
+    if [ $NON_INTERACT -eq 0 ] ; then
+        echo ""
+	printf "Current active project: "        
 	gcloud config get-value project
-	echo ""
 	printf "Do you want to use the current active project (y/n)? (default: y) "
 	read KEEP_PROJECT
 
@@ -886,14 +890,14 @@ gcloud_setup()
 	read SELECT_IMAGE
 
 	if [ "$SELECT_IMAGE" == "" ] || [ "$SELECT_IMAGE" == "centos" ] ; then
-	    GCP_IMAGE=centos-7-v20200714
+	    GCP_IMAGE=$CENTOS_IMAGE
 	    GCP_IMAGE_PROJECT=centos-cloud
 	elif [ "$SELECT_IMAGE" == "ubuntu" ] ; then
 	    GCP_IMAGE=ubuntu-1804-bionic-v20200716
 	    GCP_IMAGE_PROJECT=ubuntu-os-cloud
 	else
 	    echo "Examples of IMAGE are:"
-	    echo "GCP_IMAGE=centos-7-v20200714"
+	    echo "GCP_IMAGE=$CENTOS_IMAGE"
 	    echo "GCP_IMAGE=ubuntu-1804-bionic-v20200716"
 	    echo ""
 	    printf "Enter the IMAGE: "
@@ -958,7 +962,7 @@ _gcloud_precreate()
 	echo ""
 	printf "How many NVMe local disks do you want to add to this host (max: 24)? (default: 0) "
 	read NUM_NVME_DRIVES_PER_WORKER
-
+        echo ""
 	if [ "$NUM_NVME_DRIVES_PER_WORKER" == "" ] ; then
 	    NUM_NVME_DRIVES_PER_WORKER=0
 	fi
@@ -1024,7 +1028,7 @@ az_get_ips()
     if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
 	set_name "cpu"
     elif [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then
-	set_name "gpu"
+	set_name "api"
     fi
     
     IP=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $2 }')
@@ -1065,9 +1069,9 @@ az_get_ips()
     while [ $i -lt $GPUS ] ;     
     do
 	if [ $i -lt 10 ] ; then
-	    set_name "gpu0${i}"
+	    set_name "api0${i}"
 	else
-	    set_name "gpu${i}"
+	    set_name "api${i}"
 	fi
 	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $3, $2 }')
         if [ $DEBUG -eq 1 ] ; then
@@ -1674,7 +1678,7 @@ create_vm_cpu()
 
 create_vm_gpu()
 {
-    echo "Creating gpu-enabled VM...."
+    echo "Creating api-enabled VM...."
     echo ""
     if [ "$CLOUD" == "gcp" ] ; then
 	gcloud_create_gpu $1
@@ -1986,7 +1990,7 @@ fi
 if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
     set_name "cpu"
 elif [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then
-    set_name "gpu"
+    set_name "api"
     HEAD_GPU=1
 elif [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
     set_name "head"    
@@ -2132,7 +2136,7 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
         
 	WORKERS="${WORKERS}${PRIVATE_GPU[${i}]},"
 	if [ $DEBUG -eq 1 ] ; then
-	    echo "gpu workers: $WORKERS"
+	    echo "api workers: $WORKERS"
 	fi
 	i=$((i+1))	
     done
