@@ -245,9 +245,9 @@ splash_screen()
 {
     clear
     echo ""
-    echo "Karamel/Hopsworks Cloud Installer, Copyright(C) 2020 Logical Clocks AB. All rights reserved."
+    echo "RonDB Cloud Installer, Copyright(C) 2020 Logical Clocks AB. All rights reserved."
     echo ""
-    echo "This program creates VMs on GCP/Azure/AWS and installs Hopsworks on the VMs."
+    echo "This program creates virtual machines (VMs) on cloud infrastructure and installs RonDB on the VMs."
     echo ""
     echo "To cancel installation at any time, press CONTROL-C"
     echo ""
@@ -486,37 +486,39 @@ enter_email()
 enter_cloud()
 {
     if [ "$CLOUD" == "" ] ; then
-        echo "-------------------- Where are you installing Hopsworks? --------------------"
+        echo "-------------------- Where are you installing RonDB? --------------------"
 	echo ""
-        echo "On what platform are you installing Hopsworks?"
+        echo "On what platform are you installing RonDB?"
 	echo ""
-	echo "(1) On-premises or private cloud."
+	# echo "(1) On-premises or private cloud."
+	# echo ""
+	# echo "(2) AWS."
+	# echo ""
+	echo "(1) GCP."
 	echo ""
-	echo "(2) AWS."
+	echo "(2) Azure."
 	echo ""
-	echo "(3) GCP."
-	echo ""
-	echo "(4) Azure."
-	echo ""
-	printf 'Please enter your choice '1', '2', '3', '4' :  '
+        #	printf 'Please enter your choice '1', '2', '3', '4' :  '
+	printf 'Please enter your choice '1', '2' :  '        
         read ACCEPT
         case $ACCEPT in
+            # 1)
+	    #     CLOUD="on-premises"
+	    #     ;;
+            # 2)
+	    #     CLOUD="aws"
+	    #     ;;
             1)
-		CLOUD="on-premises"
-		;;
-            2)
-		CLOUD="aws"
-		;;
-            3)
    		CLOUD="gcp"
 		;;
-            4)
+            2)
        		CLOUD="azure"
 		;;
             *)
 		echo ""
 		echo "Invalid Choice: $ACCEPT"
-		echo "Please enter your choice '1', '2', '3', '4'."
+                #		echo "Please enter your choice '1', '2', '3', '4'."
+		echo "Please enter your choice '1', '2'."                
 		clear_screen
 		enter_cloud
 		;;
@@ -610,7 +612,8 @@ cpu_worker_size()
 {
     if [ $NON_INTERACT -eq 0 ] ; then	    
 	if [ $NUM_WORKERS_CPU -eq 0 ] ; then
-	    printf 'Please enter the number of database nodes you want to add (default: 0): '
+            clear_screen
+	    printf 'Please enter the number of database nodes you want to add: '
 	    read NUM_WORKERS_CPU
 	    if [ "$NUM_WORKERS_CPU" == "" ] ; then
 		NUM_WORKERS_CPU=0
@@ -633,7 +636,8 @@ cpu_worker_size()
 gpu_worker_size()
 {
     if [ $NON_INTERACT -eq 0 ] ; then    
-	if [ $NUM_WORKERS_GPU -eq 0 ] ; then    
+	if [ $NUM_WORKERS_GPU -eq 0 ] ; then
+            clear_screen
 	    printf 'Please enter the number of API nodes (MySQL servers) you want to add (default: 0): '
 	    read NUM_WORKERS_GPU
 	    if [ "$NUM_WORKERS_GPU" == "" ] ; then
@@ -2013,6 +2017,7 @@ fi
 
 IP=
 while [ "$IP" == "" ] ; do
+    clear_screen
     echo "Getting IPs"
     get_ips
     sleep 5

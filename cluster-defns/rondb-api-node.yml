@@ -4,4 +4,5 @@
       ip: __WORKER_IP__
     recipes:
       - ndb::mysqld
+      - consul::slave      
 #      - hopsmonitor::node_exporter

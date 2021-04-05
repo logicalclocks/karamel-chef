@@ -28,6 +28,7 @@ groups:
     recipes:
       - ndb::mgmd
       - ndb::mysqld
+      - consul::master      
 #      - hopsmonitor::node_exporter
 #      - hopsmonitor::mysqld_exporter
       __DATABASE_NODE_HEAD__
