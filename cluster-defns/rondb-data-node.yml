@@ -4,5 +4,4 @@
       ip: __WORKER_IP__
     recipes:
       - ndb::ndbd
-      - consul::slave      
 #      - hopsmonitor::node_exporter
