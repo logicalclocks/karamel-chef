@@ -1,6 +1,5 @@
 #!/bin/bash
 
-email="blah"
 ###################################################################################################
 #                                                                                                 #
 # This code is released under the GNU General Public License, Version 3, see for details:         #
