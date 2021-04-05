@@ -76,3 +76,4 @@ groups:
       - hopsmonitor::node_exporter
       - consul::master
       - hops::docker_registry
+      - onlinefs
