@@ -27,7 +27,7 @@ groups:
       ip: __IP__
     recipes:
       - ndb::mgmd
-      - ndb::mysqld
+#      - ndb::mysqld
 #      - hopsmonitor::node_exporter
 #      - hopsmonitor::mysqld_exporter
       __DATABASE_NODE_HEAD__

@@ -121,10 +121,9 @@ RESERVATION_AFFINITY=any
 SHIELD=""
 
 BOOT_DISK=pd-ssd
-BOOT_SIZE_GBS=150
+BOOT_SIZE_GBS=20
 
 RAW_SSH_KEY="${USER}:$(cat ~/.ssh/id_rsa.pub)"
-#printf -v ESCAPED_SSH_KEY "%q\n" "$RAW_SSH_KEY"
 ESCAPED_SSH_KEY="$RAW_SSH_KEY"
 TAGS=http-server,https-server,karamel
 
@@ -148,9 +147,12 @@ VM_WORKER=cpu
 VM_GPU=gpu
 
 
-#VM_SIZE=Standard_E4as_v4
-# 
+# 1 CPU, 1 GB Ram for Mgmt Server
+# 4 CPUs, 32 GB Ram for NDBD ?
+
 VM_SIZE=Standard_E8s_v3
+
+# 4 CPUs, 8 GB Ram for MySQL Server
 ACCELERATOR_VM=Standard_E8s_v3
 
 AZ_IMAGE=Canonical:UbuntuServer:18.04-LTS:latest
@@ -168,7 +170,7 @@ ACCELERATOR_ZONE=3
 ADDRESS_PREFIXES="10.0.0.0/16"
 SUBNET_PREFIXES="10.0.0.0/24"
 
-DATA_DISK_SIZES_GB=150
+DATA_DISK_SIZES_GB=100
 LOCAL_DISK=
 ACCELERATED_NETWORKING=false
 PRIORITY=spot
@@ -1762,24 +1764,24 @@ help()
 {
     echo "usage: $SCRIPTNAME "
     echo " [-h|--help]      help message"
-    echo " [-i|--install-action community|cluster]"
-    echo "                 'community' installs RonDB on a single VM"
+    echo " [-i|--install-action single|cluster]"
+    echo "                 'single' installs RonDB on a single VM"
     echo "                 'cluster' installs RonDB on a multi-VM cluster"
-    echo " [-c|--cloud gcp|aws|azure] Name of the public cloud "
+    echo " [-c|--cloud gcp|azure] Name of the public cloud "
     echo " [--debug] Verbose logging for this script"
     echo " [-drc|--dry-run-create-vms]  creates the VMs, generates cluster definition (YML) files but doesn't run karamel."	      	      
     echo " [-a|--num-api-nodes num] Number of API nodes (MySQL Servers) to create for the cluster."
     echo " [-dc|--download-opensource-url url] downloads open-source binaries from this URL."
-    echo " [-ht|--head-instance-type compute instance type for the head node (lookup name in GCP,Azure)]"    
+    echo " [-ht|--head-instance-type compute instance type for the head node (contains mgmt server and MySQL Server)]"    
     echo " [-l|--list-public-ips] List the public ips of all VMs."
     echo " [-n|--vm-name-prefix name] The prefix for the VM name created."
     echo " [-ni|--non-interactive] skip license/terms acceptance and all confirmation screens."
     echo " [-rm|--remove] Delete a VM - you will be prompted for the name of the VM to delete."
     echo " [-sc|--skip-create] skip creating the VMs, use the existing VM(s) with the same vm_name(s)."
-    echo " [-sz|--data-node-image-size] Image for Database nodes (auzre of gcp image)."
-    echo " [-sa|--api-node-image-size] Image for API nodes (auzre of gcp image)."            
+    echo " [-sz|--data-node-image-size] Image for Database nodes (azure of gcp image)."
+    echo " [-sa|--api-node-image-size] Image for API nodes (azure of gcp image)."            
     echo " [-w|--num-data-nodes num] Number of Database Nodes to create for the cluster."
-    echo " [-dt|--database-node-instance-type compute instance type for worker nodes (lookup name in GCP,Azure)]"
+    echo " [-dt|--database-node-instance-type compute instance type for database nodes (lookup name in GCP,Azure)]"
     echo " [-r|--num-replicas num] specify the number of database replicas to use."            
     echo ""
     echo "Azure options"
@@ -1789,7 +1791,7 @@ help()
     echo " [-arg|--azure-resource-group group] Azure resource group to use."
     echo ""
     echo "GCP options"
-    echo " [-nvme|--nvme num_disks] the number of disks to attach to each worker node"	          
+    echo " [-nvme|--nvme num_disks] the number of disks to attach to each database node"	          
     exit 3
 
 }
@@ -1803,7 +1805,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	-i|--install-action)
 	    shift
 	    case $1 in
-		community)
+		single)
 		    INSTALL_ACTION=$INSTALL_CPU
 		    ACTION="community"
   		    ;;
