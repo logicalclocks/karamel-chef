@@ -93,6 +93,8 @@ PROXY=
 GEM_SERVER=0
 GEM_SERVER_PORT=54321
 
+OS_VERSION=0
+
 NODE_MANAGER_HEAD="      - hops::nm
 "
 
@@ -186,6 +188,7 @@ splash_screen()
     echo "* your ip is: $IP"
     echo "* installation user: $USER"
     echo "* linux distro: $DISTRO"
+    echo "* version: $OS_VERSION"    
     echo "* cluster defn branch: $CLUSTER_DEFINITION_BRANCH"
     echo "* hopsworks-chef branch: $HOPSWORKS_REPO/$HOPSWORKS_BRANCH"
 
@@ -263,7 +266,7 @@ splash_screen()
 	echo "WARNING: Reverse DNS does not work on this host. If you enable 'TLS', it will not work."
 	echo "Hostname: $HOSTNAME"
 	echo "Reverse Hostname: $reverse_hostname"
-	echo "Azure Installatione: please continue, we will try and fix this during the installation."
+	echo "Azure installation: please continue, we will try and fix this during the installation."
 	#      echo "https://docs.microsoft.com/en-us/azure/dns/private-dns-getstarted-portal"
 	#      echo ""
 	echo "On-premises: you have to configure your networking to make reverse-DNS work correctly."
@@ -877,10 +880,12 @@ check_linux()
 	if [ -f /etc/lsb-release -o -d /etc/lsb-release.d ]; then
 	    DISTRO=$(lsb_release -i | cut -d: -f2 | sed s/'^\t'//)
 	    # Otherwise, use release info file
+            OS_VERSION=$(lsb_release -d | grep -o -E '[0-9]+' | head -1)
 	else
 	    DISTRO=$(ls -d /etc/[A-Za-z]*[_-][rv]e[lr]* | grep -v \"lsb\" | cut -d'/' -f3 | cut -d'-' -f1 | cut -d'_' -f1 | head -1)
 	    if [ "$DISTRO" == "Ubuntu" ] ; then
 		sudo apt install lsb-core -y
+                OS_VERSION=$(lsb_release -d | grep -o -E '[0-9]+' | head -1)
 	    elif [ "${DISTRO,,}" == "centos" ] || [ "${DISTRO,,}" == "os" ] ; then
 		sudo yum install redhat-lsb-core -y
 	    else
@@ -1183,7 +1188,11 @@ fi
 
 # generate a pub/private keypair if none exists
 if [ ! -e ~/.ssh/id_rsa.pub ] ; then
-    cat /dev/zero | ssh-keygen -q -N "" > /dev/null
+    if [ "$DISTRO" == "Ubuntu" ] && [ $OS_VERSION -gt 18 ] ; then
+        cat /dev/zero | ssh-keygen -m PEM -q -N "" > /dev/null
+    else
+        cat /dev/zero | ssh-keygen -q -N "" > /dev/null        
+    fi
 else
     echo "Found existing id_rsa.pub"
 fi
@@ -1420,10 +1429,17 @@ else
 	    DNS_IP="8.8.8.8"
 	fi
 
+	if [ "$CLOUD" == "azure" ] ; then
+		# Add Azure DNS static IP address
+		DNS_IP="168.63.129.16 ${DNS_IP}"
+	fi
+
 	if [ $KUBERNETES -eq 1 ] ; then
 	    KUBE="true"
 	    DOWNLOAD="$DOWNLOAD
   kube-hops:
+    kfserving:
+      enabled: false
     pki:
       verify_hopsworks_cert: false
     fallback_dns: $DNS_IP
@@ -1492,7 +1508,7 @@ $NODE_MANAGER_HEAD"
 	echo "$KARAMEL_HTTP_PROXY_4"
 	echo "$KARAMEL_HTTP_PROXY_5"
 	echo "$KARAMEL_HTTP_PROXY_6"
-	echo "setsid ./bin/karamel -headless -launch ../$YML_FILE $THE_PWD > ../installation.log 2>&1 &"
+	echo "setsid ./bin/karamel -headless -launch ../${YML_FILE} $THE_PWD $RUN_GEM_SERVER > ../installation.log 2>&1 &"
         $KARAMEL_HTTP_PROXY_1
         $KARAMEL_HTTP_PROXY_2
         $KARAMEL_HTTP_PROXY_3
@@ -1539,7 +1555,7 @@ $NODE_MANAGER_HEAD"
 	echo " Then, edit your cluster definitions in: /home/$USER/cluster-defns"
 	echo " Then run karamel on your new cluster definition: "
 	echo " "
-	echo " cd karamel-0.6 && setsid ./bin/karamel -headless -launch ../cluster-defns/$YML_FILE > ../installation.log 2>&1 &"
+	echo " cd karamel-0.6 && setsid ./bin/karamel -headless -launch ../${YML_FILE} > ../installation.log 2>&1 &"
 	echo "****************************************"
     fi
 fi

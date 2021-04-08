@@ -13,4 +13,3 @@ read name
 echo "The cluster name prefix is: $name"
 
 ENTERPRISE_PASSWORD=$PASSWORD ./hopsworks-cloud-installer.sh -n $name -i kubernetes -ni -c azure -de https://nexus.hops.works/repository -w 0 -g 0 --debug -avn hops -arg hopsworks
-

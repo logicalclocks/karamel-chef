@@ -1,6 +1,5 @@
 #!/bin/bash
 
-email="blah"
 ###################################################################################################
 #                                                                                                 #
 # This code is released under the GNU General Public License, Version 3, see for details:         #
@@ -82,7 +81,7 @@ GPU_WORKER_ID=0
 
 SKIP_CREATE=0
 
-NUM_GPUS_PER_VM=
+NUM_GPUS_PER_VM=0
 GPU_TYPE=
 
 NUM_WORKERS_CPU=0
@@ -96,7 +95,7 @@ NUM_NVME_DRIVES_PER_WORKER=0
 HEAD_INSTANCE_TYPE=
 WORKER_INSTANCE_TYPE=
 
-ENTERPRISE_DOWNLOAD_URL=https://nexus.hops.works/repository
+ENTERPRISE_DOWNLOAD_URL="https://nexus.hops.works/repository"
 
 #################
 # GCP Config
@@ -135,7 +134,9 @@ VIRTUAL_NETWORK=
 
 # We call Azure's LOCATION "REGION" to make this script more generic
 # az vm create -n ghead --vnet-name hops --size Standard_NC6 --location westeurope --image UbuntuLTS --subnet default --public-ip-address ""
-AZ_ZONE=3
+AZ_ZONE=
+#AZ_ZONE=3
+
 SUBNET=default
 DNS_PRIVATE_ZONE=h.w
 DNS_VN_LINK=hopslink
@@ -149,8 +150,9 @@ VM_GPU=gpu
 VM_SIZE=Standard_E8s_v3
 ACCELERATOR_VM=Standard_NC6
 
-OS_IMAGE=Canonical:UbuntuServer:18.04-LTS:latest
-#OS_IMAGE=OpenLogic:CentOS:7.5:latest
+OS_IMAGE="Canonical:UbuntuServer:18.04-LTS:latest"
+OS_VERSION=18
+
 #OS_IMAGE=OpenLogic:CentOS:7.7:latest
 #
 #AZ_NETWORKING="--accelerated-networking true"
@@ -261,7 +263,11 @@ splash_screen()
 	echo "To continue, you need to create one at that path. Is that ok (y/n)?"
 	read ACCEPT
 	if [ "$ACCEPT" == "y" ] ; then
-	    cat /dev/zero | ssh-keygen -q -N "" > /dev/null
+            if [[ $(OS_IMAGE) =~ "Ubuntu" ]] && [[ $OS_VERSION -gt 18 ]] ; then            
+	        cat /dev/zero | ssh-keygen -m PEM -q -N "" > /dev/null
+            else
+                cat /dev/zero | ssh-keygen -q -N "" > /dev/null                
+            fi
 	else
 	    echo "Exiting...."
 	    exit 99
@@ -656,9 +662,6 @@ gpu_worker_size()
 	NUM_WORKERS_GPU=0
     fi
     
-    if [ $NUM_WORKERS_GPU -ne 0 ] ; then
-	select_gpu "worker"
-    fi
     i=0
     while [ $i -lt $NUM_WORKERS_GPU ] ;
     do
@@ -666,6 +669,7 @@ gpu_worker_size()
 	    echo "Adding GPU worker $i"
 	    echo ""
 	fi
+        select_gpu "worker"
 	add_worker $NUM_GPUS_PER_VM 
 	i=$((i+1))
     done
@@ -674,31 +678,31 @@ gpu_worker_size()
 
 select_gpu()
 {
-    if [ "$NUM_GPUS_PER_VM" == "" ] ; then
-	
-	printf "Please enter the number of GPUs for the $1 VM(s) (default: 0): "
-	read NUM_GPUS_PER_VM
-	if [ "$NUM_GPUS_PER_VM" == "" ] || [ "$NUM_GPUS_PER_VM" == "0" ] ; then
-	    NUM_GPUS_PER_VM=0
-	else
-	    HEAD_GPU=1
-	    echo ""
-	    echo "Available GPU types: v100, p100, t4, k80"
-	    printf 'Please enter the type of GPU: '
-	    read GPU_TYPE
-	    case $GPU_TYPE in
-		v100 | p100 | k80 | t4)
-		    echo ""
-		    echo "Number of GPUs per GPU-enabled VM: $NUM_GPUS_PER_VM  GPU type: $GPU_TYPE"
-		    ;;
-		*)
-		    echo "Invalid GPU choice. Try again."
-		    echo ""
-		    NUM_GPUS_PER_VM=
-		    select_gpu $1
-		    ;;
-	    esac
-	fi
+    if [ $NON_INTERACT -eq 0 ] ; then    
+        printf "Please enter the number of GPUs for the $1 VM(s) (default: $NUM_GPUS_PER_VM): "
+        read NUM_GPUS
+        if [ "$NUM_GPUS" != "" ] ; then
+            NUM_GPUS_PER_VM=$NUM_GPUS
+        fi
+        if [ "$NUM_GPUS_PER_VM" -ne "0" ] ; then
+            echo ""
+            echo ""
+            echo "Available GPU types: v100, p100, t4, k80"
+            printf 'Please enter the type of GPU: '
+            read GPU_TYPE
+            case $GPU_TYPE in
+	        v100 | p100 | k80 | t4)
+	            echo ""
+	            echo "Number of GPUs per GPU-enabled VM: $NUM_GPUS_PER_VM  GPU type: $GPU_TYPE"
+	            ;;
+	        *)
+	            echo "Invalid GPU choice. Try again."
+	            echo ""
+	            NUM_GPUS_PER_VM=
+	            select_gpu $1
+	            ;;
+            esac
+        fi
     fi
 }
 
@@ -805,7 +809,6 @@ gcloud_get_ips()
 	CPU[$i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
 	PRIVATE_CPU[$i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
 	if [ $DEBUG -eq 1 ] ; then
-	    echo "Worker cpu${i} : CPU[$i]"
             echo -e "${NAME}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
 	fi	    
         i=$((i+1))
@@ -1121,9 +1124,9 @@ az_get_ips()
 	set_name "gpu"
     fi
     
-    IP=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $3 }')
+    IP=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $2 }')
     echo "$NAME : $IP"
-    ssh -t -o StrictHostKeyChecking=no $IP "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
+    ssh -t -o StrictHostKeyChecking=no $IP "sudo hostnamectl set-hostname ${NAME}.${DNS_PRIVATE_ZONE}"
     
     sleep 3
 
@@ -1138,14 +1141,22 @@ az_get_ips()
 	else
 	    set_name "cpu${i}"
 	fi
-	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table  | grep ^$NAME | awk '{ print $2, $3 }')
-	CPU[$i]=$(echo "$MY_IPS" | awk '{ print $3 }')
+	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table  | tail -n +3 | grep ^$NAME | awk '{ print $2, $3 }')
+        if [ $DEBUG -eq 1 ] ; then
+          echo "MY_IPS: "
+          echo "$MY_IPS"
+        fi
+	CPU[$i]=$(echo "$MY_IPS" | awk '{ print $1 }')
 	PRIVATE_CPU[$i]=$(echo "$MY_IPS" | awk '{ print $2 }')
+
 	if [ $DEBUG -eq 1 ] ; then	
             echo -e "${NAME}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
 	fi
-        ssh -t -o StrictHostKeyChecking=no ${CPU[${i}]}  "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
-	i=$((i+1))	
+        ssh -t -o StrictHostKeyChecking=no ${CPU[${i}]}  "sudo hostnamectl set-hostname ${NAME}.${DNS_PRIVATE_ZONE}"
+	i=$((i+1))
+        if [ $DEBUG -eq 1 ] ; then
+            echo "CPU$i : $PRIVATE_CPU[$i] "
+        fi        
     done
 
     i=0
@@ -1156,14 +1167,21 @@ az_get_ips()
 	else
 	    set_name "gpu${i}"
 	fi
-	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table  | grep ^$NAME | awk '{ print $2, $3 }')
-	GPU[$i]=$(echo "$MY_IPS" | awk '{ print $3 }')
+	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $2, $3 }')
+        if [ $DEBUG -eq 1 ] ; then
+          echo "MY_IPS: "
+          echo "$MY_IPS"
+        fi        
+	GPU[$i]=$(echo "$MY_IPS" | awk '{ print $1 }')
 	PRIVATE_GPU[$i]=$(echo "$MY_IPS" | awk '{ print $2 }')
 	if [ $DEBUG -eq 1 ] ; then	
             echo -e "${NAME}\t Public IP: ${GPU[${i}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
 	fi
-        ssh -t -o StrictHostKeyChecking=no ${GPU[${i}]} "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
-	i=$((i+1))	
+        ssh -t -o StrictHostKeyChecking=no ${GPU[${i}]} "sudo hostnamectl set-hostname ${NAME}.${DNS_PRIVATE_ZONE}"
+	i=$((i+1))
+        if [ $DEBUG -eq 1 ] ; then
+            echo "GPU$i : $PRIVATE_GPU[$i] "
+        fi        
     done
 }    
 
@@ -1548,7 +1566,7 @@ _az_precreate()
 	    echo ""
 	    echo "Example image types: Standard_E4as_v4, Standard_NV6_Promo, etc"
 	    printf "Enter the VM type: "
-	    read VM_SIZE
+	    read VM_TYPE
 	fi
 	echo "VM type selected: $VM_TYPE"
 
@@ -1606,7 +1624,8 @@ az_create_gpu()
 	ACCELERATOR_ZONE=1
 	ACCELERATOR_VM=Standard_NC6s_v3
     else
-	ACCELERATOR_ZONE=3	
+	ACCELERATOR_ZONE=3
+	ACCELERATOR_VM=Standard_NC6        
     fi
     VM_TYPE=$ACCELERATOR_VM
     PUBLIC_IP_ATTR="--public-ip-sku Standard"    
@@ -1618,7 +1637,7 @@ az_create_cpu()
 {
     VM_TYPE=$VM_SIZE
     PUBLIC_IP_ATTR="--public-ip-sku Standard"
-    AZ_ZONE="-z 3"
+    #AZ_ZONE="-z 3"
     _az_create_vm $1
 }
 
@@ -2124,14 +2143,15 @@ if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
 elif [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then
     set_name "gpu"
     HEAD_GPU=1
-    if [ $NON_INTERACT -eq 0 ] ; then        
+    if [ $NON_INTERACT -eq 0 ] ; then
+        echo "Important: GPUs on the head node are not usable by Kubernetes, only Hops."
 	select_gpu "head"
     fi
 elif [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
     set_name "head"    
     if [ $NON_INTERACT -eq 0 ] ; then
 	select_gpu "head"
-    elif [ $NUM_WORKERS_CPU -eq 0 ] && [ $NUM_WORKERS_GPU -eq 0 ] && [ "$GPU_TYPE" != "" ] ; then
+    elif [ "$NUM_WORKERS_CPU" -eq "0" ] && [ "$NUM_WORKERS_GPU" -eq "0" ] && [ "$GPU_TYPE" != "" ] ; then
 	HEAD_GPU=1
 	echo "Head VM is allocated a GPU"
     fi
@@ -2196,7 +2216,13 @@ if [ $? -ne 0 ] ; then
 fi    
 
 if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
-    ssh -t -o StrictHostKeyChecking=no $IP "if [ ! -e ~/.ssh/id_rsa.pub ] ; then cat /dev/zero | ssh-keygen -q -N \"\" ; fi"
+
+#    if [[ $(OS_IMAGE) =~ "Ubuntu" ]] && [[ $OS_VERSION -gt 18 ]] ; then
+       ssh -t -o StrictHostKeyChecking=no $IP "if [ ! -e ~/.ssh/id_rsa.pub ] ; then cat /dev/zero | ssh-keygen -m PEM -q -N \"\" ; fi"
+#    else
+#       ssh -t -o StrictHostKeyChecking=no $IP "if [ ! -e ~/.ssh/id_rsa.pub ] ; then cat /dev/zero | ssh-keygen -q -N \"\" ; fi"
+#    fi
+
     pubkey=$(ssh -t -o StrictHostKeyChecking=no $IP "cat ~/.ssh/id_rsa.pub")
 
     keyfile=".pubkey.pub"
@@ -2217,7 +2243,7 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
     while [ $i -lt ${CPUS} ] ;
     do
 	host_ip=${CPU[${i}]}
-	if [ $DEBUG -eq 1 ] ; then	
+	if [ $DEBUG -eq 1 ] ; then
 	    echo "I think host_ip is ${CPU[$i]}"
 	    echo "I think host_ip is ${CPU[${i}]}"
 	    echo "All  hosts ${CPU[*]}"
@@ -2280,6 +2306,9 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
 	echo "ALL WORKERS: $WORKERS"
     fi
 else
+    if [ $DEBUG -eq 1 ] ; then    
+	echo "Not a cluster installation, setting workers to 'none'"
+    fi
     WORKERS="-w none"
 fi
 
