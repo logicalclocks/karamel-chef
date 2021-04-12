@@ -99,7 +99,10 @@ GEM_SERVER_PORT=54321
 OS_VERSION=0
 NUM_REPLICAS=1
 
-DATABASE_NODE_HEAD="- ndb::ndbd"
+DATABASE_NODE_HEAD="- ndb::ndbd
+      - ndb::mysqld
+      - hopsmonitor::node_exporter
+      - ndb::mysqld_exporter"
 
 
 # $1 = String describing error

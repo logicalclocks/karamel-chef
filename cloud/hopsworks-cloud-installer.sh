@@ -121,7 +121,7 @@ RESERVATION_AFFINITY=any
 SHIELD=""
 
 BOOT_DISK=pd-ssd
-BOOT_SIZE_GBS=20
+BOOT_SIZE_GBS=30
 
 RAW_SSH_KEY="${USER}:$(cat ~/.ssh/id_rsa.pub)"
 ESCAPED_SSH_KEY="$RAW_SSH_KEY"
@@ -146,14 +146,15 @@ VM_HEAD=hd
 VM_WORKER=cpu
 VM_GPU=gpu
 
-
 # 1 CPU, 1 GB Ram for Mgmt Server
-# 4 CPUs, 32 GB Ram for NDBD ?
+HEAD_INSTANCE_TYPE=Standard_D2s_v3
+# 4 CPUs, 32 GB Ram for NDBD 
+WORKER_INSTANCE_TYPE=Standard_E8s_v4
+# Bit less for MySQL Server
+API_INSTANCE_TYPE=Standard_D8s_v4
+ACCELERATOR_VM=Standard_D8s_v4
 
 VM_SIZE=Standard_E8s_v3
-
-# 4 CPUs, 8 GB Ram for MySQL Server
-ACCELERATOR_VM=Standard_E8s_v3
 
 AZ_IMAGE=Canonical:UbuntuServer:18.04-LTS:latest
 OS_VERSION=18
@@ -161,8 +162,8 @@ OS_VERSION=18
 #AZ_IMAGE=OpenLogic:CentOS:7.5:latest
 #AZ_IMAGE=OpenLogic:CentOS:7.7:latest
 #
-#AZ_NETWORKING="--accelerated-networking true"
-AZ_NETWORKING="--accelerated-networking false"
+AZ_NETWORKING="--accelerated-networking true"
+#AZ_NETWORKING="--accelerated-networking false"
 #GPUs on Azure
 # GPUs are often limited to a particular zone in a region, so only enter a value here if you know the zone where the GPUs are located
 ACCELERATOR_ZONE=3
@@ -552,35 +553,52 @@ download_installer() {
 
     mkdir -p .tmp
     cd .tmp
-    
-    curl --silent --show-error -C - ${HOPSWORKS_INSTALLER_BRANCH}/hopsworks-installer.sh -o ./rondb-installer.sh 2>&1 > /dev/null
-    if [ $? -ne 0 ] ; then
-	echo "Could not download rondb-installer.sh"
-	echo "WARNING: There could be a problem with your proxy server settings."	  
-        echo "You need to export either the http_proxy or https_proxy enviornment variables."
-	echo "Current settings:"
-	echo "http_proxy=$http_proxy"
-	echo "https_proxy=$https_proxy"
-	echo "PROXY=$PROXY"
-	exit 3
+
+    if [ ! -e ../../hopsworks-installer.sh ] ; then
+        curl --silent --show-error -C - ${HOPSWORKS_INSTALLER_BRANCH}/hopsworks-installer.sh -o ./rondb-installer.sh 2>&1 > /dev/null
+        if [ $? -ne 0 ] ; then
+	    echo "Could not download rondb-installer.sh"
+	    echo "WARNING: There could be a problem with your proxy server settings."	  
+            echo "You need to export either the http_proxy or https_proxy enviornment variables."
+	    echo "Current settings:"
+	    echo "http_proxy=$http_proxy"
+	    echo "https_proxy=$https_proxy"
+	    echo "PROXY=$PROXY"
+	    exit 3
+        fi
+    else
+        cp -f ../../hopsworks-installer.sh rondb-installer.sh
     fi
     chmod +x rondb-installer.sh
 
     mkdir -p $CLUSTER_DEFINITIONS_DIR
     cd $CLUSTER_DEFINITIONS_DIR
-    # Don't overwrite the YML files, so that users can customize them
-    curl --silent --show-error -C - ${CLUSTER_DEFINITION_BRANCH}/${CLUSTER_DEFINITIONS_DIR}/$INPUT_YML -o ./$INPUT_YML 2>&1 > /dev/null
-    if [ $? -ne 0 ] ; then
-	exit 12
-    fi
-    curl --silent --show-error -C - ${CLUSTER_DEFINITION_BRANCH}/${CLUSTER_DEFINITIONS_DIR}/$WORKER_YML -o ./$WORKER_YML 2>&1 > /dev/null
-    if [ $? -ne 0 ] ; then
-	exit 13
-    fi
-    curl --silent --show-error -C - ${CLUSTER_DEFINITION_BRANCH}/${CLUSTER_DEFINITIONS_DIR}/$WORKER_GPU_YML -o ./$WORKER_GPU_YML 2>&1 > /dev/null    
-    if [ $? -ne 0 ] ; then
-	exit 14
-    fi
+
+    if [ ! -d ../../../cluster-defns ] ; then
+        # Don't overwrite the YML files, so that users can customize them
+        curl --silent --show-error -C - ${CLUSTER_DEFINITION_BRANCH}/${CLUSTER_DEFINITIONS_DIR}/$INPUT_YML -o ./$INPUT_YML 2>&1 > /dev/null
+        if [ $? -ne 0 ] ; then
+	    exit 12
+        fi
+        curl --silent --show-error -C - ${CLUSTER_DEFINITION_BRANCH}/${CLUSTER_DEFINITIONS_DIR}/$WORKER_YML -o ./$WORKER_YML 2>&1 > /dev/null
+        if [ $? -ne 0 ] ; then
+	    exit 13
+        fi
+        curl --silent --show-error -C - ${CLUSTER_DEFINITION_BRANCH}/${CLUSTER_DEFINITIONS_DIR}/$WORKER_GPU_YML -o ./$WORKER_GPU_YML 2>&1 > /dev/null    
+        if [ $? -ne 0 ] ; then
+	    exit 14
+        fi
+    else
+        cp -f ../../../cluster-defns/rondb*.yml .
+        if [ $? -ne 0 ] ; then
+            echo "Error. It looks like you are doing development in karamle-chef, but i can't find the rondb-*.yml cluster defn files"
+            echo "Found directory: ../../../cluster-defns "
+            echo "But could not find rondb*-.yml files in this directory."
+            echo ""
+	    exit 155
+        fi
+        
+    fi       
     cd ../..
 }
 
@@ -1474,7 +1492,7 @@ _az_precreate()
 	    echo ""
 	    echo "Example image types: Standard_E4as_v4, Standard_NV6_Promo, etc"
 	    printf "Enter the VM type: "
-	    read VM_SIZE
+	    read VM_TYPE
 	fi
 	echo "VM type selected: $VM_TYPE"
 
@@ -1522,17 +1540,37 @@ _az_precreate()
 
 az_create_gpu()
 {
-    VM_TYPE=$ACCELERATOR_VM
+    #    VM_TYPE=$ACCELERATOR_VM
+    VM_TYPE=$API_INSTANCE_TYPE
+    PPG=
+    ACC_NETWORKING="$AZ_NETWORKING"
+    if [ "$AZURE_PPG" != "" ] ; then
+       PPG="--ppg=$AZURE_PPG"
+    fi
     PUBLIC_IP_ATTR="--public-ip-sku Standard"    
-    AZ_ZONE=
+    #AZ_ZONE=
+    AZURE_ZONE="--zone $AZ_ZONE"    
     _az_create_vm $1
 }
 
 az_create_cpu()
 {
+    VM_TYPE=$HEAD_INSTANCE_TYPE
+    PPG=
+    if [ "$AZURE_PPG" != "" ] ; then
+        PPG="--ppg=$AZURE_PPG"
+    fi
+    ACC_NETWORKING="$AZ_NETWORKING"
+    if [ "$1" == "head" ] ; then
+        VM_TYPE=$HEAD_INSTANCE_TYPE
+	ACC_NETWORKING=
+    elif [ "$1" == "worker" ] ; then
+        VM_TYPE=$WORKER_INSTANCE_TYPE
+    fi    
     VM_TYPE=$VM_SIZE
     PUBLIC_IP_ATTR="--public-ip-sku Standard"
-    AZ_ZONE="-z 3"
+    #AZ_ZONE="-z 3"
+    AZURE_ZONE="--zone $AZ_ZONE"    
     _az_create_vm $1
 }
 
@@ -1545,7 +1583,9 @@ _az_create_vm()
        --image $AZ_IMAGE --os-disk-size-gb $BOOT_SIZE \
        --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
        --location $REGION \
-       --ssh-key-value ~/.ssh/id_rsa.pub $PUBLIC_IP_ATTR $AZ_ZONE
+       --ssh-key-value ~/.ssh/id_rsa.pub $PUBLIC_IP_ATTR $AZURE_ZONE \
+       $ACC_NETWORKING $PPG
+#       --ssh-key-value ~/.ssh/id_rsa.pub $PUBLIC_IP_ATTR $AZ_ZONE
 "
 	# --data-disk-sizes-gb $DATA_DISK_SIZE 
 	# $AZ_NETWORKING \	
@@ -1556,7 +1596,9 @@ _az_create_vm()
        --image $AZ_IMAGE --os-disk-size-gb $BOOT_SIZE \
        --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
        --location $REGION \
-       --ssh-key-value ~/.ssh/id_rsa.pub $PUBLIC_IP_ATTR $AZ_ZONE
+       --ssh-key-value ~/.ssh/id_rsa.pub $PUBLIC_IP_ATTR $AZURE_ZONE \
+       $ACC_NETWORKING $PPG
+#       --ssh-key-value ~/.ssh/id_rsa.pub $PUBLIC_IP_ATTR $AZ_ZONE
 
     if [ $? -ne 0 ] ; then
 	echo "Problem creating VM. Exiting ..."
@@ -1769,26 +1811,30 @@ help()
     echo "                 'cluster' installs RonDB on a multi-VM cluster"
     echo " [-c|--cloud gcp|azure] Name of the public cloud "
     echo " [--debug] Verbose logging for this script"
-    echo " [-drc|--dry-run-create-vms]  creates the VMs, generates cluster definition (YML) files but doesn't run karamel."	      	      
+    echo " [-drc|--dry-run-create-vms]  creates the VMs, generates cluster definition (YML) files but doesn't run karamel."
     echo " [-a|--num-api-nodes num] Number of API nodes (MySQL Servers) to create for the cluster."
+    echo " [-at|--api-node-instance-type compute instance type for API/MySQL nodes (lookup name in GCP,Azure)]"    
     echo " [-dc|--download-opensource-url url] downloads open-source binaries from this URL."
-    echo " [-ht|--head-instance-type compute instance type for the head node (contains mgmt server and MySQL Server)]"    
+    echo " [-dt|--database-node-instance-type compute instance type for worker nodes (lookup name in GCP,Azure)]"
+    echo " [-ht|--head-instance-type compute instance type for the head node (contains mgmt server and MySQL Server)]"
     echo " [-l|--list-public-ips] List the public ips of all VMs."
     echo " [-n|--vm-name-prefix name] The prefix for the VM name created."
     echo " [-ni|--non-interactive] skip license/terms acceptance and all confirmation screens."
+    echo " [-os|--os-image] OS Image for nodes (azure or gcp image)."
+    echo " [-ppg|--proximity-placement-group name] Use Azure Proximity Placement Group for nodes"    
     echo " [-rm|--remove] Delete a VM - you will be prompted for the name of the VM to delete."
     echo " [-sc|--skip-create] skip creating the VMs, use the existing VM(s) with the same vm_name(s)."
-    echo " [-sz|--data-node-image-size] Image for Database nodes (azure of gcp image)."
-    echo " [-sa|--api-node-image-size] Image for API nodes (azure of gcp image)."            
     echo " [-w|--num-data-nodes num] Number of Database Nodes to create for the cluster."
     echo " [-dt|--database-node-instance-type compute instance type for database nodes (lookup name in GCP,Azure)]"
-    echo " [-r|--num-replicas num] specify the number of database replicas to use."            
+    echo " [-r|--num-replicas num] specify the number of database replicas to use."
+    echo " [-z|--availability-zone num] Availability Zone (normally 1,2 or 3)"    
     echo ""
     echo "Azure options"
     echo " [-alink|--azure-dns-virtual-network-link link] Azure private DNS Zone to virtual network link name."
     echo " [-adns|--azure-private-dns-zone fqdn] Azure private DNS Zone fqdn."	
     echo " [-avn|--azure-virtual-network network] Azure virtual network to use."
     echo " [-arg|--azure-resource-group group] Azure resource group to use."
+    echo " [-acc-off|--accelerated-networking-off] Set if no accelerated networking is desirable"    
     echo ""
     echo "GCP options"
     echo " [-nvme|--nvme num_disks] the number of disks to attach to each database node"	          
@@ -1847,14 +1893,10 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	    shift
 	    DNS_PRIVATE_ZONE=$1
 	    ;;
-        -sz|--data-node-image-size)
-	    shift
-	    VM_SIZE=$1
-	    ;;            
-        -sa|--api-node-image-size)
-	    shift
-	    ACCELERATOR_VM=$1
-	    ;;            
+        -at|--api-node-instance-type)
+            shitft
+            API_INSTANCE_TYPE=$1
+            ;;
 	-dc|--download-opensource-url)
       	    shift
 	    DOWNLOAD_URL=$1
@@ -1923,6 +1965,24 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
             shift
 	    NUM_WORKERS_CPU=$1
             ;;
+ 	-ppg|--proximity-placement-group)
+ 	    shift
+ 	    AZURE_PPG=$1
+            ;;
+ 	-z|--availability-zone)
+ 	    shift
+ 	    AZ_ZONE=$1
+ 	    ZONE=$1
+            ;;
+ 	-os|--os-image)
+ 	    shift
+ 	    AZ_IMAGE=$1
+ 	    GCP_IMAGE=$1
+            ;;
+ 	-acc-off|--accelerated-networking-off)
+ 	    AZ_NETWORKING=
+            ;;
+       
 	*)
 	    exit_error "Unrecognized parameter: $1"
 	    ;;
@@ -2023,7 +2083,7 @@ fi
 
 IP=
 while [ "$IP" == "" ] ; do
-    clear_screen
+    clear
     echo "Getting IPs"
     get_ips
     sleep 5

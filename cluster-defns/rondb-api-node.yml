@@ -4,5 +4,6 @@
       ip: __WORKER_IP__
     recipes:
       - ndb::mysqld
+      - ndb::mysql_exporter
+      - hopsmonitor::node_exporter      
       - ndb::bench
-#      - hopsmonitor::node_exporter
