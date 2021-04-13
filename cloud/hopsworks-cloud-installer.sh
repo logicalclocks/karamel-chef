@@ -1559,7 +1559,8 @@ _az_precreate()
 
 az_create_gpu()
 {
-    VM_TYPE=$API_INSTANCE_TYPE
+    #    VM_TYPE=$API_INSTANCE_TYPE
+    set_api_instance_type
     PPG=
     ACC_NETWORKING="$AZ_NETWORKING"
     if [ "$AZURE_PPG" != "" ] ; then
@@ -1573,7 +1574,7 @@ az_create_gpu()
 
 az_create_cpu()
 {
-    VM_TYPE=$HEAD_INSTANCE_TYPE
+#    VM_TYPE=$HEAD_INSTANCE_TYPE
     PPG=
     if [ "$AZURE_PPG" != "" ] ; then
         PPG="--ppg=$AZURE_PPG"
@@ -1594,6 +1595,12 @@ az_create_cpu()
 _az_create_vm()
 {
     _az_precreate $1
+
+    AZURE_SPOT_VMS=
+    if [ "$AZ_SPOT_VMS" == "yes" ] ; then
+        AZURE_SPOT_VMS="--priority Spot --max-price=-1"
+    fi
+    
     if [ $DEBUG -eq 1 ] ; then    
 	echo "
     az vm create -n $NAME -g $RESOURCE_GROUP --size $VM_TYPE \
@@ -1613,7 +1620,7 @@ _az_create_vm()
        --generate-ssh-keys --vnet-name $VIRTUAL_NETWORK --subnet $SUBNET \
        --location $REGION \
        --ssh-key-value ~/.ssh/id_rsa.pub $PUBLIC_IP_ATTR $AZURE_ZONE \
-       $ACC_NETWORKING $PPG
+       $ACC_NETWORKING $PPG $AZURE_SPOT_VMS
 
     if [ $? -ne 0 ] ; then
 	echo "Problem creating VM. Exiting ..."
@@ -1821,6 +1828,7 @@ set_head_instance_type()
         echo "Head type exiting."
         exit 444
     fi
+    BOOT_SIZE=$HEAD_NODE_BOOT_SIZE    
 }
 
 set_worker_instance_type()
@@ -1835,6 +1843,7 @@ set_worker_instance_type()
         echo "Head type exiting."
         exit 444
     fi
+    BOOT_SIZE=$DATA_NODE_BOOT_SIZE    
 }
 
 set_api_instance_type()
@@ -1849,6 +1858,8 @@ set_api_instance_type()
         echo "Head type exiting."
         exit 444
     fi
+
+
 }
 
 
@@ -1885,7 +1896,12 @@ help()
     echo " [-w|--num-data-nodes num] Number of Database Nodes to create for the cluster."
     echo " [-dt|--database-node-instance-type compute instance type for database nodes (lookup name in GCP,Azure)]"
     echo " [-r|--num-replicas num] specify the number of database replicas to use."
-    echo " [-z|--availability-zone num] Availability Zone (normally 1,2 or 3)"    
+    echo " [-z|--availability-zone num] Availability Zone (normally 1,2 or 3)"
+    echo " [-bh|--head-node-boot-size num] Head node boot size (in GBytes)"
+    echo " [-bd|--database-node-boot-size num] Database node boot size (in GBytes)"
+    echo " [-ba|--api-node-boot-size num] API node boot size (in GBytes)"
+    echo " [-u|--use-spot-vms] Use Spot VMs"
+    
     echo ""
     echo "Azure options"
     echo " [-alink|--azure-dns-virtual-network-link link] Azure private DNS Zone to virtual network link name."
@@ -2056,7 +2072,22 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
  	-acc-off|--accelerated-networking-off)
  	    AZ_NETWORKING=
             ;;
-       
+        -bh|--head-node-boot-size num)
+ 	    shift
+ 	    HEAD_NODE_BOOT_SIZE=$1
+            ;;
+        -bd|--database-node-boot-size num)
+ 	    shift
+ 	    DATA_NODE_BOOT_SIZE=$1
+            ;;                                                                        
+        -ba|--api-node-boot-size)
+ 	    shift
+ 	    API_NODE_BOOT_SIZE=$1
+            ;;
+        -u|--use-spot-vms)
+ 	    shift
+    	    AZ_SPOT_VMS="yes"
+            ;;
 	*)
 	    exit_error "Unrecognized parameter: $1"
 	    ;;
@@ -2131,14 +2162,11 @@ elif [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then
 elif [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
     set_name "head"    
 else
-if [ "$HEAD_INSTANCE_TYPE" != "" ] ; then        
-    set_head_instance_type
-fi
-
     exit_error "Bad install action: $INSTALL_ACTION"
 fi
 
 if [ $SKIP_CREATE -eq 0 ] ; then
+    set_head_instance_type    
     if [ $HEAD_GPU -eq 1 ] ; then    
 	create_vm_gpu "head"
     else
