@@ -93,6 +93,10 @@ NUM_NVME_DRIVES_PER_WORKER=0
 
 HEAD_INSTANCE_TYPE=
 WORKER_INSTANCE_TYPE=
+GCP_HEAD_INSTANCE_TYPE=n2-standard-2
+GCP_WORKER_INSTANCE_TYPE=n2-standard-4
+GCP_API_INSTANCE_TYPE=n2-standard-8
+
 
 ENTERPRISE_DOWNLOAD_URL=https://nexus.hops.works/repository
 
@@ -123,6 +127,11 @@ SHIELD=""
 BOOT_DISK=pd-ssd
 BOOT_SIZE_GBS=30
 
+HEAD_NODE_BOOT_SIZE=40
+DATA_NODE_BOOT_SIZE=250
+API_NODE_BOOT_SIZE=100
+
+
 RAW_SSH_KEY="${USER}:$(cat ~/.ssh/id_rsa.pub)"
 ESCAPED_SSH_KEY="$RAW_SSH_KEY"
 TAGS=http-server,https-server,karamel
@@ -147,12 +156,17 @@ VM_WORKER=cpu
 VM_GPU=gpu
 
 # 1 CPU, 1 GB Ram for Mgmt Server
-HEAD_INSTANCE_TYPE=Standard_D2s_v3
+#HEAD_INSTANCE_TYPE=Standard_D2s_v3
 # 4 CPUs, 32 GB Ram for NDBD 
-WORKER_INSTANCE_TYPE=Standard_E8s_v4
+#WORKER_INSTANCE_TYPE=Standard_E8s_v4
 # Bit less for MySQL Server
-API_INSTANCE_TYPE=Standard_D8s_v4
-ACCELERATOR_VM=Standard_D8s_v4
+#API_INSTANCE_TYPE=Standard_D8s_v4
+#ACCELERATOR_VM=Standard_D8s_v4
+
+AZ_HEAD_INSTANCE_TYPE=Standard_D2s_v3
+AZ_WORKER_INSTANCE_TYPE=Standard_E8s_v4
+AZ_API_INSTANCE_TYPE=Standard_D8s_v4
+
 
 VM_SIZE=Standard_E8s_v3
 
@@ -1104,6 +1118,11 @@ az_get_ips()
             echo -e "${NAME}\t Public IP: ${GPU[${i}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
 	fi
         ssh -t -o StrictHostKeyChecking=no ${GPU[${i}]} "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
+        if [ $? -ne 0 ] ; then
+            echo "Could not ssh to ${GPU[${i}]}"
+            echo "Trying again...."
+            ssh -t -o StrictHostKeyChecking=no ${GPU[${i}]} "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
+        fi
 	i=$((i+1))
         if [ $DEBUG -eq 1 ] ; then
             echo "GPU$i : $PRIVATE_GPU[$i] "
@@ -1540,7 +1559,6 @@ _az_precreate()
 
 az_create_gpu()
 {
-    #    VM_TYPE=$ACCELERATOR_VM
     VM_TYPE=$API_INSTANCE_TYPE
     PPG=
     ACC_NETWORKING="$AZ_NETWORKING"
@@ -1573,7 +1591,6 @@ az_create_cpu()
     AZURE_ZONE="--zone $AZ_ZONE"    
     _az_create_vm $1
 }
-
 _az_create_vm()
 {
     _az_precreate $1
@@ -1585,7 +1602,6 @@ _az_create_vm()
        --location $REGION \
        --ssh-key-value ~/.ssh/id_rsa.pub $PUBLIC_IP_ATTR $AZURE_ZONE \
        $ACC_NETWORKING $PPG
-#       --ssh-key-value ~/.ssh/id_rsa.pub $PUBLIC_IP_ATTR $AZ_ZONE
 "
 	# --data-disk-sizes-gb $DATA_DISK_SIZE 
 	# $AZ_NETWORKING \	
@@ -1598,17 +1614,11 @@ _az_create_vm()
        --location $REGION \
        --ssh-key-value ~/.ssh/id_rsa.pub $PUBLIC_IP_ATTR $AZURE_ZONE \
        $ACC_NETWORKING $PPG
-#       --ssh-key-value ~/.ssh/id_rsa.pub $PUBLIC_IP_ATTR $AZ_ZONE
 
     if [ $? -ne 0 ] ; then
 	echo "Problem creating VM. Exiting ..."
 	exit 12
     fi
-    sleep 20
-    # Shortcut to create a network security group (NSG) add the 443 inbound rule, and applies it to the VM 
-    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 443 --priority 900
-    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 4848 --priority 899
-    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 9090 --priority 898
 }
 
 
@@ -1799,6 +1809,50 @@ cloud_setup()
     fi    
 }    
 
+set_head_instance_type()
+{
+    if [ "$CLOUD" == "azure" ] ; then
+        MACHINE_TYPE=$AZ_HEAD_INSTANCE_TYPE
+    elif [ "$CLOUD" == "gcp" ] ; then 
+        MACHINE_TYPE=$GCP_HEAD_INSTANCE_TYPE
+    elif [ "$CLOUD" == "aws" ] ; then
+    else
+        echo "Error. Unrecognized cloud: $CLOUD "
+        echo "Head type exiting."
+        exit 444
+    fi
+}
+
+set_worker_instance_type()
+{
+    if [ "$CLOUD" == "azure" ] ; then
+        MACHINE_TYPE=$AZ_WORKER_INSTANCE_TYPE
+    elif [ "$CLOUD" == "gcp" ] ; then 
+        MACHINE_TYPE=$GCP_WORKER_INSTANCE_TYPE
+    elif [ "$CLOUD" == "aws" ] ; then
+    else
+        echo "Error. Unrecognized cloud: $CLOUD "
+        echo "Head type exiting."
+        exit 444
+    fi
+}
+
+set_api_instance_type()
+{
+    if [ "$CLOUD" == "azure" ] ; then
+        MACHINE_TYPE=$AZ_API_INSTANCE_TYPE
+    elif [ "$CLOUD" == "gcp" ] ; then 
+        MACHINE_TYPE=$GCP_API_INSTANCE_TYPE
+    elif [ "$CLOUD" == "aws" ] ; then
+    else
+        echo "Error. Unrecognized cloud: $CLOUD "
+        echo "Head type exiting."
+        exit 444
+    fi
+}
+
+
+
 ###################################################################
 #   MAIN                                                          #
 ###################################################################
@@ -1815,8 +1869,12 @@ help()
     echo " [-a|--num-api-nodes num] Number of API nodes (MySQL Servers) to create for the cluster."
     echo " [-at|--api-node-instance-type compute instance type for API/MySQL nodes (lookup name in GCP,Azure)]"    
     echo " [-dc|--download-opensource-url url] downloads open-source binaries from this URL."
-    echo " [-dt|--database-node-instance-type compute instance type for worker nodes (lookup name in GCP,Azure)]"
-    echo " [-ht|--head-instance-type compute instance type for the head node (contains mgmt server and MySQL Server)]"
+    echo " [-gdt|--gcp-data-node-instance-type compute instance type for database nodes in GCP]"
+    echo " [-gat|--gcp-api-node-instance-type compute instance type for api nodes in GCP]"    
+    echo " [-azdt|--azure-data-node-instance-type compute instance type for database nodes in Azure]"
+    echo " [-azat|--azure-api-node-instance-type compute instance type for api nodes in Azure]"    
+    echo " [-ght|--gcp-head-instance-type compute instance type for the head node on GCP (mgm server)]"
+    echo " [-azht|--azure-head-instance-type compute instance type for the head node on Azure (mgm server)]"    
     echo " [-l|--list-public-ips] List the public ips of all VMs."
     echo " [-n|--vm-name-prefix name] The prefix for the VM name created."
     echo " [-ni|--non-interactive] skip license/terms acceptance and all confirmation screens."
@@ -1911,13 +1969,29 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
             shift
 	    NUM_WORKERS_GPU=$1
             ;;
-	-ht|--head-instance-type)
+	-ght|--gcp-head-instance-type)
       	    shift
-	    HEAD_INSTANCE_TYPE=$1
+	    GCP_HEAD_INSTANCE_TYPE=$1
             ;;
-	-dt|--worker-instance-type)
+	-azht|--azure-head-instance-type)
       	    shift
-	    WORKER_INSTANCE_TYPE=$1
+	    AZ_HEAD_INSTANCE_TYPE=$1
+            ;;
+	-gdt|--gcp-data-node-instance-type)
+      	    shift
+	    GCP_WORKER_INSTANCE_TYPE=$1
+            ;;	    	
+	-azdt|--azure-data-node-instance-type)
+      	    shift
+	    AZ_WORKER_INSTANCE_TYPE=$1
+            ;;	    	
+	-gat|--gcp-api-node-instance-type)
+      	    shift
+	    GCP_API_INSTANCE_TYPE=$1
+            ;;	    	
+	-azat|--azure-api-node-instance-type)
+      	    shift
+	    AZ_API_INSTANCE_TYPE=$1
             ;;	    	
 	-nvme|--nvme)
 	    shift
@@ -2046,7 +2120,7 @@ cloud_setup
 
 HEAD_GPU=0
 if [ "$HEAD_INSTANCE_TYPE" != "" ] ; then        
-    MACHINE_TYPE=$HEAD_INSTANCE_TYPE
+    set_head_instance_type 
 fi
 
 if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
@@ -2057,6 +2131,10 @@ elif [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then
 elif [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
     set_name "head"    
 else
+if [ "$HEAD_INSTANCE_TYPE" != "" ] ; then        
+    set_head_instance_type
+fi
+
     exit_error "Bad install action: $INSTALL_ACTION"
 fi
 
@@ -2066,11 +2144,18 @@ if [ $SKIP_CREATE -eq 0 ] ; then
     else
 	create_vm_cpu "head"
     fi
+    if [ "$CLOUD" == "azure" ] ; then
+        sleep 20
+        # Shortcut to create a network security group (NSG) add the 443 inbound rule, and applies it to the VM 
+        az vm open-port -g $RESOURCE_GROUP -n $NAME --port 443 --priority 900
+        az vm open-port -g $RESOURCE_GROUP -n $NAME --port 9090 --priority 898
+        az vm open-port -g $RESOURCE_GROUP -n $NAME --port 3000 --priority 897
+    fi
+    
     if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
-	if [ "$WORKER_INSTANCE_TYPE" != "" ] ; then        
-	    MACHINE_TYPE=$WORKER_INSTANCE_TYPE
-	fi
+	set_worker_instance_type
         cpu_worker_size
+	set_api_instance_type        
         gpu_worker_size
     fi
 else
@@ -2178,15 +2263,21 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
     do
 	host_ip=${GPU[${i}]}
 	if [ $DEBUG -eq 1 ] ; then	
-	    echo "I think GPU host_ip is ${GPU[$i]}"
-	    echo "I think GPU host_ip is ${GPU[${i}]}"
+	    echo "I think API host_ip is ${GPU[$i]}"
+	    echo "I think API host_ip is ${GPU[${i}]}"
 	    echo "All  hosts ${GPU[*]}"
 	fi
 	clear_known_hosts
 	ssh-copy-id -o StrictHostKeyChecking=no -f -i $keyfile ${GPU[${i}]}
+	if [ $? -ne 0 ] ; then
+            echo ""
+            echo "Problem copying ssh key to host."
+            echo "ssh-copy-id -o StrictHostKeyChecking=no -f -i $keyfile ${GPU[${i}]}"
+        fi
 	ssh -t -o StrictHostKeyChecking=no $IP "ssh -t -o StrictHostKeyChecking=no ${PRIVATE_GPU[${i}]} \"pwd\""
 	if [ $? -ne 0 ] ; then
 	    echo ""
+            echo "	ssh -t -o StrictHostKeyChecking=no $IP \"ssh -t -o StrictHostKeyChecking=no ${PRIVATE_GPU[${i}]} \"pwd\"\""
 	    echo "Error. Public key SSH from $IP to ${PRIVATE_GPU[${i}]} not working."
 	    echo "Exiting..."
 	    echo ""
