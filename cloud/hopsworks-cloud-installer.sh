@@ -1823,6 +1823,7 @@ set_head_instance_type()
     elif [ "$CLOUD" == "gcp" ] ; then 
         MACHINE_TYPE=$GCP_HEAD_INSTANCE_TYPE
     elif [ "$CLOUD" == "aws" ] ; then
+        MACHINE_TYPE=$AWS_HEAD_INSTANCE_TYPE
     else
         echo "Error. Unrecognized cloud: $CLOUD "
         echo "Head type exiting."
@@ -1838,6 +1839,7 @@ set_worker_instance_type()
     elif [ "$CLOUD" == "gcp" ] ; then 
         MACHINE_TYPE=$GCP_WORKER_INSTANCE_TYPE
     elif [ "$CLOUD" == "aws" ] ; then
+        MACHINE_TYPE=$AWS_WORKER_INSTANCE_TYPE        
     else
         echo "Error. Unrecognized cloud: $CLOUD "
         echo "Head type exiting."
@@ -1853,6 +1855,7 @@ set_api_instance_type()
     elif [ "$CLOUD" == "gcp" ] ; then 
         MACHINE_TYPE=$GCP_API_INSTANCE_TYPE
     elif [ "$CLOUD" == "aws" ] ; then
+        MACHINE_TYPE=$AWS_API_INSTANCE_TYPE        
     else
         echo "Error. Unrecognized cloud: $CLOUD "
         echo "Head type exiting."
@@ -2072,11 +2075,11 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
  	-acc-off|--accelerated-networking-off)
  	    AZ_NETWORKING=
             ;;
-        -bh|--head-node-boot-size num)
+        -bh|--head-node-boot-size)
  	    shift
  	    HEAD_NODE_BOOT_SIZE=$1
             ;;
-        -bd|--database-node-boot-size num)
+        -bd|--database-node-boot-size)
  	    shift
  	    DATA_NODE_BOOT_SIZE=$1
             ;;                                                                        
