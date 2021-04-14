@@ -622,9 +622,10 @@ download_installer() {
 add_worker()
 {
     WORKER_GPUS=$1
-    
+    id=$2
+
     if [ $WORKER_GPUS -gt 0 ] ; then
-	if [ $i -lt 10 ] ; then
+	if [ $id -lt 10 ] ; then
 	    set_name "api0${GPU_WORKER_ID}"
 	else
 	    set_name "api${GPU_WORKER_ID}"
@@ -632,7 +633,7 @@ add_worker()
         create_vm_gpu "worker"
         GPU_WORKER_ID=$((GPU_WORKER_ID+1))
     else
-	if [ $i -lt 10 ] ; then
+	if [ $id -lt 10 ] ; then
 	    set_name "cpu0${CPU_WORKER_ID}"
 	else
 	    set_name "cpu${CPU_WORKER_ID}"
@@ -662,7 +663,7 @@ cpu_worker_size()
 	    echo "Adding CPU worker ${i}"
 	    echo ""
 	fi
-	add_worker 0
+	add_worker 0 $i
 	i=$((i+1))
     done
 }
@@ -692,7 +693,7 @@ gpu_worker_size()
 	    echo "Adding GPU worker $i"
 	    echo ""
 	fi
-	add_worker $NUM_GPUS_PER_VM 
+	add_worker $NUM_GPUS_PER_VM $i
 	i=$((i+1))
     done
 }
@@ -1001,7 +1002,7 @@ _gcloud_precreate()
 	    NUM_NVME_DRIVES_PER_WORKER=0
 	fi
 	LOCAL_DISK=
-        for (( i=1; i<=${NUM_NVME_DRIVES_PER_WORKER}; i++ ))
+        for (( ctr=1; ctr<=${NUM_NVME_DRIVES_PER_WORKER}; ctr++ ))
 	do
 	    LOCAL_DISK="$LOCAL_DISK --local-ssd=interface=NVME"
 	done
@@ -1073,11 +1074,11 @@ az_get_ips()
 
     cpus_gpus
 
-    i=0
-    while [ $i -lt $CPUS ] ; 
+    az_i=0
+    while [ $az_i -lt $CPUS ] ; 
     do
-        echo "CPUS: $CPUS   i: $i"	
-	if [ $i -lt 10 ] ; then
+        echo "CPUS: $CPUS   i: $az_i"	
+	if [ $az_i -lt 10 ] ; then
 	    set_name "cpu0${i}"
 	else
 	    set_name "cpu${i}"
@@ -1087,22 +1088,22 @@ az_get_ips()
           echo "MY_IPS: "
           echo "$MY_IPS"
         fi
-	CPU[$i]=$(echo "$MY_IPS" | awk '{ print $2 }')
-	PRIVATE_CPU[$i]=$(echo "$MY_IPS" | awk '{ print $1 }')
+	CPU[$az_i]=$(echo "$MY_IPS" | awk '{ print $2 }')
+	PRIVATE_CPU[$az_i]=$(echo "$MY_IPS" | awk '{ print $1 }')
 	if [ $DEBUG -eq 1 ] ; then	
             echo -e "${NAME}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
 	fi
         ssh -t -o StrictHostKeyChecking=no ${CPU[${i}]}  "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
-	i=$((i+1))
+	az_i=$((az_i+1))
         if [ $DEBUG -eq 1 ] ; then
-            echo "CPU$i : $PRIVATE_CPU[$i] "
+            echo "CPU${az_i} : $PRIVATE_CPU[$az_i] "
         fi        
     done
 
     i=0
-    while [ $i -lt $GPUS ] ;     
+    while [ $az_i -lt $GPUS ] ;     
     do
-	if [ $i -lt 10 ] ; then
+	if [ $az_i -lt 10 ] ; then
 	    set_name "api0${i}"
 	else
 	    set_name "api${i}"
@@ -1112,8 +1113,8 @@ az_get_ips()
           echo "MY_IPS: "
           echo "$MY_IPS"
         fi        
-	GPU[$i]=$(echo "$MY_IPS" | awk '{ print $2 }')
-	PRIVATE_GPU[$i]=$(echo "$MY_IPS" | awk '{ print $1 }')
+	GPU[$az_i]=$(echo "$MY_IPS" | awk '{ print $2 }')
+	PRIVATE_GPU[$az_i]=$(echo "$MY_IPS" | awk '{ print $1 }')
 	if [ $DEBUG -eq 1 ] ; then	
             echo -e "${NAME}\t Public IP: ${GPU[${i}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
 	fi
@@ -1123,9 +1124,9 @@ az_get_ips()
             echo "Trying again...."
             ssh -t -o StrictHostKeyChecking=no ${GPU[${i}]} "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
         fi
-	i=$((i+1))
+	az_i=$((az_i+1))
         if [ $DEBUG -eq 1 ] ; then
-            echo "GPU$i : $PRIVATE_GPU[$i] "
+            echo "GPU${az_i} : $PRIVATE_GPU[$az_i] "
         fi        
     done
 }    
@@ -1881,7 +1882,6 @@ help()
     echo " [--debug] Verbose logging for this script"
     echo " [-drc|--dry-run-create-vms]  creates the VMs, generates cluster definition (YML) files but doesn't run karamel."
     echo " [-a|--num-api-nodes num] Number of API nodes (MySQL Servers) to create for the cluster."
-    echo " [-at|--api-node-instance-type compute instance type for API/MySQL nodes (lookup name in GCP,Azure)]"    
     echo " [-dc|--download-opensource-url url] downloads open-source binaries from this URL."
     echo " [-gdt|--gcp-data-node-instance-type compute instance type for database nodes in GCP]"
     echo " [-gat|--gcp-api-node-instance-type compute instance type for api nodes in GCP]"    
