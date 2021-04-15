@@ -17,6 +17,7 @@ attrs:
   mysql:
       password: __PWD___202
   ndb:
+    num_ndb_open_slots: 100
     NoOfReplicas: __NUM_REPLICAS__
     __NDB_NVME__      
   __DOWNLOAD__
