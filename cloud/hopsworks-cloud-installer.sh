@@ -737,37 +737,37 @@ gcloud_get_ips()
     sleep 3
     cpus_gpus
 
-    i=0
-    while [ $i -lt $CPUS ] ; 
+    gc_i=0
+    while [ $gc_i -lt $CPUS ] ;
     do
-	if [ $i -lt 10 ] ; then
-	    set_name "cpu0${i}"
+	if [ $gc_i -lt 10 ] ; then
+	    set_name "cpu0${gc_i}"
 	else
-	    set_name "cpu${i}"	    
+	    set_name "cpu${gc_i}"
 	fi
-	CPU[$i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
-	PRIVATE_CPU[$i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
+	CPU[$gc_i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
+	PRIVATE_CPU[$gc_i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
 	if [ $DEBUG -eq 1 ] ; then
-            echo -e "${NAME}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
+            echo -e "${NAME}\t Public IP: ${CPU[${gc_i}]} \t Private IP: ${PRIVATE_CPU[${gc_i}]}"
 	fi	    
-        i=$((i+1))
+        gc_i=$((gc_i+1))
     done
 
-    i=0       
-    while [ $i -lt $GPUS ] ; 
+    gc_i=0
+    while [ $gc_i -lt $GPUS ] ;
     do
-	if [ $i -lt 10 ] ; then
-	    set_name "api0${i}"
+	if [ $gc_i -lt 10 ] ; then
+	    set_name "api0${gc_i}"
 	else
-	    set_name "api${i}"	    
+	    set_name "api${gc_i}"
 	fi
-	GPU[$i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
-	PRIVATE_GPU[$i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
+	GPU[$gc_i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
+	PRIVATE_GPU[$gc_i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
 	if [ $DEBUG -eq 1 ] ; then	
-	    echo "Worker gpu${i} : GPU[$i]"	
-            echo -e "${NAME}\t Public IP: ${GPU[${i}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
+	    echo "Worker gpu${gc_i} : GPU[$gc_i]"
+            echo -e "${NAME}\t Public IP: ${GPU[${gc_i}]} \t Private IP: ${PRIVATE_GPU[${gc_i}]}"
 	fi
-	i=$((i+1))
+	gc_i=$((gc_i+1))
     done
 }    
 
@@ -1007,7 +1007,7 @@ _gcloud_precreate()
 	do
 	    LOCAL_DISK="$LOCAL_DISK --local-ssd=interface=NVME"
 	done
-	gcloud_enter_zone	
+	gcloud_enter_zone
     fi
     BOOT_SIZE="${BOOT_SIZE_GBS}GB"
 }
@@ -1080,9 +1080,9 @@ az_get_ips()
     do
         echo "CPUS: $CPUS   i: $az_i"	
 	if [ $az_i -lt 10 ] ; then
-	    set_name "cpu0${i}"
+	    set_name "cpu0${az_i}"
 	else
-	    set_name "cpu${i}"
+	    set_name "cpu${az_i}"
 	fi
 	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3  | grep ^$NAME | awk '{ print $3, $2 }')
         if [ $DEBUG -eq 1 ] ; then
@@ -1092,22 +1092,22 @@ az_get_ips()
 	CPU[$az_i]=$(echo "$MY_IPS" | awk '{ print $2 }')
 	PRIVATE_CPU[$az_i]=$(echo "$MY_IPS" | awk '{ print $1 }')
 	if [ $DEBUG -eq 1 ] ; then	
-            echo -e "${NAME}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
+            echo -e "${NAME}\t Public IP: ${CPU[${az_i}]} \t Private IP: ${PRIVATE_CPU[${az_i}]}"
 	fi
-        ssh -t -o StrictHostKeyChecking=no ${CPU[${i}]}  "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
+        ssh -t -o StrictHostKeyChecking=no ${CPU[${az_i}]}  "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
 	az_i=$((az_i+1))
         if [ $DEBUG -eq 1 ] ; then
             echo "CPU${az_i} : $PRIVATE_CPU[$az_i] "
-        fi        
+        fi
     done
 
-    i=0
+    az_i=0
     while [ $az_i -lt $GPUS ] ;     
     do
 	if [ $az_i -lt 10 ] ; then
-	    set_name "api0${i}"
+	    set_name "api0${az_i}"
 	else
-	    set_name "api${i}"
+	    set_name "api${az_i}"
 	fi
 	MY_IPS=$(az vm list-ip-addresses -g $RESOURCE_GROUP -o table | tail -n +3 | grep ^$NAME | awk '{ print $3, $2 }')
         if [ $DEBUG -eq 1 ] ; then
@@ -1117,23 +1117,20 @@ az_get_ips()
 	GPU[$az_i]=$(echo "$MY_IPS" | awk '{ print $2 }')
 	PRIVATE_GPU[$az_i]=$(echo "$MY_IPS" | awk '{ print $1 }')
 	if [ $DEBUG -eq 1 ] ; then	
-            echo -e "${NAME}\t Public IP: ${GPU[${i}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
+            echo -e "${NAME}\t Public IP: ${GPU[${az_i}]} \t Private IP: ${PRIVATE_GPU[${az_i}]}"
 	fi
-        ssh -t -o StrictHostKeyChecking=no ${GPU[${i}]} "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
+        ssh -t -o StrictHostKeyChecking=no ${GPU[${az_i}]} "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
         if [ $? -ne 0 ] ; then
-            echo "Could not ssh to ${GPU[${i}]}"
+            echo "Could not ssh to ${GPU[${az_i}]}"
             echo "Trying again...."
-            ssh -t -o StrictHostKeyChecking=no ${GPU[${i}]} "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
+            ssh -t -o StrictHostKeyChecking=no ${GPU[${az_i}]} "sudo hostname ${NAME}.${DNS_PRIVATE_ZONE}"
         fi
 	az_i=$((az_i+1))
         if [ $DEBUG -eq 1 ] ; then
             echo "GPU${az_i} : $PRIVATE_GPU[$az_i] "
-        fi        
+        fi
     done
 }    
-
-
-
 
 _az_set_subscription()
 {
@@ -1831,7 +1828,7 @@ set_head_instance_type()
         echo "Head type exiting."
         exit 444
     fi
-    BOOT_SIZE=$HEAD_NODE_BOOT_SIZE    
+    BOOT_SIZE_GBS=$HEAD_NODE_BOOT_SIZE
 }
 
 set_worker_instance_type()
@@ -1847,7 +1844,7 @@ set_worker_instance_type()
         echo "Head type exiting."
         exit 444
     fi
-    BOOT_SIZE=$DATA_NODE_BOOT_SIZE    
+    BOOT_SIZE_GBS=$DATA_NODE_BOOT_SIZE
 }
 
 set_api_instance_type()
@@ -2119,7 +2116,6 @@ if [ $NON_INTERACT -eq 0 ] ; then
     splash_screen
     display_license
     accept_license
-    clear_screen
     enter_email
     enter_cloud
     install_action
@@ -2198,9 +2194,11 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
     set_name "head"    
 fi  
 
+echo "Wait for VMs to be properly started"
+sleep 60
+
 IP=
 while [ "$IP" == "" ] ; do
-    clear
     echo "Getting IPs"
     get_ips
     sleep 5
