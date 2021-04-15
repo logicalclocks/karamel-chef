@@ -565,6 +565,7 @@ enter_prefix()
 
 download_installer() {
 
+    rm -rf .tmp
     mkdir -p .tmp
     cd .tmp
 
