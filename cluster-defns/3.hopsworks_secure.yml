@@ -70,7 +70,6 @@ groups:
       - tensorflow
       - hopslog
       - hopslog::_filebeat-serving
-      - hopslog::_filebeat-beam
       - hopslog::_filebeat-jupyter
       - kzookeeper
       - livy
@@ -104,7 +103,6 @@ groups:
       - hadoop_spark::yarn
       - flink::yarn
       - hopslog::_filebeat-spark
-      - hopslog::_filebeat-beam
       - tensorflow
       - hopsmonitor::node_exporter
       - elastic
@@ -128,7 +126,6 @@ groups:
       - hadoop_spark::yarn
       - flink::yarn
       - hopslog::_filebeat-spark
-      - hopslog::_filebeat-beam
       - tensorflow
       - hopsmonitor::node_exporter
       - consul::slave
