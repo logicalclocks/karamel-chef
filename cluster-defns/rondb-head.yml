@@ -14,8 +14,10 @@ attrs:
     enabled: true
   kagent:
     enabled: false
+  hopsmonitor:
+    rondb: true
   mysql:
-      password: __PWD___202
+    password: __PWD__
   ndb:
     num_ndb_open_slots: 100
     NoOfReplicas: __NUM_REPLICAS__

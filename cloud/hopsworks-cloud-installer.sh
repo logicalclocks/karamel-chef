@@ -382,7 +382,7 @@ install_action()
 	echo ""
         echo "What would you like to do?"
 	echo ""
-	echo "(1) Install single-host RonDB."
+	echo "(1) Install RonDB on a single server (localhost)."
 	echo ""
 	echo "(2) Install clustered RonDB (multiple hosts)."
 	echo ""
@@ -1873,8 +1873,8 @@ help()
 {
     echo "usage: $SCRIPTNAME "
     echo " [-h|--help]      help message"
-    echo " [-i|--install-action single|cluster]"
-    echo "                 'single' installs RonDB on a single VM"
+    echo " [-i|--install-action localhost|cluster]"
+    echo "                 'localhost' installs RonDB on a single VM"
     echo "                 'cluster' installs RonDB on a multi-VM cluster"
     echo " [-c|--cloud gcp|azure] Name of the public cloud "
     echo " [--debug] Verbose logging for this script"
@@ -1926,7 +1926,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	-i|--install-action)
 	    shift
 	    case $1 in
-		single)
+		localhost)
 		    INSTALL_ACTION=$INSTALL_CPU
 		    ACTION="community"
   		    ;;
@@ -1936,7 +1936,8 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 		    ;;
 		*)
 		    echo "Could not recognise '-i' option: $1"
-              	    get_install_option_help		      
+              	    get_install_option_help
+                    exit 33
 	    esac
 	    ;;
 	-c|--cloud)
