@@ -16,6 +16,8 @@ attrs:
     enabled: false
   hopsmonitor:
     rondb: true
+  consul:
+    security: false
   mysql:
     password: __PWD__
   ndb:
