@@ -8,4 +8,3 @@
       - hopsmonitor::node_exporter      
       - ndb::bench
       - consul::slave
-      
