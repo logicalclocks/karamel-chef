@@ -32,5 +32,7 @@ groups:
       - ndb::mgmd
       - ndb::bench
       - hopsmonitor::prometheus
-      - hopsmonitor      
+      - hopsmonitor::grafana
+      - hopsmonitor::alertmanager      
+      - consul::master      
       __DATABASE_NODE_HEAD__

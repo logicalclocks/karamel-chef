@@ -5,3 +5,5 @@
     recipes:
       - ndb::ndbd
       - hopsmonitor::node_exporter
+      - consul::slave
+      
