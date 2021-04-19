@@ -35,6 +35,6 @@ groups:
       - ndb::bench
       - hopsmonitor::prometheus
       - hopsmonitor::grafana
-      - hopsmonitor::alertmanager      
+#      - hopsmonitor::alertmanager      
       - consul::master      
       __DATABASE_NODE_HEAD__

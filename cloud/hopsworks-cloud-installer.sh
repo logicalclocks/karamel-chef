@@ -2179,6 +2179,8 @@ if [ $SKIP_CREATE -eq 0 ] ; then
         az vm open-port -g $RESOURCE_GROUP -n $NAME --port 443 --priority 900
         az vm open-port -g $RESOURCE_GROUP -n $NAME --port 9090 --priority 898
         az vm open-port -g $RESOURCE_GROUP -n $NAME --port 3000 --priority 897
+    elif [ "$CLOUD" == "gcp" ] ; then
+        gcloud compute firewall-rules create grafana-rondb --allow tcp:3000 --source-tags=$NAME --source-ranges=0.0.0.0/0 --description="Grafana port open"
     fi
     
     if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
