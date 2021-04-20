@@ -134,7 +134,7 @@ API_NODE_BOOT_SIZE=100
 
 RAW_SSH_KEY="${USER}:$(cat ~/.ssh/id_rsa.pub)"
 ESCAPED_SSH_KEY="$RAW_SSH_KEY"
-TAGS=http-server,https-server,karamel
+TAGS=http-server,https-server,karamel,grafana-rondb
 
 ACTION=
 
@@ -1049,7 +1049,7 @@ gcloud_delete_vm()
 {
     nohup gcloud compute instances delete -q $VM_DELETE > gcp-installer.log 2>&1  & 
     RES=$?
-    echo "Deleting in the background. Check gcp-installer.log for status."
+    echo "Deleting in the background."
     exit $RES
 }
 
@@ -2167,7 +2167,13 @@ else
 fi
 
 if [ $SKIP_CREATE -eq 0 ] ; then
-    set_head_instance_type    
+    set_head_instance_type
+    if [ "$CLOUD" == "gcp" ] ; then
+        # Create a firewall rule to open the port for grafana and Karamel on the head node, ignore errors if already exists
+        gcloud compute firewall-rules create grafana-rondb --allow tcp:3000 --source-ranges=0.0.0.0/0 --description="Open port for Grafana" 1>&2 > /dev/null
+        gcloud compute firewall-rules create karamel --allow tcp:9090 --source-ranges=0.0.0.0/0 --description="Open port for Karamel" 1>&2 > /dev/null        
+    fi
+    
     if [ $HEAD_GPU -eq 1 ] ; then    
 	create_vm_gpu "head"
     else
@@ -2179,10 +2185,7 @@ if [ $SKIP_CREATE -eq 0 ] ; then
         az vm open-port -g $RESOURCE_GROUP -n $NAME --port 443 --priority 900
         az vm open-port -g $RESOURCE_GROUP -n $NAME --port 9090 --priority 898
         az vm open-port -g $RESOURCE_GROUP -n $NAME --port 3000 --priority 897
-    elif [ "$CLOUD" == "gcp" ] ; then
-        gcloud compute firewall-rules create grafana-rondb --allow tcp:3000 --source-tags=$NAME --source-ranges=0.0.0.0/0 --description="Grafana port open"
-    fi
-    
+    fi    
     if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
 	set_worker_instance_type
         cpu_worker_size
