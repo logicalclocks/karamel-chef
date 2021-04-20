@@ -1266,7 +1266,7 @@ fi
 
 if [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST" ] ; then
     DOWNLOAD="ndb:
-      TotalMemoryConfig: 4000
+      TotalMemoryConfig: 15000
       NumCPUs: 6"
 fi     
 
