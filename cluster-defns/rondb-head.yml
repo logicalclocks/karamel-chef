@@ -14,9 +14,14 @@ attrs:
     enabled: true
   kagent:
     enabled: false
+  hopsmonitor:
+    rondb: true
+  consul:
+    security: false
   mysql:
-      password: __PWD___202
+    password: __PWD__
   ndb:
+    num_ndb_open_slots: 100
     NoOfReplicas: __NUM_REPLICAS__
     __NDB_NVME__      
   __DOWNLOAD__
@@ -29,5 +34,7 @@ groups:
       - ndb::mgmd
       - ndb::bench
       - hopsmonitor::prometheus
-      - hopsmonitor      
+      - hopsmonitor::grafana
+#      - hopsmonitor::alertmanager      
+      - consul::master      
       __DATABASE_NODE_HEAD__

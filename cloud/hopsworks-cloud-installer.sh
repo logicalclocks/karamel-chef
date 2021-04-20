@@ -134,7 +134,7 @@ API_NODE_BOOT_SIZE=100
 
 RAW_SSH_KEY="${USER}:$(cat ~/.ssh/id_rsa.pub)"
 ESCAPED_SSH_KEY="$RAW_SSH_KEY"
-TAGS=http-server,https-server,karamel
+TAGS=http-server,https-server,karamel,grafana
 
 ACTION=
 
@@ -382,7 +382,7 @@ install_action()
 	echo ""
         echo "What would you like to do?"
 	echo ""
-	echo "(1) Install single-host RonDB."
+	echo "(1) Install RonDB on a single server (localhost)."
 	echo ""
 	echo "(2) Install clustered RonDB (multiple hosts)."
 	echo ""
@@ -391,7 +391,9 @@ install_action()
         case $ACCEPT in
             1)
 		INSTALL_ACTION=$INSTALL_CPU
-		ACTION="community"
+		ACTION="localhost"
+                GCP_HEAD_INSTANCE_TYPE=n2-standard-8
+                AZ_HEAD_INSTANCE_TYPE=Standard_D8s_v4                
 		;;
             2)
 		INSTALL_ACTION=$INSTALL_CLUSTER
@@ -893,7 +895,6 @@ gcloud_setup()
 	check_gcp_tools
     fi
     
-    TAGS=http-server,https-server,karamel
     SUBNET=default
     NETWORK_TIER=PREMIUM
     MAINTENANCE_POLICY=TERMINATE
@@ -1049,7 +1050,7 @@ gcloud_delete_vm()
 {
     nohup gcloud compute instances delete -q $VM_DELETE > gcp-installer.log 2>&1  & 
     RES=$?
-    echo "Deleting in the background. Check gcp-installer.log for status."
+    echo "Deleting in the background."
     exit $RES
 }
 
@@ -1873,8 +1874,8 @@ help()
 {
     echo "usage: $SCRIPTNAME "
     echo " [-h|--help]      help message"
-    echo " [-i|--install-action single|cluster]"
-    echo "                 'single' installs RonDB on a single VM"
+    echo " [-i|--install-action localhost|cluster]"
+    echo "                 'localhost' installs RonDB on a single VM"
     echo "                 'cluster' installs RonDB on a multi-VM cluster"
     echo " [-c|--cloud gcp|azure] Name of the public cloud "
     echo " [--debug] Verbose logging for this script"
@@ -1926,9 +1927,11 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	-i|--install-action)
 	    shift
 	    case $1 in
-		single)
+		localhost)
 		    INSTALL_ACTION=$INSTALL_CPU
-		    ACTION="community"
+		    ACTION="localhost"
+                    GCP_HEAD_INSTANCE_TYPE=n2-standard-8
+                    AZ_HEAD_INSTANCE_TYPE=Standard_D8s_v4
   		    ;;
 		cluster)
                     INSTALL_ACTION=$INSTALL_CLUSTER
@@ -1936,7 +1939,8 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 		    ;;
 		*)
 		    echo "Could not recognise '-i' option: $1"
-              	    get_install_option_help		      
+              	    get_install_option_help
+                    exit 33
 	    esac
 	    ;;
 	-c|--cloud)
@@ -2166,7 +2170,13 @@ else
 fi
 
 if [ $SKIP_CREATE -eq 0 ] ; then
-    set_head_instance_type    
+    set_head_instance_type
+    if [ "$CLOUD" == "gcp" ] ; then
+        # Create a firewall rule to open the port for grafana and Karamel on the head node, ignore errors if already exists
+        gcloud compute firewall-rules create grafana-rondb --source-tags=grafana --allow tcp:3000 --source-ranges=0.0.0.0/0 --description="Open port for Grafana" 1>&2 > /dev/null
+        gcloud compute firewall-rules create karamel --allow tcp:9090 --source-tags=karamel --source-ranges=0.0.0.0/0 --description="Open port for Karamel" 1>&2 > /dev/null        
+    fi
+    
     if [ $HEAD_GPU -eq 1 ] ; then    
 	create_vm_gpu "head"
     else
@@ -2178,8 +2188,7 @@ if [ $SKIP_CREATE -eq 0 ] ; then
         az vm open-port -g $RESOURCE_GROUP -n $NAME --port 443 --priority 900
         az vm open-port -g $RESOURCE_GROUP -n $NAME --port 9090 --priority 898
         az vm open-port -g $RESOURCE_GROUP -n $NAME --port 3000 --priority 897
-    fi
-    
+    fi    
     if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
 	set_worker_instance_type
         cpu_worker_size
