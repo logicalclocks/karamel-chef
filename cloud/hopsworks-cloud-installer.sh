@@ -391,7 +391,9 @@ install_action()
         case $ACCEPT in
             1)
 		INSTALL_ACTION=$INSTALL_CPU
-		ACTION="community"
+		ACTION="localhost"
+                GCP_HEAD_INSTANCE_TYPE=n2-standard-8
+                AZ_HEAD_INSTANCE_TYPE=Standard_D8s_v4                
 		;;
             2)
 		INSTALL_ACTION=$INSTALL_CLUSTER
@@ -1927,7 +1929,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	    case $1 in
 		localhost)
 		    INSTALL_ACTION=$INSTALL_CPU
-		    ACTION="community"
+		    ACTION="localhost"
                     GCP_HEAD_INSTANCE_TYPE=n2-standard-8
                     AZ_HEAD_INSTANCE_TYPE=Standard_D8s_v4
   		    ;;

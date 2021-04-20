@@ -947,7 +947,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	-i|--install-action)
 	    shift
 	    case $1 in
-		community)
+		localhost)
 		    INSTALL_ACTION=$INSTALL_LOCALHOST_TLS
   		    ;;
 		cluster)
@@ -1263,6 +1263,12 @@ if [ $NVME -gt 0 ] ; then
       logfile_size: 100000M
       undofile_size: 1000M"
 fi
+
+if [ "$INSTALL_ACTION" == "$INSTALL_LOCALHOST" ] ; then
+    DOWNLOAD="ndb:
+      TotalMemoryConfig: 4000
+      NumCPUs: 6"
+fi     
 
 perl -pi -e "s/__DOWNLOAD__/$DOWNLOAD/" $YML_FILE
 perl -pi -e "s/__NDB_NVME__/${NDB_NVME}/" $YML_FILE
