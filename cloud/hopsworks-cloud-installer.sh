@@ -92,11 +92,6 @@ VM_DELETE=
 NUM_NVME_DRIVES_PER_WORKER=0
 
 HEAD_INSTANCE_TYPE=
-WORKER_INSTANCE_TYPE=
-GCP_HEAD_INSTANCE_TYPE=n2-standard-2
-GCP_WORKER_INSTANCE_TYPE=n2-standard-4
-GCP_API_INSTANCE_TYPE=n2-standard-8
-
 
 ENTERPRISE_DOWNLOAD_URL=https://nexus.hops.works/repository
 
@@ -131,6 +126,9 @@ HEAD_NODE_BOOT_SIZE=40
 DATA_NODE_BOOT_SIZE=250
 API_NODE_BOOT_SIZE=100
 
+GCP_HEAD_INSTANCE_TYPE=n2-standard-2
+GCP_WORKER_INSTANCE_TYPE=n2-standard-4
+GCP_API_INSTANCE_TYPE=n2-standard-8
 
 RAW_SSH_KEY="${USER}:$(cat ~/.ssh/id_rsa.pub)"
 ESCAPED_SSH_KEY="$RAW_SSH_KEY"
@@ -1575,11 +1573,11 @@ az_create_cpu()
     fi
     ACC_NETWORKING="$AZ_NETWORKING"
     if [ "$1" == "head" ] ; then
-        VM_TYPE=$HEAD_INSTANCE_TYPE
+        VM_TYPE=$AZ_HEAD_INSTANCE_TYPE
 	ACC_NETWORKING=
     elif [ "$1" == "worker" ] ; then
-        VM_TYPE=$WORKER_INSTANCE_TYPE
-    fi    
+        VM_TYPE=$AZ_WORKER_INSTANCE_TYPE
+    fi 
     PUBLIC_IP_ATTR="--public-ip-sku Standard"
     AZURE_ZONE="--zone $AZ_ZONE"    
     _az_create_vm $1
@@ -2146,10 +2144,6 @@ fi
 cloud_setup
 
 HEAD_GPU=0
-if [ "$HEAD_INSTANCE_TYPE" != "" ] ; then        
-    set_head_instance_type 
-fi
-
 if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
     set_name "cpu"
 elif [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then
