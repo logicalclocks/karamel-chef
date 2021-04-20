@@ -134,7 +134,7 @@ API_NODE_BOOT_SIZE=100
 
 RAW_SSH_KEY="${USER}:$(cat ~/.ssh/id_rsa.pub)"
 ESCAPED_SSH_KEY="$RAW_SSH_KEY"
-TAGS=http-server,https-server,karamel,grafana-rondb
+TAGS=http-server,https-server,karamel,grafana
 
 ACTION=
 
@@ -893,7 +893,6 @@ gcloud_setup()
 	check_gcp_tools
     fi
     
-    TAGS=http-server,https-server,karamel
     SUBNET=default
     NETWORK_TIER=PREMIUM
     MAINTENANCE_POLICY=TERMINATE
@@ -1929,6 +1928,8 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 		localhost)
 		    INSTALL_ACTION=$INSTALL_CPU
 		    ACTION="community"
+                    GCP_HEAD_INSTANCE_TYPE=n2-standard-8
+                    AZ_HEAD_INSTANCE_TYPE=Standard_D8s_v4
   		    ;;
 		cluster)
                     INSTALL_ACTION=$INSTALL_CLUSTER
@@ -2170,8 +2171,8 @@ if [ $SKIP_CREATE -eq 0 ] ; then
     set_head_instance_type
     if [ "$CLOUD" == "gcp" ] ; then
         # Create a firewall rule to open the port for grafana and Karamel on the head node, ignore errors if already exists
-        gcloud compute firewall-rules create grafana-rondb --allow tcp:3000 --source-ranges=0.0.0.0/0 --description="Open port for Grafana" 1>&2 > /dev/null
-        gcloud compute firewall-rules create karamel --allow tcp:9090 --source-ranges=0.0.0.0/0 --description="Open port for Karamel" 1>&2 > /dev/null        
+        gcloud compute firewall-rules create grafana-rondb --source-tags=grafana --allow tcp:3000 --source-ranges=0.0.0.0/0 --description="Open port for Grafana" 1>&2 > /dev/null
+        gcloud compute firewall-rules create karamel --allow tcp:9090 --source-tags=karamel --source-ranges=0.0.0.0/0 --description="Open port for Karamel" 1>&2 > /dev/null        
     fi
     
     if [ $HEAD_GPU -eq 1 ] ; then    
