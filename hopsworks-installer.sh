@@ -241,8 +241,10 @@ splash_screen()
 
     # If there are multiple FQDNs for this IP, return the last one (this works on Azure)
     reverse_hostname=$(dig +noall +answer -x $IP | awk '{ print $5 }' | sort -r |  grep -v 'internal.cloudapp.net')
-    # stirp off trailing '.' chracter on the hostname returned
-    reverse_hostname=${reverse_hostname::-1}
+    # stirp off trailing '.' character on the hostname returned
+    if [ "$reverse_hostname" != "" } ; then
+      reverse_hostname=${reverse_hostname::-1}
+    fi
     if [ "$reverse_hostname" != "$HOSTNAME" ] ; then
 	REVERSE_DNS=0
 	echo ""
@@ -684,7 +686,9 @@ add_worker()
     if [ "$CLOUD" == "azure" ] ; then
 	NSLOOKUP=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "nslookup $WORKER_IP | grep name | grep -v 'internal.cloudapp.net'")
 	SUSPECTED_HOSTNAME=$(echo $NSLOOKUP | awk {' print $4 '})
-	SUSPECTED_HOSTNAME=${SUSPECTED_HOSTNAME::-1}
+        if [ "$SUSPECTED_HOSTNAME" != "" ] ; then
+	    SUSPECTED_HOSTNAME=${SUSPECTED_HOSTNAME::-1}
+        fi
 	echo ""
 	echo "On Azure, you need to add every worker to the same Private DNS Zone, and note the hostname you set in Azure."
 	echo "We suspect the private DNS hostname is:"
@@ -1157,7 +1161,9 @@ cp -f $INPUT_YML $YML_FILE
 
 if [ "$CLOUD" == "azure" ] ; then
     NSLOOKUP=$(nslookup $IP | grep name | awk {' print $4 '} | grep -v 'internal.cloudapp.net')
-    SUSPECTED_HOSTNAME=${NSLOOKUP::-1}
+    if [ "$SUSPECTED_HOSTNAME" != "" ] ; then
+        SUSPECTED_HOSTNAME=${NSLOOKUP::-1}
+    fi
     echo ""
     echo "On Azure, you need to add every host to the same Private DNS Zone, and note the hostname you set in Azure."
     echo "We suspect the private DNS hostname is:"
