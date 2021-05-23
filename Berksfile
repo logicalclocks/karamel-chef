@@ -12,7 +12,7 @@ cookbook 'kzookeeper', github: "logicalclocks/kzookeeper", branch: "master"
 cookbook 'elastic', github: "logicalclocks/elasticsearch-chef", branch: "master"
 cookbook 'hopslog', github: "logicalclocks/hopslog-chef", branch: "master"
 cookbook 'kkafka', github: "logicalclocks/kafka-cookbook", branch: "master"
+cookbook 'consul', github: "logicalclocks/consul-chef", branch: "master"
 cookbook 'java', github: "logicalclocks/java", branch: "v7.0.0-1"
 
-cookbook 'ark', '= 4.0.0'
 cookbook 'seven_zip', '= 3.2.0'
