@@ -1223,8 +1223,7 @@ which java > /dev/null
 if [ $? -ne 0 ] ; then
     echo "Installing Java..."
     if [ "$DISTRO" == "Ubuntu" ] ; then
-	sudo apt update -y
-	sudo apt install openjdk-8-jre-headless -y
+	sudo apt update -y && apt install openjdk-8-jre-headless -y
         if [ $? -ne 0 ] ; then
             exit_error "Error: problem installing java with command 'apt install openjdk-8-jre-headless -y'"
         fi
