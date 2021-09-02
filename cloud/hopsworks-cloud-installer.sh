@@ -2269,6 +2269,14 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
 	clear_known_hosts
 
 	ssh-copy-id -o StrictHostKeyChecking=no -f -i $keyfile ${CPU[${i}]}
+        RES=$?
+        while [ $RES -ne 0 ] ;
+        do
+           echo "Retrying copying public key for head node to ${CPU[${i}]}"
+           ssh-copy-id -o StrictHostKeyChecking=no -f -i $keyfile ${CPU[${i}]}
+           RES=$?
+        done
+        
 	ssh -t -o StrictHostKeyChecking=no $IP "ssh -t -o StrictHostKeyChecking=no ${PRIVATE_CPU[${i}]} \"pwd\""
 	if [ $? -ne 0 ] ; then
 	    echo ""
