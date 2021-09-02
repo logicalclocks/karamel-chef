@@ -102,8 +102,14 @@ ENTERPRISE_DOWNLOAD_URL="https://nexus.hops.works/repository"
 #################
 REGION=us-east1
 ZONE=us-east1-c
-IMAGE=centos-7-v20200910
-IMAGE_PROJECT=centos-cloud
+IMAGE_CENTOS=centos-7-v20210817
+IMAGE_PROJECT_CENTOS=centos-cloud
+IMAGE_UBUNTU=ubuntu-1804-bionic-v20210825
+IMAGE_PROJECT_UBUNTU=ubuntu-os-cloud
+IMAGE=$IMAGE_UBUNTU
+IMAGE_PROJECT=$IMAGE_PROJECT_UBUNTU
+
+
 MACHINE_TYPE=n1-standard-8
 NAME=
 PROJECT=
@@ -604,7 +610,7 @@ add_worker()
     WORKER_GPUS=$1
     
     if [ "$WORKER_GPUS" -gt "0" ] ; then
-	if [ $i -lt 10 ] ; then
+	if [ $sz -lt 10 ] ; then
 	    set_name "gpu0${GPU_WORKER_ID}"
 	else
 	    set_name "gpu${GPU_WORKER_ID}"
@@ -612,7 +618,7 @@ add_worker()
         create_vm_gpu "worker"
         GPU_WORKER_ID=$((GPU_WORKER_ID+1))
     else
-	if [ $i -lt 10 ] ; then
+	if [ $sz -lt 10 ] ; then
 	    set_name "cpu0${CPU_WORKER_ID}"
 	else
 	    set_name "cpu${CPU_WORKER_ID}"
@@ -634,15 +640,17 @@ cpu_worker_size()
 	    fi
 	fi
     fi
-    i=0
-    while [ $i -lt $NUM_WORKERS_CPU ] ;
+    
+    sz=0
+    while [ $sz -lt $NUM_WORKERS_CPU ] ;
     do
 	if [ $DEBUG -eq 1 ] ; then
-	    echo "Adding CPU worker ${i}"
+	    echo "Adding CPU worker ${sz}"
 	    echo ""
 	fi
 	add_worker 0
-	i=$((i+1))
+        ((sz++))
+        echo "Num workers left: $sz from $NUM_WORKERS_CPU"
     done
 }
 
@@ -663,16 +671,16 @@ gpu_worker_size()
 	NUM_WORKERS_GPU=0
     fi
     
-    i=0
-    while [ $i -lt $NUM_WORKERS_GPU ] ;
+    sz=0
+    while [ $sz -lt $NUM_WORKERS_GPU ] ;
     do
 	if [ $DEBUG -eq 1 ] ; then	
-	    echo "Adding GPU worker $i"
+	    echo "Adding GPU worker $sz"
 	    echo ""
 	fi
         select_gpu "worker"
 	add_worker $NUM_GPUS_PER_VM 
-	i=$((i+1))
+        ((sz++))
     done
 }
 
@@ -783,21 +791,18 @@ _check_deletion()
 gcloud_get_ips()
 {
     MY_IPS=$(gcloud compute instances list | grep "$PREFIX")
+
+    set_name "head"
+    
+    IP=$(echo "$MY_IPS" | grep "^${NAME}" | awk '{ print $5 }')    
     if [ $DEBUG -eq 1 ] ; then
 	echo "MY_IPS: "
 	echo "$MY_IPS"
-    fi
-    set_name "head"
-    if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
-	set_name "cpu"
-    elif [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then
-	set_name "gpu"
+        echo "${NAME} IP: ${IP}"
     fi
     
-    IP=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
-
     sleep 3
-    cpus_gpus
+    cpus_gpus 
 
     i=0
     while [ $i -lt $CPUS ] ; 
@@ -807,10 +812,11 @@ gcloud_get_ips()
 	else
 	    set_name "cpu${i}"	    
 	fi
-	CPU[$i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
-	PRIVATE_CPU[$i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
+        echo "Name: $NAME"        
+	CPU[$i]=$(echo "$MY_IPS" | grep "^${NAME}" | awk '{ print $5 }')
+	PRIVATE_CPU[$i]=$(echo "$MY_IPS" | grep "^${NAME}" | awk '{ print $4 }')
 	if [ $DEBUG -eq 1 ] ; then
-            echo -e "${NAME}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
+            echo -e "${NAME}\t ID ${i}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
 	fi	    
         i=$((i+1))
     done
@@ -823,13 +829,13 @@ gcloud_get_ips()
 	else
 	    set_name "gpu${i}"	    
 	fi
-	GPU[$i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
-	PRIVATE_GPU[$i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
+	GPU[$i]=$(echo "$MY_IPS" | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
+	PRIVATE_GPU[$i]=$(echo "$MY_IPS" | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
 	if [ $DEBUG -eq 1 ] ; then	
 	    echo "Worker gpu${i} : GPU[$i]"	
-            echo -e "${NAME}\t Public IP: ${GPU[${i}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
+            echo -e "${NAME}\t ID ${i}\t Public IP: ${GPU[${i}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
 	fi
-	i=$((i+1))
+        i=$((i+1))
     done
 }    
 
@@ -985,21 +991,21 @@ gcloud_setup()
 	read SELECT_IMAGE
 
 	if [ "$SELECT_IMAGE" == "" ] || [ "$SELECT_IMAGE" == "centos" ] ; then
-	    IMAGE=centos-7-v20200714
-	    IMAGE_PROJECT=centos-cloud
+	    IMAGE=$IMAGE_CENTOS
+	    IMAGE_PROJECT=$IMAGE_PROJECT_CENTOS
 	elif [ "$SELECT_IMAGE" == "ubuntu" ] ; then
-	    IMAGE=ubuntu-1804-bionic-v20200716
-	    IMAGE_PROJECT=ubuntu-os-cloud
+	    IMAGE=$IMAGE_UBUNTU
+	    IMAGE_PROJECT=$IMAGE_PROJECT_UBUNTU
 	else
 	    echo "Examples of IMAGE are:"
-	    echo "IMAGE=centos-7-v20200714"
-	    echo "IMAGE=ubuntu-1804-bionic-v20200716"
+	    echo "IMAGE=$IMAGE_CENTOS"
+	    echo "IMAGE=$IMAGE_UBUNTU"
 	    echo ""
 	    printf "Enter the IMAGE: "
 	    read IMAGE
 	    echo "Examples of IMAGE/IMAGE_PROJECT are:"
-	    echo "IMAGE_PROJECT=centoos-cloud"
-	    echo "IMAGE_PROJECT=ubuntu-os-cloud"
+	    echo "IMAGE_PROJECT=$IMAGE_PROJECT_CENTOS"
+	    echo "IMAGE_PROJECT=$IMAGE_PROJECT_UBUNTU"
 	    printf "Enter the IMAGE_PROJECT: "
 	    read IMAGE_PROJECT
 	fi
@@ -1154,7 +1160,7 @@ az_get_ips()
             echo -e "${NAME}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
 	fi
         ssh -t -o StrictHostKeyChecking=no ${CPU[${i}]}  "sudo hostnamectl set-hostname ${NAME}.${DNS_PRIVATE_ZONE}"
-	i=$((i+1))
+        i=$((i+1))
         if [ $DEBUG -eq 1 ] ; then
             echo "CPU$i : $PRIVATE_CPU[$i] "
         fi        
@@ -1179,7 +1185,7 @@ az_get_ips()
             echo -e "${NAME}\t Public IP: ${GPU[${i}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
 	fi
         ssh -t -o StrictHostKeyChecking=no ${GPU[${i}]} "sudo hostnamectl set-hostname ${NAME}.${DNS_PRIVATE_ZONE}"
-	i=$((i+1))
+        i=$((i+1))
         if [ $DEBUG -eq 1 ] ; then
             echo "GPU$i : $PRIVATE_GPU[$i] "
         fi        
@@ -2097,7 +2103,7 @@ if [ $NON_INTERACT -eq 0 ] ; then
     display_license
     accept_license
     clear_screen
-    enter_email
+#    enter_email
     enter_cloud
     install_action
     enter_prefix
@@ -2161,6 +2167,7 @@ else
 fi
 
 if [ $SKIP_CREATE -eq 0 ] ; then
+    echo "Creating virtual machine (can take a few minutes) ...."
     if [ $HEAD_GPU -eq 1 ] ; then    
 	create_vm_gpu "head"
     else
@@ -2191,11 +2198,23 @@ echo "Found IP: $IP"
 
 host_ip=$IP
 clear_known_hosts
-
+SSH_CONNECTED=0
+while [ $SSH_CONNECTED -eq 0 ] ; do
+    ssh -t -o StrictHostKeyChecking=no $IP "ls"
+    if [ $? -ne 0 ] ; then
+        echo "Could not successfully ssh to $IP . Retrying...."
+    else
+        echo "Successfully ssh'd to $IP"
+        SSH_CONNECTED=1
+    fi
+    sleep 2
+done
 if [[ "$IMAGE" == *"centos"* ]]; then
     ssh -t -o StrictHostKeyChecking=no $IP "sudo yum install wget -y > /dev/null"
 fi    
-
+if [[ "$IMAGE" == *"ubuntu"* ]]; then
+    ssh -t -o StrictHostKeyChecking=no $IP "apt update"
+fi
 
 echo "Installing installer on $IP"
 scp -o StrictHostKeyChecking=no ./.tmp/hopsworks-installer.sh ${IP}:
@@ -2267,7 +2286,7 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
 	if [ $DEBUG -eq 1 ] ; then
 	    echo "cpu workers: $WORKERS"
 	fi
-	i=$((i+1))
+        i=$((i+1))
     done
 
     i=0
@@ -2296,7 +2315,7 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
 	if [ $DEBUG -eq 1 ] ; then
 	    echo "gpu workers: $WORKERS"
 	fi
-	i=$((i+1))	
+        i=$((i+1))
     done
 
     if [ "$WORKERS" != "-w none " ] ; then
