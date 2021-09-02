@@ -2213,9 +2213,6 @@ done
 if [[ "$IMAGE" == *"centos"* ]]; then
     ssh -t -o StrictHostKeyChecking=no $IP "sudo yum install wget -y > /dev/null"
 fi    
-if [[ "$IMAGE" == *"ubuntu"* ]]; then
-    ssh -t -o StrictHostKeyChecking=no $IP "apt update"
-fi
 
 echo "Installing installer on $IP"
 scp -o StrictHostKeyChecking=no ./.tmp/hopsworks-installer.sh ${IP}:
