@@ -31,9 +31,9 @@ attrs:
     LockPagesInMainMemory: 0
     TotalMemoryConfig: 4G
     NumCPUs: 4
-    diskdata_dir: "/mnt/nvmeDisks/nvme0/"
-    nvme:
-      logfile_size: "10G"
+#    diskdata_dir: "/mnt/nvmeDisks/nvme0/"
+#    nvme:
+#      logfile_size: "10G"
   alertmanager:
     email:
       to: sre@logicalclocks.com
