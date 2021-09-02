@@ -1225,9 +1225,18 @@ if [ $? -ne 0 ] ; then
     if [ "$DISTRO" == "Ubuntu" ] ; then
 	sudo apt update -y
 	sudo apt install openjdk-8-jre-headless -y
+        if [ $? -ne 0 ] ; then
+            exit_error "Error: problem installing java with command 'apt install openjdk-8-jre-headless -y'"
+        fi
     elif [ "${DISTRO,,}" == "centos" ] || [ "${DISTRO,,}" == "os" ] ; then
 	sudo yum install java-1.8.0-openjdk-headless -y
+        if [ $? -ne 0 ] ; then
+            exit_error "Error: problem installing java with command 'yum install java-1.8.0-openjdk-headless -y'"
+        fi
 	sudo yum install wget -y
+        if [ $? -ne 0 ] ; then
+            exit_error "Error: problem installing wget with command 'yum install wget -y'"
+        fi
     else
 	echo "Could not recognize Linux distro: $DISTRO"
 	exit_error
