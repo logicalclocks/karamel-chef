@@ -31,6 +31,9 @@ attrs:
     LockPagesInMainMemory: 0
     TotalMemoryConfig: 4G
     NumCPUs: 4
+    diskdata_dir: "/mnt/nvmeDisks/nvme0/"
+    nvme:
+      logfile_size: "10G"
   alertmanager:
     email:
       to: sre@logicalclocks.com
@@ -39,6 +42,9 @@ attrs:
   prometheus:
       retention_time: "8h"
   hopsworks:
+    hdfs:
+      storage_policy:
+        base: "DB"
     encryption_password: __PWD___001
     master:
       password: __PWD___002
