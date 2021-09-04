@@ -1057,7 +1057,7 @@ gcloud_shutdown_cluster()
 gcloud_restart_cluster()
 {
     vms="$(gcloud compute instances list)"
-    b=$(echo "$vms" | awk '{ print $1 }' | grep -v cpu | grep -v gpu | grep TERMINATED )
+    b=$(echo "$vms" | grep TERMINATED | awk '{ print $1 }' | grep -v cpu | grep -v gpu )
 
     IFS='
 '
@@ -1970,7 +1970,7 @@ shutdown_cluster() {
 restart_cluster() {
     if [ $RESTART_CLUSTER -eq 1 ] ; then
         echo ""
-        echo "Running clusters:"
+        echo "Stopped clusters:"
         if [ "$CLOUD" == "gcp" ] ; then
 	    gcloud_restart_cluster
         elif [ "$CLOUD" == "azure" ] ; then
@@ -2039,8 +2039,8 @@ help()
     echo " [-ni|--non-interactive] skip license/terms acceptance and all confirmation screens."
     echo " [-rm|--remove] Delete a VM - you will be prompted for the name of the VM to delete."
     echo " [-sc|--skip-create] skip creating the VMs, use the existing VM(s) with the same vm_name(s)."
-    echo " [-stop|--stop] stop and shut down the virtual machines for a cluster."
-    echo " [-start|--start] start a cluster that has been stopped."        
+    # echo " [-stop|--stop] stop and shut down the virtual machines for a cluster."
+    # echo " [-start|--start] start a cluster that has been stopped."        
     echo " [-w|--num-cpu-workers num] Number of workers (CPU only) to create for the cluster."
     echo " [-wt|--worker-instance-type compute instance type for worker nodes (lookup name in GCP,Azure)]"
     echo ""
