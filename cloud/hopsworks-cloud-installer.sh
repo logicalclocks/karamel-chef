@@ -1627,6 +1627,7 @@ az_shutdown_cluster()
 
 az_restart_cluster()
 {
+    echo ""
 }
 
 
@@ -1827,7 +1828,6 @@ aws_shutdown_cluster()
 
 aws_restart_cluster()
 {
-
     echo ""
 }
 
