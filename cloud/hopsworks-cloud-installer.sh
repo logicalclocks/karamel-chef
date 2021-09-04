@@ -90,6 +90,9 @@ NUM_WORKERS_GPU=0
 
 CLOUD=
 VM_DELETE=
+SHUTDOWN_CLUSTER=0
+RESTART_CLUSTER=0
+CLUSTER_STOP=
 
 NUM_NVME_DRIVES_PER_WORKER=0
 
@@ -176,7 +179,6 @@ LOCAL_DISK=
 ACCELERATED_NETWORKING=false
 PRIORITY=spot
 PRICE=0.06
-
 
 #################
 # AWS Config
@@ -1023,6 +1025,63 @@ gcloud_list_public_ips()
     gcloud compute instances list 
 }
 
+gcloud_shutdown_cluster()
+{
+    vms="$(gcloud compute instances list)"
+    b=$(echo "$vms" | awk '{ print $1 }' | grep -v cpu | grep -v gpu | grep -v NAME )
+
+    IFS='
+'
+
+    for item in $b
+    do
+        item=${item%head}
+        echo "${item}"
+    done
+
+    echo ""
+    printf "Enter the name of the cluster to stop: "
+    read CLUSTER_STOP
+
+    c=$(echo "$vms" | awk '{ print $1 }' | grep -v NAME  | grep $CLUSTER_STOP)
+    for instance in $c
+    do
+        my_ip=$(echo "$vms" | grep "$instance" | awk '{ print $5 }')
+        echo "Stopping all services on $my_ip ..."
+        ssh $my_ip "sudo /srv/hops/kagent/kagent/bin/shutdown-all-local-services.sh -f"
+        echo "Stopping virtual machine $my_ip ..."        
+        gcloud compute instances stop $instance
+    done
+}
+
+gcloud_restart_cluster()
+{
+    vms="$(gcloud compute instances list)"
+    b=$(echo "$vms" | awk '{ print $1 }' | grep -v cpu | grep -v gpu | grep TERMINATED )
+
+    IFS='
+'
+
+    for item in $b
+    do
+        item=${item%head}
+        echo "${item}"
+    done
+
+    echo ""
+    printf "Enter the name of the cluster to start: "
+    read CLUSTER_START
+
+    head=$(echo "$vms" | awk '{ print $1 }' |  grep -v NAME  | grep $CLUSTER_START | grep head | grep -v cpu | grep -v gpu)
+    gcloud compute instances start $head
+
+    c=$(echo "$vms" | awk '{ print $1 }' |  grep -v NAME  | grep $CLUSTER_START | grep -v head)
+    for instance in $c
+    do
+        echo "Starting virtual machine $my_ip ..."        
+        gcloud compute instances start $instance
+    done
+}
 
 _gcloud_precreate()
 {
@@ -1096,13 +1155,13 @@ _gcloud_create_vm()
 {
     _gcloud_precreate $1
     if [ $DEBUG -eq 1 ] ; then
-	echo "    gcloud compute --project=$PROJECT instances create $NAME --zone=$ZONE --machine-type=$MACHINE_TYPE --subnet=$SUBNET--maintenance-policy=$MAINTENANCE_POLICY $SERVICE_ACCOUNT --no-scopes $ACCELERATOR --tags=$TAGS --image=$IMAGE --image-project=$IMAGE_PROJECT --boot-disk-size=$BOOT_SIZE --boot-disk-type=$BOOT_DISK $LOCAL_DISK --boot-disk-device-name=$NAME --metadata=ssh-keys=\"$ESCAPED_SSH_KEY\"" --guest-os-features MULTI_IP_SUBNET
+	echo "    gcloud compute --project=$PROJECT instances create $NAME --zone=$ZONE --machine-type=$MACHINE_TYPE --subnet=$SUBNET--maintenance-policy=$MAINTENANCE_POLICY $SERVICE_ACCOUNT --no-scopes $ACCELERATOR --tags=$TAGS --image=$IMAGE --image-project=$IMAGE_PROJECT --boot-disk-size=$BOOT_SIZE --boot-disk-type=$BOOT_DISK $LOCAL_DISK --boot-disk-device-name=$NAME --metadata=ssh-keys=\"$ESCAPED_SSH_KEY\"" 
     fi
 
     #  --network-tier=$NETWORK_TIER
     #  --reservation-affinity=$RESERVATION_AFFINITY
     
-    gcloud compute --project=$PROJECT instances create $NAME --zone=$ZONE --machine-type=$MACHINE_TYPE --subnet=$SUBNET --maintenance-policy=$MAINTENANCE_POLICY $SERVICE_ACCOUNT --no-scopes $ACCELERATOR --tags=$TAGS --image=$IMAGE --image-project=$IMAGE_PROJECT --boot-disk-size=$BOOT_SIZE --boot-disk-type=$BOOT_DISK $LOCAL_DISK --boot-disk-device-name=$NAME --metadata=ssh-keys="$ESCAPED_SSH_KEY" --guest-os-features MULTI_IP_SUBNET
+    gcloud compute --project=$PROJECT instances create $NAME --zone=$ZONE --machine-type=$MACHINE_TYPE --subnet=$SUBNET --maintenance-policy=$MAINTENANCE_POLICY $SERVICE_ACCOUNT --no-scopes $ACCELERATOR --tags=$TAGS --image=$IMAGE --image-project=$IMAGE_PROJECT --boot-disk-size=$BOOT_SIZE --boot-disk-type=$BOOT_DISK $LOCAL_DISK --boot-disk-device-name=$NAME --metadata=ssh-keys="$ESCAPED_SSH_KEY"
     if [ $? -ne 0 ] ; then
 	echo "Problem creating VM. Exiting ..."
 	exit 12
@@ -1550,6 +1609,27 @@ az_list_public_ips()
     az vm list-ip-addresses -g $RESOURCE_GROUP --output table #--show-details 
 }
 
+az_shutdown_cluster()
+{
+#    vms="$(gcloud compute instances list)"
+    b=$(echo "$vms" | awk '{ print $1 }' | grep -v cpu | grep -v gpu | grep -v NAME )
+
+    IFS='
+'
+
+    for item in $b
+    do
+        item=${item%head}
+        echo "$item"
+    done
+
+}
+
+az_restart_cluster()
+{
+}
+
+
 _az_precreate()
 {
     az vm list-ip-addresses -g $RESOURCE_GROUP -n $NAME 2>&1 > /dev/null
@@ -1739,6 +1819,18 @@ aws_list_public_ips()
     echo ""
 }
 
+aws_shutdown_cluster()
+{
+
+    echo ""
+}
+
+aws_restart_cluster()
+{
+
+    echo ""
+}
+
 _aws_precreate()
 {
     echo ""
@@ -1853,6 +1945,50 @@ list_public_ips()
     fi    
 }
 
+
+shutdown_cluster() {
+    if [ $SHUTDOWN_CLUSTER -eq 1 ] ; then
+        echo ""
+        echo "Running clusters:"
+        if [ "$CLOUD" == "gcp" ] ; then
+	    gcloud_shutdown_cluster
+        elif [ "$CLOUD" == "azure" ] ; then
+	    az_shutdown_cluster
+        elif [ "$CLOUD" == "aws" ] ; then
+	    aws_shutdown_cluster
+        else
+	    _missing_cloud	
+        fi
+    fi
+    echo ""
+    echo "Finished stopping the cluster. "
+    echo "You can restart the cluster by running the '-start' command with  hopsworks-cloud-installer.sh"
+    echo ""    
+    
+}
+
+restart_cluster() {
+    if [ $RESTART_CLUSTER -eq 1 ] ; then
+        echo ""
+        echo "Running clusters:"
+        if [ "$CLOUD" == "gcp" ] ; then
+	    gcloud_restart_cluster
+        elif [ "$CLOUD" == "azure" ] ; then
+	    az_restart_cluster
+        elif [ "$CLOUD" == "aws" ] ; then
+	    aws_restart_cluster
+        else
+	    _missing_cloud	
+        fi
+    fi
+    echo ""
+    echo "Finished starting the cluster. "
+    echo ""    
+    
+}
+
+
+
 cloud_setup()
 {
 
@@ -1903,6 +2039,8 @@ help()
     echo " [-ni|--non-interactive] skip license/terms acceptance and all confirmation screens."
     echo " [-rm|--remove] Delete a VM - you will be prompted for the name of the VM to delete."
     echo " [-sc|--skip-create] skip creating the VMs, use the existing VM(s) with the same vm_name(s)."
+    echo " [-stop|--stop] stop and shut down the virtual machines for a cluster."
+    echo " [-start|--start] start a cluster that has been stopped."        
     echo " [-w|--num-cpu-workers num] Number of workers (CPU only) to create for the cluster."
     echo " [-wt|--worker-instance-type compute instance type for worker nodes (lookup name in GCP,Azure)]"
     echo ""
@@ -2058,6 +2196,14 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	-sc|--skip-create)
       	    SKIP_CREATE=1
             ;;
+	-stop|--stop)
+	    NON_INTERACT=1            
+      	    SHUTDOWN_CLUSTER=1
+            ;;
+	-start|--start)
+	    NON_INTERACT=1            
+      	    RESTART_CLUSTER=1
+            ;;
 	-p|--http-proxy)
             shift
             PROXY=$1
@@ -2093,6 +2239,17 @@ if [ "$RM_TYPE" != "" ] ; then
     delete_vm
     exit 0
 fi    
+
+if [ $SHUTDOWN_CLUSTER -eq 1 ] ; then
+    shutdown_cluster
+    exit 0
+fi    
+
+if [ $RESTART_CLUSTER -eq 1 ] ; then
+    restart_cluster
+    exit 0
+fi    
+
 
 if [ $DRY_RUN -eq 1 ] ; then
     NON_INTERACT=1
