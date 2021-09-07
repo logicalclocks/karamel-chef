@@ -2141,10 +2141,6 @@ help()
     echo " [-ni|--non-interactive] skip license/terms acceptance and all confirmation screens."
     echo " [-rm|--remove] Delete a VM - you will be prompted for the name of the VM to delete."
     echo " [-sc|--skip-create] skip creating the VMs, use the existing VM(s) with the same vm_name(s)."
-    echo " [-stop|--stop] stop and shut down the virtual machines for a cluster."
-    echo " [-start|--start] start a cluster that has been stopped."        
-    echo " [-suspend|--suspend] (GCP Only) suspend the virtual machines for a cluster (GCP-only, no attached SSDs)."
-    echo " [-resume|--resume] (GCP Only) resume a cluster that has been suspended."        
     echo " [-w|--num-cpu-workers num] Number of workers (CPU only) to create for the cluster."
     echo " [-wt|--worker-instance-type compute instance type for worker nodes (lookup name in GCP,Azure)]"
     echo ""
@@ -2156,6 +2152,10 @@ help()
     echo ""
     echo "GCP options"
     echo " [-nvme|--nvme num_disks] the number of disks to attach to each worker node"	          
+    echo " [-stop|--stop] stop and shut down the virtual machines for a cluster."
+    echo " [-start|--start] start a cluster that has been stopped."        
+    echo " [-suspend|--suspend] (GCP Only) suspend the virtual machines for a cluster (GCP-only, no attached SSDs)."
+    echo " [-resume|--resume] (GCP Only) resume a cluster that has been suspended."        
     exit 3
 
 }
