@@ -93,6 +93,8 @@ VM_DELETE=
 SHUTDOWN_CLUSTER=0
 RESTART_CLUSTER=0
 CLUSTER_STOP=
+SUSPEND_CLUSTER=0
+RESUME_CLUSTER=0
 
 NUM_NVME_DRIVES_PER_WORKER=0
 
@@ -1083,6 +1085,65 @@ gcloud_restart_cluster()
     done
 }
 
+gcloud_suspend_cluster()
+{
+    vms="$(gcloud compute instances list)"
+    b=$(echo "$vms" | awk '{ print $1 }' | grep -v cpu | grep -v gpu | grep -v NAME )
+
+    IFS='
+'
+
+    for item in $b
+    do
+        item=${item%head}
+        echo "${item}"
+    done
+
+    echo ""
+    printf "Enter the name of the cluster to stop: "
+    read CLUSTER_STOP
+
+    c=$(echo "$vms" | awk '{ print $1 }' | grep -v NAME  | grep $CLUSTER_STOP)
+    for instance in $c
+    do
+        echo "Suspending virtual machine $instance ..."        
+        gcloud beta compute instances suspend $instance
+    done
+}
+
+
+gcloud_resume_cluster()
+{
+    vms="$(gcloud compute instances list)"
+    b=$(echo "$vms" | grep SUSPEND | awk '{ print $1 }' | grep -v cpu | grep -v gpu )
+
+    IFS='
+'
+
+    for item in $b
+    do
+        item=${item%head}
+        echo "${item}"
+    done
+
+    echo ""
+    printf "Enter the name of the cluster to resume: "
+    read CLUSTER_START
+
+    head=$(echo "$vms" | awk '{ print $1 }' |  grep -v NAME  | grep $CLUSTER_START | grep head | grep -v cpu | grep -v gpu)
+    gcloud beta compute instances resume $head
+
+    c=$(echo "$vms" | awk '{ print $1 }' |  grep -v NAME  | grep $CLUSTER_START | grep -v head)
+    for instance in $c
+    do
+        echo "Starting virtual machine $my_ip ..."        
+        gcloud beta compute instances resume $instance
+    done
+}
+
+
+
+
 _gcloud_precreate()
 {
     VM_IP=$(gcloud compute instances list | grep $NAME | awk '{ print $5 }')
@@ -1949,7 +2010,7 @@ list_public_ips()
 shutdown_cluster() {
     if [ $SHUTDOWN_CLUSTER -eq 1 ] ; then
         echo ""
-        echo "Running clusters:"
+        echo "Looking up currently running clusters..."
         if [ "$CLOUD" == "gcp" ] ; then
 	    gcloud_shutdown_cluster
         elif [ "$CLOUD" == "azure" ] ; then
@@ -1962,7 +2023,7 @@ shutdown_cluster() {
     fi
     echo ""
     echo "Finished stopping the cluster. "
-    echo "You can restart the cluster by running the '-start' command with  hopsworks-cloud-installer.sh"
+    echo "You can restart the cluster by running the hopsworks-cloud-installer.sh script with the '-start' switch."
     echo ""    
     
 }
@@ -1983,9 +2044,51 @@ restart_cluster() {
     fi
     echo ""
     echo "Finished starting the cluster. "
+    echo ""        
+}
+
+suspend_cluster() {
+    if [ $SUSPEND_CLUSTER -eq 1 ] ; then
+        echo ""
+        echo "Looking up currently running clusters..."
+        if [ "$CLOUD" == "gcp" ] ; then
+	    gcloud_suspend_cluster
+        elif [ "$CLOUD" == "azure" ] ; then
+            exit_error "No supported on Azure"
+        elif [ "$CLOUD" == "aws" ] ; then
+            exit_error "No supported on AWS"
+        else
+	    _missing_cloud	
+        fi
+    fi
+    echo ""
+    echo "Finished suspending the cluster. "
+    echo "You can resume the cluster by running the hopsworks-cloud-installer.sh script with the '-resume' switch."
     echo ""    
     
 }
+
+
+resume_cluster() {
+    if [ $RESUME_CLUSTER -eq 1 ] ; then
+        echo ""
+        echo "Looking up currently running clusters..."
+        if [ "$CLOUD" == "gcp" ] ; then
+	    gcloud_resume_cluster
+        elif [ "$CLOUD" == "azure" ] ; then
+            exit_error "No supported on Azure"
+        elif [ "$CLOUD" == "aws" ] ; then
+            exit_error "No supported on AWS"
+        else
+	    _missing_cloud	
+        fi
+    fi
+    echo ""
+    echo "Finished resumeing the cluster. "
+    echo ""    
+    
+}
+
 
 
 
@@ -2039,8 +2142,10 @@ help()
     echo " [-ni|--non-interactive] skip license/terms acceptance and all confirmation screens."
     echo " [-rm|--remove] Delete a VM - you will be prompted for the name of the VM to delete."
     echo " [-sc|--skip-create] skip creating the VMs, use the existing VM(s) with the same vm_name(s)."
-    # echo " [-stop|--stop] stop and shut down the virtual machines for a cluster."
-    # echo " [-start|--start] start a cluster that has been stopped."        
+    echo " [-stop|--stop] stop and shut down the virtual machines for a cluster."
+    echo " [-start|--start] start a cluster that has been stopped."        
+    echo " [-suspend|--suspend] (GCP Only) suspend the virtual machines for a cluster (GCP-only, no attached SSDs)."
+    echo " [-resume|--resume] (GCP Only) resume a cluster that has been suspended."        
     echo " [-w|--num-cpu-workers num] Number of workers (CPU only) to create for the cluster."
     echo " [-wt|--worker-instance-type compute instance type for worker nodes (lookup name in GCP,Azure)]"
     echo ""
@@ -2204,6 +2309,18 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	    NON_INTERACT=1            
       	    RESTART_CLUSTER=1
             ;;
+	-suspend|--suspend)
+	    NON_INTERACT=1            
+      	    SUSPEND_CLUSTER=1
+            ;;
+	-resume|--resume)
+	    NON_INTERACT=1            
+      	    RESUME_CLUSTER=1
+            ;;
+	-start|--start)
+	    NON_INTERACT=1            
+      	    RESUME_CLUSTER=1
+            ;;
 	-p|--http-proxy)
             shift
             PROXY=$1
@@ -2249,6 +2366,25 @@ if [ $RESTART_CLUSTER -eq 1 ] ; then
     restart_cluster
     exit 0
 fi    
+
+if [ $SUSPEND_CLUSTER -eq 1 ] ; then
+    if [ "$CLOUD" != "gcp" ] ; then
+        echo "VM suspend is only support on GCP, currently."
+        exit 12
+    fi
+    suspend_cluster
+    exit 0
+fi    
+
+if [ $RESUME_CLUSTER -eq 1 ] ; then
+    if [ "$CLOUD" != "gcp" ] ; then
+        echo "VM suspend is only support on GCP, currently."
+        exit 12
+    fi
+    resume_cluster
+    exit 0
+fi    
+
 
 
 if [ $DRY_RUN -eq 1 ] ; then
