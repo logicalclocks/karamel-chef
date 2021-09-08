@@ -6,7 +6,7 @@
 # http://www.gnu.org/licenses/gpl-3.0.txt                                                         #
 #                                                                                                 #
 #                                                                                                 #
-# Copyright (c) Logical Clocks AB, 2020.                                                          #
+# Copyright (c) Logical Clocks AB, 2021.                                                          #
 # All Rights Reserved.                                                                            #
 #                                                                                                 #
 ###################################################################################################
@@ -252,7 +252,7 @@ splash_screen()
 {
     clear
     echo ""
-    echo "Karamel/Hopsworks Cloud Installer, Copyright(C) 2020 Logical Clocks AB. All rights reserved."
+    echo "Karamel/Hopsworks Cloud Installer, Copyright(C) 2021 Logical Clocks AB. All rights reserved."
     echo ""
     echo "This program creates VMs on GCP/Azure/AWS and installs Hopsworks on the VMs."
     echo ""
@@ -294,7 +294,7 @@ display_license()
     echo "This code is released under the GNU General Public License, Version 3, see:"
     echo "http://www.gnu.org/licenses/gpl-3.0.txt"
     echo ""
-    echo "Copyright(C) 2020 Logical Clocks AB. All rights reserved."
+    echo "Copyright(C) 2021 Logical Clocks AB. All rights reserved."
     echo "Logical Clocks AB is furnishing this item \"as is\". Logical Clocks AB does not provide any"
     echo "warranty of the item whatsoever, whether express, implied, or statutory,"
     echo "including, but not limited to, any warranty of merchantability or fitness"
