@@ -32,7 +32,7 @@
 #                                                                                                 #
 ###################################################################################################
 
-HOPSWORKS_INSTALLER_VERSION=2.3
+HOPSWORKS_INSTALLER_VERSION=master
 CLUSTER_DEFINITION_VERSION=$HOPSWORKS_INSTALLER_VERSION
 HOPSWORKS_INSTALLER_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_INSTALLER_VERSION
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$CLUSTER_DEFINITION_VERSION
@@ -132,7 +132,7 @@ BOOT_SIZE_GBS=150
 RAW_SSH_KEY="${USER}:$(cat ~/.ssh/id_rsa.pub)"
 #printf -v ESCAPED_SSH_KEY "%q\n" "$RAW_SSH_KEY"
 ESCAPED_SSH_KEY="$RAW_SSH_KEY"
-TAGS=http-server,https-server,karamel
+TAGS=http-server,https-server,karamel,featurestore
 
 ACTION=
 
@@ -962,7 +962,6 @@ gcloud_setup()
 	check_gcp_tools
     fi
     
-    TAGS=http-server,https-server,karamel
     SUBNET=default
     NETWORK_TIER=PREMIUM
     MAINTENANCE_POLICY=TERMINATE
@@ -2155,7 +2154,14 @@ help()
     echo " [-stop|--stop] stop and shut down the virtual machines for a cluster."
     echo " [-start|--start] start a cluster that has been stopped."        
     echo " [-suspend|--suspend] (GCP Only) suspend the virtual machines for a cluster (GCP-only, no attached SSDs)."
-    echo " [-resume|--resume] (GCP Only) resume a cluster that has been suspended."        
+    echo " [-resume|--resume] (GCP Only) resume a cluster that has been suspended."
+    echo ""
+    echo "To track installation progress and fix issues with Karamel, open the port:"
+    echo ""\t 9090"
+    echo ""
+    echo "Hopsworks Feature Store Python clients need access to the following ports:
+    echo "\t 443, 8020, 9083, 9085, 50010"
+    echo ""
     exit 3
 
 }

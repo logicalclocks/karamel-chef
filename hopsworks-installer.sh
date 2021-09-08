@@ -28,7 +28,7 @@
 ###################################################################################################
 
 HOPSWORKS_REPO=logicalclocks/hopsworks-chef
-HOPSWORKS_BRANCH=2.3
+HOPSWORKS_BRANCH=master
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_BRANCH
 KARAMEL_VERSION=0.6
 ENTERPRISE_DOWNLOAD_URL=https://nexus.hops.works/repository
@@ -375,6 +375,13 @@ $INSTALL_AS_DAEMON_HELP\n
     \tHopsworks will run at the end of the installation.\n
 (3) Setup, install, and run Karamel on this host. \n
     \tKaramel can be used to install Hopsworks by opening the URL in your browser: http://${ip}:9090/index.html \n
+
+This installer has a Web UI available on the following port: \n
+\t 9090 \n
+
+
+The following ports should be opened for external Python access to the Hopsworks Feature Store: \n
+\t 443, 8020, 9083, 9085, 50010 \n
 "
 }
 
