@@ -2157,10 +2157,10 @@ help()
     echo " [-resume|--resume] (GCP Only) resume a cluster that has been suspended."
     echo ""
     echo "To track installation progress and fix issues with Karamel, open the port:"
-    echo ""\t 9090"
+    echo "   9090"
     echo ""
-    echo "Hopsworks Feature Store Python clients need access to the following ports:
-    echo "\t 443, 8020, 9083, 9085, 50010"
+    echo "Hopsworks Feature Store Python clients need access to the following ports:"
+    echo "   443, 8020, 9083, 9085, 50010"
     echo ""
     exit 3
 
