@@ -1,0 +1,47 @@
+name: Ndb
+baremetal:
+    username: jdowling
+
+cookbooks:
+  hopsworks:
+    github: jimdowling/ndb-chef
+    branch: master
+
+attrs:
+  install:
+    dir: /srv/hops
+    cloud: gcp
+  ndb:
+    new_node_ids: "3,4"
+    update: "true"
+    MaxNoOfExecutionThreads: 6
+    DataMemory: 2650
+    NoOfReplicas: 2
+    ndbd:
+      ips_ids: ['10.0.0.5:1','10.0.0.6:2','10.0.0.7:3','10.0.0.8:4']
+  kagent:
+    enabled: false
+groups:
+  metaserver:
+    size: 1
+    baremetal:
+      ip: 10.0.0.4
+    recipes:
+      - ndb::mgmd
+      - ndb::mr1
+      - ndb::rrdone
+  worker0:
+    size: 1
+    baremetal:
+      ip: 10.0.0.5
+    recipes:
+      - ndb::rr1
+      - ndb::mr2
+  worker1:
+    size: 1
+    baremetal:
+      ip: 10.0.0.6
+    recipes:
+      - ndb::rr2
+      - ndb::mr3
+

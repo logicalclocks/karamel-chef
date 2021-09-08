@@ -7,7 +7,7 @@ ec2:
 cookbooks:
   hops:
     github: "logicalclocks/hops-hadoop-chef"
-    branch: "2.3"
+    branch: "master"
 
 attrs:
   install:
