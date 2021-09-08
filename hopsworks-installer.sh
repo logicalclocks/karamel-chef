@@ -375,6 +375,13 @@ $INSTALL_AS_DAEMON_HELP\n
     \tHopsworks will run at the end of the installation.\n
 (3) Setup, install, and run Karamel on this host. \n
     \tKaramel can be used to install Hopsworks by opening the URL in your browser: http://${ip}:9090/index.html \n
+
+This installer has a Web UI available on the following port: \n
+\t 9090 \n
+
+
+The following ports should be opened for external Python access to the Hopsworks Feature Store: \n
+\t 443, 8020, 9083, 9085, 50010 \n
 "
 }
 
@@ -1223,11 +1230,24 @@ which java > /dev/null
 if [ $? -ne 0 ] ; then
     echo "Installing Java..."
     if [ "$DISTRO" == "Ubuntu" ] ; then
-	sudo apt update -y
-	sudo apt install openjdk-8-jre-headless -y
+	sudo apt update -y && sudo apt install openjdk-8-jre-headless -y
+        if [ $? -ne 0 ] ; then
+            echo "Retrying to install java...."
+            sudo apt update -y
+            sudo apt install openjdk-8-jre-headless -y
+            if [ $? -ne 0 ] ; then
+                exit_error "Error: problem installing java with command 'apt install openjdk-8-jre-headless -y'"
+            fi
+        fi
     elif [ "${DISTRO,,}" == "centos" ] || [ "${DISTRO,,}" == "os" ] ; then
 	sudo yum install java-1.8.0-openjdk-headless -y
+        if [ $? -ne 0 ] ; then
+            exit_error "Error: problem installing java with command 'yum install java-1.8.0-openjdk-headless -y'"
+        fi
 	sudo yum install wget -y
+        if [ $? -ne 0 ] ; then
+            exit_error "Error: problem installing wget with command 'yum install wget -y'"
+        fi
     else
 	echo "Could not recognize Linux distro: $DISTRO"
 	exit_error
