@@ -32,7 +32,7 @@
 #                                                                                                 #
 ###################################################################################################
 
-HOPSWORKS_INSTALLER_VERSION=master
+HOPSWORKS_INSTALLER_VERSION=2.3
 CLUSTER_DEFINITION_VERSION=$HOPSWORKS_INSTALLER_VERSION
 HOPSWORKS_INSTALLER_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_INSTALLER_VERSION
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$CLUSTER_DEFINITION_VERSION
@@ -89,6 +89,11 @@ NUM_WORKERS_GPU=0
 
 CLOUD=
 VM_DELETE=
+SHUTDOWN_CLUSTER=0
+RESTART_CLUSTER=0
+CLUSTER_STOP=
+SUSPEND_CLUSTER=0
+RESUME_CLUSTER=0
 
 NUM_NVME_DRIVES_PER_WORKER=0
 
@@ -102,8 +107,14 @@ ENTERPRISE_DOWNLOAD_URL="https://nexus.hops.works/repository"
 #################
 REGION=us-east1
 ZONE=us-east1-c
-IMAGE=centos-7-v20200910
-IMAGE_PROJECT=centos-cloud
+IMAGE_CENTOS=centos-7-v20210817
+IMAGE_PROJECT_CENTOS=centos-cloud
+IMAGE_UBUNTU=ubuntu-1804-bionic-v20210825
+IMAGE_PROJECT_UBUNTU=ubuntu-os-cloud
+IMAGE=$IMAGE_UBUNTU
+IMAGE_PROJECT=$IMAGE_PROJECT_UBUNTU
+
+
 MACHINE_TYPE=n1-standard-8
 NAME=
 PROJECT=
@@ -169,7 +180,6 @@ LOCAL_DISK=
 ACCELERATED_NETWORKING=false
 PRIORITY=spot
 PRICE=0.06
-
 
 #################
 # AWS Config
@@ -561,6 +571,7 @@ enter_prefix()
 
 download_installer() {
 
+    rm -rf .tmp
     mkdir -p .tmp
     cd .tmp
     
@@ -603,7 +614,7 @@ add_worker()
     WORKER_GPUS=$1
     
     if [ "$WORKER_GPUS" -gt "0" ] ; then
-	if [ $i -lt 10 ] ; then
+	if [ $sz -lt 10 ] ; then
 	    set_name "gpu0${GPU_WORKER_ID}"
 	else
 	    set_name "gpu${GPU_WORKER_ID}"
@@ -611,7 +622,7 @@ add_worker()
         create_vm_gpu "worker"
         GPU_WORKER_ID=$((GPU_WORKER_ID+1))
     else
-	if [ $i -lt 10 ] ; then
+	if [ $sz -lt 10 ] ; then
 	    set_name "cpu0${CPU_WORKER_ID}"
 	else
 	    set_name "cpu${CPU_WORKER_ID}"
@@ -633,15 +644,17 @@ cpu_worker_size()
 	    fi
 	fi
     fi
-    i=0
-    while [ $i -lt $NUM_WORKERS_CPU ] ;
+    
+    sz=0
+    while [ $sz -lt $NUM_WORKERS_CPU ] ;
     do
 	if [ $DEBUG -eq 1 ] ; then
-	    echo "Adding CPU worker ${i}"
+	    echo "Adding CPU worker ${sz}"
 	    echo ""
 	fi
 	add_worker 0
-	i=$((i+1))
+        ((sz++))
+        echo "Num workers left: $sz from $NUM_WORKERS_CPU"
     done
 }
 
@@ -662,16 +675,16 @@ gpu_worker_size()
 	NUM_WORKERS_GPU=0
     fi
     
-    i=0
-    while [ $i -lt $NUM_WORKERS_GPU ] ;
+    sz=0
+    while [ $sz -lt $NUM_WORKERS_GPU ] ;
     do
 	if [ $DEBUG -eq 1 ] ; then	
-	    echo "Adding GPU worker $i"
+	    echo "Adding GPU worker $sz"
 	    echo ""
 	fi
         select_gpu "worker"
 	add_worker $NUM_GPUS_PER_VM 
-	i=$((i+1))
+        ((sz++))
     done
 }
 
@@ -782,21 +795,18 @@ _check_deletion()
 gcloud_get_ips()
 {
     MY_IPS=$(gcloud compute instances list | grep "$PREFIX")
+
+    set_name "head"
+    
+    IP=$(echo "$MY_IPS" | grep "^${NAME}" | awk '{ print $5 }')    
     if [ $DEBUG -eq 1 ] ; then
 	echo "MY_IPS: "
 	echo "$MY_IPS"
-    fi
-    set_name "head"
-    if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
-	set_name "cpu"
-    elif [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then
-	set_name "gpu"
+        echo "${NAME} IP: ${IP}"
     fi
     
-    IP=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
-
     sleep 3
-    cpus_gpus
+    cpus_gpus 
 
     i=0
     while [ $i -lt $CPUS ] ; 
@@ -806,10 +816,11 @@ gcloud_get_ips()
 	else
 	    set_name "cpu${i}"	    
 	fi
-	CPU[$i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
-	PRIVATE_CPU[$i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
+        echo "Name: $NAME"        
+	CPU[$i]=$(echo "$MY_IPS" | grep "^${NAME}" | awk '{ print $5 }')
+	PRIVATE_CPU[$i]=$(echo "$MY_IPS" | grep "^${NAME}" | awk '{ print $4 }')
 	if [ $DEBUG -eq 1 ] ; then
-            echo -e "${NAME}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
+            echo -e "${NAME}\t ID ${i}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
 	fi	    
         i=$((i+1))
     done
@@ -822,13 +833,13 @@ gcloud_get_ips()
 	else
 	    set_name "gpu${i}"	    
 	fi
-	GPU[$i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
-	PRIVATE_GPU[$i]=$(echo $MY_IPS | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
+	GPU[$i]=$(echo "$MY_IPS" | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//"| awk '{ print $5 }')
+	PRIVATE_GPU[$i]=$(echo "$MY_IPS" | sed -e "s/.*${NAME}/${NAME}/" | sed -e "s/RUNNING.*//" | awk '{ print $4 }')
 	if [ $DEBUG -eq 1 ] ; then	
 	    echo "Worker gpu${i} : GPU[$i]"	
-            echo -e "${NAME}\t Public IP: ${GPU[${i}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
+            echo -e "${NAME}\t ID ${i}\t Public IP: ${GPU[${i}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
 	fi
-	i=$((i+1))
+        i=$((i+1))
     done
 }    
 
@@ -984,21 +995,21 @@ gcloud_setup()
 	read SELECT_IMAGE
 
 	if [ "$SELECT_IMAGE" == "" ] || [ "$SELECT_IMAGE" == "centos" ] ; then
-	    IMAGE=centos-7-v20200714
-	    IMAGE_PROJECT=centos-cloud
+	    IMAGE=$IMAGE_CENTOS
+	    IMAGE_PROJECT=$IMAGE_PROJECT_CENTOS
 	elif [ "$SELECT_IMAGE" == "ubuntu" ] ; then
-	    IMAGE=ubuntu-1804-bionic-v20200716
-	    IMAGE_PROJECT=ubuntu-os-cloud
+	    IMAGE=$IMAGE_UBUNTU
+	    IMAGE_PROJECT=$IMAGE_PROJECT_UBUNTU
 	else
 	    echo "Examples of IMAGE are:"
-	    echo "IMAGE=centos-7-v20200714"
-	    echo "IMAGE=ubuntu-1804-bionic-v20200716"
+	    echo "IMAGE=$IMAGE_CENTOS"
+	    echo "IMAGE=$IMAGE_UBUNTU"
 	    echo ""
 	    printf "Enter the IMAGE: "
 	    read IMAGE
 	    echo "Examples of IMAGE/IMAGE_PROJECT are:"
-	    echo "IMAGE_PROJECT=centoos-cloud"
-	    echo "IMAGE_PROJECT=ubuntu-os-cloud"
+	    echo "IMAGE_PROJECT=$IMAGE_PROJECT_CENTOS"
+	    echo "IMAGE_PROJECT=$IMAGE_PROJECT_UBUNTU"
 	    printf "Enter the IMAGE_PROJECT: "
 	    read IMAGE_PROJECT
 	fi
@@ -1014,6 +1025,122 @@ gcloud_list_public_ips()
 {    
     gcloud compute instances list 
 }
+
+gcloud_shutdown_cluster()
+{
+    vms="$(gcloud compute instances list)"
+    b=$(echo "$vms" | awk '{ print $1 }' | grep -v cpu | grep -v gpu | grep -v NAME )
+
+    IFS='
+'
+
+    for item in $b
+    do
+        item=${item%head}
+        echo "${item}"
+    done
+
+    echo ""
+    printf "Enter the name of the cluster to stop: "
+    read CLUSTER_STOP
+
+    c=$(echo "$vms" | awk '{ print $1 }' | grep -v NAME  | grep $CLUSTER_STOP)
+    for instance in $c
+    do
+        my_ip=$(echo "$vms" | grep "$instance" | awk '{ print $5 }')
+        echo "Stopping all services on $my_ip ..."
+        ssh $my_ip "sudo /srv/hops/kagent/kagent/bin/shutdown-all-local-services.sh -f"
+        echo "Stopping virtual machine $my_ip ..."        
+        gcloud compute instances stop $instance
+    done
+}
+
+gcloud_restart_cluster()
+{
+    vms="$(gcloud compute instances list)"
+    b=$(echo "$vms" | grep TERMINATED | awk '{ print $1 }' | grep -v cpu | grep -v gpu )
+
+    IFS='
+'
+
+    for item in $b
+    do
+        item=${item%head}
+        echo "${item}"
+    done
+
+    echo ""
+    printf "Enter the name of the cluster to start: "
+    read CLUSTER_START
+
+    head=$(echo "$vms" | awk '{ print $1 }' |  grep -v NAME  | grep $CLUSTER_START | grep head | grep -v cpu | grep -v gpu)
+    gcloud compute instances start $head
+
+    c=$(echo "$vms" | awk '{ print $1 }' |  grep -v NAME  | grep $CLUSTER_START | grep -v head)
+    for instance in $c
+    do
+        echo "Starting virtual machine $my_ip ..."        
+        gcloud compute instances start $instance
+    done
+}
+
+gcloud_suspend_cluster()
+{
+    vms="$(gcloud compute instances list)"
+    b=$(echo "$vms" | awk '{ print $1 }' | grep -v cpu | grep -v gpu | grep -v NAME )
+
+    IFS='
+'
+
+    for item in $b
+    do
+        item=${item%head}
+        echo "${item}"
+    done
+
+    echo ""
+    printf "Enter the name of the cluster to stop: "
+    read CLUSTER_STOP
+
+    c=$(echo "$vms" | awk '{ print $1 }' | grep -v NAME  | grep $CLUSTER_STOP)
+    for instance in $c
+    do
+        echo "Suspending virtual machine $instance ..."        
+        gcloud beta compute instances suspend $instance
+    done
+}
+
+
+gcloud_resume_cluster()
+{
+    vms="$(gcloud compute instances list)"
+    b=$(echo "$vms" | grep SUSPEND | awk '{ print $1 }' | grep -v cpu | grep -v gpu )
+
+    IFS='
+'
+
+    for item in $b
+    do
+        item=${item%head}
+        echo "${item}"
+    done
+
+    echo ""
+    printf "Enter the name of the cluster to resume: "
+    read CLUSTER_START
+
+    head=$(echo "$vms" | awk '{ print $1 }' |  grep -v NAME  | grep $CLUSTER_START | grep head | grep -v cpu | grep -v gpu)
+    gcloud beta compute instances resume $head
+
+    c=$(echo "$vms" | awk '{ print $1 }' |  grep -v NAME  | grep $CLUSTER_START | grep -v head)
+    for instance in $c
+    do
+        echo "Starting virtual machine $my_ip ..."        
+        gcloud beta compute instances resume $instance
+    done
+}
+
+
 
 
 _gcloud_precreate()
@@ -1088,7 +1215,7 @@ _gcloud_create_vm()
 {
     _gcloud_precreate $1
     if [ $DEBUG -eq 1 ] ; then
-	echo "    gcloud compute --project=$PROJECT instances create $NAME --zone=$ZONE --machine-type=$MACHINE_TYPE --subnet=$SUBNET--maintenance-policy=$MAINTENANCE_POLICY $SERVICE_ACCOUNT --no-scopes $ACCELERATOR --tags=$TAGS --image=$IMAGE --image-project=$IMAGE_PROJECT --boot-disk-size=$BOOT_SIZE --boot-disk-type=$BOOT_DISK $LOCAL_DISK --boot-disk-device-name=$NAME --metadata=ssh-keys=\"$ESCAPED_SSH_KEY\""
+	echo "    gcloud compute --project=$PROJECT instances create $NAME --zone=$ZONE --machine-type=$MACHINE_TYPE --subnet=$SUBNET--maintenance-policy=$MAINTENANCE_POLICY $SERVICE_ACCOUNT --no-scopes $ACCELERATOR --tags=$TAGS --image=$IMAGE --image-project=$IMAGE_PROJECT --boot-disk-size=$BOOT_SIZE --boot-disk-type=$BOOT_DISK $LOCAL_DISK --boot-disk-device-name=$NAME --metadata=ssh-keys=\"$ESCAPED_SSH_KEY\"" 
     fi
 
     #  --network-tier=$NETWORK_TIER
@@ -1153,7 +1280,7 @@ az_get_ips()
             echo -e "${NAME}\t Public IP: ${CPU[${i}]} \t Private IP: ${PRIVATE_CPU[${i}]}"
 	fi
         ssh -t -o StrictHostKeyChecking=no ${CPU[${i}]}  "sudo hostnamectl set-hostname ${NAME}.${DNS_PRIVATE_ZONE}"
-	i=$((i+1))
+        i=$((i+1))
         if [ $DEBUG -eq 1 ] ; then
             echo "CPU$i : $PRIVATE_CPU[$i] "
         fi        
@@ -1178,7 +1305,7 @@ az_get_ips()
             echo -e "${NAME}\t Public IP: ${GPU[${i}]} \t Private IP: ${PRIVATE_GPU[${i}]}"
 	fi
         ssh -t -o StrictHostKeyChecking=no ${GPU[${i}]} "sudo hostnamectl set-hostname ${NAME}.${DNS_PRIVATE_ZONE}"
-	i=$((i+1))
+        i=$((i+1))
         if [ $DEBUG -eq 1 ] ; then
             echo "GPU$i : $PRIVATE_GPU[$i] "
         fi        
@@ -1542,6 +1669,28 @@ az_list_public_ips()
     az vm list-ip-addresses -g $RESOURCE_GROUP --output table #--show-details 
 }
 
+az_shutdown_cluster()
+{
+#    vms="$(gcloud compute instances list)"
+    b=$(echo "$vms" | awk '{ print $1 }' | grep -v cpu | grep -v gpu | grep -v NAME )
+
+    IFS='
+'
+
+    for item in $b
+    do
+        item=${item%head}
+        echo "$item"
+    done
+
+}
+
+az_restart_cluster()
+{
+    echo ""
+}
+
+
 _az_precreate()
 {
     az vm list-ip-addresses -g $RESOURCE_GROUP -n $NAME 2>&1 > /dev/null
@@ -1731,6 +1880,17 @@ aws_list_public_ips()
     echo ""
 }
 
+aws_shutdown_cluster()
+{
+
+    echo ""
+}
+
+aws_restart_cluster()
+{
+    echo ""
+}
+
 _aws_precreate()
 {
     echo ""
@@ -1845,6 +2005,92 @@ list_public_ips()
     fi    
 }
 
+
+shutdown_cluster() {
+    if [ $SHUTDOWN_CLUSTER -eq 1 ] ; then
+        echo ""
+        echo "Looking up currently running clusters..."
+        if [ "$CLOUD" == "gcp" ] ; then
+	    gcloud_shutdown_cluster
+        elif [ "$CLOUD" == "azure" ] ; then
+	    az_shutdown_cluster
+        elif [ "$CLOUD" == "aws" ] ; then
+	    aws_shutdown_cluster
+        else
+	    _missing_cloud	
+        fi
+    fi
+    echo ""
+    echo "Finished stopping the cluster. "
+    echo "You can restart the cluster by running the hopsworks-cloud-installer.sh script with the '-start' switch."
+    echo ""    
+    
+}
+
+restart_cluster() {
+    if [ $RESTART_CLUSTER -eq 1 ] ; then
+        echo ""
+        echo "Stopped clusters:"
+        if [ "$CLOUD" == "gcp" ] ; then
+	    gcloud_restart_cluster
+        elif [ "$CLOUD" == "azure" ] ; then
+	    az_restart_cluster
+        elif [ "$CLOUD" == "aws" ] ; then
+	    aws_restart_cluster
+        else
+	    _missing_cloud	
+        fi
+    fi
+    echo ""
+    echo "Finished starting the cluster. "
+    echo ""        
+}
+
+suspend_cluster() {
+    if [ $SUSPEND_CLUSTER -eq 1 ] ; then
+        echo ""
+        echo "Looking up currently running clusters..."
+        if [ "$CLOUD" == "gcp" ] ; then
+	    gcloud_suspend_cluster
+        elif [ "$CLOUD" == "azure" ] ; then
+            exit_error "No supported on Azure"
+        elif [ "$CLOUD" == "aws" ] ; then
+            exit_error "No supported on AWS"
+        else
+	    _missing_cloud	
+        fi
+    fi
+    echo ""
+    echo "Finished suspending the cluster. "
+    echo "You can resume the cluster by running the hopsworks-cloud-installer.sh script with the '-resume' switch."
+    echo ""    
+    
+}
+
+
+resume_cluster() {
+    if [ $RESUME_CLUSTER -eq 1 ] ; then
+        echo ""
+        echo "Looking up currently running clusters..."
+        if [ "$CLOUD" == "gcp" ] ; then
+	    gcloud_resume_cluster
+        elif [ "$CLOUD" == "azure" ] ; then
+            exit_error "No supported on Azure"
+        elif [ "$CLOUD" == "aws" ] ; then
+            exit_error "No supported on AWS"
+        else
+	    _missing_cloud	
+        fi
+    fi
+    echo ""
+    echo "Finished resumeing the cluster. "
+    echo ""    
+    
+}
+
+
+
+
 cloud_setup()
 {
 
@@ -1906,6 +2152,10 @@ help()
     echo ""
     echo "GCP options"
     echo " [-nvme|--nvme num_disks] the number of disks to attach to each worker node"	          
+    echo " [-stop|--stop] stop and shut down the virtual machines for a cluster."
+    echo " [-start|--start] start a cluster that has been stopped."        
+    echo " [-suspend|--suspend] (GCP Only) suspend the virtual machines for a cluster (GCP-only, no attached SSDs)."
+    echo " [-resume|--resume] (GCP Only) resume a cluster that has been suspended."        
     exit 3
 
 }
@@ -2050,6 +2300,26 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	-sc|--skip-create)
       	    SKIP_CREATE=1
             ;;
+	-stop|--stop)
+	    NON_INTERACT=1            
+      	    SHUTDOWN_CLUSTER=1
+            ;;
+	-start|--start)
+	    NON_INTERACT=1            
+      	    RESTART_CLUSTER=1
+            ;;
+	-suspend|--suspend)
+	    NON_INTERACT=1            
+      	    SUSPEND_CLUSTER=1
+            ;;
+	-resume|--resume)
+	    NON_INTERACT=1            
+      	    RESUME_CLUSTER=1
+            ;;
+	-start|--start)
+	    NON_INTERACT=1            
+      	    RESUME_CLUSTER=1
+            ;;
 	-p|--http-proxy)
             shift
             PROXY=$1
@@ -2086,6 +2356,36 @@ if [ "$RM_TYPE" != "" ] ; then
     exit 0
 fi    
 
+if [ $SHUTDOWN_CLUSTER -eq 1 ] ; then
+    shutdown_cluster
+    exit 0
+fi    
+
+if [ $RESTART_CLUSTER -eq 1 ] ; then
+    restart_cluster
+    exit 0
+fi    
+
+if [ $SUSPEND_CLUSTER -eq 1 ] ; then
+    if [ "$CLOUD" != "gcp" ] ; then
+        echo "VM suspend is only support on GCP, currently."
+        exit 12
+    fi
+    suspend_cluster
+    exit 0
+fi    
+
+if [ $RESUME_CLUSTER -eq 1 ] ; then
+    if [ "$CLOUD" != "gcp" ] ; then
+        echo "VM suspend is only support on GCP, currently."
+        exit 12
+    fi
+    resume_cluster
+    exit 0
+fi    
+
+
+
 if [ $DRY_RUN -eq 1 ] ; then
     NON_INTERACT=1
 fi    
@@ -2096,7 +2396,7 @@ if [ $NON_INTERACT -eq 0 ] ; then
     display_license
     accept_license
     clear_screen
-    enter_email
+#    enter_email
     enter_cloud
     install_action
     enter_prefix
@@ -2160,6 +2460,7 @@ else
 fi
 
 if [ $SKIP_CREATE -eq 0 ] ; then
+    echo "Creating virtual machine (can take a few minutes) ...."
     if [ $HEAD_GPU -eq 1 ] ; then    
 	create_vm_gpu "head"
     else
@@ -2190,11 +2491,20 @@ echo "Found IP: $IP"
 
 host_ip=$IP
 clear_known_hosts
-
+SSH_CONNECTED=0
+while [ $SSH_CONNECTED -eq 0 ] ; do
+    ssh -t -o StrictHostKeyChecking=no $IP "ls"
+    if [ $? -ne 0 ] ; then
+        echo "Could not successfully ssh to $IP . Retrying...."
+    else
+        echo "Successfully ssh'd to $IP"
+        SSH_CONNECTED=1
+    fi
+    sleep 2
+done
 if [[ "$IMAGE" == *"centos"* ]]; then
     ssh -t -o StrictHostKeyChecking=no $IP "sudo yum install wget -y > /dev/null"
 fi    
-
 
 echo "Installing installer on $IP"
 scp -o StrictHostKeyChecking=no ./.tmp/hopsworks-installer.sh ${IP}:
@@ -2251,6 +2561,14 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
 	clear_known_hosts
 
 	ssh-copy-id -o StrictHostKeyChecking=no -f -i $keyfile ${CPU[${i}]}
+        RES=$?
+        while [ $RES -ne 0 ] ;
+        do
+           echo "Retrying copying public key for head node to ${CPU[${i}]}"
+           ssh-copy-id -o StrictHostKeyChecking=no -f -i $keyfile ${CPU[${i}]}
+           RES=$?
+        done
+        
 	ssh -t -o StrictHostKeyChecking=no $IP "ssh -t -o StrictHostKeyChecking=no ${PRIVATE_CPU[${i}]} \"pwd\""
 	if [ $? -ne 0 ] ; then
 	    echo ""
@@ -2266,7 +2584,7 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
 	if [ $DEBUG -eq 1 ] ; then
 	    echo "cpu workers: $WORKERS"
 	fi
-	i=$((i+1))
+        i=$((i+1))
     done
 
     i=0
@@ -2295,7 +2613,7 @@ if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
 	if [ $DEBUG -eq 1 ] ; then
 	    echo "gpu workers: $WORKERS"
 	fi
-	i=$((i+1))	
+        i=$((i+1))
     done
 
     if [ "$WORKERS" != "-w none " ] ; then

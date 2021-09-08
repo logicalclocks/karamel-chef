@@ -28,7 +28,7 @@
 ###################################################################################################
 
 HOPSWORKS_REPO=logicalclocks/hopsworks-chef
-HOPSWORKS_BRANCH=master
+HOPSWORKS_BRANCH=2.3
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_BRANCH
 KARAMEL_VERSION=0.6
 ENTERPRISE_DOWNLOAD_URL=https://nexus.hops.works/repository
@@ -1223,11 +1223,24 @@ which java > /dev/null
 if [ $? -ne 0 ] ; then
     echo "Installing Java..."
     if [ "$DISTRO" == "Ubuntu" ] ; then
-	sudo apt update -y
-	sudo apt install openjdk-8-jre-headless -y
+	sudo apt update -y && sudo apt install openjdk-8-jre-headless -y
+        if [ $? -ne 0 ] ; then
+            echo "Retrying to install java...."
+            sudo apt update -y
+            sudo apt install openjdk-8-jre-headless -y
+            if [ $? -ne 0 ] ; then
+                exit_error "Error: problem installing java with command 'apt install openjdk-8-jre-headless -y'"
+            fi
+        fi
     elif [ "${DISTRO,,}" == "centos" ] || [ "${DISTRO,,}" == "os" ] ; then
 	sudo yum install java-1.8.0-openjdk-headless -y
+        if [ $? -ne 0 ] ; then
+            exit_error "Error: problem installing java with command 'yum install java-1.8.0-openjdk-headless -y'"
+        fi
 	sudo yum install wget -y
+        if [ $? -ne 0 ] ; then
+            exit_error "Error: problem installing wget with command 'yum install wget -y'"
+        fi
     else
 	echo "Could not recognize Linux distro: $DISTRO"
 	exit_error
