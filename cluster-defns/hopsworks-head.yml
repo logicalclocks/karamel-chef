@@ -42,9 +42,9 @@ attrs:
   prometheus:
       retention_time: "8h"
   hopsworks:
-#    hdfs:
-#      storage_policy:
-#        base: "DB"
+    hdfs:
+      storage_policy:
+        base: "DB"
     encryption_password: __PWD___001
     master:
       password: __PWD___002
