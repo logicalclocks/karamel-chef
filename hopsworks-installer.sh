@@ -44,6 +44,7 @@ AVAILABLE_DISK=${AVAILABLE_DISK%.*}
 AVAILABLE_MNT=$(df -h | grep '/mnt' | awk '{ print $4 }')
 AVAILABLE_MNT=${AVAILABLE_MNT%.*}
 AVAILABLE_CPUS=$(cat /proc/cpuinfo | grep '^processor' | wc -l)
+FILE_SYSTEM=$(df -Th | grep '/$' | awk '{ print $2 }')
 IP=$(hostname -I | awk '{ print $1 }')
 HOSTNAME=$(hostname -f)
 DISTRO=
@@ -186,6 +187,7 @@ splash_screen()
     echo "* available disk space (under '/mnt' partition): $AVAILABLE_MNT"
     echo "* available CPUs: $AVAILABLE_CPUS"
     echo "* available GPUS: $AVAILABLE_GPUS"
+    echo "* file system: $FILE_SYSTEM"    
     echo "* your ip is: $IP"
     echo "* installation user: $USER"
     echo "* linux distro: $DISTRO"
@@ -237,6 +239,13 @@ splash_screen()
 	echo ""
     fi
 
+    if [ "$FILE_SYSTEM" != "ext4" ] ; then
+	echo ""
+	echo "WARNING: Hopsworks installer only supports 'ext4' as a file system."
+	echo "If you want to install Hopsworks on 'zfs' or 'xfs', contact www.logicalclocks.com for Enterprise support."        
+	echo ""
+    fi
+    
     which dig > /dev/null
     if [ $? -ne 0 ] ; then
 	echo "Installing dig..."
