@@ -135,5 +135,6 @@ groups:
       - consul::master
       - hops::docker_registry
       - hops::fuse_mnt
+      - hopslog::_filebeat-services      
       - onlinefs      
 __KUBERNETES_RECIPES__
