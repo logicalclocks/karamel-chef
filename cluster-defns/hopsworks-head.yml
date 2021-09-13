@@ -1,6 +1,5 @@
 name: Hops
-baremetal:
-    username: __USER__
+baremetal: username: __USER__
 
 cookbooks:
   hopsworks:
@@ -114,6 +113,7 @@ groups:
       - hopslog::_filebeat-spark
       - hopslog::_filebeat-serving
       - hopslog::_filebeat-jupyter      
+      - hopslog::_filebeat-services
       - hops::dn
       - tensorflow
       - hive2

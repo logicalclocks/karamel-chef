@@ -17,6 +17,7 @@
       - hadoop_spark::yarn
       - flink::yarn
       - hopslog::_filebeat-spark
+      - hopslog::_filebeat-services
       - tensorflow
       - hopsmonitor::node_exporter
       - livy::install
