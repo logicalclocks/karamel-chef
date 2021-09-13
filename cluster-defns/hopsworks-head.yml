@@ -125,6 +125,7 @@ groups:
       - hopsmonitor::node_exporter
       - consul::master
       - hops::docker_registry
+      - hops::airflow_mnt
       - hops::fuse_mnt
       - hopslog::_filebeat-services      
       - onlinefs      
