@@ -119,13 +119,13 @@ groups:
       - hive2
       - hops_airflow
       - hops_airflow::sqoop
+      - hops::airflow_mnt      
       - hopsmonitor      
       - hopsmonitor::prometheus
       - hopsmonitor::alertmanager
       - hopsmonitor::node_exporter
       - consul::master
       - hops::docker_registry
-      - hops::airflow_mnt
       - hops::fuse_mnt
       - hopslog::_filebeat-services      
       - onlinefs      
