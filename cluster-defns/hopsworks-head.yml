@@ -1,6 +1,6 @@
 name: Hops
 baremetal:
-    username: __USER__
+  username: __USER__
 
 cookbooks:
   hopsworks:
