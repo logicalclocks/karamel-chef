@@ -112,6 +112,10 @@ groups:
       - tensorflow
       - hive2
       - hops_airflow
+<<<<<<< HEAD
+=======
+      - hops_airflow::sqoop
+>>>>>>> f0c21c6 (Added a rstudio head example cluster defn)
       - hopsmonitor      
       - hopsmonitor::prometheus
       - hopsmonitor::alertmanager
