@@ -63,6 +63,8 @@ attrs:
       mysql_password: __PWD___203
   mysql:
       password: __PWD___202
+  airflow:
+      mysql_password: __PWD___204
   elastic:
     opendistro_security:
       jwt:
