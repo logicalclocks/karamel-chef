@@ -28,8 +28,6 @@
 ###################################################################################################
 
 HOPSWORKS_REPO=logicalclocks/hopsworks-chef
-#HOPSWORKS_REPO=jimdowling/hopsworks-chef
-#HOPSWORKS_BRANCH=master
 HOPSWORKS_BRANCH=upgrade_flink_1_13_2
 
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_BRANCH
@@ -684,8 +682,8 @@ enter_email()
 	exit 1
     fi
 
-    #curl -H "Content-type:application/json" --data @.details http://karamel.io:8443/keyword --connect-timeout 10 > /dev/null 2>&1
-    CREDENTIALS=$(curl -H "Content-type:application/json" --data @.details http://karamel.io:8443/keyword --connect-timeout 10)
+    curl -H "Content-type:application/json" --data @.details http://www.karamel.io:443/keyword --connect-timeout 10 > /dev/null 2>&1
+    CREDENTIALS=$(curl -H "Content-type:application/json" --data @.details http://karamel.io:443/keyword --connect-timeout 10)
     ENTERPRISE_USERNAME=$(echo $CREDENTIALS | cut -d ":" -f1)
     ENTERPRISE_PASSWORD=$(echo $CREDENTIALS | cut -d ":" -f2)
 
@@ -1569,6 +1567,10 @@ $NODE_MANAGER_HEAD"
 	echo ""
 	echo "====================================================================="
 	echo ""
+        echo "The cluster definition for this installation (including passwords) is available here:"
+        echo ""
+        echo "/home/$USER/cluster-defns${YML_FILE}"
+        echo ""
 	echo "You can view the installation logs with this command:"
 	echo ""
 	echo "tail -f installation.log"

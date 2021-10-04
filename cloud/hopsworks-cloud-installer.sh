@@ -132,7 +132,7 @@ BOOT_SIZE_GBS=150
 RAW_SSH_KEY="${USER}:$(cat ~/.ssh/id_rsa.pub)"
 #printf -v ESCAPED_SSH_KEY "%q\n" "$RAW_SSH_KEY"
 ESCAPED_SSH_KEY="$RAW_SSH_KEY"
-TAGS=http-server,https-server,karamel,featurestore
+TAGS=http-server,https-server,karamel,featurestore,airflow
 
 ACTION=
 
