@@ -65,6 +65,7 @@ groups:
       - hive2
       - kagent::dev
       - hopslog::_filebeat-serving
+      - hopslog::_filebeat-services
       - hopslog::_filebeat-jupyter
       - hops_airflow
       - hops_airflow::sqoop
@@ -94,6 +95,7 @@ groups:
       - hadoop_spark::yarn
       - flink::yarn
       - hopslog::_filebeat-spark
+      - hopslog::_filebeat-services
       - tensorflow
       - hopsmonitor::node_exporter
       - elastic
@@ -117,6 +119,7 @@ groups:
       - hadoop_spark::yarn
       - flink::yarn
       - hopslog::_filebeat-spark
+      - hopslog::_filebeat-services
       - tensorflow
       - hopsmonitor::node_exporter
       - consul::slave
