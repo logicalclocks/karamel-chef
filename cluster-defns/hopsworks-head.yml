@@ -26,7 +26,7 @@ attrs:
     rmappsecurity:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
   ndb:
-    __NDB_NVME__  
+    __NDBNVME__  
     NoOfReplicas: 1
     LockPagesInMainMemory: 0
     TotalMemoryConfig: 4G
@@ -126,5 +126,6 @@ groups:
       - consul::master
       - hops::docker_registry
 #      - hops::fuse_mnt
+      - hopslog::_filebeat-services      
       - onlinefs      
 __KUBERNETES_RECIPES__
