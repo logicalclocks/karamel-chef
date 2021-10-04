@@ -79,3 +79,11 @@ bash "Add swap" do
   EOF
   not_if 'swapon --bytes | grep NAME'
 end
+
+bash "Temporary fix expired Let's Encrypt CA" do
+  user "root"
+  group "root"
+  code <<-EOF
+    sed -ie '/DST Root CA X3/,+19d' /opt/chef/embedded/ssl/certs/cacert.pem
+  EOF
+end
