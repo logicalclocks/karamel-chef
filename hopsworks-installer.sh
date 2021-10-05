@@ -6,7 +6,7 @@
 # http://www.gnu.org/licenses/gpl-3.0.txt                                                         #
 #                                                                                                 #
 #                                                                                                 #
-# Copyright (c) Logical Clocks AB, 2020.                                                          #
+# Copyright (c) Logical Clocks AB, 2020/2021.                                                     #
 # All Rights Reserved.                                                                            #
 #                                                                                                 #
 ###################################################################################################
@@ -29,6 +29,7 @@
 
 HOPSWORKS_REPO=logicalclocks/hopsworks-chef
 HOPSWORKS_BRANCH=master
+
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_BRANCH
 KARAMEL_VERSION=0.6
 ENTERPRISE_DOWNLOAD_URL=https://nexus.hops.works/repository
@@ -43,6 +44,7 @@ AVAILABLE_DISK=${AVAILABLE_DISK%.*}
 AVAILABLE_MNT=$(df -h | grep '/mnt' | awk '{ print $4 }')
 AVAILABLE_MNT=${AVAILABLE_MNT%.*}
 AVAILABLE_CPUS=$(cat /proc/cpuinfo | grep '^processor' | wc -l)
+FILE_SYSTEM=$(df -Th | grep '/$' | awk '{ print $2 }')
 IP=$(hostname -I | awk '{ print $1 }')
 HOSTNAME=$(hostname -f)
 DISTRO=
@@ -173,7 +175,7 @@ splash_screen()
 {
     clear
     echo ""
-    echo "Karamel/Hopsworks Installer, Copyright(C) 2020 Logical Clocks AB. All rights reserved."
+    echo "Karamel/Hopsworks Installer, Copyright(C) 2021 Logical Clocks AB. All rights reserved."
     echo ""
     echo "This program can install Karamel/Chef and/or Hopsworks."
     echo ""
@@ -185,6 +187,7 @@ splash_screen()
     echo "* available disk space (under '/mnt' partition): $AVAILABLE_MNT"
     echo "* available CPUs: $AVAILABLE_CPUS"
     echo "* available GPUS: $AVAILABLE_GPUS"
+    echo "* file system: $FILE_SYSTEM"    
     echo "* your ip is: $IP"
     echo "* installation user: $USER"
     echo "* linux distro: $DISTRO"
@@ -236,6 +239,13 @@ splash_screen()
 	echo ""
     fi
 
+    if [ "$FILE_SYSTEM" != "ext4" ] ; then
+	echo ""
+	echo "WARNING: Hopsworks installer only supports 'ext4' as a file system."
+	echo "If you want to install Hopsworks on 'zfs' or 'xfs', contact www.logicalclocks.com for Enterprise support."        
+	echo ""
+    fi
+    
     which dig > /dev/null
     if [ $? -ne 0 ] ; then
 	echo "Installing dig..."
@@ -323,7 +333,7 @@ display_license()
     echo "This code is released under the GNU General Public License, Version 3, see:"
     echo "http://www.gnu.org/licenses/gpl-3.0.txt"
     echo ""
-    echo "Copyright(C) 2020 Logical Clocks AB. All rights reserved."
+    echo "Copyright(C) 2021 Logical Clocks AB. All rights reserved."
     echo "Logical Clocks AB is furnishing this item \"as is\". Logical Clocks AB does not provide any"
     echo "warranty of the item whatsoever, whether express, implied, or statutory,"
     echo "including, but not limited to, any warranty of merchantability or fitness"
@@ -672,8 +682,8 @@ enter_email()
 	exit 1
     fi
 
-    #curl -H "Content-type:application/json" --data @.details http://karamel.io:8443/keyword --connect-timeout 10 > /dev/null 2>&1
-    CREDENTIALS=$(curl -H "Content-type:application/json" --data @.details http://karamel.io:8443/keyword --connect-timeout 10)
+    curl -H "Content-type:application/json" --data @.details http://www.karamel.io:443/keyword --connect-timeout 10 > /dev/null 2>&1
+    CREDENTIALS=$(curl -H "Content-type:application/json" --data @.details http://karamel.io:443/keyword --connect-timeout 10)
     ENTERPRISE_USERNAME=$(echo $CREDENTIALS | cut -d ":" -f1)
     ENTERPRISE_PASSWORD=$(echo $CREDENTIALS | cut -d ":" -f2)
 
@@ -1557,6 +1567,10 @@ $NODE_MANAGER_HEAD"
 	echo ""
 	echo "====================================================================="
 	echo ""
+        echo "The cluster definition for this installation (including passwords) is available here:"
+        echo ""
+        echo "/home/$USER/cluster-defns${YML_FILE}"
+        echo ""
 	echo "You can view the installation logs with this command:"
 	echo ""
 	echo "tail -f installation.log"

@@ -1,11 +1,11 @@
 name: Hops
 baremetal:
-  username: __USER__
+    username: __USER__
 
 cookbooks:
   hopsworks:
-    github: __GITHUB__
-    branch: __BRANCH__
+    github: gibchikafa/hopsworks-chef
+    branch: HopsworksRstudio
 
 attrs:
   __DOWNLOAD__
@@ -31,9 +31,6 @@ attrs:
     LockPagesInMainMemory: 0
     TotalMemoryConfig: 4G
     NumCPUs: 4
-#    diskdata_dir: "/mnt/nvmeDisks/nvme0/"
-#    nvme:
-#      logfile_size: "10G"
   alertmanager:
     email:
       to: sre@logicalclocks.com
@@ -42,9 +39,6 @@ attrs:
   prometheus:
       retention_time: "8h"
   hopsworks:
-#    hdfs:
-#      storage_policy:
-#        base: "DB"
     encryption_password: __PWD___001
     master:
       password: __PWD___002
@@ -63,8 +57,6 @@ attrs:
       mysql_password: __PWD___203
   mysql:
       password: __PWD___202
-  airflow:
-      mysql_password: __PWD___204
   elastic:
     opendistro_security:
       jwt:
@@ -116,18 +108,16 @@ groups:
       - hopslog::_filebeat-spark
       - hopslog::_filebeat-serving
       - hopslog::_filebeat-jupyter      
-      - hopslog::_filebeat-services
       - hops::dn
       - tensorflow
       - hive2
       - hops_airflow
+      - hops_airflow::sqoop
       - hopsmonitor      
       - hopsmonitor::prometheus
       - hopsmonitor::alertmanager
       - hopsmonitor::node_exporter
       - consul::master
       - hops::docker_registry
-#      - hops::fuse_mnt
-      - hopslog::_filebeat-services      
       - onlinefs      
 __KUBERNETES_RECIPES__
