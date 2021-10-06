@@ -127,7 +127,7 @@ groups:
       - hopsmonitor::node_exporter
       - consul::master
       - hops::docker_registry
-      - hops::fuse_mnt
+#      - hops::fuse_mnt
       - hopslog::_filebeat-services      
       - onlinefs      
 __KUBERNETES_RECIPES__
