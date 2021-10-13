@@ -68,7 +68,6 @@ groups:
       - hopslog::_filebeat-services
       - hopslog::_filebeat-jupyter
       - hops_airflow
-      - hops_airflow::sqoop
       - hopsmonitor::prometheus
       - hopsmonitor::alertmanager
       - hopsmonitor::node_exporter
