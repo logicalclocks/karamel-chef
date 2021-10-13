@@ -2082,7 +2082,7 @@ resume_cluster() {
         fi
     fi
     echo ""
-    echo "Finished resumeing the cluster. "
+    echo "Finished resuming the cluster. "
     echo ""    
     
 }
