@@ -28,7 +28,8 @@
 ###################################################################################################
 
 HOPSWORKS_REPO=logicalclocks/hopsworks-chef
-HOPSWORKS_BRANCH=airflow_fuse
+HOPSWORKS_BRANCH=opendistr_1_13_2
+#HOPSWORKS_BRANCH=airflow_fuse
 
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_BRANCH
 KARAMEL_VERSION=0.6
