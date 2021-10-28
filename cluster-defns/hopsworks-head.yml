@@ -42,7 +42,6 @@ attrs:
   prometheus:
       retention_time: "8h"
   hopsworks:
-    download_url: https://nexus.hops.works/repository/dev/jim/hopsworks
     hdfs:
       storage_policy:
         base: "DB"
