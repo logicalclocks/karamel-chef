@@ -27,9 +27,8 @@
 #                                                                                                 #
 ###################################################################################################
 
-#HOPSWORKS_REPO=logicalclocks/hopsworks-chef
-HOPSWORKS_REPO=maismail/hopsworks-chef
-HOPSWORKS_BRANCH="2763"
+HOPSWORKS_REPO=logicalclocks/hopsworks-chef
+HOPSWORKS_BRANCH=opensearch
 
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_BRANCH
 KARAMEL_VERSION=0.6
