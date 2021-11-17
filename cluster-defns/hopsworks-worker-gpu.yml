@@ -21,3 +21,4 @@
       - hopsmonitor::node_exporter
       - livy::install
       - consul::slave
+      - hopslog::_filebeat-services
