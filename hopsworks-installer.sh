@@ -28,7 +28,7 @@
 ###################################################################################################
 
 HOPSWORKS_REPO=logicalclocks/hopsworks-chef
-HOPSWORKS_BRANCH=master
+HOPSWORKS_BRANCH=2.5
 
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_BRANCH
 KARAMEL_VERSION=0.6
@@ -1302,7 +1302,7 @@ fi
 
 if [ ! -d karamel-${KARAMEL_VERSION} ] ; then
     echo "Installing Karamel..."
-    wget -nc https://repo.hops.works/master/karamel-${KARAMEL_VERSION}.tgz
+    wget --no-check-certificate -nc https://repo.hops.works/master/karamel-${KARAMEL_VERSION}.tgz
     if [ $? -ne 0 ] ; then
 	exit_error "Problem downloading karamel"
     fi
