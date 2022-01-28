@@ -2402,7 +2402,7 @@ if [ $NON_INTERACT -eq 0 ] ; then
     display_license
     accept_license
     clear_screen
-#    enter_email
+    enter_email
     enter_cloud
     install_action
     enter_prefix
