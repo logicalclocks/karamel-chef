@@ -32,7 +32,7 @@
 #                                                                                                 #
 ###################################################################################################
 
-HOPSWORKS_INSTALLER_VERSION=opendistr_1_13_2
+HOPSWORKS_INSTALLER_VERSION=master
 CLUSTER_DEFINITION_VERSION=$HOPSWORKS_INSTALLER_VERSION
 HOPSWORKS_INSTALLER_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_INSTALLER_VERSION
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$CLUSTER_DEFINITION_VERSION
@@ -2402,7 +2402,7 @@ if [ $NON_INTERACT -eq 0 ] ; then
     display_license
     accept_license
     clear_screen
-#    enter_email
+    enter_email
     enter_cloud
     install_action
     enter_prefix
