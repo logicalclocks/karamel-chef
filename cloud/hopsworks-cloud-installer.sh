@@ -2082,7 +2082,7 @@ resume_cluster() {
         fi
     fi
     echo ""
-    echo "Finished resumeing the cluster. "
+    echo "Finished resuming the cluster. "
     echo ""    
     
 }
@@ -2402,7 +2402,7 @@ if [ $NON_INTERACT -eq 0 ] ; then
     display_license
     accept_license
     clear_screen
-#    enter_email
+    enter_email
     enter_cloud
     install_action
     enter_prefix
