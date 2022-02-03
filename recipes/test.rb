@@ -150,13 +150,7 @@ when 'ubuntu'
     environment ({'PATH' => "#{ENV['PATH']}:/usr/bin/ruby2.5:/srv/hops/mysql/bin",
                   'LD_LIBRARY_PATH' => "#{ENV['LD_LIBRARY_PATH']}:/srv/hops/mysql/lib",
                   'JAVA_HOME' => "/usr/lib/jvm/default-java"})
-    if node['test']['hopsworks']['it']
-      # Run integration tests
-      code <<-EOH
-      bundle install
-      rspec --format RspecJunitFormatter --out #{node['test']['hopsworks']['report_dir']}/ubuntu.xml --pattern "**{,/*/**}/*it_spec.rb"
-      EOH
-    elsif ::File.file?("#{node['test']['hopsworks']['test_dir']}/lambo_rspec.py")
+    if ::File.file?("#{node['test']['hopsworks']['test_dir']}/lambo_rspec.py")
       # Hardcode this for the moment so that we are able to keep the old testing in parallel
       code <<-EOH
         bundle install
@@ -166,7 +160,7 @@ when 'ubuntu'
       # Run regular ruby tests, excluding integration tests
       code <<-EOH
       bundle install
-      rspec --format RspecJunitFormatter --out #{node['test']['hopsworks']['report_dir']}/ubuntu.xml --exclude-pattern '*it_spec.rb'
+      rspec --format RspecJunitFormatter --out #{node['test']['hopsworks']['report_dir']}/ubuntu.xml
       EOH
     end
   end
@@ -215,14 +209,7 @@ when 'centos'
               'HOME' => "/home/vagrant",
               'JAVA_HOME' => "/usr/lib/jvm/java"})
 
-    if node['test']['hopsworks']['it']
-      # Run integration tests
-      code <<-EOH
-      set -e
-      bundle install
-      rspec --format RspecJunitFormatter --out #{node['test']['hopsworks']['report_dir']}/centos.xml --pattern "**{,/*/**}/*it_spec.rb"
-      EOH
-    elsif ::File.file?("#{node['test']['hopsworks']['test_dir']}/lambo_rspec.py")
+    if ::File.file?("#{node['test']['hopsworks']['test_dir']}/lambo_rspec.py")
       # Hardcode this for the moment so that we are able to keep the old testing in parallel
       code <<-EOH
         bundle install
@@ -233,7 +220,7 @@ when 'centos'
       code <<-EOH
       set -e
       bundle install
-      rspec --format RspecJunitFormatter --out #{node['test']['hopsworks']['report_dir']}/centos.xml --exclude-pattern '*it_spec.rb'
+      rspec --format RspecJunitFormatter --out #{node['test']['hopsworks']['report_dir']}/centos.xml
       EOH
     end
   end
