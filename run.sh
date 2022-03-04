@@ -128,6 +128,8 @@ function deploy_ear() {
       cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
     fi
 
+    echo ""
+    echo ""
     echo "You can redeploy your ear on Vagrant after you follow these instructions: "
     echo "On dev4.hops.works:"
     echo ""
@@ -159,7 +161,6 @@ function ssh_config() {
     echo "Host dev4"
     echo "  Hostname dev4.hops.works"
     echo "  User $USER"
-    echo ""
     echo "Host vagrant"
     echo "  Hostname dev4.hops.works"
     echo "  User $USER"
@@ -342,7 +343,4 @@ parse_ports
 deploy_ear
 ssh_config
 
-echo ""
-echo "Connect your browser to: http://$(hostname):${http_port}/hopsworks"
-echo ""
 exit 0
