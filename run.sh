@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function help() {
-  echo "Usage: ./run.sh [centos|ubuntu|ports|ssh-config] [1|3] [ndb|hopsworks|hops|jim|antonios|theofilos|demodela|etc] [no-random-ports] [udp-hack]"
+  echo "Usage: ./run.sh [centos|ubuntu|ports|ssh-config|deploy-ear] [1|3] [ndb|hopsworks|hops|jim|antonios||etc] [no-random-ports] [udp-hack]"
   echo ""
   echo "Create your own cluster definition from an existing one:"
   echo "cp cluster.1.hopsworks cluster.1.jim"
@@ -17,7 +17,7 @@ function help() {
 port=
 forwarded_port=
 ports=
-#http_port=8080
+
 
 VBOX_MANAGE=/usr/bin/VBoxManage
 OCTETS="192.168."
@@ -119,6 +119,40 @@ function parse_ports() {
 	count=$(($count + 1))
     done
 }
+
+function deploy_ear() {
+    
+    ssh_key=$(cat ${HOME}/.ssh/id_rsa.pub)
+    grep $ssh_key ~/.ssh/authorized_keys >/dev/null 2>&1
+    if [ $? -ne 0 ] ; then
+      cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+    fi
+
+#    echo "1. change unit file to start in debug mode"
+#    vagrant ssh "sudo sed -i \"s/-debug false/-debug true/\" /lib/systemd/system/glassfish-domain1.service"
+#    echo "2. reload systemd unit files"
+#    vagrant ssh "sudo systemctl daemon-reload"
+#    echo "3. restart glassfish"
+#    echo "Restarting glassfish in debug mode. This will take 5 mins...."
+#    vagrant ssh "sudo systemctl restart glassfish-domain1"
+
+    echo "You can redeploy your ear on Vagrant after you follow these instructions: "
+    echo "On dev4.hops.works:"
+    echo ""
+    echo "mkdir Projects"
+    echo "cd Projects"
+    echo "# Change this from jimdowling to your private github repo"
+    echo "git clone git@github.com:jimdowling/hopsworks-ee.git"
+    echo "cd Projects/hopsworks-ee"
+    echo "mvn clean install -Pkube,web,jupyter-git -DskipTests"
+    echo ""
+    echo "cd ~/karamel-chef"
+    echo "vagrant ssh"
+    echo "#now on vagrant, copies the hopsworks-ear.ear file from dev4, and deploys it to glassfish"
+    echo "./deploy-ear.sh"
+    echo ""
+}
+
 
 function ssh_config() {
     echo "=========================================="
@@ -222,6 +256,11 @@ if [ "$1" == "ssh-config" ] ; then
  exit 0
 fi
 
+if [ "$1" == "deploy-ear" ] ; then
+ deploy_ear
+ exit 0
+fi
+
 
 if [ $# -lt 3 ] ; then
     help
@@ -266,7 +305,7 @@ fi
 cp vagrantfiles/Vagrantfile.$1.$2 Vagrantfile
 cp cluster-defns/$2.$3.yml cluster.yml
 
-cp -f cloud/deploy-ear.sh .deploy.sh
+cp -f scripts/deploy-ear.sh .deploy.sh
 sed -i "s/__USER__/$USER/g" .deploy.sh
 
 if [ $PORTS -eq 1 ] ; then

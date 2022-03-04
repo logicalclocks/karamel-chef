@@ -6,11 +6,11 @@ VERSION="2.6.0-SNAPSHOT"
 cd /tmp
 
 rm -f hopsworks-*
-scp ${USER}@dev4.hops.works:~/Projects/hopsworks-ee/hopsworks-ear/target/*.ear .
+scp -i ~/.ssh/id_rsa_dev ${USER}@dev4.hops.works:~/Projects/hopsworks-ee/hopsworks-ear/target/*.ear .
 
 if [ "$1" == "war" ] ; then 
   rm -f hopsworks*.war
-  scp ${USER}@dev4.hops.works:~/Projects/hopsworks-ee/hopsworks-web/target/*.war .
+  scp -i ~/.ssh/id_rsa_dev ${USER}@dev4.hops.works:~/Projects/hopsworks-ee/hopsworks-web/target/*.war .
 fi
 
 sudo su glassfish <<EOF
