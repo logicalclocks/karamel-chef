@@ -138,6 +138,7 @@ function deploy_ear() {
     echo "# Change this from jimdowling to your private github repo"
     echo "git clone git@github.com:jimdowling/hopsworks-ee.git"
     echo "cd Projects/hopsworks-ee"
+    echo "./scripts/allow-cors.sh"
     echo "mvn clean install -Pkube,web,jupyter-git -DskipTests"
     echo ""
     echo "cd ~/karamel-chef"
