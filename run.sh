@@ -128,14 +128,6 @@ function deploy_ear() {
       cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
     fi
 
-#    echo "1. change unit file to start in debug mode"
-#    vagrant ssh "sudo sed -i \"s/-debug false/-debug true/\" /lib/systemd/system/glassfish-domain1.service"
-#    echo "2. reload systemd unit files"
-#    vagrant ssh "sudo systemctl daemon-reload"
-#    echo "3. restart glassfish"
-#    echo "Restarting glassfish in debug mode. This will take 5 mins...."
-#    vagrant ssh "sudo systemctl restart glassfish-domain1"
-
     echo "You can redeploy your ear on Vagrant after you follow these instructions: "
     echo "On dev4.hops.works:"
     echo ""
@@ -347,6 +339,8 @@ if [ $UDP_HACK -eq 1 ]; then
 fi
 
 parse_ports
+deploy_ear
+ssh_config
 
 echo ""
 echo "Connect your browser to: http://$(hostname):${http_port}/hopsworks"
