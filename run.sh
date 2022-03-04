@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function help() {
-  echo "Usage: ./run.sh [centos|ubuntu|ports|demodela] [1|3] [ndb|hopsworks|hops|jim|antonios|theofilos|demodela|etc] [no-random-ports] [udp-hack]"
+  echo "Usage: ./run.sh [centos|ubuntu|ports|ssh-config] [1|3] [ndb|hopsworks|hops|jim|antonios|theofilos|demodela|etc] [no-random-ports] [udp-hack]"
   echo ""
   echo "Create your own cluster definition from an existing one:"
   echo "cp cluster.1.hopsworks cluster.1.jim"
@@ -120,6 +120,71 @@ function parse_ports() {
     done
 }
 
+function ssh_config() {
+    echo "=========================================="
+    echo ""
+    echo "Copy and paste the following into ~/.ssh/config"
+    echo "Make sure permissions are correct:"
+    echo "chmod 600 ~/.ssh/config"
+    echo ""
+    echo "=========================================="
+    echo ""
+    echo ""    
+    echo "Host dev4"
+    echo "  Hostname dev4.hops.works"
+    echo "  User $USER"
+    echo ""
+    echo "Host vagrant"
+    echo "  Hostname dev4.hops.works"
+    echo "  User $USER"
+    echo "  ProxyJump dev4"
+    DEBUG_PORT=0
+    HTTPS_PORT=0
+    GLASSFISH_PORT=0
+
+    
+    SAVEIFS=$IFS
+    # Change IFS to new line.
+    IFS=$'\n'
+    ports=$(grep forward Vagrantfile | grep -Eo '[0-9]{2,5}'|xargs)
+    count=0
+    echo "Found forwarded Ports:"
+    ports=($ports)
+    # Restore IFS
+    IFS=$SAVEIFS
+    for i in $ports ; do
+	
+	odd=$(($count % 2))
+	if [ $odd -eq 1 ] ; then
+	    if [ $DEBUG_PORT -eq 9009 ] ; then
+	      DEBUG_PORT=$i	
+	    fi
+	    if [ $HTTPS_PORT -eq 8181 ] ; then
+	      HTTPS_PORT=$i	
+	    fi
+	    if [ $GLASSFISH_PORT -eq 4848 ] ; then
+	      GLASSFISH_PORT=$i	
+	    fi
+	else
+	    if [ $i -eq 9009 ] ; then
+		DEBUG_PORT=9009
+	    fi
+	    if [ $i -eq 8181 ] ; then
+		HTTPS_PORT=8181
+	    fi
+	    if [ $i -eq 4848 ] ; then
+		GLASSFISH_PORT=4848
+	    fi
+	fi
+	count=$(($count + 1))
+    done
+
+    echo "  LocalForward 9009 localhost:$DEBUG_PORT"
+    echo "  LocalForward 8181 localhost:$HTTPS_PORT"
+    echo "  LocalForward 4848 localhost:$GLASSFISH_PORT"
+    
+}
+
 function change_subnet() {
   priv_subnets=($($VBOX_MANAGE list hostonlyifs | grep "IPAddress:" | awk -F' ' '{print $2}' | awk -F'.' '{print $3}'))
 
@@ -151,6 +216,12 @@ if [ "$1" == "ports" ] ; then
  parse_ports
  exit 0
 fi
+
+if [ "$1" == "ssh-config" ] ; then
+ ssh_config
+ exit 0
+fi
+
 
 if [ $# -lt 3 ] ; then
     help
@@ -195,6 +266,8 @@ fi
 cp vagrantfiles/Vagrantfile.$1.$2 Vagrantfile
 cp cluster-defns/$2.$3.yml cluster.yml
 
+cp -f cloud/deploy-ear.sh .deploy.sh
+sed -i "s/__USER__/$USER/g" .deploy.sh
 
 if [ $PORTS -eq 1 ] ; then
 
