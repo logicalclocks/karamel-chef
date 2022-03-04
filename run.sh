@@ -3,14 +3,12 @@
 function help() {
   echo "Usage: ./run.sh [centos|ubuntu|ports|ssh-config|deploy-ear] [1|3] [ndb|hopsworks|hops|jim|antonios||etc] [no-random-ports] [udp-hack]"
   echo ""
-  echo "Create your own cluster definition from an existing one:"
-  echo "cp cluster.1.hopsworks cluster.1.jim"
-  echo "For example, for a 1-node hopsworks cluster on ubuntu for development with random ports, run:"
+  echo "Create a custom cluster definition from an existing one:"
+  echo "cp cluster-defns/1.hopsworks.yml cluster-defns/1.jim.yml"
+  echo ""
+  echo "For a hopsworks cluster on ubuntu or centos, run:"
   echo "./run.sh ubuntu 1 jim"
-  echo "For centos without random ports, run:"
-  echo "./run.sh centos 1 centos no-random-ports"
-  echo "To find out the currently mapped ports, run:"
-  echo "./run.sh ports"
+  echo "./run.sh centos 1 centos"
   exit 1
 }
 
