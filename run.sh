@@ -103,7 +103,6 @@ function parse_ports() {
     IFS=$'\n'
     ports=$(grep forward Vagrantfile | grep -Eo '[0-9]{2,5}'|xargs)
     count=0
-    echo "Found forwarded Ports:"
     ports=($ports)
     # Restore IFS
     IFS=$SAVEIFS
@@ -167,6 +166,7 @@ function ssh_config() {
     DEBUG_PORT=0
     HTTPS_PORT=0
     GLASSFISH_PORT=0
+    KARAMEL_PORT=0
 
     
     SAVEIFS=$IFS
@@ -191,6 +191,9 @@ function ssh_config() {
 	    if [ $GLASSFISH_PORT -eq 4848 ] ; then
 	      GLASSFISH_PORT=$i	
 	    fi
+	    if [ $KARAMEL_PORT -eq 9090 ] ; then
+	      KARAMEL_PORT=$i	
+	    fi
 	else
 	    if [ $i -eq 9009 ] ; then
 		DEBUG_PORT=9009
@@ -201,6 +204,9 @@ function ssh_config() {
 	    if [ $i -eq 4848 ] ; then
 		GLASSFISH_PORT=4848
 	    fi
+	    if [ $i -eq 9090 ] ; then
+		KARAMEL_PORT=9090
+	    fi
 	fi
 	count=$(($count + 1))
     done
@@ -208,6 +214,7 @@ function ssh_config() {
     echo "  LocalForward 9009 localhost:$DEBUG_PORT"
     echo "  LocalForward 8181 localhost:$HTTPS_PORT"
     echo "  LocalForward 4848 localhost:$GLASSFISH_PORT"
+    echo "  LocalForward 9090 localhost:$KARAMEL_PORT"
     
 }
 
