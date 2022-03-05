@@ -174,7 +174,6 @@ function ssh_config() {
     IFS=$'\n'
     ports=$(grep forward Vagrantfile | grep -Eo '[0-9]{2,5}'|xargs)
     count=0
-    echo "Found forwarded Ports:"
     ports=($ports)
     # Restore IFS
     IFS=$SAVEIFS
