@@ -122,7 +122,16 @@ function deploy_ear() {
     ssh_key=$(cat ${HOME}/.ssh/id_rsa.pub)
     grep $ssh_key ~/.ssh/authorized_keys >/dev/null 2>&1
     if [ $? -ne 0 ] ; then
-      cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+      if [ -f ~/.ssh/id_rsa.pub ] ; then
+        cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+      else
+	echo "----------------------------------------------------------"
+	echo "WARNING: the deploy-ear.sh script will not work as you do not have a"
+	echo "public-private key"
+	echo "To fix this problem, create a public/private ssh key with no password with this command:"
+	echo "cat /dev/zero | ssh-keygen -m PEM -q -N > /dev/null "
+	echo "----------------------------------------------------------"
+      fi
     fi
 
     echo ""
