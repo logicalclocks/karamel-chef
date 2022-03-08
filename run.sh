@@ -1,23 +1,21 @@
 #!/bin/bash
 
 function help() {
-  echo "Usage: ./run.sh [centos|ubuntu|ports|demodela] [1|3] [ndb|hopsworks|hops|jim|antonios|theofilos|demodela|etc] [no-random-ports] [udp-hack]"
+  echo "Usage: ./run.sh [centos|ubuntu|ports|ssh-config|deploy-ear] [1|3] [ndb|hopsworks|hops|jim|antonios||etc] [no-random-ports] [udp-hack]"
   echo ""
-  echo "Create your own cluster definition from an existing one:"
-  echo "cp cluster.1.hopsworks cluster.1.jim"
-  echo "For example, for a 1-node hopsworks cluster on ubuntu for development with random ports, run:"
+  echo "Create a custom cluster definition from an existing one:"
+  echo "cp cluster-defns/1.hopsworks.yml cluster-defns/1.jim.yml"
+  echo ""
+  echo "For a hopsworks cluster on ubuntu or centos, run:"
   echo "./run.sh ubuntu 1 jim"
-  echo "For centos without random ports, run:"
-  echo "./run.sh centos 1 centos no-random-ports"
-  echo "To find out the currently mapped ports, run:"
-  echo "./run.sh ports"
+  echo "./run.sh centos 1 centos"
   exit 1
 }
 
 port=
 forwarded_port=
 ports=
-#http_port=8080
+
 
 VBOX_MANAGE=/usr/bin/VBoxManage
 OCTETS="192.168."
@@ -105,7 +103,6 @@ function parse_ports() {
     IFS=$'\n'
     ports=$(grep forward Vagrantfile | grep -Eo '[0-9]{2,5}'|xargs)
     count=0
-    echo "Found forwarded Ports:"
     ports=($ports)
     # Restore IFS
     IFS=$SAVEIFS
@@ -118,6 +115,115 @@ function parse_ports() {
 	fi
 	count=$(($count + 1))
     done
+}
+
+function deploy_ear() {
+    
+    ssh_key=$(cat ${HOME}/.ssh/id_rsa.pub)
+    grep $ssh_key ~/.ssh/authorized_keys >/dev/null 2>&1
+    if [ $? -ne 0 ] ; then
+      if [ -f ~/.ssh/id_rsa.pub ] ; then
+        cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+      else
+	echo "----------------------------------------------------------"
+	echo "WARNING: the deploy-ear.sh script will not work as you do not have a"
+	echo "public-private key"
+	echo "To fix this problem, create a public/private ssh key with no password with this command:"
+	echo "cat /dev/zero | ssh-keygen -m PEM -q -N > /dev/null "
+	echo "----------------------------------------------------------"
+      fi
+    fi
+
+    echo ""
+    echo ""
+    echo "You can redeploy your ear on Vagrant after you follow these instructions: "
+    echo "On dev4.hops.works:"
+    echo ""
+    echo "mkdir Projects"
+    echo "cd Projects"
+    echo "# Change this from jimdowling to your private github repo"
+    echo "git clone git@github.com:jimdowling/hopsworks-ee.git"
+    echo "cd Projects/hopsworks-ee"
+    echo "./scripts/allow-cors.sh"
+    echo "mvn clean install -Pkube,web,jupyter-git -DskipTests"
+    echo ""
+    echo "cd ~/karamel-chef"
+    echo "vagrant ssh"
+    echo "#now on vagrant, copies the hopsworks-ear.ear file from dev4, and deploys it to glassfish"
+    echo "./deploy-ear.sh"
+    echo ""
+}
+
+
+function ssh_config() {
+    echo "=========================================="
+    echo ""
+    echo "Copy and paste the following into ~/.ssh/config"
+    echo "Make sure permissions are correct:"
+    echo "chmod 600 ~/.ssh/config"
+    echo ""
+    echo "=========================================="
+    echo ""
+    echo ""    
+    echo "Host dev4"
+    echo "  Hostname dev4.hops.works"
+    echo "  User $USER"
+    echo "Host vagrant"
+    echo "  Hostname dev4.hops.works"
+    echo "  User $USER"
+    echo "  ProxyJump dev4"
+    DEBUG_PORT=0
+    HTTPS_PORT=0
+    GLASSFISH_PORT=0
+    KARAMEL_PORT=0
+
+    
+    SAVEIFS=$IFS
+    # Change IFS to new line.
+    IFS=$'\n'
+    ports=$(grep forward Vagrantfile | grep -Eo '[0-9]{2,5}'|xargs)
+    count=0
+    ports=($ports)
+    # Restore IFS
+    IFS=$SAVEIFS
+    for i in $ports ; do
+	
+	odd=$(($count % 2))
+	if [ $odd -eq 1 ] ; then
+	    if [ $DEBUG_PORT -eq 9009 ] ; then
+	      DEBUG_PORT=$i	
+	    fi
+	    if [ $HTTPS_PORT -eq 8181 ] ; then
+	      HTTPS_PORT=$i	
+	    fi
+	    if [ $GLASSFISH_PORT -eq 4848 ] ; then
+	      GLASSFISH_PORT=$i	
+	    fi
+	    if [ $KARAMEL_PORT -eq 9090 ] ; then
+	      KARAMEL_PORT=$i	
+	    fi
+	else
+	    if [ $i -eq 9009 ] ; then
+		DEBUG_PORT=9009
+	    fi
+	    if [ $i -eq 8181 ] ; then
+		HTTPS_PORT=8181
+	    fi
+	    if [ $i -eq 4848 ] ; then
+		GLASSFISH_PORT=4848
+	    fi
+	    if [ $i -eq 9090 ] ; then
+		KARAMEL_PORT=9090
+	    fi
+	fi
+	count=$(($count + 1))
+    done
+
+    echo "  LocalForward 9009 localhost:$DEBUG_PORT"
+    echo "  LocalForward 8181 localhost:$HTTPS_PORT"
+    echo "  LocalForward 4848 localhost:$GLASSFISH_PORT"
+    echo "  LocalForward 9090 localhost:$KARAMEL_PORT"
+    
 }
 
 function change_subnet() {
@@ -151,6 +257,17 @@ if [ "$1" == "ports" ] ; then
  parse_ports
  exit 0
 fi
+
+if [ "$1" == "ssh-config" ] ; then
+ ssh_config
+ exit 0
+fi
+
+if [ "$1" == "deploy-ear" ] ; then
+ deploy_ear
+ exit 0
+fi
+
 
 if [ $# -lt 3 ] ; then
     help
@@ -195,6 +312,8 @@ fi
 cp vagrantfiles/Vagrantfile.$1.$2 Vagrantfile
 cp cluster-defns/$2.$3.yml cluster.yml
 
+cp -f scripts/deploy-ear.sh .deploy.sh
+sed -i "s/__USER__/$USER/g" .deploy.sh
 
 if [ $PORTS -eq 1 ] ; then
 
@@ -235,8 +354,7 @@ if [ $UDP_HACK -eq 1 ]; then
 fi
 
 parse_ports
+deploy_ear
+ssh_config
 
-echo ""
-echo "Connect your browser to: http://$(hostname):${http_port}/hopsworks"
-echo ""
 exit 0

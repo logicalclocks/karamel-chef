@@ -20,3 +20,4 @@ cluster.yml
 env.sh
 # this file is used to store the path to Enterprise Hopsworks
 cloud-tests/util/env.sh
+.deploy.sh
