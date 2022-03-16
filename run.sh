@@ -122,7 +122,7 @@ function deploy_ear() {
     if [ -f ${HOME}/.ssh/id_rsa.pub ] ; then
 	ssh_key=$(cat ${HOME}/.ssh/id_rsa.pub)
 
-	grep $ssh_key ~/.ssh/authorized_keys >/dev/null 2>&1
+	grep "$ssh_key" ~/.ssh/authorized_keys >/dev/null 2>&1
 	if [ $? -ne 0 ] ; then
           cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
 	fi
