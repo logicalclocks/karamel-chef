@@ -128,12 +128,11 @@ function deploy_ear() {
 	fi
     else
 	echo "----------------------------------------------------------"
-	echo "WARNING: the deploy-ear.sh script will not work as you do not have a"
-	echo "public-private key"
-	echo "To fix this problem, create a public/private ssh key with no password with this command:"
+	echo "WARNING: the deploy-ear.sh script will not work as you do not have a public-private key"
+	echo "Creating a public/private ssh key with no password with this command:"
 	echo "cat /dev/zero | ssh-keygen -m PEM -q -N > /dev/null "
 	echo "----------------------------------------------------------"
-        	
+	cat /dev/zero | ssh-keygen -m PEM -q -N > /dev/null
     fi
     echo ""
     echo ""
@@ -177,6 +176,7 @@ function ssh_config() {
     HTTPS_PORT=0
     GLASSFISH_PORT=0
     KARAMEL_PORT=0
+    SSH_PORT=0
 
     
     SAVEIFS=$IFS
@@ -203,6 +203,9 @@ function ssh_config() {
 	    if [ $KARAMEL_PORT -eq 9090 ] ; then
 	      KARAMEL_PORT=$i	
 	    fi
+	    if [ $SSH_PORT -eq 22 ] ; then
+	      SSH_PORT=$i	
+	    fi
 	else
 	    if [ $i -eq 9009 ] ; then
 		DEBUG_PORT=9009
@@ -216,6 +219,9 @@ function ssh_config() {
 	    if [ $i -eq 9090 ] ; then
 		KARAMEL_PORT=9090
 	    fi
+	    if [ $i -eq 22 ] ; then
+		SSH_PORT=22
+	    fi
 	fi
 	count=$(($count + 1))
     done
@@ -224,6 +230,15 @@ function ssh_config() {
     echo "  LocalForward 8181 localhost:$HTTPS_PORT"
     echo "  LocalForward 4848 localhost:$GLASSFISH_PORT"
     echo "  LocalForward 9090 localhost:$KARAMEL_PORT"
+    echo ""    
+    echo "Host dev4_vagrant"
+    echo "  HostName dev4.hops.works"
+    echo "  ProxyJump dev4"
+    echo "  User vagrant"
+    echo "  Port $SSH_PORT"
+    echo "  IdentityFile ~/.vagrant.d/insecure_private_key" 
+    echo ""    
+    echo ""    
     
 }
 
