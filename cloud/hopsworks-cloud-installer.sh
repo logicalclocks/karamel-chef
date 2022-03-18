@@ -502,9 +502,7 @@ enter_email()
 	    exit 1
 	fi
 
-	CREDENTIALS=$(curl -H "Content-type:application/json" --data @.details http://karamel.io:443/keyword --connect-timeout 10)
-	ENTERPRISE_USERNAME=$(echo $CREDENTIALS | cut -d ":" -f1)	
-	ENTERPRISE_PASSWORD=$(echo $CREDENTIALS | cut -d ":" -f2)
+	curl -H "Content-type:application/json" --data @.details https://register.hops.works:8443/keyword --connect-timeout 10
 	clear_screen
     fi
 }

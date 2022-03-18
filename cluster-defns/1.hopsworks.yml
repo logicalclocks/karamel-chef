@@ -21,6 +21,7 @@ attrs:
   prometheus:
     retention_time: "2h"
   hopsworks:
+    debug: true
     featurestore_online: true
     kagent_liveness:
       enabled: true
