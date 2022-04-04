@@ -29,6 +29,7 @@
 
 HOPSWORKS_REPO=logicalclocks/hopsworks-chef
 HOPSWORKS_BRANCH=opensearch
+#HOPSWORKS_BRANCH=master
 
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_BRANCH
 KARAMEL_VERSION=0.6

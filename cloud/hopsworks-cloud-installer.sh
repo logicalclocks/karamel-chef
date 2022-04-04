@@ -161,10 +161,10 @@ VM_GPU=gpu
 VM_SIZE=Standard_E8s_v3
 ACCELERATOR_VM=Standard_NC6
 
-OS_IMAGE="Canonical:UbuntuServer:18.04-LTS:latest"
-OS_VERSION=18
+OS_IMAGE=OpenLogic:CentOS:7.7:latest
+#OS_IMAGE="Canonical:UbuntuServer:18.04-LTS:latest"
+UBUNTU_VERSION=18
 
-#OS_IMAGE=OpenLogic:CentOS:7.7:latest
 #
 #AZ_NETWORKING="--accelerated-networking true"
 AZ_NETWORKING="--accelerated-networking false"
@@ -273,7 +273,7 @@ splash_screen()
 	echo "To continue, you need to create one at that path. Is that ok (y/n)?"
 	read ACCEPT
 	if [ "$ACCEPT" == "y" ] ; then
-            if [[ $(OS_IMAGE) =~ "Ubuntu" ]] && [[ $OS_VERSION -gt 18 ]] ; then            
+            if [[ $(OS_IMAGE) =~ "Ubuntu" ]] && [[ $UBUNTU_VERSION -gt 18 ]] ; then            
 	        cat /dev/zero | ssh-keygen -m PEM -q -N "" > /dev/null
             else
                 cat /dev/zero | ssh-keygen -q -N "" > /dev/null                
@@ -2531,7 +2531,7 @@ fi
 
 if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
 
-#    if [[ $(OS_IMAGE) =~ "Ubuntu" ]] && [[ $OS_VERSION -gt 18 ]] ; then
+#    if [[ $(OS_IMAGE) =~ "Ubuntu" ]] && [[ $UBUNTU_VERSION -gt 18 ]] ; then
        ssh -t -o StrictHostKeyChecking=no $IP "if [ ! -e ~/.ssh/id_rsa.pub ] ; then cat /dev/zero | ssh-keygen -m PEM -q -N \"\" ; fi"
 #    else
 #       ssh -t -o StrictHostKeyChecking=no $IP "if [ ! -e ~/.ssh/id_rsa.pub ] ; then cat /dev/zero | ssh-keygen -q -N \"\" ; fi"
