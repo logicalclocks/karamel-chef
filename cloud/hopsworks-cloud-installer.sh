@@ -6,7 +6,7 @@
 # http://www.gnu.org/licenses/gpl-3.0.txt                                                         #
 #                                                                                                 #
 #                                                                                                 #
-# Copyright (c) Logical Clocks AB, 2021.                                                          #
+# Copyright (c) Logical Clocks AB, 2021/2022.                                                     #
 # All Rights Reserved.                                                                            #
 #                                                                                                 #
 ###################################################################################################
@@ -111,6 +111,8 @@ IMAGE_CENTOS=centos-7-v20210817
 IMAGE_PROJECT_CENTOS=centos-cloud
 IMAGE_UBUNTU=ubuntu-1804-bionic-v20220308
 IMAGE_PROJECT_UBUNTU=ubuntu-os-cloud
+#IMAGE=$IMAGE_CENTOS
+#IMAGE_PROJECT=$IMAGE_PROJECT_CENTOS
 IMAGE=$IMAGE_UBUNTU
 IMAGE_PROJECT=$IMAGE_PROJECT_UBUNTU
 
@@ -371,15 +373,11 @@ install_action()
 	echo ""
         echo "What would you like to do?"
 	echo ""
-	echo "(1) Install single-host Hopsworks Community (CPU only)."
+	echo "(1) Install Hopsworks Community."
 	echo ""
-	echo "(2) Install single-host Hopsworks Community (with GPU(s))."
+	echo "(2) Install Hopsworks Enterprise."
 	echo ""
-	echo "(3) Install a multi-host Hopsworks Community cluster."
-	echo ""
-	echo "(4) Install a Hopsworks Enterprise cluster."
-	echo ""
-	echo "(5) Install a Hopsworks Enterprise cluster with Kubernetes"
+	echo "(3) Install Hopsworks Enterprise with Kubernetes"
 	echo ""
 	printf 'Please enter your choice '1', '2', '3', '4', '5',  'q' \(quit\), or 'h' \(help\) :  '
         read ACCEPT
@@ -389,20 +387,12 @@ install_action()
 		ACTION="localhost-tls"
 		;;
             2)
-		INSTALL_ACTION=$INSTALL_GPU
-		ACTION="localhost-tls"
-		;;
-            3)
-		INSTALL_ACTION=$INSTALL_CLUSTER
-		ACTION="cluster"
-		;;
-            4)
 		INSTALL_ACTION=$INSTALL_CLUSTER
 		ACTION="enterprise"
 		ENTERPRISE=1
                 accept_enterprise
 		;;
-            5)
+            3)
 		INSTALL_ACTION=$INSTALL_CLUSTER
 		ACTION="kubernetes"
 		ENTERPRISE=1
@@ -2177,15 +2167,6 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 		    INSTALL_ACTION=$INSTALL_CPU
 		    ACTION="localhost-tls"
   		    ;;
-		community-gpu)
-                    INSTALL_ACTION=$INSTALL_GPU
-		    ACTION="localhost-tls"		     
-  		    ;;
-		community-cluster)
-                    INSTALL_ACTION=$INSTALL_CLUSTER
-		    ENTERPRISE=0
-		    ACTION="cluster"
-		    ;;
 		enterprise)
 		    INSTALL_ACTION=$INSTALL_CLUSTER
                     ENTERPRISE=1
@@ -2442,16 +2423,16 @@ if [ "$HEAD_INSTANCE_TYPE" != "" ] ; then
     MACHINE_TYPE=$HEAD_INSTANCE_TYPE
 fi
 
-if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
-    set_name "cpu"
-elif [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then
-    set_name "gpu"
-    HEAD_GPU=1
-    if [ $NON_INTERACT -eq 0 ] ; then
-        echo "Important: GPUs on the head node are not usable by Kubernetes, only Hops."
-	select_gpu "head"
-    fi
-elif [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
+# if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
+#     set_name "cpu"
+# elif [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then
+#     set_name "gpu"
+#     HEAD_GPU=1
+#     if [ $NON_INTERACT -eq 0 ] ; then
+#         echo "Important: GPUs on the head node are not usable by Kubernetes, only Hops."
+# 	select_gpu "head"
+#     fi
+# if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
     set_name "head"    
     if [ $NON_INTERACT -eq 0 ] ; then
 	select_gpu "head"
@@ -2459,9 +2440,9 @@ elif [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
 	HEAD_GPU=1
 	echo "Head VM is allocated a GPU"
     fi
-else
-    exit_error "Bad install action: $INSTALL_ACTION"
-fi
+# else
+#     exit_error "Bad install action: $INSTALL_ACTION"
+# fi
 
 if [ $SKIP_CREATE -eq 0 ] ; then
     echo "Creating virtual machine (can take a few minutes) ...."
@@ -2470,20 +2451,20 @@ if [ $SKIP_CREATE -eq 0 ] ; then
     else
 	create_vm_cpu "head"
     fi
-    if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
+#    if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
 	if [ "$WORKER_INSTANCE_TYPE" != "" ] ; then        
 	    MACHINE_TYPE=$WORKER_INSTANCE_TYPE
 	fi
         cpu_worker_size
         gpu_worker_size
-    fi
+#    fi
 else
     echo "Skipping VM creation...."
 fi	
 
-if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
+#if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
     set_name "head"    
-fi  
+#fi  
 
 IP=
 while [ "$IP" == "" ] ; do
