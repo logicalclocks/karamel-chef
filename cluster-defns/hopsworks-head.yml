@@ -44,9 +44,9 @@ attrs:
       retention_time: "8h"
   hopsworks:
    #debug: true
-   ear_url: https://repo.hops.works/dev/jdowling/hopsworks-ear.ear
-   ca_url:  https://repo.hops.works/dev/jdowling/hopsworks-ca.war
-   war_url: https://repo.hops.works/dev/jdowling/hopsworks-web.war
+    ear_url: https://repo.hops.works/dev/jdowling/hopsworks-ear.ear
+    ca_url:  https://repo.hops.works/dev/jdowling/hopsworks-ca.war
+    war_url: https://repo.hops.works/dev/jdowling/hopsworks-web.war
     hdfs:
       storage_policy:
         base: "DB"
