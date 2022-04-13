@@ -44,7 +44,8 @@ attrs:
       retention_time: "8h"
   hopsworks:
     debug: true
-    ear_url: https://repo.hops.works/dev/jdowling/hopsworks-ear-kube.ear
+#    ear_url: https://repo.hops.works/dev/jdowling/hopsworks-ear-kube.ear
+    ear_url: https://repo.hops.works/dev/jdowling/hopsworks-ear.ear
     ca_url:  https://repo.hops.works/dev/jdowling/hopsworks-ca.war
     war_url: https://repo.hops.works/dev/jdowling/hopsworks-web.war
     hdfs:
