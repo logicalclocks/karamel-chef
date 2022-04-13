@@ -111,10 +111,10 @@ IMAGE_CENTOS=centos-7-v20210817
 IMAGE_PROJECT_CENTOS=centos-cloud
 IMAGE_UBUNTU=ubuntu-1804-bionic-v20220308
 IMAGE_PROJECT_UBUNTU=ubuntu-os-cloud
-#IMAGE=$IMAGE_CENTOS
-#IMAGE_PROJECT=$IMAGE_PROJECT_CENTOS
-IMAGE=$IMAGE_UBUNTU
-IMAGE_PROJECT=$IMAGE_PROJECT_UBUNTU
+IMAGE=$IMAGE_CENTOS
+IMAGE_PROJECT=$IMAGE_PROJECT_CENTOS
+#IMAGE=$IMAGE_UBUNTU
+#IMAGE_PROJECT=$IMAGE_PROJECT_UBUNTU
 
 
 MACHINE_TYPE=n1-standard-8
@@ -2102,12 +2102,10 @@ help()
 {
     echo "usage: $SCRIPTNAME "
     echo " [-h|--help]      help message"
-    echo " [-i|--install-action community|community-gpu|community-cluster|enterprise|kubernetes]"
+    echo " [-i|--install-action community|enterprise|kubernetes]"
     echo "                 'community' installs Hopsworks Community on a single VM"
-    echo "                 'community-gpu' installs Hopsworks Community on a single VM with GPU(s)"
-    echo "                 'community-cluster' installs Hopsworks Community on a multi-VM cluster"
     echo "                 'enterprise' installs Hopsworks Enterprise (single VM or multi-VM)"
-    echo "                 'kubernetes' installs Hopsworks Enterprise (single VM or multi-VM) alson with open-source Kubernetes"
+    echo "                 'kubernetes' installs Hopsworks Enterprise (single VM or multi-VM) also with open-source Kubernetes"
     echo " [-c|--cloud gcp|aws|azure] Name of the public cloud "
     echo " [--debug] Verbose logging for this script"
     echo " [-drc|--dry-run-create-vms]  creates the VMs, generates cluster definition (YML) files but doesn't run karamel."	      	      
