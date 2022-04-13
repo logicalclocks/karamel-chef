@@ -58,7 +58,7 @@ attrs:
   mysql:
       password: __PWD___202
   elastic:
-    opendistro_security:
+    opensearch_security:
       jwt:
         exp_ms: 1800000
       audit:

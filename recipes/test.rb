@@ -83,8 +83,8 @@ when 'centos'
 end
 
 elastic_endpoint=""
-elastic_user="#{node['elastic']['opendistro_security']['admin']['username']}"
-elastic_pass="#{node['elastic']['opendistro_security']['admin']['password']}"
+elastic_user="#{node['elastic']['opensearch_security']['admin']['username']}"
+elastic_pass="#{node['elastic']['opensearch_security']['admin']['password']}"
 kibana_endpoint="#{node[:karamel][:default][:private_ips][0]}:#{node[:kibana][:port]}"
 
 elastic_multinode='centos'
