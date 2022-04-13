@@ -24,7 +24,7 @@ attrs:
   hopsworks:
     featurestore_online: true
   elastic:
-    opendistro_security:
+    opensearch_security:
       jwt:
         exp_ms: "1800000"
       audit:
