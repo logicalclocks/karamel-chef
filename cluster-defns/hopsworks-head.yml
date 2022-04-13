@@ -66,7 +66,7 @@ attrs:
   airflow:
       mysql_password: __PWD___204
   elastic:
-    opendistro_security:
+    opensearch_security:
       jwt:
         exp_ms: 1800000
       audit:
