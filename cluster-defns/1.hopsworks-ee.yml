@@ -68,20 +68,20 @@ groups:
       - hadoop_spark::yarn
       - hadoop_spark::historyserver
       - hive2
-      - hops::ndb
-      - hops::rm
-      - hops::nn
-      - hops::jhs
-      - hops::fuse_mnt
       - hops::docker_registry
+      - hops::dn
+      - hops::fuse_mnt
+      - hops::jhs
+      - hops::ndb
+      - hops::nm
+      - hops::nn
+      - hops::rm
       - hopsmonitor
       - hopslog
       - hopslog::_filebeat-spark
       - hopslog::_filebeat-serving
       - hopslog::_filebeat-jupyter
       - hopslog::_filebeat-services
-      - hops::dn
-      - hops::nm
       - hops_airflow
       - hopsmonitor::prometheus
       - hopsmonitor::alertmanager
@@ -90,6 +90,10 @@ groups:
       # when upgrading, enable this recipe
       #- hopsworks::migrate
       - kagent
+      - kube-hops::addons
+      - kube-hops::ca
+      - kube-hops::hopsworks
+      - kube-hops::master
       - kzookeeper
       - kkafka
       - livy
