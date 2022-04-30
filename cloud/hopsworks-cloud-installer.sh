@@ -1808,6 +1808,9 @@ _az_create_vm()
     az vm open-port -g $RESOURCE_GROUP -n $NAME --port 443 --priority 900
     az vm open-port -g $RESOURCE_GROUP -n $NAME --port 4848 --priority 899
     az vm open-port -g $RESOURCE_GROUP -n $NAME --port 9090 --priority 898
+    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 32080 --priority 897
+    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 32443 --priority 896
+    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 32021 --priority 895
 }
 
 
@@ -2146,7 +2149,7 @@ help()
     echo "   9090"
     echo ""
     echo "Hopsworks Feature Store Python clients need access to the following ports:"
-    echo "   443, 8020, 9083, 9085, 50010"
+    echo "   443, 8020, 9083, 9085, 50010, 32080, 32080, 32021"
     echo ""
     exit 3
 
