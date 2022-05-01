@@ -1805,12 +1805,12 @@ _az_create_vm()
     fi
     sleep 20
     # Shortcut to create a network security group (NSG) add the 443 inbound rule, and applies it to the VM 
-    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 443 --priority 900
-    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 4848 --priority 899
-    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 9090 --priority 898
-    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 32080 --priority 897
-    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 32443 --priority 896
-    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 32021 --priority 895
+    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 443 --priority 900  #hopsworks
+    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 4848 --priority 899  #glassfish
+    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 9090 --priority 898  #karamel
+    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 32080 --priority 897  #istio-1
+    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 32443 --priority 896  #istio-2
+    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 32021 --priority 895  #istio-3
 }
 
 
