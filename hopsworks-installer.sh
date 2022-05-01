@@ -6,7 +6,7 @@
 # http://www.gnu.org/licenses/gpl-3.0.txt                                                         #
 #                                                                                                 #
 #                                                                                                 #
-# Copyright (c) Logical Clocks AB, 2020/2021.                                                     #
+# Copyright (c) Logical Clocks AB, 2020/2021/2022.                                                #
 # All Rights Reserved.                                                                            #
 #                                                                                                 #
 ###################################################################################################
@@ -28,8 +28,7 @@
 ###################################################################################################
 
 HOPSWORKS_REPO=logicalclocks/hopsworks-chef
-HOPSWORKS_BRANCH=opensearch
-
+HOPSWORKS_BRANCH=master
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_BRANCH
 KARAMEL_VERSION=0.6
 ENTERPRISE_DOWNLOAD_URL=https://nexus.hops.works/repository

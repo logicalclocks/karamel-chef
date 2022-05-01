@@ -43,7 +43,8 @@ attrs:
   prometheus:
       retention_time: "8h"
   hopsworks:
-   #debug: true
+    debug: true
+#    download_url: https://repo.hops.works/dev/jdowling/
     hdfs:
       storage_policy:
         base: "DB"
