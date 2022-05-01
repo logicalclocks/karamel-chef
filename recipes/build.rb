@@ -21,8 +21,8 @@ directory '/tmp/chef-solo' do
 end
 
 #EE default flags
-ubuntu_build_flags = "-Pjupyter-git,testing,web"
-centos_build_flags = "-Pkube,jupyter-git,noSeleniumTest,testing"
+ubuntu_build_flags = "-Ptesting,web"
+centos_build_flags = "-Pkube,noSeleniumTest,testing"
 if node['build']['test']['community']
   centos_build_flags = "-Pweb,testing,noSeleniumTest"
   ubuntu_build_flags = "-Pweb,testing"

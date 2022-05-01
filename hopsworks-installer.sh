@@ -1465,7 +1465,7 @@ else
 	    KUBE="true"
 	    DOWNLOAD="$DOWNLOAD
   kube-hops:
-#    kfserving:
+#    kserve:
 #      enabled: false
     pki:
       verify_hopsworks_cert: false
