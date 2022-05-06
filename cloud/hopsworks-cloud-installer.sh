@@ -6,7 +6,7 @@
 # http://www.gnu.org/licenses/gpl-3.0.txt                                                         #
 #                                                                                                 #
 #                                                                                                 #
-# Copyright (c) Logical Clocks AB, 2021/2022.                                                     #
+# Copyright (c) Hopsworks AB, 2021/2022.                                                     #
 # All Rights Reserved.                                                                            #
 #                                                                                                 #
 ###################################################################################################
@@ -111,8 +111,8 @@ IMAGE_CENTOS=centos-7-v20210817
 IMAGE_PROJECT_CENTOS=centos-cloud
 IMAGE_UBUNTU=ubuntu-1804-bionic-v20220308
 IMAGE_PROJECT_UBUNTU=ubuntu-os-cloud
-IMAGE=$IMAGE_CENTOS
-IMAGE_PROJECT=$IMAGE_PROJECT_CENTOS
+#IMAGE=$IMAGE_CENTOS
+#IMAGE_PROJECT=$IMAGE_PROJECT_CENTOS
 #IMAGE=$IMAGE_UBUNTU
 #IMAGE_PROJECT=$IMAGE_PROJECT_UBUNTU
 
@@ -163,8 +163,8 @@ VM_GPU=gpu
 VM_SIZE=Standard_E8s_v3
 ACCELERATOR_VM=Standard_NC6
 
-OS_IMAGE=OpenLogic:CentOS:7.7:latest
-#OS_IMAGE="Canonical:UbuntuServer:18.04-LTS:latest"
+#OS_IMAGE=OpenLogic:CentOS:7.7:latest
+OS_IMAGE="Canonical:UbuntuServer:18.04-LTS:latest"
 UBUNTU_VERSION=18
 
 #

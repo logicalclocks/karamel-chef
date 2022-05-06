@@ -6,7 +6,7 @@
 # http://www.gnu.org/licenses/gpl-3.0.txt                                                         #
 #                                                                                                 #
 #                                                                                                 #
-# Copyright (c) Logical Clocks AB, 2020/2021/2022.                                                #
+# Copyright (c) Hopsworks AB, 2020/2021/2022.                                                #
 # All Rights Reserved.                                                                            #
 #                                                                                                 #
 ###################################################################################################
