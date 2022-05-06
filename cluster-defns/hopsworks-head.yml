@@ -10,6 +10,7 @@ cookbooks:
 attrs:
   __DOWNLOAD__
   install:
+#   current_version: "2.5.0"
     dir: /srv/hops
     cloud: __CLOUD__
     kubernetes: __KUBE__
@@ -42,9 +43,11 @@ attrs:
   prometheus:
       retention_time: "8h"
   hopsworks:
-#    hdfs:
-#      storage_policy:
-#        base: "DB"
+    debug: true
+#    download_url: https://repo.hops.works/dev/jdowling/
+    hdfs:
+      storage_policy:
+        base: "DB"
     encryption_password: __PWD___001
     master:
       password: __PWD___002
@@ -112,6 +115,7 @@ groups:
       - kkafka
       - epipe
       - hopsworks
+        # - hopsworks::migrate
       - hopslog
       - hopslog::_filebeat-spark
       - hopslog::_filebeat-serving

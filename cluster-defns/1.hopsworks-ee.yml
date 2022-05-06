@@ -1,0 +1,106 @@
+name: HopsworksEnterpriseSingleNode
+baremetal:
+    username: vagrant
+
+cookbooks:
+  hopsworks:
+    github: logicalclocks/hopsworks-chef
+    branch: master
+
+attrs:
+  kube-hops:
+    pki:
+      verify_hopsworks_cert: false
+    fallback_dns: 8.8.8.8
+    master:
+      untaint: true
+  install:
+    # When upgrading, set current_version and re-run karamel
+    #current_version: 2.5.0
+    dir: /srv/hops
+    cloud: gcp
+    kubernetes: true
+    enterprise:
+      install: true
+      download_url: 
+      username: 
+      password: 
+  hops:
+    rmappsecurity:
+      actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
+  alertmanager:
+    email:
+      to: sre@logicalclocks.com
+      from: hopsworks@logicalclocks.com
+      smtp_host: mail.hello.com
+  prometheus:
+    retention_time: "2h"
+  hopsworks:
+    debug: true
+    #download_url: 
+    #ear_url: 
+    featurestore_online: true
+    kagent_liveness:
+      enabled: true
+      threshold: "40s"
+  elastic:
+    opensearch_security:
+      jwt:
+        exp_ms: "1800000"
+      audit:
+        enable_rest: "true"
+        enable_transport: "false"
+  ndb:
+    LockPagesInMainMemory: 0
+    TotalMemoryConfig: 4G
+    NumCPUs: 4
+    
+groups:
+  namenodes:
+    size: 1
+    baremetal:
+      ip: 10.0.2.15
+    recipes:
+      - conda
+      - consul::master
+      - elastic
+      - epipe
+      - flink::yarn
+      - flink::historyserver
+      - hadoop_spark::yarn
+      - hadoop_spark::historyserver
+      - hive2
+      - hops::docker_registry
+      - hops::dn
+      - hops::fuse_mnt
+      - hops::jhs
+      - hops::ndb
+      - hops::nm
+      - hops::nn
+      - hops::rm
+      - hopsmonitor
+      - hopslog
+      - hopslog::_filebeat-spark
+      - hopslog::_filebeat-serving
+      - hopslog::_filebeat-jupyter
+      - hopslog::_filebeat-services
+      - hops_airflow
+      - hopsmonitor::prometheus
+      - hopsmonitor::alertmanager
+      - hopsmonitor::node_exporter
+      - hopsworks
+      # when upgrading, enable this recipe
+      #- hopsworks::migrate
+      - kagent
+      - kube-hops::addons
+      - kube-hops::ca
+      - kube-hops::hopsworks
+      - kube-hops::master
+      - kzookeeper
+      - kkafka
+      - livy
+      - ndb::mgmd
+      - ndb::ndbd
+      - ndb::mysqld
+      - onlinefs
+      - tensorflow
