@@ -113,8 +113,8 @@ IMAGE_UBUNTU=ubuntu-1804-bionic-v20220308
 IMAGE_PROJECT_UBUNTU=ubuntu-os-cloud
 #IMAGE=$IMAGE_CENTOS
 #IMAGE_PROJECT=$IMAGE_PROJECT_CENTOS
-#IMAGE=$IMAGE_UBUNTU
-#IMAGE_PROJECT=$IMAGE_PROJECT_UBUNTU
+IMAGE=$IMAGE_UBUNTU
+IMAGE_PROJECT=$IMAGE_PROJECT_UBUNTU
 
 
 MACHINE_TYPE=n1-standard-8
@@ -1811,6 +1811,7 @@ _az_create_vm()
     az vm open-port -g $RESOURCE_GROUP -n $NAME --port 32080 --priority 897  #istio-1
     az vm open-port -g $RESOURCE_GROUP -n $NAME --port 32443 --priority 896  #istio-2
     az vm open-port -g $RESOURCE_GROUP -n $NAME --port 32021 --priority 895  #istio-3
+    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 3306 --priority 895  #mysql server for online feature store
 }
 
 
@@ -2149,7 +2150,7 @@ help()
     echo "   9090"
     echo ""
     echo "Hopsworks Feature Store Python clients need access to the following ports:"
-    echo "   443, 8020, 9083, 9085, 50010, 32080, 32080, 32021"
+    echo "   443, 8020, 9083, 9085, 50010, 32080, 32080, 32021, 3306"
     echo ""
     exit 3
 
