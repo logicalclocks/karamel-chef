@@ -17,12 +17,11 @@ attrs:
   install:
     # When upgrading, set current_version and re-run karamel
     #current_version: 2.5.0
-    dir: /srv/hops
     #cloud: gcp
     kubernetes: true
     enterprise:
       install: true
-      download_url: # TODO
+      download_url: https://nexus.hops.works/repository
       username: # TODO
       password: # TODO
   hops:
@@ -54,7 +53,6 @@ attrs:
     LockPagesInMainMemory: 0
     TotalMemoryConfig: 4G
     NumCPUs: 4
-    
 groups:
   namenodes:
     size: 1
@@ -111,19 +109,18 @@ groups:
     recipes:
       - kagent
       - conda
-      - livy::install
-      - ndb::ndbd
-      - ndb::mysqld
-      - hops::ndb
       - hops::dn
       - hops::nm
+      - kzookeeper
       - hadoop_spark::yarn
       - flink::yarn
+      - livy::install
       - hopslog::_filebeat-spark
       - hopslog::_filebeat-services
+      - tensorflow
       - hopsmonitor::node_exporter
       - consul::slave
-      - kube-hops::node
+      - kube-hops::node      
   datanode2:
     size: 1
     baremetal:
@@ -131,16 +128,14 @@ groups:
     recipes:
       - kagent
       - conda
-      - livy::install
-      - ndb::ndbd
-      - ndb::mysqld
-      - hops::ndb
       - hops::dn
       - hops::nm
+      - kzookeeper
       - hadoop_spark::yarn
       - flink::yarn
       - hopslog::_filebeat-spark
       - hopslog::_filebeat-services
+      - tensorflow
       - hopsmonitor::node_exporter
       - consul::slave
       - kube-hops::node
