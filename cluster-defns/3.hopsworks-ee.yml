@@ -133,6 +133,7 @@ groups:
       - kzookeeper
       - hadoop_spark::yarn
       - flink::yarn
+      - livy::install
       - hopslog::_filebeat-spark
       - hopslog::_filebeat-services
       - tensorflow
