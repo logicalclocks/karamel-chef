@@ -896,9 +896,10 @@ check_linux()
             OS_VERSION=$(lsb_release -d | grep -o -E '[0-9]+' | head -1)
 	else
 	    DISTRO=$(ls -d /etc/[A-Za-z]*[_-][rv]e[lr]* | grep -v \"lsb\" | cut -d'/' -f3 | cut -d'-' -f1 | cut -d'_' -f1 | head -1)
-	    if [ "$DISTRO" == "Ubuntu" ] ; then
+	    if [ "$DISTRO" == "Ubuntu" ] || [ "$DISTRO" == "debian" ] ; then
 		sudo apt install lsb-core -y
                 OS_VERSION=$(lsb_release -d | grep -o -E '[0-9]+' | head -1)
+		DISTRO="Ubuntu"
 	    elif [ "${DISTRO,,}" == "centos" ] || [ "${DISTRO,,}" == "os" ] ; then
 		sudo yum install redhat-lsb-core -y
 	    else

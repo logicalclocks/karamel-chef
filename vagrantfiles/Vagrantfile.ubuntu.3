@@ -90,16 +90,8 @@ Vagrant.configure("2") do |config|
     hopsworks0.vm.network(:forwarded_port, {:guest=>3000, :host=>3000})
     # Nodemanager
     hopsworks0.vm.network(:forwarded_port, {:guest=>8083, :host=>8083})
-    # Influx DB admin (because of clash with nodemanager)
-    hopsworks0.vm.network(:forwarded_port, {:guest=>8084, :host=>8084})
-    # Influx DB REST API
-    hopsworks0.vm.network(:forwarded_port, {:guest=>8086, :host=>8086})
-    # Graphite Endpoint
-    hopsworks0.vm.network(:forwarded_port, {:guest=>2003, :host=>2003})
-    # Jupyter
-    hopsworks0.vm.network(:forwarded_port, {:guest=>8888, :host=>8888})
-    # Hadoop debug
-    hopsworks0.vm.network(:forwarded_port, {:guest=>11000, :host=>11000})
+    # Prometheus
+    hopsworks0.vm.network(:forwarded_port, {:guest=>9089, :host=>9089})
 
 
     hopsworks0.vm.provision "file", source: "~/.ssh/id_rsa", destination: ".ssh/id_rsa_dev"
