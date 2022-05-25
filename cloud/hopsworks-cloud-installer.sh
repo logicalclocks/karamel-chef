@@ -1812,6 +1812,7 @@ _az_create_vm()
     az vm open-port -g $RESOURCE_GROUP -n $NAME --port 32443 --priority 896  #istio-2
     az vm open-port -g $RESOURCE_GROUP -n $NAME --port 32021 --priority 895  #istio-3
     az vm open-port -g $RESOURCE_GROUP -n $NAME --port 3306 --priority 895  #mysql server for online feature store
+    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 9092 --priority 894  #kafka broker on head node
 }
 
 
@@ -2150,7 +2151,7 @@ help()
     echo "   9090"
     echo ""
     echo "Hopsworks Feature Store Python clients need access to the following ports:"
-    echo "   443, 8020, 9083, 9085, 50010, 32080, 32080, 32021, 3306"
+    echo "   443, 8020, 9083, 9085, 50010, 32080, 32080, 32021, 3306, 9092"
     echo ""
     exit 3
 
