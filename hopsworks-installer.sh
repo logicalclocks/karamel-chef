@@ -96,7 +96,7 @@ GEM_SERVER_PORT=54321
 
 OS_VERSION=0
 
-PUBLIC_IP=
+KAFKA_PUBLIC_IP=
 
 NODE_MANAGER_HEAD="      - hops::nm
 "
@@ -1108,9 +1108,9 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
             shift
             PROXY=$1
 	    ;;
-	-ip|--public-ip)
+	-kip|--kakfa-public-ip)
             shift
-            PUBLIC_IP=$1
+            KAFKA_PUBLIC_IP=$1
             ;;
         -w|--workers)
             shift
@@ -1407,7 +1407,7 @@ else
     perl -pi -e "s/__YARN__/$YARN/" $YML_FILE
     perl -pi -e "s/__TLS__/$TLS/" $YML_FILE
     perl -pi -e "s/__CUDA__/$CUDA/" $YML_FILE
-    perl -pi -e "s/__KAFKA_PUBLIC_IP__/$PUBLIC_IP/" $YML_FILE
+    perl -pi -e "s/__KAFKA_PUBLIC_IP__/$KAFKA_PUBLIC_IP/" $YML_FILE
 
     if [ "$DOWNLOAD_URL" != "" ] ; then
 	DOWNLOAD_URL=${DOWNLOAD_URL//\./\\\.}
