@@ -1111,6 +1111,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	-ip|--public-ip)
             shift
             PUBLIC_IP=$1
+            ;;
 	-w|--workers)
             shift
             WORKER_LIST=$1
