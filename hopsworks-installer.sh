@@ -687,6 +687,25 @@ enter_email()
 
 }
 
+
+enter_kafka_public_ip()
+{
+
+    echo "Hopsworks needs to advetise the public IP address of the Kafka Broker:"
+    echo "Please enter the public IP address or FQDN of this node (or the node containing the Kafka broker):"
+    read kafka_ip
+
+    ping -c 1 $kafka_ip
+    
+    if [ $? -ne 0 ] 
+    then
+	echo "Exiting. Could not ping to the entered address: $kafka_ip."
+	exit 1
+    fi
+    KAFKA_PUBLIC_IP=$kafka_ip
+}
+
+
 update_worker_yml()
 {
     sed -i "s/__WORKER_ID__/$WORKER_ID/" $tmpYml
@@ -1108,7 +1127,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
             shift
             PROXY=$1
 	    ;;
-	-kip|--kakfa-public-ip)
+	-kip|--kafka-public-ip)
             shift
             KAFKA_PUBLIC_IP=$1
             ;;
@@ -1166,6 +1185,7 @@ if [ $NON_INTERACT -eq 0 ] ; then
     check_proxy
     clear_screen
     enter_email
+    enter_kafka_public_ip
     clear_screen
 fi
 if [ "$PROXY" != "" ] ; then
