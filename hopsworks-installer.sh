@@ -1007,7 +1007,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	    echo " [-gs|--gem-server] Run a local gem server for chef-solo (for air-gapped installations)."
 	    echo " [-ni|--non-interactive)] skip license/terms acceptance and all confirmation screens."
 	    echo " [-p|--http-proxy) url] URL of the http(s) proxy server. Only https proxies with valid certs supported."
-	    echo " [-ip|--public-ip) ip_address] Public IP address of the Kafka broker (typically the head VM)."
+	    echo " [-kip|--kafka-public-ip) ip_address] Public IP address of the Kafka broker (typically the head VM)."
 	    echo " [-pwd|--password password] sudo password for user running chef recipes."
 	    echo " [-y|--yml yaml_file] yaml file to run Karamel against."
 	    echo ""
