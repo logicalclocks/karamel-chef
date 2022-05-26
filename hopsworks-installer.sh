@@ -96,6 +96,8 @@ GEM_SERVER_PORT=54321
 
 OS_VERSION=0
 
+PUBLIC_IP=
+
 NODE_MANAGER_HEAD="      - hops::nm
 "
 
@@ -1005,6 +1007,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	    echo " [-gs|--gem-server] Run a local gem server for chef-solo (for air-gapped installations)."
 	    echo " [-ni|--non-interactive)] skip license/terms acceptance and all confirmation screens."
 	    echo " [-p|--http-proxy) url] URL of the http(s) proxy server. Only https proxies with valid certs supported."
+	    echo " [-ip|--public-ip) ip_address] Public IP address of the Kafka broker (typically the head VM)."
 	    echo " [-pwd|--password password] sudo password for user running chef recipes."
 	    echo " [-y|--yml yaml_file] yaml file to run Karamel against."
 	    echo ""
@@ -1105,6 +1108,9 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
             shift
             PROXY=$1
 	    ;;
+	-ip|--public-ip)
+            shift
+            PUBLIC_IP=$1
 	-w|--workers)
             shift
             WORKER_LIST=$1
@@ -1400,6 +1406,7 @@ else
     perl -pi -e "s/__YARN__/$YARN/" $YML_FILE
     perl -pi -e "s/__TLS__/$TLS/" $YML_FILE
     perl -pi -e "s/__CUDA__/$CUDA/" $YML_FILE
+    perl -pi -e "s/__PUBLIC_IP__/$PUBLIC_IP/" $YML_FILE
 
     if [ "$DOWNLOAD_URL" != "" ] ; then
 	DOWNLOAD_URL=${DOWNLOAD_URL//\./\\\.}
