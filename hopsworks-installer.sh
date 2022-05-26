@@ -1407,7 +1407,7 @@ else
     perl -pi -e "s/__YARN__/$YARN/" $YML_FILE
     perl -pi -e "s/__TLS__/$TLS/" $YML_FILE
     perl -pi -e "s/__CUDA__/$CUDA/" $YML_FILE
-    perl -pi -e "s/__PUBLIC_IP__/$PUBLIC_IP/" $YML_FILE
+    perl -pi -e "s/__KAFKA_PUBLIC_IP__/$PUBLIC_IP/" $YML_FILE
 
     if [ "$DOWNLOAD_URL" != "" ] ; then
 	DOWNLOAD_URL=${DOWNLOAD_URL//\./\\\.}
