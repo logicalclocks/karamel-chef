@@ -102,6 +102,8 @@ WORKER_INSTANCE_TYPE=
 
 ENTERPRISE_DOWNLOAD_URL="https://nexus.hops.works/repository"
 
+PUBLIC_IP=
+
 #################
 # GCP Config
 #################
@@ -1213,6 +1215,8 @@ _gcloud_create_vm()
 	echo "Problem creating VM. Exiting ..."
 	exit 12
     fi
+
+    
     sleep 4
 }
 
@@ -1812,6 +1816,7 @@ _az_create_vm()
     az vm open-port -g $RESOURCE_GROUP -n $NAME --port 32443 --priority 896  #istio-2
     az vm open-port -g $RESOURCE_GROUP -n $NAME --port 32021 --priority 895  #istio-3
     az vm open-port -g $RESOURCE_GROUP -n $NAME --port 3306 --priority 895  #mysql server for online feature store
+    az vm open-port -g $RESOURCE_GROUP -n $NAME --port 9092 --priority 894  #kafka broker on head node
 }
 
 
@@ -2150,7 +2155,7 @@ help()
     echo "   9090"
     echo ""
     echo "Hopsworks Feature Store Python clients need access to the following ports:"
-    echo "   443, 8020, 9083, 9085, 50010, 32080, 32080, 32021, 3306"
+    echo "   443, 8020, 9083, 9085, 50010, 32080, 32080, 32021, 3306, 9092"
     echo ""
     exit 3
 
@@ -2425,16 +2430,6 @@ if [ "$HEAD_INSTANCE_TYPE" != "" ] ; then
     MACHINE_TYPE=$HEAD_INSTANCE_TYPE
 fi
 
-# if [ $INSTALL_ACTION -eq $INSTALL_CPU ] ; then
-#     set_name "cpu"
-# elif [ $INSTALL_ACTION -eq $INSTALL_GPU ] ; then
-#     set_name "gpu"
-#     HEAD_GPU=1
-#     if [ $NON_INTERACT -eq 0 ] ; then
-#         echo "Important: GPUs on the head node are not usable by Kubernetes, only Hops."
-# 	select_gpu "head"
-#     fi
-# if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
     set_name "head"    
     if [ $NON_INTERACT -eq 0 ] ; then
 	select_gpu "head"
@@ -2442,10 +2437,6 @@ fi
 	HEAD_GPU=1
 	echo "Head VM is allocated a GPU"
     fi
-# else
-#     exit_error "Bad install action: $INSTALL_ACTION"
-# fi
-
 if [ $SKIP_CREATE -eq 0 ] ; then
     echo "Creating virtual machine (can take a few minutes) ...."
     if [ $HEAD_GPU -eq 1 ] ; then    
@@ -2453,20 +2444,14 @@ if [ $SKIP_CREATE -eq 0 ] ; then
     else
 	create_vm_cpu "head"
     fi
-#    if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
-	if [ "$WORKER_INSTANCE_TYPE" != "" ] ; then        
-	    MACHINE_TYPE=$WORKER_INSTANCE_TYPE
-	fi
-        cpu_worker_size
-        gpu_worker_size
-#    fi
+    if [ "$WORKER_INSTANCE_TYPE" != "" ] ; then        
+       MACHINE_TYPE=$WORKER_INSTANCE_TYPE
+    fi
+    cpu_worker_size
+    gpu_worker_size
 else
     echo "Skipping VM creation...."
 fi	
-
-#if [ $INSTALL_ACTION -eq $INSTALL_CLUSTER ] ; then
-    set_name "head"    
-#fi  
 
 IP=
 while [ "$IP" == "" ] ; do
@@ -2477,6 +2462,7 @@ done
 echo "Found IP: $IP"
 
 host_ip=$IP
+PUBLIC_IP=$IP
 clear_known_hosts
 SSH_CONNECTED=0
 while [ $SSH_CONNECTED -eq 0 ] ; do
@@ -2645,10 +2631,15 @@ NVME_SWITCH=""
 if [ $NUM_NVME_DRIVES_PER_WORKER -gt 0 ] ; then
     NVME_SWITCH=" -nvme $NUM_NVME_DRIVES_PER_WORKER "
 fi
-if [ $DEBUG -eq 1 ] ; then	
-    echo "ssh -t -o StrictHostKeyChecking=no $IP \"~/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH} && sleep 5\""
+
+THE_IP=PUBLIC_IP
+if [ "$THE_IP" != "" ] ; then
+    THE_IP=" --kafka-public-ip $PUBLIC_IP "
 fi
-ssh -t -o StrictHostKeyChecking=no $IP "~/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH} && sleep 5"
+
+echo "ssh -t -o StrictHostKeyChecking=no $IP \"~/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH}${THE_IP} && sleep 5\""
+
+ssh -t -o StrictHostKeyChecking=no $IP "~/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH}${THE_IP} && sleep 5"
 
 if [ $? -ne 0 ] ; then
     echo "Problem running installer. Exiting..."

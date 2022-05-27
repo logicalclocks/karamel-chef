@@ -96,6 +96,8 @@ GEM_SERVER_PORT=54321
 
 OS_VERSION=0
 
+KAFKA_PUBLIC_IP=
+
 NODE_MANAGER_HEAD="      - hops::nm
 "
 
@@ -685,6 +687,25 @@ enter_email()
 
 }
 
+
+enter_kafka_public_ip()
+{
+
+    echo "Hopsworks needs to advetise the public IP address of the Kafka Broker:"
+    echo "Please enter the public IP address or FQDN of this node (or the node containing the Kafka broker):"
+    read kafka_ip
+
+    ping -c 1 $kafka_ip
+    
+    if [ $? -ne 0 ] 
+    then
+	echo "Exiting. Could not ping to the entered address: $kafka_ip."
+	exit 1
+    fi
+    KAFKA_PUBLIC_IP=$kafka_ip
+}
+
+
 update_worker_yml()
 {
     sed -i "s/__WORKER_ID__/$WORKER_ID/" $tmpYml
@@ -1005,6 +1026,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	    echo " [-gs|--gem-server] Run a local gem server for chef-solo (for air-gapped installations)."
 	    echo " [-ni|--non-interactive)] skip license/terms acceptance and all confirmation screens."
 	    echo " [-p|--http-proxy) url] URL of the http(s) proxy server. Only https proxies with valid certs supported."
+	    echo " [-kip|--kafka-public-ip) ip_address] Public IP address of the Kafka broker (typically the head VM)."
 	    echo " [-pwd|--password password] sudo password for user running chef recipes."
 	    echo " [-y|--yml yaml_file] yaml file to run Karamel against."
 	    echo ""
@@ -1105,7 +1127,11 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
             shift
             PROXY=$1
 	    ;;
-	-w|--workers)
+	-kip|--kafka-public-ip)
+            shift
+            KAFKA_PUBLIC_IP=$1
+            ;;
+        -w|--workers)
             shift
             WORKER_LIST=$1
             ;;
@@ -1159,6 +1185,7 @@ if [ $NON_INTERACT -eq 0 ] ; then
     check_proxy
     clear_screen
     enter_email
+    enter_kafka_public_ip
     clear_screen
 fi
 if [ "$PROXY" != "" ] ; then
@@ -1400,6 +1427,7 @@ else
     perl -pi -e "s/__YARN__/$YARN/" $YML_FILE
     perl -pi -e "s/__TLS__/$TLS/" $YML_FILE
     perl -pi -e "s/__CUDA__/$CUDA/" $YML_FILE
+    perl -pi -e "s/__KAFKA_PUBLIC_IP__/$KAFKA_PUBLIC_IP/" $YML_FILE
 
     if [ "$DOWNLOAD_URL" != "" ] ; then
 	DOWNLOAD_URL=${DOWNLOAD_URL//\./\\\.}

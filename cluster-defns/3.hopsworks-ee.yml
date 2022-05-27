@@ -17,6 +17,7 @@ attrs:
   install:
     # When upgrading, set current_version and re-run karamel
     #current_version: 2.5.0
+    dir: /srv/hops
     #cloud: gcp
     kubernetes: true
     enterprise:
