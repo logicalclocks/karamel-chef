@@ -62,10 +62,10 @@ attrs:
     kagent_liveness:
       enabled: true
       threshold: 40s
-  kkafka:
-    broker: 
-      host:
-        public_ip: __KAFKA_PUBLIC_IP__
+#  kkafka:
+#    broker: 
+#      host:
+#        public_ip: __KAFKA_PUBLIC_IP__
   hive2:
       mysql_password: __PWD___203
   mysql:
