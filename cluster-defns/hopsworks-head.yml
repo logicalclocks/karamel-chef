@@ -62,6 +62,8 @@ attrs:
     kagent_liveness:
       enabled: true
       threshold: 40s
+  flink:
+    url: https://repo.hops.works/dev/davit/flink-1.14.3.0-bin-scala_2.11.tgz 
   kkafka:
     broker: 
       host:
