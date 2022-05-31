@@ -177,7 +177,7 @@ splash_screen()
 {
     clear
     echo ""
-    echo "Karamel/Hopsworks Installer, Copyright(C) 2021 Logical Clocks AB. All rights reserved."
+    echo "Karamel/Hopsworks Installer, Copyright(C) 2021/2 Hopsworks AB. All rights reserved."
     echo ""
     echo "This program can install Karamel/Chef and/or Hopsworks."
     echo ""
@@ -335,18 +335,18 @@ display_license()
     echo "This code is released under the GNU General Public License, Version 3, see:"
     echo "http://www.gnu.org/licenses/gpl-3.0.txt"
     echo ""
-    echo "Copyright(C) 2021 Logical Clocks AB. All rights reserved."
-    echo "Logical Clocks AB is furnishing this item \"as is\". Logical Clocks AB does not provide any"
+    echo "Copyright(C) 2021/2 Hopsworks AB. All rights reserved."
+    echo "Hopsworks AB is furnishing this item \"as is\". Hopsworks AB does not provide any"
     echo "warranty of the item whatsoever, whether express, implied, or statutory,"
     echo "including, but not limited to, any warranty of merchantability or fitness"
     echo "for a particular purpose or any warranty that the contents of the item will"
-    echo "be error-free. In no respect shall Logical Clocks AB incur any liability for any"
+    echo "be error-free. In no respect shall Hopsworks AB incur any liability for any"
     echo "damages, including, but limited to, direct, indirect, special, or consequential"
     echo "damages arising out of, resulting from, or any way connected to the use of the"
     echo "item, whether or not based upon warranty, contract, tort, or otherwise; "
     echo "whether or not injury was sustained by persons or property or otherwise;"
     echo "and whether or not loss was sustained from, or arose out of, the results of,"
-    echo "the item, or any services that may be provided by Logical Clocks AB."
+    echo "the item, or any services that may be provided by Hopsworks AB."
     echo ""
     printf 'Do you accept these terms and conditions? [ yes or no ] '
 }
