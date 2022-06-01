@@ -97,6 +97,7 @@ GEM_SERVER_PORT=54321
 OS_VERSION=0
 
 KAFKA_PUBLIC_IP=
+HOPSWORKS_PUBLIC_IP=
 
 NODE_MANAGER_HEAD="      - hops::nm
 "
@@ -688,21 +689,43 @@ enter_email()
 }
 
 
-enter_kafka_public_ip()
+enter_public_ips()
 {
 
-    echo "Hopsworks needs to advetise the public IP address of the Kafka Broker:"
-    echo "Please enter the public IP address or FQDN of this node (or the node containing the Kafka broker):"
-    read kafka_ip
+    echo "Hopsworks needs to advetise the public IP address of the Hopsworks head node and the Kafka Broker:"
+    echo "Please enter the public IP address or FQDN of this node:"
+    read hopsworks_ip
 
-    ping -c 1 $kafka_ip
+    ping -c 1 $hopsworks_ip
     
     if [ $? -ne 0 ] 
     then
-	echo "Exiting. Could not ping to the entered address: $kafka_ip."
+	echo "Exiting. Could not ping to the entered address: $hopsworks_ip."
 	exit 1
     fi
-    KAFKA_PUBLIC_IP=$kafka_ip
+    HOPSWORKS_PUBLIC_IP=$hopsworks_ip
+    KAFKA_PUBLIC_IP=$hopsworks_ip
+
+    printf "Is the Kafka broker on the same public IP? (y/n)? "
+    read ACCEPT
+    case $ACCEPT in
+	y|yes)
+	    echo "Setting Kafka public IP to $hopsworks_ip."
+	    echo ""
+	    ;;
+	n|no)
+	    echo "Please enter the public IP address or FQDN of the kafka broker:"
+	    read kafka_ip
+	    KAFKA_PUBLIC_IP=$kafka_ip
+	    echo "Setting Kafka public IP to $kafka_ip."	    
+	    ;;
+
+	*)
+	    echo "Next time, enter 'y' or 'n' ."
+            enter_public_ips
+	    ;;
+    esac
+
 }
 
 
@@ -1026,6 +1049,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	    echo " [-gs|--gem-server] Run a local gem server for chef-solo (for air-gapped installations)."
 	    echo " [-ni|--non-interactive)] skip license/terms acceptance and all confirmation screens."
 	    echo " [-p|--http-proxy) url] URL of the http(s) proxy server. Only https proxies with valid certs supported."
+	    echo " [-hip|--hopsworks-public-ip) ip_address] Public IP address of the Hopsworks head VM."
 	    echo " [-kip|--kafka-public-ip) ip_address] Public IP address of the Kafka broker (typically the head VM)."
 	    echo " [-pwd|--password password] sudo password for user running chef recipes."
 	    echo " [-y|--yml yaml_file] yaml file to run Karamel against."
@@ -1127,6 +1151,10 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
             shift
             PROXY=$1
 	    ;;
+	-hip|--hopsworks-public-ip)
+            shift
+            HOPSWORKS_PUBLIC_IP=$1
+            ;;
 	-kip|--kafka-public-ip)
             shift
             KAFKA_PUBLIC_IP=$1
@@ -1185,9 +1213,16 @@ if [ $NON_INTERACT -eq 0 ] ; then
     check_proxy
     clear_screen
     enter_email
-    enter_kafka_public_ip
+    enter_public_ips
     clear_screen
 fi
+
+if [ "$KAFKA_PUBLIC_IP" == "" ] && [ "$HOPSWORKS_PUBLIC_IP" != "" ] ;
+   echo "Setting KAFKA_PUBLIC_IP to $HOPSWORKS_PUBLIC_IP"
+   echo "If you want to change this, specify '--kafka-public-ip' as an option when running this script"
+   KAFKA_PUBLIC_IP=$HOPSWORKS_PUBLIC_IP
+fi
+
 if [ "$PROXY" != "" ] ; then
     set_karamel_http_proxy
 fi
@@ -1428,7 +1463,8 @@ else
     perl -pi -e "s/__TLS__/$TLS/" $YML_FILE
     perl -pi -e "s/__CUDA__/$CUDA/" $YML_FILE
     perl -pi -e "s/__KAFKA_PUBLIC_IP__/$KAFKA_PUBLIC_IP/" $YML_FILE
-
+    perl -pi -e "s/__HOPSWORKS_PUBLIC_IP__/$HOPSWORKS_PUBLIC_IP/" $YML_FILE
+    
     if [ "$DOWNLOAD_URL" != "" ] ; then
 	DOWNLOAD_URL=${DOWNLOAD_URL//\./\\\.}
 	DOWNLOAD_URL=${DOWNLOAD_URL//\//\\\/}
