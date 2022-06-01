@@ -1217,7 +1217,7 @@ if [ $NON_INTERACT -eq 0 ] ; then
     clear_screen
 fi
 
-if [ "$KAFKA_PUBLIC_IP" == "" ] && [ "$HOPSWORKS_PUBLIC_IP" != "" ] ;
+if [ "$KAFKA_PUBLIC_IP" == "" ] && [ "$HOPSWORKS_PUBLIC_IP" != "" ] ; then
    echo "Setting KAFKA_PUBLIC_IP to $HOPSWORKS_PUBLIC_IP"
    echo "If you want to change this, specify '--kafka-public-ip' as an option when running this script"
    KAFKA_PUBLIC_IP=$HOPSWORKS_PUBLIC_IP
