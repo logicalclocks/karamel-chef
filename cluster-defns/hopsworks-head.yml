@@ -43,11 +43,12 @@ attrs:
   prometheus:
       retention_time: "8h"
   hopsworks:
+    hopsworks_public_host: __HOPSWORKS_PUBLIC_IP__  
     debug: true
-#    download_url: https://repo.hops.works/dev/jdowling/
-    hdfs:
-      storage_policy:
-        base: "DB"
+#    download_url: https://repo.hops.works/dev/xxx/
+#    hdfs:
+#      storage_policy:
+#        base: "DB"
     encryption_password: __PWD___001
     master:
       password: __PWD___002

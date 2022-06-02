@@ -2634,7 +2634,7 @@ fi
 
 THE_IP=PUBLIC_IP
 if [ "$THE_IP" != "" ] ; then
-    THE_IP=" --kafka-public-ip $PUBLIC_IP "
+    THE_IP=" --hopsworks-public-ip $PUBLIC_IP "
 fi
 
 echo "ssh -t -o StrictHostKeyChecking=no $IP \"~/hopsworks-installer.sh -i $ACTION -ni -c $CLOUD ${DOWNLOAD}${DOWNLOAD_USERNAME}${DOWNLOAD_PASSWORD}${WORKERS}${DRY_RUN_KARAMEL}${NVME_SWITCH}${THE_IP} && sleep 5\""
