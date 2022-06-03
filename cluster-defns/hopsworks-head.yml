@@ -45,7 +45,8 @@ attrs:
   hopsworks:
     hopsworks_public_host: __HOPSWORKS_PUBLIC_IP__  
     debug: true
-#    download_url: https://repo.hops.works/dev/xxx/
+    ear_url: https://repo.hops.works/dev/jdowling/hopsworks-ear-kube.ear
+    #download_url: https://repo.hops.works/dev/
 #    hdfs:
 #      storage_policy:
 #        base: "DB"
