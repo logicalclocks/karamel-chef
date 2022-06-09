@@ -45,6 +45,7 @@ attrs:
   hopsworks:
     hopsworks_public_host: __HOPSWORKS_PUBLIC_IP__  
     debug: true
+    ear_url: https://repo.hops.works/dev/jdowling/hopsworks-alexandru.ear
 #    download_url: https://repo.hops.works/dev/xxx/
 #    hdfs:
 #      storage_policy:
@@ -63,8 +64,10 @@ attrs:
     kagent_liveness:
       enabled: true
       threshold: 40s
+  onlinefs:
+    download_url: https://repo.hops.works/dev/jdowling/onlinefs.tgz 
   flink:
-    url: https://repo.hops.works/dev/davit/flink-1.14.3.0-bin-scala_2.11.tgz 
+    url: https://repo.hops.works/dev/jdowling/flink-1.14.3.0-bin-scala_2.11.tgz 
   kkafka:
     broker: 
       host:
