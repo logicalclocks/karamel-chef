@@ -45,7 +45,7 @@ attrs:
   hopsworks:
     hopsworks_public_host: __HOPSWORKS_PUBLIC_IP__  
     debug: true
-    ear_url: https://repo.hops.works/dev/jdowling/hopsworks-ear-kube.ear
+    ear_url: https://repo.hops.works/dev/jdowling/hopsworks-ear-alex.ear
 #    download_url: https://repo.hops.works/dev/xxx/
 #    hdfs:
 #      storage_policy:
@@ -65,7 +65,7 @@ attrs:
       enabled: true
       threshold: 40s
   onlinefs:
-    download_url: https://repo.hops.works/dev/jdowling/onlinefs.tgz 
+    download_url: https://repo.hops.works/dev/jdowling/onlinefs-alex.tgz 
   flink:
     url: https://repo.hops.works/dev/jdowling/flink-1.14.3.0-bin-scala_2.11.tgz 
   kkafka:
