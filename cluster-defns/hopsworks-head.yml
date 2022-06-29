@@ -30,7 +30,7 @@ attrs:
     __NDB_NVME__  
     NoOfReplicas: 1
     LockPagesInMainMemory: 0
-    TotalMemoryConfig: 4G
+    TotalMemoryConfig: 12G
     NumCPUs: 4
 #    diskdata_dir: "/mnt/nvmeDisks/nvme0/"
 #    nvme:

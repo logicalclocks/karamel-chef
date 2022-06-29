@@ -131,7 +131,7 @@ RESERVATION_AFFINITY=any
 SHIELD=""
 
 BOOT_DISK=pd-ssd
-BOOT_SIZE_GBS=100
+BOOT_SIZE_GBS=250
 
 RAW_SSH_KEY="${USER}:$(cat ~/.ssh/id_rsa.pub)"
 #printf -v ESCAPED_SSH_KEY "%q\n" "$RAW_SSH_KEY"
