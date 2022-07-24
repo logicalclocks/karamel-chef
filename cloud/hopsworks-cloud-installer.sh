@@ -119,7 +119,7 @@ IMAGE=$IMAGE_UBUNTU
 IMAGE_PROJECT=$IMAGE_PROJECT_UBUNTU
 
 
-MACHINE_TYPE=n1-standard-8
+MACHINE_TYPE=n1-standard-16
 NAME=
 PROJECT=
 SUBNET=default
@@ -2669,7 +2669,7 @@ else
     echo " Then, edit your cluster definition ~/$CLUSTER_DEFINITIONS_DIR/$YML_FILE"
     echo " Then run karamel on your new cluster definition: "
     echo " cd karamel-0.6"
-    echo " setsid ./bin/karamel -headless -launch ../$YML_FILE > ../installation.log 2>&1 &"
+    echo " setsid ./bin/karamel -headless -launch ../cluster-defns/$YML_FILE > ../installation.log 2>&1 &"
     echo "*                                      *"    
     echo "****************************************"
 fi    
