@@ -144,7 +144,7 @@ when 'ubuntu'
 
   bash "dependencies_tests" do
     user "root"
-    ignore_failure true
+    ignore_failure false
     cwd node['test']['hopsworks']['test_dir']
     timeout node['karamel']['test_timeout']
     environment ({'PATH' => "#{ENV['PATH']}:/usr/bin/ruby2.5:/srv/hops/mysql/bin",
@@ -201,7 +201,7 @@ when 'ubuntu'
 when 'centos'
   bash "dependencies_tests" do
     user "root"
-    ignore_failure true
+    ignore_failure false
     timeout node['karamel']['test_timeout']
     cwd node['test']['hopsworks']['test_dir']
     environment ({'PATH' => "/usr/local/rvm/gems/ruby-2.5.1/bin:/usr/local/rvm/gems/ruby-2.5.1@global/bin:/usr/local/rvm/rubies/ruby-2.5.1/bin:/usr/local/bin:/srv/hops/mysql/bin:#{ENV['PATH']}",
@@ -213,7 +213,7 @@ when 'centos'
       # Hardcode this for the moment so that we are able to keep the old testing in parallel
       code <<-EOH
         bundle install
-        /srv/hops/anaconda/anaconda/envs/airflow/bin/python lambo_rspec.py -proc 6 -out #{node['test']['hopsworks']['report_dir']} -os #{node['platform']}
+        /srv/hops/anaconda/anaconda/envs/airflow/bin/python lambo_rspec.py -proc 4 -out #{node['test']['hopsworks']['report_dir']} -os #{node['platform']}
       EOH
     else
       # Run regular ruby tests, excluding integration tests
