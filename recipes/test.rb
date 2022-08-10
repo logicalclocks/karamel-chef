@@ -162,6 +162,7 @@ when 'ubuntu'
         start=`date +%s`
         start_time=`date`
         echo "start running dependencies test: $start_time"
+        rm -rf Gemfile.lock
         bundle install
         /srv/hops/anaconda/anaconda/bin/python lambo_rspec.py -proc 4 -out #{node['test']['hopsworks']['report_dir']} -os #{node['platform']}
         end=`date +%s`
