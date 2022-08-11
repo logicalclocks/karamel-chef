@@ -237,6 +237,7 @@ when 'centos'
     if ::File.file?("#{node['test']['hopsworks']['test_dir']}/lambo_rspec.py")
       # Hardcode this for the moment so that we are able to keep the old testing in parallel
       code <<-EOH
+        rm -rf Gemfile.lock
         bundle install
         /srv/hops/anaconda/anaconda/bin/python lambo_rspec.py -proc 4 -out #{node['test']['hopsworks']['report_dir']} -os #{node['platform']}
       EOH
