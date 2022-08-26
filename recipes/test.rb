@@ -143,7 +143,7 @@ when 'ubuntu'
       mvn test -Dmaven.test.failure.ignore=true
       end=`date +%s`
       runtime=$((end-start))
-      echo "Running time for dependencies test: $runtime"
+      echo "Running time for unit test: $runtime"
       find . -name "*.xml" | grep "surefire-reports" | xargs cp -t #{node['test']['hopsworks']['report_dir']}/ut
     EOH
   end
@@ -156,26 +156,16 @@ when 'ubuntu'
     environment ({'PATH' => "#{ENV['PATH']}:/usr/bin/ruby2.5:/srv/hops/mysql/bin",
                   'LD_LIBRARY_PATH' => "#{ENV['LD_LIBRARY_PATH']}:/srv/hops/mysql/lib",
                   'JAVA_HOME' => "/usr/lib/jvm/default-java"})
-    if ::File.file?("#{node['test']['hopsworks']['test_dir']}/lambo_rspec.py")
-      # Hardcode this for the moment so that we are able to keep the old testing in parallel
-      code <<-EOH
-        start=`date +%s`
-        start_time=`date`
-        echo "start running dependencies test: $start_time"
-        rm -rf Gemfile.lock
-        bundle install
-        /srv/hops/anaconda/anaconda/bin/python lambo_rspec.py -proc 4 -out #{node['test']['hopsworks']['report_dir']} -os #{node['platform']}
-        end=`date +%s`
-        runtime=$((end-start))
-        echo "Running time for dependencies test: $runtime"
-      EOH
-    else
-      # Run regular ruby tests, excluding integration tests
-      code <<-EOH
+    code <<-EOH
+      start=`date +%s`
+      start_time=`date`
+      echo "start running dependencies test: $start_time"
       bundle install
-      rspec --format RspecJunitFormatter --out #{node['test']['hopsworks']['report_dir']}/ubuntu.xml
-      EOH
-    end
+      /srv/hops/anaconda/anaconda/bin/python lambo_rspec.py -proc 4 -out #{node['test']['hopsworks']['report_dir']} -os #{node['platform']}
+      end=`date +%s`
+      runtime=$((end-start))
+      echo "Running time for dependencies test: $runtime"
+    EOH
   end
 
   # Run Selenium tests
@@ -234,20 +224,9 @@ when 'centos'
               'HOME' => "/home/vagrant",
               'JAVA_HOME' => "/usr/lib/jvm/java"})
 
-    if ::File.file?("#{node['test']['hopsworks']['test_dir']}/lambo_rspec.py")
-      # Hardcode this for the moment so that we are able to keep the old testing in parallel
-      code <<-EOH
-        rm -rf Gemfile.lock
-        bundle install
-        /srv/hops/anaconda/anaconda/bin/python lambo_rspec.py -proc 4 -out #{node['test']['hopsworks']['report_dir']} -os #{node['platform']}
-      EOH
-    else
-      # Run regular ruby tests, excluding integration tests
-      code <<-EOH
-      set -e
+    code <<-EOH
       bundle install
-      rspec --format RspecJunitFormatter --out #{node['test']['hopsworks']['report_dir']}/centos.xml
-      EOH
-    end
+      /srv/hops/anaconda/anaconda/bin/python lambo_rspec.py -proc 4 -out #{node['test']['hopsworks']['report_dir']} -os #{node['platform']}
+    EOH
   end
 end
