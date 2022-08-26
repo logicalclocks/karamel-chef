@@ -135,9 +135,15 @@ when 'ubuntu'
     timeout node['karamel']['test_timeout']
     # Run hopsworks unit tests
     code <<-EOH
+      start=`date +%s`
+      start_time=`date`
+      echo "start running unit test: $start_time"
       set -e
       mkdir -pm 777 #{node['test']['hopsworks']['report_dir']}/ut
       mvn test -Dmaven.test.failure.ignore=true
+      end=`date +%s`
+      runtime=$((end-start))
+      echo "Running time for unit test: $runtime"
       find . -name "*.xml" | grep "surefire-reports" | xargs cp -t #{node['test']['hopsworks']['report_dir']}/ut
     EOH
   end
@@ -150,19 +156,16 @@ when 'ubuntu'
     environment ({'PATH' => "#{ENV['PATH']}:/usr/bin/ruby2.5:/srv/hops/mysql/bin",
                   'LD_LIBRARY_PATH' => "#{ENV['LD_LIBRARY_PATH']}:/srv/hops/mysql/lib",
                   'JAVA_HOME' => "/usr/lib/jvm/default-java"})
-    if ::File.file?("#{node['test']['hopsworks']['test_dir']}/lambo_rspec.py")
-      # Hardcode this for the moment so that we are able to keep the old testing in parallel
-      code <<-EOH
-        bundle install
-        /srv/hops/anaconda/anaconda/envs/airflow/bin/python lambo_rspec.py -proc 6 -out #{node['test']['hopsworks']['report_dir']} -os #{node['platform']}
-      EOH
-    else
-      # Run regular ruby tests, excluding integration tests
-      code <<-EOH
+    code <<-EOH
+      start=`date +%s`
+      start_time=`date`
+      echo "start running dependencies test: $start_time"
       bundle install
-      rspec --format RspecJunitFormatter --out #{node['test']['hopsworks']['report_dir']}/ubuntu.xml
-      EOH
-    end
+      /srv/hops/anaconda/anaconda/bin/python lambo_rspec.py -proc 4 -out #{node['test']['hopsworks']['report_dir']} -os #{node['platform']}
+      end=`date +%s`
+      runtime=$((end-start))
+      echo "Running time for dependencies test: $runtime"
+    EOH
   end
 
   # Run Selenium tests
@@ -175,9 +178,15 @@ when 'ubuntu'
                   'DB_HOST' => "127.0.0.1",
                   'BROWSER' => "firefox"})
     code <<-FIREFOX
+      start=`date +%s`
+      start_time=`date`
+      echo "start running selenium test: $start_time"
       mvn clean install -P-web,mysql -Dmaven.test.failure.ignore=true
       cd hopsworks-IT/target/failsafe-reports
       for file in *.xml ; do cp $file #{node['test']['hopsworks']['report_dir']}/firefox-${file} ; done
+      end=`date +%s`
+      runtime=$((end-start))
+      echo "Running time for selenium firefox test: $runtime"
     FIREFOX
     only_if { node['test']['hopsworks']['frontend'] }
   end
@@ -191,9 +200,15 @@ when 'ubuntu'
                   'DB_HOST' => "127.0.0.1",
                   'BROWSER' => "chrome"})
     code <<-CHROME
+      start=`date +%s`
+      start_time=`date`
+      echo "start running selenium chrome test: $start_time"
       mvn clean install -P-web,mysql -Dmaven.test.failure.ignore=true
       cd hopsworks-IT/target/failsafe-reports
       for file in *.xml ; do cp $file #{node['test']['hopsworks']['report_dir']}/chrome-${file} ; done
+      end=`date +%s`
+      runtime=$((end-start))
+      echo "Running time for selenium chrome test: $runtime"
     CHROME
     only_if { node['test']['hopsworks']['frontend'] }
   end
@@ -209,19 +224,9 @@ when 'centos'
               'HOME' => "/home/vagrant",
               'JAVA_HOME' => "/usr/lib/jvm/java"})
 
-    if ::File.file?("#{node['test']['hopsworks']['test_dir']}/lambo_rspec.py")
-      # Hardcode this for the moment so that we are able to keep the old testing in parallel
-      code <<-EOH
-        bundle install
-        /srv/hops/anaconda/anaconda/envs/airflow/bin/python lambo_rspec.py -proc 6 -out #{node['test']['hopsworks']['report_dir']} -os #{node['platform']}
-      EOH
-    else
-      # Run regular ruby tests, excluding integration tests
-      code <<-EOH
-      set -e
+    code <<-EOH
       bundle install
-      rspec --format RspecJunitFormatter --out #{node['test']['hopsworks']['report_dir']}/centos.xml
-      EOH
-    end
+      /srv/hops/anaconda/anaconda/bin/python lambo_rspec.py -proc 4 -out #{node['test']['hopsworks']['report_dir']} -os #{node['platform']}
+    EOH
   end
 end
