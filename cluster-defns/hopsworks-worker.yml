@@ -25,7 +25,7 @@
       - ndb::ndbd
       # - hops::dn
       # - hops::nm
-      # - hadoop_spark::yarn
+      - hadoop_spark::yarn
       # - flink::yarn
       # - hopslog::_filebeat-spark
       - hopslog::_filebeat-services
