@@ -26,6 +26,7 @@ attrs:
       system-reserved-memory-mb: 4000
     rmappsecurity:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
+    num_replicas:
   ndb:
     __NDB_NVME__  
     NoOfReplicas: 1
@@ -45,7 +46,7 @@ attrs:
   hopsworks:
     hopsworks_public_host: __HOPSWORKS_PUBLIC_IP__  
     debug: true
-    ear_url: https://repo.hops.works/dev/jdowling/hopsworks-ear-alex.ear
+    ear_url: https://repo.hops.works/dev/jdowling/hopsworks-ear-kube.ear
 #    download_url: https://repo.hops.works/dev/xxx/
 #    hdfs:
 #      storage_policy:
@@ -65,7 +66,7 @@ attrs:
       enabled: true
       threshold: 40s
   onlinefs:
-    download_url: https://repo.hops.works/dev/jdowling/onlinefs-alex.tgz 
+    download_url: https://repo.hops.works/dev/jdowling/onlinefs.tgz 
   flink:
     url: https://repo.hops.works/dev/jdowling/flink-1.14.3.0-bin-scala_2.11.tgz 
   kkafka:
@@ -109,11 +110,12 @@ groups:
       - kagent
       - conda
       - ndb::mgmd
-      - ndb::ndbd
+      # - ndb::ndbd
       - ndb::mysqld
       - hops::ndb
       - hops::rm
       - hops::nn
+      - hops::nm
       - hops::jhs
       - hadoop_spark::yarn
       - hadoop_spark::historyserver

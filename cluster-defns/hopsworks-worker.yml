@@ -1,17 +1,18 @@
-  ndb:
-    __NDB_NVME__  
-    NoOfReplicas: 1
-    LockPagesInMainMemory: 0
-    TotalMemoryConfig: 16G
-    NumCPUs: 8
-#    diskdata_dir: "/mnt/nvmeDisks/nvme0/"
-#    nvme:
-#      logfile_size: "10G"
   worker__WORKER_ID__:
+  
     size: 1
     baremetal:
       ip: __WORKER_IP__
     attrs:
+      ndb:
+        __NDB_NVME__  
+        NoOfReplicas: 1
+        LockPagesInMainMemory: 0
+        TotalMemoryConfig: 16G
+        NumCPUs: 8
+    #    diskdata_dir: "/mnt/nvmeDisks/nvme0/"
+    #    nvme:
+    #      logfile_size: "10G"
       cuda:
         accept_nvidia_download_terms: false
       hops:

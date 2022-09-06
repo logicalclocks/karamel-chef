@@ -1,3 +1,12 @@
+  ndb:
+    __NDB_NVME__  
+    NoOfReplicas: 1
+    LockPagesInMainMemory: 0
+    TotalMemoryConfig: 16G
+    NumCPUs: 8
+#    diskdata_dir: "/mnt/nvmeDisks/nvme0/"
+#    nvme:
+#      logfile_size: "10G"
   worker__WORKER_ID__:
     size: 1
     baremetal:
@@ -12,15 +21,16 @@
     recipes:
       - kagent
       - conda
-      - hops::dn
-      - hops::nm
-      - hadoop_spark::yarn
-      - flink::yarn
-      - hopslog::_filebeat-spark
+      - ndb::ndbd
+      # - hops::dn
+      # - hops::nm
+      # - hadoop_spark::yarn
+      # - flink::yarn
+      # - hopslog::_filebeat-spark
       - hopslog::_filebeat-services
-      - tensorflow
+      # - tensorflow
       - hopsmonitor::node_exporter
-      - livy::install
+      # - livy::install
       - consul::slave
 #      - kube-hops::node
 
