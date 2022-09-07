@@ -26,7 +26,7 @@ attrs:
       system-reserved-memory-mb: 4000
     rmappsecurity:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
-    num_replicas:
+    num_replicas: 1
   ndb:
     __NDB_NVME__  
     NoOfReplicas: 1

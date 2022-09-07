@@ -24,7 +24,7 @@
       - conda
       - ndb::ndbd
       # - hops::dn
-      # - hops::nm
+      - hops::nm
       - hadoop_spark::yarn
       # - flink::yarn
       # - hopslog::_filebeat-spark
