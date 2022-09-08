@@ -13,6 +13,9 @@ attrs:
   hops:
     rmappsecurity:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
+    yarn:
+      vcores: 4
+      memory_mbs: 20000
   alertmanager:
     email:
       to: sre@logicalclocks.com
