@@ -11,7 +11,7 @@ cookbook 'conda', github: "logicalclocks/conda-chef", branch: "master"
 cookbook 'kzookeeper', github: "logicalclocks/kzookeeper", branch: "master"
 cookbook 'elastic', github: "logicalclocks/elasticsearch-chef", branch: "master"
 cookbook 'hopslog', github: "logicalclocks/hopslog-chef", branch: "master"
-cookbook 'kkafka', github: "logicalclocks/kafka-cookbook", branch: "master"
+cookbook 'kkafka', github: "Nightcro/kafka-cookbook", branch: "master"
 cookbook 'consul', github: "logicalclocks/consul-chef", branch: "master"
 cookbook 'java', github: "logicalclocks/java", branch: "v7.0.0-1"
 

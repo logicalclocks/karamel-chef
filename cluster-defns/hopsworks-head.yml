@@ -30,8 +30,8 @@ attrs:
     __NDB_NVME__  
     NoOfReplicas: 1
     LockPagesInMainMemory: 0
-    TotalMemoryConfig: 4G
-    NumCPUs: 4
+    TotalMemoryConfig: 10G
+    NumCPUs: 8
 #    diskdata_dir: "/mnt/nvmeDisks/nvme0/"
 #    nvme:
 #      logfile_size: "10G"
