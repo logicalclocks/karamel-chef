@@ -30,7 +30,7 @@
 HOPSWORKS_REPO=logicalclocks/hopsworks-chef
 HOPSWORKS_BRANCH=master
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_BRANCH
-KARAMEL_VERSION=0.6
+KARAMEL_VERSION=0.7
 ENTERPRISE_DOWNLOAD_URL=https://nexus.hops.works/repository
 
 INSTALL_ACTION=
@@ -1650,7 +1650,7 @@ $NODE_MANAGER_HEAD"
 	echo " Then, edit your cluster definitions in: /home/$USER/cluster-defns"
 	echo " Then run karamel on your new cluster definition: "
 	echo " "
-	echo " cd karamel-0.6 && setsid ./bin/karamel -headless -launch ../${YML_FILE} > ../installation.log 2>&1 &"
+	echo " cd karamel-${KARAMEL_VERSION} && setsid ./bin/karamel -headless -launch ../${YML_FILE} > ../installation.log 2>&1 &"
 	echo "****************************************"
     fi
 fi
