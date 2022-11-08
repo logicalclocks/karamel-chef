@@ -22,8 +22,8 @@ OCTETS="192.168."
 ORIGINAL_OCTETS=${OCTETS}"56"
 
 GB=1024
-SOFT_LIMIT=$(( 80 * GB ))
-HARD_LIMIT=$(( 30 * GB ))
+DISK_SOFT_LIMIT=$(( 80 * GB ))
+DISK_HARD_LIMIT=$(( 30 * GB ))
 
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
@@ -32,8 +32,8 @@ NC='\033[0m'
 function check_available_disk_space() {
     available_mb_str=$(df . --output=avail -B MB | grep -v "\W")
     available_mb=${available_mb_str//[^0-9]*/}
-    echo "Available MB on device: $available_mb_str HARD limit : ${HARD_LIMIT}MB SOFT limit: ${SOFT_LIMIT}MB"
-    if [ $available_mb -le $HARD_LIMIT ]
+    echo "Available hard disk space on device: $available_mb_str HARD limit : ${DISK_HARD_LIMIT}MB SOFT limit: ${DISK_SOFT_LIMIT}MB"
+    if [ $available_mb -le $DISK_HARD_LIMIT ]
     then
         echo -e "${RED}*****************************************************${NC}"
         echo -e "${RED}*                                                   *${NC}"
@@ -41,7 +41,7 @@ function check_available_disk_space() {
         echo -e "${RED}*                                                   *${NC}"
         echo -e "${RED}*****************************************************${NC}"
 	exit 3
-    elif [ $available_mb -le $SOFT_LIMIT ]
+    elif [ $available_mb -le $DISK_SOFT_LIMIT ]
     then
         echo -e "${YELLOW}**************************************************************${NC}"
         echo -e "${YELLOW}*                                                            *${NC}"
@@ -50,6 +50,41 @@ function check_available_disk_space() {
         echo -e "${YELLOW}**************************************************************${NC}"
 	sleep 2
     fi
+}
+
+
+HEAD_VM_MEMORY_MB=$(( 27 * GB ))
+WORKER_VM_MEMORY_MB=$(( 18 * GB ))
+MEM_SOFT_LIMIT=$(( 10 * GB ))
+MEM_HARD_LIMIT=$(( 2 * GB ))
+
+function check_available_memory() {
+  available_memory_mb=$(free --mega | grep -e "^Mem" | awk '{ print $7 }')
+  num_vms=$1
+  mem_cluster_total_mb=$HEAD_VM_MEMORY_MB
+  if [ $num_vms -gt 1 ]
+  then
+    mem_cluster_total_mb=$(( HEAD_VM_MEMORY_MB + (num_vms - 1) * WORKER_VM_MEMORY_MB ))
+  fi
+  memory_left_mb=$(( available_memory_mb - mem_cluster_total_mb ))
+  echo "Available memory on device ${available_memory_mb}MB Required: ${mem_cluster_total_mb}MB HARD limit: ${MEM_HARD_LIMIT}MB SOFT limit: ${MEM_SOFT_LIMIT}"
+  if [ $memory_left_mb -le $MEM_HARD_LIMIT ]
+  then
+    echo -e "${RED}*************************************************${NC}"
+    echo -e "${RED}*                                               *${NC}"
+    echo -e "${RED}*   Error: Not enough memory left on device :(  *${NC}"
+    echo -e "${RED}*                                               *${NC}"
+    echo -e "${RED}*************************************************${NC}"
+    exit 3
+  elif [ $memory_left_mb -le $MEM_SOFT_LIMIT ]
+  then
+    echo -e "${YELLOW}**********************************************************${NC}"
+    echo -e "${YELLOW}*                                                        *${NC}"
+    echo -e "${YELLOW}*   Warning: Available memory on device is getting low   *${NC}"
+    echo -e "${YELLOW}*                                                        *${NC}"
+    echo -e "${YELLOW}**********************************************************${NC}"
+    sleep 2
+  fi
 }
 
 function replace_port() {
@@ -289,9 +324,8 @@ if [ $# -lt 3 ] ; then
     help
 fi
 
-
 check_available_disk_space
-
+check_available_memory $2
 
 PORTS=1
 
