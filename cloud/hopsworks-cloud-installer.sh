@@ -87,7 +87,7 @@ GPU_TYPE=
 NUM_WORKERS_CPU=0
 NUM_WORKERS_GPU=0
 
-CLOUD=
+CLOUD=gcp
 VM_DELETE=
 SHUTDOWN_CLUSTER=0
 RESTART_CLUSTER=0
@@ -2155,7 +2155,7 @@ help()
     echo "   9090"
     echo ""
     echo "Hopsworks Feature Store Python clients need access to the following ports:"
-    echo "   443, 8020, 9083, 9085, 50010, 32080, 32080, 32021, 3306, 9092"
+    echo "   443, 8020, 9083, 9085, 50010, 32080, 32080, 32021, 3306, 9092, 5005"
     echo ""
     exit 3
 
