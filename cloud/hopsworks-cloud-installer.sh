@@ -2156,7 +2156,7 @@ help()
     echo ""
     echo "Hopsworks Feature Store Python clients need access to the following ports:"
     echo "   443, 8020, 9083, 9085, 50010, 32080, 32080, 32021, 3306, 9092, 5005, 9200"
-    echo "  (Payara, HiveServer2, Hive Metastore, FlyingDuck, OpenSearch, MySQL Server)"
+    echo "  (Payara (443), HiveServer2, Hive Metastore, OpenSearch, MySQL Server (3306), FlyingDuck (5005))"
     echo ""
     exit 3
 
