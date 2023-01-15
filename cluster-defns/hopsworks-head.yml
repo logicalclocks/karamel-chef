@@ -60,9 +60,6 @@ attrs:
     featurestore_online: true
     requests_verify: false
     application_certificate_validity_period: 6d
-    kagent_liveness:
-      enabled: true
-      threshold: 40s
   kkafka:
     broker: 
       host:
@@ -138,4 +135,5 @@ groups:
       - hops::docker_registry
       - hops::fuse_mnt
       - onlinefs      
+      - flyingduck
 __KUBERNETES_RECIPES__
