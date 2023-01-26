@@ -1,15 +1,9 @@
 
 Vagrant.configure("2") do |config|
-    disk_partition = <<-SCRIPT
-        growpart /dev/sda 3
-        pvresize /dev/sda3
-        lvresize /dev/ubuntu-vg/ubuntu-lv  -l 100%VG
-        resize2fs /dev/ubuntu-vg/ubuntu-lv
-    SCRIPT
 
     config.disksize.size = "130GB"
     config.ssh.insert_key = false
-    config.vm.box = "bento/ubuntu-22.04"
+    config.vm.box = "ubuntu/bionic64"
     config.vm.hostname = 'hopsworks0.logicalclocks.com'
     config.vm.boot_timeout =3600
 
@@ -57,23 +51,21 @@ Vagrant.configure("2") do |config|
 
     config.vm.provider :virtualbox do |v|
       v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
-      v.customize ["modifyvm", :id, "--memory", 30000]
+      v.customize ["modifyvm", :id, "--memory", 42000]
       v.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
       v.customize ["modifyvm", :id, "--nictype1", "virtio"]
       v.customize ["modifyvm", :id, "--name", "hopsworks0"]
-      v.customize ["modifyvm", :id, "--cpus", "6"]
+      v.customize ["modifyvm", :id, "--cpus", "8"]
     end
 
-    config.vm.provision :shell, :inline => disk_partition
     config.vm.provision :chef_solo do |chef|
         chef.version = "14.10.9"
         chef.cookbooks_path = "cookbooks"
         chef.json = {
           "karamel" => {
-	            "default" =>      {
-                  "private_ips" => ["10.0.2.15"]
-	            },
-              "hostname" => "hopsworks0.logicalclocks.com",
+	    "default" =>      {
+              "private_ips" => ["10.0.2.15"]
+	    },
           },
         }
         chef.add_recipe "karamel::install"
