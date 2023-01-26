@@ -107,3 +107,4 @@ groups:
       - ndb::mysqld
       - onlinefs
       - tensorflow
+      #- flyingduck
