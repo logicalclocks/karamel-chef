@@ -40,8 +40,8 @@ attrs:
     LockPagesInMainMemory: 0
     TotalMemoryConfig: 4G
     NumCPUs: 4
-  #flyingduck:
-  #  memory_gbs: 2
+  flyingduck:
+    memory_gbs: 2
     
 groups:
   namenodes:
@@ -84,4 +84,4 @@ groups:
       - consul::master
       - hops::docker_registry
       - onlinefs
-      # - flyingduck
+      - flyingduck
