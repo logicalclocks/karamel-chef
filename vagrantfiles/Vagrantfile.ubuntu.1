@@ -51,11 +51,11 @@ Vagrant.configure("2") do |config|
 
     config.vm.provider :virtualbox do |v|
       v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
-      v.customize ["modifyvm", :id, "--memory", 30000]
+      v.customize ["modifyvm", :id, "--memory", 56000]
       v.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
       v.customize ["modifyvm", :id, "--nictype1", "virtio"]
       v.customize ["modifyvm", :id, "--name", "hopsworks0"]
-      v.customize ["modifyvm", :id, "--cpus", "6"]
+      v.customize ["modifyvm", :id, "--cpus", "10"]
     end
 
     config.vm.provision :chef_solo do |chef|
