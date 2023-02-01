@@ -4,7 +4,7 @@ baremetal:
 
 cookbooks:
   hopsworks:
-    github: logicalclocks/hopsworks-chef
+    github: jimdowling/hopsworks-chef
     branch: master
 
 attrs:
@@ -40,6 +40,8 @@ attrs:
     LockPagesInMainMemory: 0
     TotalMemoryConfig: 4G
     NumCPUs: 4
+  flyingduck:
+    memory_gbs: 8
     
 groups:
   namenodes:
