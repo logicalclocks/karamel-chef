@@ -84,4 +84,4 @@ groups:
       - consul::master
       - hops::docker_registry
       - onlinefs
-      - flyingduck
+      - flyingduck::test
