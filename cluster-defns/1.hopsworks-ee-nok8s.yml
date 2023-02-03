@@ -1,4 +1,4 @@
-name: HopsworksEnterpriseSingleNode
+name: HopsworksVagrantSingleNode
 baremetal:
     username: vagrant
 
@@ -6,7 +6,6 @@ cookbooks:
   hopsworks:
     github: logicalclocks/hopsworks-chef
     branch: master
-
 attrs:
   kube-hops:
     pki:
@@ -15,22 +14,18 @@ attrs:
     master:
       untaint: true
   install:
-    # When upgrading, set current_version and re-run karamel
-    #current_version: 2.5.0
+    #  current_version: 3.0.0
     dir: /srv/hops
     cloud: gcp
-    kubernetes: true
+    kubernetes: false
     enterprise:
       install: true
-      download_url: 
+      download_url: https://nexus.hops.works/repository
       username: 
       password: 
   hops:
     rmappsecurity:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
-    yarn:
-      vcores: 4
-      memory_mbs: 20000
   alertmanager:
     email:
       to: sre@logicalclocks.com
@@ -40,12 +35,9 @@ attrs:
     retention_time: "2h"
   hopsworks:
     debug: true
-    #download_url: 
-    #ear_url: 
+    #ear_url: https://repo.hops.works/dev/jdowling/hopsworks-airflow.ear
+    #war_url: https://repo.hops.works/dev/jdowling/hopsworks-airflow-web.war
     featurestore_online: true
-    kagent_liveness:
-      enabled: true
-      threshold: "40s"
   elastic:
     opensearch_security:
       jwt:
@@ -66,47 +58,43 @@ groups:
     baremetal:
       ip: 10.0.2.15
     recipes:
+      - kagent
       - conda
-      - consul::master
-      - elastic
-      - epipe
-      - flink::yarn
-      - flink::historyserver
+      - ndb::mgmd
+      - ndb::ndbd
+      - ndb::mysqld
+      - hops::ndb
+      - hops::rm
+      - hops::nn
+      - hops::jhs
       - hadoop_spark::yarn
       - hadoop_spark::historyserver
-      - hive2
-      - hops::docker_registry
-      - hops::dn
-      - hops::fuse_mnt
-      - hops::jhs
-      - hops::ndb
-      - hops::nm
-      - hops::nn
-      - hops::rm
-      - hopsmonitor
+      - flink::yarn
+      - flink::historyserver
+      - elastic
+      - livy
+      - kzookeeper
+      - kkafka
+      - epipe
       - hopslog
+      - hopsworks
+        #- hopsworks::migrate
       - hopslog::_filebeat-spark
       - hopslog::_filebeat-serving
       - hopslog::_filebeat-jupyter
       - hopslog::_filebeat-services
+      - hops::dn
+      - tensorflow
+      - hive2
       - hops_airflow
+      - hopsmonitor
       - hopsmonitor::prometheus
       - hopsmonitor::alertmanager
       - hopsmonitor::node_exporter
-      - hopsworks
-      # when upgrading, enable this recipe
-      #- hopsworks::migrate
-      - kagent
-      - kube-hops::addons
-      - kube-hops::ca
-      - kube-hops::hopsworks
-      - kube-hops::master
-      - kzookeeper
-      - kkafka
-      - livy
-      - ndb::mgmd
-      - ndb::ndbd
-      - ndb::mysqld
+      - consul::master
+      - hops::fuse_mnt
+      - hops::docker_registry
       - onlinefs
-      - tensorflow
+      - hops::nm
       - flyingduck
+

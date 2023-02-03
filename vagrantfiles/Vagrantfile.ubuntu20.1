@@ -8,6 +8,8 @@ Vagrant.configure("2") do |config|
     config.vm.boot_timeout =3600
 
     config.vm.network :forwarded_port, guest: 22, host: 10022, id: "ssh"
+    # FlyingDuck
+    config.vm.network(:forwarded_port, {:guest=>5005, :host=>5005})
     # MySQL Server
     config.vm.network(:forwarded_port, {:guest=>3306, :host=>3306})
     # karamel http
