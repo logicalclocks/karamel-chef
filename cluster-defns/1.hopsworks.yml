@@ -41,7 +41,7 @@ attrs:
     TotalMemoryConfig: 4G
     NumCPUs: 4
   flyingduck:
-    memory_gbs: 8
+    memory_gbs: 12
     
 groups:
   namenodes:
@@ -84,4 +84,4 @@ groups:
       - consul::master
       - hops::docker_registry
       - onlinefs
-      - flyingduck::test
+      - flyingduck
