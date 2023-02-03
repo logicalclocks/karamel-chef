@@ -41,7 +41,7 @@ attrs:
     TotalMemoryConfig: 4G
     NumCPUs: 4
   flyingduck:
-    memory_gbs: 12
+    memory_gbs: 16
     
 groups:
   namenodes:
