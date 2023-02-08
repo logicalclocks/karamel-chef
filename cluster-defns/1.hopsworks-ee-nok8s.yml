@@ -4,7 +4,7 @@ baremetal:
 
 cookbooks:
   hopsworks:
-    github: jimdowling/hopsworks-chef
+    github: logicalclocks/hopsworks-chef
     branch: master
 attrs:
   kube-hops:
@@ -21,8 +21,8 @@ attrs:
     enterprise:
       install: true
       download_url: https://nexus.hops.works/repository
-      username: jim
-      password: Stockhome14!
+      username: 
+      password: 
   hops:
     rmappsecurity:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
