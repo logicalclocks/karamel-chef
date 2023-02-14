@@ -822,7 +822,7 @@ add_worker()
 	fi
     fi
 
-    WORKER_GPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo lspci | grep -i nvidia | wc -l")
+    WORKER_GPUS=$(ssh -t -o StrictHostKeyChecking=no $WORKER_IP "sudo lspci | grep -i 'vga.*nvidia' | wc -l")
     # strip carriage return '\r' from variable to make it a number
     WORKER_GPUS=$(echo $WORKER_GPUS|tr -d '\r')
 
@@ -1200,7 +1200,7 @@ if [ $? -ne 0 ] ; then
     echo "Installing pciutils ...."
     sudo yum install pciutils -y > /dev/null
 fi
-AVAILABLE_GPUS=$(sudo lspci | grep -i nvidia | wc -l)
+AVAILABLE_GPUS=$(sudo lspci | grep -i 'vga.*nvidia' | wc -l)
 
 
 if [ $NON_INTERACT -eq 0 ] ; then
