@@ -26,9 +26,3 @@ default['test']['ruby_version']             = "2.6.6"
 
 default['java']['jdk_version'] = '8'
 default['java']['install_flavor'] = 'openjdk'
-
-
-default["sshd"]["dir"]                      = "/etc/ssh"
-default["sshd"]["port"]                     = "22"
-default["sshd"]["permit_root_login"]        = "no"
-default["sshd"]["password_authentication"]  = "no"
