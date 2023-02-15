@@ -212,6 +212,7 @@ function ssh_config() {
     GLASSFISH_PORT=0
     KARAMEL_PORT=0
     SSH_PORT=0
+    FLYINGDUCK_PORT=0
 
     
     SAVEIFS=$IFS
@@ -235,6 +236,9 @@ function ssh_config() {
 	    if [ $GLASSFISH_PORT -eq 4848 ] ; then
 	      GLASSFISH_PORT=$i	
 	    fi
+	    if [ $FLYINGDUCK_PORT -eq 5005 ] ; then
+	      FLYINGDUCK_PORT=$i	
+	    fi
 	    if [ $KARAMEL_PORT -eq 9090 ] ; then
 	      KARAMEL_PORT=$i	
 	    fi
@@ -251,6 +255,9 @@ function ssh_config() {
 	    if [ $i -eq 4848 ] ; then
 		GLASSFISH_PORT=4848
 	    fi
+	    if [ $i -eq 5005 ] ; then
+		GLASSFISH_PORT=5005
+	    fi
 	    if [ $i -eq 9090 ] ; then
 		KARAMEL_PORT=9090
 	    fi
@@ -265,6 +272,7 @@ function ssh_config() {
     echo "  LocalForward 8181 localhost:$HTTPS_PORT"
     echo "  LocalForward 4848 localhost:$GLASSFISH_PORT"
     echo "  LocalForward 9090 localhost:$KARAMEL_PORT"
+    echo "  LocalForward 5005 localhost:$FLYINGDUCK_PORT"
     echo ""    
     echo "Host dev4_vagrant"
     echo "  HostName dev4.hops.works"
