@@ -5,7 +5,7 @@ baremetal:
 cookbooks:       
   hops:                                                                     
     github: "logicalclocks/hops-hadoop-chef"
-    branch: "3.1.0"  
+    branch: "3.1"  
 
 
 attrs:
