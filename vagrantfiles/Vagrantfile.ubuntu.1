@@ -7,6 +7,11 @@ Vagrant.configure("2") do |config|
         resize2fs /dev/ubuntu-vg/ubuntu-lv
     SCRIPT
 
+    disable_cgroup2 = <<-SCRIPT
+        sed -i -e 's/^GRUB_CMDLINE_LINUX="/GRUB_CMDLINE_LINUX="systemd.unified_cgroup_hierarchy=0 /' /etc/default/grub
+        update-grub
+    SCRIPT
+
     config.disksize.size = "130GB"
     config.ssh.insert_key = false
     config.vm.box = "bento/ubuntu-22.04"
@@ -63,6 +68,8 @@ Vagrant.configure("2") do |config|
     end
 
     config.vm.provision :shell, :inline => disk_partition
+    config.vm.provision :shell, :inline => disable_cgroup2
+    config.vm.provision :reload
     config.vm.provision :chef_solo do |chef|
         chef.version = "14.10.9"
         chef.cookbooks_path = "cookbooks"
