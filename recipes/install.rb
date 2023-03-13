@@ -52,18 +52,6 @@ when 'debian', 'ubuntu'
       systemctl restart sshd
     EOH
   end
-
-when 'redhat', 'centos', 'fedora'
-
-
-
-  # Fix bug: https://github.com/mitchellh/vagrant/issues/8115
-  bash "restart_network" do
-      user "root"
-      code <<-EOH
-    /etc/init.d/network restart
-  EOH
-  end
 end
 
 bash "Add swap" do
