@@ -8,6 +8,14 @@ node[:karamel][:default][:private_ips].each_with_index do |ip, index|
     action    :create
     unique    true
   end
+
+  bash 'set-hostname' do
+    user "root"
+    group "root"
+    code <<-EOH
+      hostnamectl set-hostname hopsworks#{index}.logicalclocks.com
+    EOH
+  end
 end
 
 case node['platform']
