@@ -19,7 +19,7 @@ bash 'set-hostname' do
     not_if {node[:karamel][:hostname].eql?("")}
 end
 
-case node['platform']
+case node['platform_family']
 when 'debian', 'ubuntu'
 
   ### BEGIN OF HACK
