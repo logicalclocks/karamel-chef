@@ -15,6 +15,7 @@ node[:karamel][:default][:private_ips].each_with_index do |ip, index|
     code <<-EOH
       hostnamectl set-hostname hopsworks#{index}.logicalclocks.com
     EOH
+    only_if {node['ipaddress'] == ip}
   end
 end
 
