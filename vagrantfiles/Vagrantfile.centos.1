@@ -79,9 +79,10 @@ Vagrant.configure("2") do |config|
         chef.cookbooks_path = "cookbooks"
         chef.json = {
           "karamel" => {
-	    "default" =>      {
-              "private_ips" => ["10.0.2.15"]
-	    },
+	            "default" =>      {
+                  "private_ips" => ["10.0.2.15"]
+	            },
+              "hostname" => "hopsworks0.logicalclocks.com",
           },
         }
         chef.add_recipe "karamel::install"

@@ -24,9 +24,10 @@ Vagrant.configure("2") do |config|
       chef.cookbooks_path = "cookbooks"
       chef.json = {
           "karamel" => {
-	    "default" =>      {
-              "private_ips" => ["192.168.56.101","192.168.56.102","192.168.56.103"]
-	    },
+	          "default" =>      {
+                "private_ips" => ["192.168.56.101","192.168.56.102","192.168.56.103"]
+	          },
+            "hostname" => "hopsworks2.logicalclocks.com",
           },
         }
       chef.add_recipe "karamel::install"
@@ -53,9 +54,10 @@ Vagrant.configure("2") do |config|
       chef.cookbooks_path = "cookbooks"
       chef.json = {
           "karamel" => {
-	    "default" =>      {
-              "private_ips" => ["192.168.56.101","192.168.56.102","192.168.56.103"]
-	    },
+	            "default" =>      {
+                   "private_ips" => ["192.168.56.101","192.168.56.102","192.168.56.103"]
+	            },
+              "hostname" => "hopsworks1.logicalclocks.com",
           },
         }
       chef.add_recipe "karamel::install"
@@ -114,9 +116,10 @@ Vagrant.configure("2") do |config|
         chef.cookbooks_path = "cookbooks"
         chef.json = {
           "karamel" => {
-	    "default" =>      {
-              "private_ips" => ["192.168.56.101","192.168.56.102","192.168.56.103"]
-	    },
+	           "default" =>      {
+                     "private_ips" => ["192.168.56.101","192.168.56.102","192.168.56.103"]
+	           },
+             "hostname" => "hopsworks0.logicalclocks.com",
           },
         }
         chef.add_recipe "karamel::install"
