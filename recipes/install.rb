@@ -61,6 +61,15 @@ when 'debian', 'ubuntu'
       systemctl restart sshd
     EOH
   end
+when 'rhel'
+  bash 'disable_selinux' do
+    user 'root'
+    group 'root'
+    code <<-EOH
+      setenforce 0
+      sed -i --follow-symlinks 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/sysconfig/selinux
+    EOH
+  end
 end
 
 bash "Add swap" do
