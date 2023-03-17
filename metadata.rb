@@ -41,3 +41,6 @@ attribute "karamel/timeout",
           :description => "Timeout for completing karamel. Default: 36000 (s) - 10 hrs",
           :type => 'string'
 
+attribute "test/ruby_version",
+          :description => "Ruby version. Default: 2.6.6",
+          :type => 'string'
