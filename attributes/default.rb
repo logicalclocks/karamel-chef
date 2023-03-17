@@ -22,6 +22,7 @@ default['test']['hopsworks']['test_dir']    = "#{node['test']['hopsworks']['base
 default['test']['hopsworks']['report_dir']  = "/home/vagrant/test_report"
 default['test']['hopsworks']['frontend']    = true
 default['test']['hopsworks']['it']          = false
+default['test']['ruby_version']             = "2.6.6"
 
 default['java']['jdk_version'] = '8'
 default['java']['install_flavor'] = 'openjdk'
