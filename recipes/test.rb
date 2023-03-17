@@ -5,6 +5,8 @@ directory "/home/vagrant" do
   action :create
 end
 
+ruby_version = node['test']['ruby_version']
+
 case node['platform']
 when 'ubuntu'
   package ['bundler', 'firefox', 'libappindicator3-1', 'fonts-liberation', 'libxss1', 'xdg-utils', 'libreadline-dev', 'zlib1g-dev', 'libgbm1', 'libnspr4', 'libnss3']
@@ -39,8 +41,8 @@ when 'ubuntu'
       eval "$(rbenv init -)"
       echo 'eval "$(rbenv init -)"' >> ~/.bashrc
       /tmp/rbenv_check.sh
-      rbenv install 2.5.1
-      rbenv global 2.5.1
+      rbenv install #{ruby_version}
+      rbenv global #{ruby_version}
     EOH
   end
 
@@ -76,8 +78,8 @@ when 'centos'
       curl -sSL https://rvm.io/pkuczynski.asc | sudo gpg2 --import -
       curl -sSL https://get.rvm.io | bash -s stable
       source /etc/profile.d/rvm.sh
-      rvm install 2.5.1
-      rvm use 2.5.1 --default
+      rvm install #{ruby_version}
+      rvm use #{ruby_version} --default
     EOH
   end
 end
@@ -219,7 +221,7 @@ when 'centos'
     ignore_failure true
     timeout node['karamel']['test_timeout']
     cwd node['test']['hopsworks']['test_dir']
-    environment ({'PATH' => "/usr/local/rvm/gems/ruby-2.5.1/bin:/usr/local/rvm/gems/ruby-2.5.1@global/bin:/usr/local/rvm/rubies/ruby-2.5.1/bin:/usr/local/bin:/srv/hops/mysql/bin:#{ENV['PATH']}",
+    environment ({'PATH' => "/usr/local/rvm/gems/ruby-#{ruby_version}/bin:/usr/local/rvm/gems/ruby-#{ruby_version}@global/bin:/usr/local/rvm/rubies/ruby-#{ruby_version}/bin:/usr/local/bin:/srv/hops/mysql/bin:#{ENV['PATH']}",
               'LD_LIBRARY_PATH' => "#{ENV['LD_LIBRARY_PATH']}:/srv/hops/mysql/lib",
               'HOME' => "/home/vagrant",
               'JAVA_HOME' => "/usr/lib/jvm/java"})
