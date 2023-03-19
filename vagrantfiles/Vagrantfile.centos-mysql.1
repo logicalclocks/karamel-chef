@@ -1,14 +1,18 @@
 Vagrant.configure("2") do |config|
 
    common = <<-SCRIPT
-       sudo parted /dev/sda resizepart 2 100%
-       sudo pvresize /dev/sda2
-       sudo lvextend -l +100%FREE /dev/centos/root
-       sudo xfs_growfs /dev/centos/root
+          sudo sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+          sudo sed -i 's|#baseurl=http://mirror.centos.org/$contentdir/$stream|baseurl=http://mirror.centos.org/centos/8-stream|g' /etc/yum.repos.d/CentOS-*
+          sudo dnf clean all
+          sudo dnf install epel-release epel-next-release -y
+          sudo yum -y update ca-certificates
+          sudo dnf install lvm2 -y
+          echo -e "resizepart\n2\nYes\n100%\nprint\nquit" | sudo parted /dev/sda ---pretend-input-tty
+          sudo xfs_growfs /
    SCRIPT
    config.disksize.size = "100GB"
    config.ssh.insert_key = false
-   config.vm.box = "bento/centos-7.7"
+   config.vm.box = "bento/centos-stream-8"
    config.vm.hostname = 'hopsworks0.logicalclocks.com'
 
     config.vm.network :forwarded_port, guest: 22, host: 10022, id: "ssh"
