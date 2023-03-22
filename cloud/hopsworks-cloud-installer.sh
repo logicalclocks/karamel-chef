@@ -32,7 +32,8 @@
 #                                                                                                 #
 ###################################################################################################
 
-HOPSWORKS_INSTALLER_VERSION=master
+HOPSWORKS_INSTALLER_VERSION=installer_ubuntu22_centos8
+#master
 CLUSTER_DEFINITION_VERSION=$HOPSWORKS_INSTALLER_VERSION
 HOPSWORKS_INSTALLER_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_INSTALLER_VERSION
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$CLUSTER_DEFINITION_VERSION
@@ -115,8 +116,8 @@ IMAGE_UBUNTU=ubuntu-2204-jammy-v20230302
 IMAGE_PROJECT_UBUNTU=ubuntu-os-cloud
 IMAGE=$IMAGE_CENTOS
 IMAGE_PROJECT=$IMAGE_PROJECT_CENTOS
-#IMAGE=$IMAGE_UBUNTU
-#IMAGE_PROJECT=$IMAGE_PROJECT_UBUNTU
+IMAGE=$IMAGE_UBUNTU
+IMAGE_PROJECT=$IMAGE_PROJECT_UBUNTU
 
 
 MACHINE_TYPE=n1-standard-8
