@@ -196,7 +196,8 @@ splash_screen()
     echo "* version: $OS_VERSION"    
     echo "* cluster defn branch: $CLUSTER_DEFINITION_BRANCH"
     echo "* hopsworks-chef branch: $HOPSWORKS_REPO/$HOPSWORKS_BRANCH"
-
+    clear_screen
+}
     strlen=${#HOSTNAME}
     if [ $strlen -gt 64 ] ; then
 	echo ""
@@ -325,8 +326,6 @@ splash_screen()
 	pgrep ndb | tail -1
 	echo ""
     fi
-    clear_screen
-}
 
 
 display_license()
