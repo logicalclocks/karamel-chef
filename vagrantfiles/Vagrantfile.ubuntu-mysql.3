@@ -31,7 +31,6 @@ Vagrant.configure("2") do |config|
     end
 
     config.vm.provision :shell, :inline => disk_partition
-    config.vm.provision :reload
     hopsworks2.vm.provision :chef_solo do |chef|
       chef.version = "14.10.9"
       chef.cookbooks_path = "cookbooks"
@@ -65,7 +64,6 @@ Vagrant.configure("2") do |config|
     end
 
     config.vm.provision :shell, :inline => disk_partition
-    config.vm.provision :reload
     hopsworks1.vm.provision :chef_solo do |chef|
       chef.version = "14.10.9"
       chef.cookbooks_path = "cookbooks"
@@ -134,7 +132,6 @@ Vagrant.configure("2") do |config|
     end
 
     config.vm.provision :shell, :inline => disk_partition
-    config.vm.provision :reload
     hopsworks0.vm.provision :chef_solo do |chef|
         chef.version = "14.10.9"
         chef.cookbooks_path = "cookbooks"
