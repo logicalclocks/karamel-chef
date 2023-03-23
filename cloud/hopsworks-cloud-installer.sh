@@ -32,8 +32,7 @@
 #                                                                                                 #
 ###################################################################################################
 
-HOPSWORKS_INSTALLER_VERSION=installer_ubuntu22_centos8
-#master
+HOPSWORKS_INSTALLER_VERSION=master
 CLUSTER_DEFINITION_VERSION=$HOPSWORKS_INSTALLER_VERSION
 HOPSWORKS_INSTALLER_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_INSTALLER_VERSION
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$CLUSTER_DEFINITION_VERSION
@@ -166,9 +165,9 @@ VM_GPU=gpu
 VM_SIZE=Standard_E8s_v3
 ACCELERATOR_VM=Standard_NC6
 
-#OS_IMAGE=OpenLogic:CentOS:7.7:latest
-OS_IMAGE="Canonical:UbuntuServer:18.04-LTS:latest"
-UBUNTU_VERSION=18
+#OS_IMAGE=cognosys:centos-8-1-free
+OS_IMAGE="Canonical:0001-com-ubuntu-server-jammy:22_04-lts:latest"
+UBUNTU_VERSION=22
 
 #
 #AZ_NETWORKING="--accelerated-networking true"
