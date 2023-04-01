@@ -33,9 +33,7 @@
 ###################################################################################################
 
 HOPSWORKS_INSTALLER_VERSION=fd
-CLUSTER_DEFINITION_VERSION=$HOPSWORKS_INSTALLER_VERSION
 HOPSWORKS_INSTALLER_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_INSTALLER_VERSION
-CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$CLUSTER_DEFINITION_VERSION
 
 DEBUG=0
 
@@ -580,18 +578,8 @@ download_installer() {
 
     mkdir -p $CLUSTER_DEFINITIONS_DIR
     cd $CLUSTER_DEFINITIONS_DIR
-    # Don't overwrite the YML files, so that users can customize them
-    curl --silent --show-error -C - ${CLUSTER_DEFINITION_BRANCH}/${CLUSTER_DEFINITIONS_DIR}/$INPUT_YML -o ./$INPUT_YML 2>&1 > /dev/null
     if [ $? -ne 0 ] ; then
 	exit 12
-    fi
-    curl --silent --show-error -C - ${CLUSTER_DEFINITION_BRANCH}/${CLUSTER_DEFINITIONS_DIR}/$WORKER_YML -o ./$WORKER_YML 2>&1 > /dev/null
-    if [ $? -ne 0 ] ; then
-	exit 13
-    fi
-    curl --silent --show-error -C - ${CLUSTER_DEFINITION_BRANCH}/${CLUSTER_DEFINITIONS_DIR}/$WORKER_GPU_YML -o ./$WORKER_GPU_YML 2>&1 > /dev/null    
-    if [ $? -ne 0 ] ; then
-	exit 14
     fi
     cd ../..
 }
