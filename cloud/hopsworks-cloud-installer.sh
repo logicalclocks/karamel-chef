@@ -107,14 +107,14 @@ PUBLIC_IP=
 #################
 # GCP Config
 #################
-REGION=us-east1
-ZONE=us-east1-c
-IMAGE_CENTOS=centos-7-v20210817
+REGION=europe-west1
+ZONE=europe-west1-b
+IMAGE_CENTOS=centos-stream-8-v20230306
 IMAGE_PROJECT_CENTOS=centos-cloud
-IMAGE_UBUNTU=ubuntu-1804-bionic-v20220308
+IMAGE_UBUNTU=ubuntu-2204-jammy-v20230302
 IMAGE_PROJECT_UBUNTU=ubuntu-os-cloud
-#IMAGE=$IMAGE_CENTOS
-#IMAGE_PROJECT=$IMAGE_PROJECT_CENTOS
+IMAGE=$IMAGE_CENTOS
+IMAGE_PROJECT=$IMAGE_PROJECT_CENTOS
 IMAGE=$IMAGE_UBUNTU
 IMAGE_PROJECT=$IMAGE_PROJECT_UBUNTU
 
@@ -165,9 +165,9 @@ VM_GPU=gpu
 VM_SIZE=Standard_E8s_v3
 ACCELERATOR_VM=Standard_NC6
 
-#OS_IMAGE=OpenLogic:CentOS:7.7:latest
-OS_IMAGE="Canonical:UbuntuServer:18.04-LTS:latest"
-UBUNTU_VERSION=18
+#OS_IMAGE=cognosys:centos-8-1-free
+OS_IMAGE="Canonical:0001-com-ubuntu-server-jammy:22_04-lts:latest"
+UBUNTU_VERSION=22
 
 #
 #AZ_NETWORKING="--accelerated-networking true"

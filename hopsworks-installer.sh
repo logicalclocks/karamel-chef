@@ -29,9 +29,8 @@
 
 HOPSWORKS_REPO=logicalclocks/hopsworks-chef
 HOPSWORKS_BRANCH=master
-CLUSTER_DEFN=master
-CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$CLUSTER_DEFN
-KARAMEL_VERSION=0.7
+CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_BRANCH
+KARAMEL_VERSION=0.9-SNAPSHOT
 ENTERPRISE_DOWNLOAD_URL=https://nexus.hops.works/repository
 
 INSTALL_ACTION=
@@ -197,7 +196,8 @@ splash_screen()
     echo "* version: $OS_VERSION"    
     echo "* cluster defn branch: $CLUSTER_DEFINITION_BRANCH"
     echo "* hopsworks-chef branch: $HOPSWORKS_REPO/$HOPSWORKS_BRANCH"
-
+    clear_screen
+}
     strlen=${#HOSTNAME}
     if [ $strlen -gt 64 ] ; then
 	echo ""
@@ -326,8 +326,6 @@ splash_screen()
 	pgrep ndb | tail -1
 	echo ""
     fi
-    clear_screen
-}
 
 
 display_license()
