@@ -27,8 +27,8 @@
 #                                                                                                 #
 ###################################################################################################
 
-HOPSWORKS_REPO=jimdowling/hopsworks-chef
-HOPSWORKS_BRANCH=flyingduck
+HOPSWORKS_REPO=logicalclocks/hopsworks-chef
+HOPSWORKS_BRANCH=fd
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_BRANCH
 KARAMEL_VERSION=0.9-SNAPSHOT
 ENTERPRISE_DOWNLOAD_URL=https://nexus.hops.works/repository
