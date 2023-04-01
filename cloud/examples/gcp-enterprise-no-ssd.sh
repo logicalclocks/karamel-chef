@@ -20,4 +20,4 @@ if [ "$cpus" == "" ] ; then
   echo "Using 8 cpus"
 fi
 
-ENTERPRISE_PASSWORD=$PASSWORD ./hopsworks-cloud-installer.sh -n $name -i kubernetes -ni -c gcp -de https://nexus.hops.works/repository -ht n1-standard-${cpus}
+ENTERPRISE_PASSWORD=$PASSWORD ./hopsworks-cloud-installer.sh -n $name -i enterprise -ni -c gcp -de https://nexus.hops.works/repository -ht n1-standard-${cpus}
