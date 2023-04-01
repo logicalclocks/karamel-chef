@@ -43,6 +43,7 @@ attrs:
   prometheus:
       retention_time: "8h"
   hopsworks:
+    enable_flyingduck: true
     hopsworks_public_host: __HOPSWORKS_PUBLIC_IP__  
     debug: true
 #    download_url: https://repo.hops.works/dev/xxx/
