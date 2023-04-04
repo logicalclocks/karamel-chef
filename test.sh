@@ -15,7 +15,7 @@ function replace_port() {
 	# If the port is already in the file, try again
 	grep $p Vagrantfile
 	r1=$?
-	$(netstat -lptn | grep $p 2>&1 > /dev/null)
+	$(ss -lptn | grep $p 2>&1 > /dev/null)
 	r2=$?
 	if [ $r1 -eq 0 ] || [ $r2 -eq 0 ] ; then
 	    p=`shuf -i 2000-65000 -n 1`
