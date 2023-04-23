@@ -34,8 +34,8 @@
 
 HOPSWORKS_INSTALLER_VERSION=master
 CLUSTER_DEFINITION_VERSION=$HOPSWORKS_INSTALLER_VERSION
-HOPSWORKS_INSTALLER_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_INSTALLER_VERSION
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$CLUSTER_DEFINITION_VERSION
+HOPSWORKS_INSTALLER_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_INSTALLER_VERSION
 
 DEBUG=0
 
@@ -580,7 +580,7 @@ download_installer() {
 
     mkdir -p $CLUSTER_DEFINITIONS_DIR
     cd $CLUSTER_DEFINITIONS_DIR
-    # Don't overwrite the YML files, so that users can customize them
+
     curl --silent --show-error -C - ${CLUSTER_DEFINITION_BRANCH}/${CLUSTER_DEFINITIONS_DIR}/$INPUT_YML -o ./$INPUT_YML 2>&1 > /dev/null
     if [ $? -ne 0 ] ; then
 	exit 12
@@ -589,7 +589,7 @@ download_installer() {
     if [ $? -ne 0 ] ; then
 	exit 13
     fi
-    curl --silent --show-error -C - ${CLUSTER_DEFINITION_BRANCH}/${CLUSTER_DEFINITIONS_DIR}/$WORKER_GPU_YML -o ./$WORKER_GPU_YML 2>&1 > /dev/null    
+    curl --silent --show-error -C - ${CLUSTER_DEFINITION_BRANCH}/${CLUSTER_DEFINITIONS_DIR}/$WORKER_GPU_YML -o ./$WORKER_GPU_YML 2>&1 > /dev/null
     if [ $? -ne 0 ] ; then
 	exit 14
     fi
@@ -2155,7 +2155,8 @@ help()
     echo "   9090"
     echo ""
     echo "Hopsworks Feature Store Python clients need access to the following ports:"
-    echo "   443, 8020, 9083, 9085, 50010, 32080, 32080, 32021, 3306, 9092"
+    echo "   443, 8020, 9083, 9085, 50010, 32080, 32080, 32021, 3306, 9092, 5005, 9200"
+    echo "  (Payara (443), HiveServer2, Hive Metastore, OpenSearch, MySQL Server (3306), FlyingDuck (5005))"
     echo ""
     exit 3
 
