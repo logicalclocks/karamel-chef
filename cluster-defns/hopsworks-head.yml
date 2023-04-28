@@ -44,6 +44,8 @@ attrs:
       retention_time: "8h"
   hopsworks:
     enable_flyingduck: true
+    enable_jupyter_python_kernel_non_kubernetes: true
+    python_kernel: true
     hopsworks_public_host: __HOPSWORKS_PUBLIC_IP__  
     debug: true
 #    download_url: https://repo.hops.works/dev/xxx/
