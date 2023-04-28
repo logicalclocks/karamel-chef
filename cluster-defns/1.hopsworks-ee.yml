@@ -59,7 +59,8 @@ attrs:
     NumCPUs: 4
   flyingduck:
     memory_gbs: 4
-    
+    cpus: 4
+  
 groups:
   namenodes:
     size: 1
