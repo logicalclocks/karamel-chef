@@ -43,7 +43,11 @@ attrs:
   prometheus:
       retention_time: "8h"
   hopsworks:
+    enable_flyingduck: true
+    enable_jupyter_python_kernel_non_kubernetes: true
+    python_kernel: true
     hopsworks_public_host: __HOPSWORKS_PUBLIC_IP__  
+    loadbalancer_external_domain: __HOPSWORKS_PUBLIC_IP__  
     debug: true
 #    download_url: https://repo.hops.works/dev/xxx/
 #    hdfs:
@@ -60,9 +64,6 @@ attrs:
     featurestore_online: true
     requests_verify: false
     application_certificate_validity_period: 6d
-    kagent_liveness:
-      enabled: true
-      threshold: 40s
   kkafka:
     broker: 
       host:
@@ -95,6 +96,10 @@ attrs:
       elastic_exporter:
         username: elasticexporter
         password: __PWD___201
+  flyingduck:
+    memory_gbs: 4
+    cpus: 4
+
 groups:
   metaserver:
     size: 1
@@ -138,4 +143,5 @@ groups:
       - hops::docker_registry
       - hops::fuse_mnt
       - onlinefs      
+      - flyingduck
 __KUBERNETES_RECIPES__
