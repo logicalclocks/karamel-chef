@@ -57,9 +57,6 @@ attrs:
     LockPagesInMainMemory: 0
     TotalMemoryConfig: 4G
     NumCPUs: 4
-  flyingduck:
-    memory_gbs: 4
-    cpus: 4
   
 groups:
   namenodes:
@@ -110,4 +107,3 @@ groups:
       - ndb::mysqld
       - onlinefs
       - tensorflow
-      - flyingduck
