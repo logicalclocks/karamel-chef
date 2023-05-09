@@ -7,6 +7,11 @@ Vagrant.configure("2") do |config|
         resize2fs /dev/ubuntu-vg/ubuntu-lv
     SCRIPT
 
+    install_kernel = <<-SCRIPT
+        apt update
+        apt install -y linux-image-5.15.0-71-generic
+    SCRIPT
+
     config.disksize.size = "50GB"
     config.ssh.insert_key = false
     config.vm.box = "bento/ubuntu-22.04"
@@ -64,6 +69,8 @@ Vagrant.configure("2") do |config|
     config.vm.provision "file", source: "cluster.yml", destination: "cluster.yml"
     config.vm.provision "file", source: "~/.vagrant.d/insecure_private_key", destination: "~/.ssh/id_rsa"
     config.vm.provision "shell", inline: "cp /home/vagrant/.ssh/authorized_keys /home/vagrant/.ssh/id_rsa.pub && sudo chown vagrant:vagrant /home/vagrant/.ssh/id_rsa.pub"
+    config.vm.provision :shell, :inline => install_kernel
+    config.vm.provision :reload
     config.vm.provision :shell, :inline => disk_partition
 
     config.vm.provider :virtualbox do |v|
