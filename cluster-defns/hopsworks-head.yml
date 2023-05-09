@@ -45,7 +45,6 @@ attrs:
   hopsworks:
     enable_flyingduck: true
     enable_jupyter_python_kernel_non_kubernetes: true
-    python_kernel: true
     hopsworks_public_host: __HOPSWORKS_PUBLIC_IP__  
     loadbalancer_external_domain: __HOPSWORKS_PUBLIC_IP__  
     debug: true
