@@ -7,6 +7,11 @@ Vagrant.configure("2") do |config|
        resize2fs /dev/ubuntu-vg/ubuntu-lv
    SCRIPT
 
+   install_kernel = <<-SCRIPT
+       apt update
+       apt install -y linux-image-5.15.0-71-generic
+   SCRIPT
+
    config.ssh.insert_key = false
    config.disksize.size = "50GB"
 
@@ -30,6 +35,8 @@ Vagrant.configure("2") do |config|
       v.customize ["modifyvm", :id, "--name", "hopsworks2"]
     end
 
+    config.vm.provision :shell, :inline => install_kernel
+    config.vm.provision :reload
     config.vm.provision :shell, :inline => disk_partition
     hopsworks2.vm.provision :chef_solo do |chef|
       chef.version = "14.10.9"
@@ -63,6 +70,8 @@ Vagrant.configure("2") do |config|
       v.customize ["modifyvm", :id, "--name", "hopsworks1"]
     end
 
+    config.vm.provision :shell, :inline => install_kernel
+    config.vm.provision :reload
     config.vm.provision :shell, :inline => disk_partition
     hopsworks1.vm.provision :chef_solo do |chef|
       chef.version = "14.10.9"
@@ -131,6 +140,8 @@ Vagrant.configure("2") do |config|
       v.customize ["modifyvm", :id, "--cpus", "2"]
     end
 
+    config.vm.provision :shell, :inline => install_kernel
+    config.vm.provision :reload
     config.vm.provision :shell, :inline => disk_partition
     hopsworks0.vm.provision :chef_solo do |chef|
         chef.version = "14.10.9"
