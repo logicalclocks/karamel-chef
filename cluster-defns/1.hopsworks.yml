@@ -29,6 +29,9 @@ attrs:
     kagent_liveness:
       enabled: true
       threshold: "40s"
+    enable_flyingduck: true
+    enable_jupyter_python_kernel_non_kubernetes: true
+    loadbalancer_external_domain: "localhost"
   elastic:
     opensearch_security:
       jwt:
@@ -40,6 +43,9 @@ attrs:
     LockPagesInMainMemory: 0
     TotalMemoryConfig: 4G
     NumCPUs: 4
+  flyingduck:
+    memory_gbs: 4
+    cpus: 2
 
 groups:
   namenodes:
@@ -82,3 +88,4 @@ groups:
       - consul::master
       - hops::docker_registry
       - onlinefs
+      - flyingduck
