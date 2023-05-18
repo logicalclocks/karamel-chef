@@ -49,6 +49,8 @@ attrs:
     hopsworks_public_host: __HOPSWORKS_PUBLIC_IP__  
     loadbalancer_external_domain: __HOPSWORKS_PUBLIC_IP__  
     debug: true
+    jupyter:
+      remote_fs_driver: hopsfsmount
 #    download_url: https://repo.hops.works/dev/xxx/
 #    hdfs:
 #      storage_policy:
