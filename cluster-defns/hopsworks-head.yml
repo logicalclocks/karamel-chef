@@ -70,6 +70,8 @@ attrs:
     broker: 
       host:
         public_ip: __KAFKA_PUBLIC_IP__
+      advertised:
+        listeners: __KAFKA_PUBLIC_IP__
   hive2:
       mysql_password: __PWD___203
   mysql:
