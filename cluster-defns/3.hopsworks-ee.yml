@@ -101,6 +101,7 @@ groups:
       - ndb::mgmd
       - ndb::ndbd
       - ndb::mysqld
+      - ndb::rdrs
       - onlinefs
       - tensorflow
   datanode1:

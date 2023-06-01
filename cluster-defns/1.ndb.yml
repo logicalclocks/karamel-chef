@@ -4,7 +4,7 @@ baremetal:
 
 cookbooks:
   hopsworks:
-    github: "logicalclocks/ndb-chef"
+    github: "logicalclocks/hopsworks-chef"
     branch: "master"
 
 attrs:
@@ -12,20 +12,16 @@ attrs:
     dir: /srv/hops
   kagent:
     enabled: false
-  ndb:
-    ndbd:
-      ips_ids: ["192.168.56.101:1"]
-    mysqld:
-      ips_ids: ["192.168.56.101:100"]
 groups:
   biggie:
     size: 1
     baremetal:
-      ip: 192.168.56.101
+      ip: 10.0.2.15
     recipes:
       - kagent::install
       - ndb::mgmd
       - ndb::ndbd
       - ndb::mysqld
+      - ndb::rdrs
 
 

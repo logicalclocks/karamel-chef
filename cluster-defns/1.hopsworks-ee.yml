@@ -114,3 +114,4 @@ groups:
       - onlinefs
       - tensorflow
       - flyingduck
+      - ndb::rdrs
