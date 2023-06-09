@@ -78,7 +78,7 @@ when "debian"
 
 when 'rhel'
   remote_file '/tmp/apache-maven-3.6.3-bin.tar.gz' do
-    source 'https://downloads.apache.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz'
+    source 'https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.6.3/apache-maven-3.6.3-bin.tar.gz'
     owner 'root'
     group 'root'
     mode '0755'
