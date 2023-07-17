@@ -45,4 +45,11 @@ echo "sudo update-initramfs -u"
 echo "echo '/dev/md0 /mnt/md0 ext4 defaults,nofail,discard 0 0' | sudo tee -a /etc/fstab"
 echo ""
 echo "Then edit: ~/cluster-definitions/hopsworks-installation.yml"
-echo "Change disk dir to: /mnt/md0"
+echo "Change disk dir to: /mnt/md0/ndb_diskdata"
+
+echo "Need to relink /srv/hopsdata/hdfs to /mnt/md0/hdfs"
+echo "Or relink /srv/hops /mnt/md0/hops"
+
+echo "Measure disk throughput with:"
+echo "hdparm -tT /dev/sda"
+echo "hdparm -tT /dev/md0"
