@@ -29,6 +29,7 @@ attrs:
     rmappsecurity:
       actor_class: "org.apache.hadoop.yarn.server.resourcemanager.security.DevHopsworksRMAppSecurityActions"
   alertmanager:
+    clustered: "true"
     email:
       to: sre@logicalclocks.com
       from: hopsworks@logicalclocks.com
