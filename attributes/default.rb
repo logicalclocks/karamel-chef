@@ -1,5 +1,5 @@
 include_attribute "elastic"
-default['karamel']['version']         = "0.9-SNAPSHOT"
+default['karamel']['version']         = "0.9"
 default['karamel']['download_url']    = "#{node['download_url']}/karamel-#{node['karamel']['version']}.tgz"
 
 default['karamel']['download_file']    = "#{Chef::Config['file_cache_path']}/#{File.basename(node['karamel']['download_url'])}"
