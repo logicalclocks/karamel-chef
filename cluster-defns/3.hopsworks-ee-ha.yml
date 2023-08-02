@@ -37,6 +37,7 @@ attrs:
   prometheus:
     retention_time: "2h"
   hopsworks:
+    debug: true
     featurestore_online: true
   elastic:
     opensearch_security:
