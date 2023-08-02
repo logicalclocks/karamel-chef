@@ -31,9 +31,6 @@ attrs:
   hopsworks:
     encryption_password: "verysecurepassword"
     featurestore_online: true
-    kagent_liveness:
-      enabled: true
-      threshold: "40s"
   elastic:
     opensearch_security:
       jwt:
