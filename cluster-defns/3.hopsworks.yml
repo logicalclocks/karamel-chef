@@ -23,9 +23,6 @@ attrs:
     retention_time: "2h"
   hopsworks:
     featurestore_online: true
-    kagent_liveness:
-      enabled: true
-      threshold: "40s"
   elastic:
     opensearch_security:
       jwt:

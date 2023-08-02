@@ -50,9 +50,6 @@ attrs:
     featurestore_online: true
     requests_verify: false
     application_certificate_validity_period: 6d
-    kagent_liveness:
-      enabled: true
-      threshold: 40s
   hive2:
       mysql_password: __PWD___203
   mysql:

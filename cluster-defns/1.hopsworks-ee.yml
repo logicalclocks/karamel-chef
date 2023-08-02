@@ -43,9 +43,6 @@ attrs:
     #download_url: 
     #ear_url: 
     featurestore_online: true
-    kagent_liveness:
-      enabled: true
-      threshold: "40s"
     enable_flyingduck: true
     enable_jupyter_python_kernel_non_kubernetes: true
     loadbalancer_external_domain: "localhost"
