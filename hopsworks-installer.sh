@@ -1533,6 +1533,7 @@ else
     pki:
       verify_hopsworks_cert: false
     fallback_dns: $DNS_IP
+#    device: nvidia
     master:
       untaint: true
 "

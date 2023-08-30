@@ -2116,7 +2116,7 @@ help()
     echo "                 'enterprise' installs Hopsworks Enterprise (single VM or multi-VM)"
     echo "                 'kubernetes' installs Hopsworks Enterprise (single VM or multi-VM) also with open-source Kubernetes"
     echo " [-c|--cloud gcp|aws|azure] Name of the public cloud "
-    echo " [--debug] Verbose logging for this script"
+    echo " [-d|--debug] Verbose logging for this script"
     echo " [-drc|--dry-run-create-vms]  creates the VMs, generates cluster definition (YML) files but doesn't run karamel."	      	      
     echo " [-g|--num-gpu-workers num] Number of workers (with GPUs) to create for the cluster."
     echo " [-gpus|--num-gpus-per-worker num] Number of GPUs per worker or head node."
@@ -2228,7 +2228,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
       	    shift
 	    DOWNLOAD_URL=$1
 	    ;;
-	--debug)
+	-d|--debug)
 	    DEBUG=1
 	    ;;
 	-du|--download-username)
@@ -2253,7 +2253,7 @@ while [ $# -gt 0 ]; do    # Until you run out of parameters . . .
 	-gt|--gpu-type)
       	    shift
 	    case $1 in
-		v100 | p100 | k80)
+		v100 | p100 | k80 | t4)
 		    GPU_TYPE=$1
   		    ;;
 		*)
