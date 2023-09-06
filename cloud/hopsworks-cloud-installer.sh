@@ -2647,6 +2647,7 @@ if [ $? -ne 0 ] ; then
     exit 2
 fi
 
+
 if [ $DRY_RUN_CREATE_VMS -eq 0 ] ; then    
     echo ""
     echo "****************************************"
@@ -2669,8 +2670,14 @@ else
     echo " ssh ${IP}"
     echo " Then, edit your cluster definition ~/$CLUSTER_DEFINITIONS_DIR/$YML_FILE"
     echo " Then run karamel on your new cluster definition: "
-    echo " cd karamel-0.7"
-    echo " setsid ./bin/karamel -headless -launch ../$YML_FILE > ../installation.log 2>&1 &"
+    echo " setsid ./bin/karamel -headless -launch ../cluster-defns/$YML_FILE > ../installation.log 2>&1 &"
     echo "*                                      *"    
     echo "****************************************"
-fi    
+fi   
+
+
+echo "****************************************"
+echo "Run this on the head node after Hopsworks installation (hotfix):"
+echo "sudo sed -i \"s/kafka\.service\.consul/$IP\/\" /srv/hops/kafka/config/server.properties"
+echo "sudo systemctl restart kafka"
+echo "sudo systemctl restart onlinefs"

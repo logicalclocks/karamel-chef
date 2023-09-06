@@ -1533,7 +1533,10 @@ else
     pki:
       verify_hopsworks_cert: false
     fallback_dns: $DNS_IP
-#    device: nvidia
+    device: nvidia
+    docker_max_memory_allocation: 16000
+    docker_max_cores_allocation: 10
+    docker_max_gpus_allocation: 7
     master:
       untaint: true
 "
