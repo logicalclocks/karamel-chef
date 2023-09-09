@@ -1199,7 +1199,7 @@ if [ $? -ne 0 ] ; then
     echo "Installing pciutils ...."
     sudo yum install pciutils -y > /dev/null
 fi
-AVAILABLE_GPUS=$(sudo lspci | grep -i nvidia | wc -l)
+AVAILABLE_GPUS=$(sudo lspci | grep -i nvidia | grep VGA | wc -l)
 
 
 if [ $NON_INTERACT -eq 0 ] ; then
