@@ -59,7 +59,7 @@ echo "echo '/dev/md0 /mnt/md0 ext4 defaults,nofail,discard 0 0' | sudo tee -a /e
 echo "mkdir -p /mnt/md0/hops"
 echo "mkdir /mnt/md0/hopsworks-data"
 echo "ln -s /mnt/md0/hops /srv/hops"
-echo "ln -s /mnt/md0/hopsworks-data /srv/hops"
+echo "ln -s /mnt/md0/hopsworks-data /srv/hopsworks-data"
 echo ""
 echo "Then edit: ~/cluster-definitions/hopsworks-installation.yml"
 echo "Change rondb diskdata to /srv/hops/rondb-diskdata. That directory will be created for you in ndb::ndbd"

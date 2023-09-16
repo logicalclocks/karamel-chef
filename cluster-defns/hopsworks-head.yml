@@ -32,7 +32,7 @@ attrs:
     LockPagesInMainMemory: 0
     TotalMemoryConfig: 4G
     NumCPUs: 4
-#    diskdata_dir: "/mnt/nvmeDisks/nvme0/"
+#    diskdata_dir: "/srv/hops/rondb-diskdata"
 #    nvme:
 #      logfile_size: "10G"
   alertmanager:

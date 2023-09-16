@@ -2678,6 +2678,6 @@ fi
 
 echo "****************************************"
 echo "Run this on the head node after Hopsworks installation (hotfix):"
-echo "sudo sed -i \"s/kafka\.service\.consul/$IP\/\" /srv/hops/kafka/config/server.properties"
+echo "sudo sed -i \"s/kafka\.service\.consul/$IP/\" /srv/hops/kafka/config/server.properties"
 echo "sudo systemctl restart kafka"
 echo "sudo systemctl restart onlinefs"
