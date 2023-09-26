@@ -46,7 +46,7 @@ echo "Then run:"
 echo ""
 echo "sudo su"
 nvme_strs = $( for 
-echo "sudo mdadm --create --verbose /dev/md0 --level=0 --raid-devices=4 /dev/nvme0n1 /dev/nvme0n2 /dev/nvme0n3 /dev/nvme0n4 "
+echo "sudo mdadm --create --verbose /dev/md0 --level=0 --raid-devices=4 $nvme_str"
 echo "sudo mkfs.ext4 -F /dev/md0"
 echo "sudo mkdir -p /mnt/md0"
 echo "sudo mount /dev/md0 /mnt/md0"
