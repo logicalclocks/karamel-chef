@@ -20,13 +20,22 @@ if [ "$cpus" == "" ] ; then
   echo "Using 8 cpus"
 fi
 
-echo "Number of NVMe disks for this instance (2, 4, 6, 8):"
+echo "Number of NVMe disks for this instance (2, 4, 6, 8): (default: 4)"
 read nvmes
 
 if [ "$nvmes" == "" ] ; then
-    nvmes=0
+    nvmes=4
 fi
 echo "Using $nvmes nvme disks"
+
+nvme_str=""
+if [ $nvmes -gt 0 ] ; then
+  start=1
+  for (( i=1; i<=$nvmes; i++ ))
+  do
+   nvme_str="$nvme_str /dev/nvme0n$i"
+  done
+fi
 
 ENTERPRISE_PASSWORD=$PASSWORD ./hopsworks-cloud-installer.sh -n $name -i enterprise -ni -c gcp -de https://nexus.hops.works/repository -ht n1-standard-${cpus} -nvme $nvmes -drc
 
@@ -36,7 +45,8 @@ echo "ssh ...."
 echo "Then run:"
 echo ""
 echo "sudo su"
-echo "sudo mdadm --create --verbose /dev/md0 --level=0 --raid-devices=8 /dev/nvme0n1 /dev/nvme0n2 /dev/nvme0n3 /dev/nvme0n4 /dev/nvme0n5 /dev/nvme0n6 /dev/nvme0n7 /dev/nvme0n8"
+nvme_strs = $( for 
+echo "sudo mdadm --create --verbose /dev/md0 --level=0 --raid-devices=4 $nvme_str"
 echo "sudo mkfs.ext4 -F /dev/md0"
 echo "sudo mkdir -p /mnt/md0"
 echo "sudo mount /dev/md0 /mnt/md0"
