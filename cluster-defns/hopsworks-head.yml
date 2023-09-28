@@ -32,7 +32,7 @@ attrs:
     LockPagesInMainMemory: 0
     TotalMemoryConfig: 4G
     NumCPUs: 4
-#    diskdata_dir: "/mnt/nvmeDisks/nvme0/"
+#    diskdata_dir: "/srv/hops/rondbdata"
 #    nvme:
 #      logfile_size: "10G"
   alertmanager:
@@ -51,7 +51,6 @@ attrs:
     debug: true
     jupyter:
       remote_fs_driver: hopsfsmount
-#    download_url: https://repo.hops.works/dev/xxx/
 #    hdfs:
 #      storage_policy:
 #        base: "DB"
@@ -101,7 +100,7 @@ attrs:
         username: elasticexporter
         password: __PWD___201
   flyingduck:
-    memory_gbs: 4
+    memory_gbs: 16
     cpus: 4
 
 groups:
@@ -145,7 +144,6 @@ groups:
       - hopsmonitor::node_exporter
       - consul::master
       - hops::docker_registry
-      - hops::fuse_mnt
       - onlinefs      
       - flyingduck
 __KUBERNETES_RECIPES__
