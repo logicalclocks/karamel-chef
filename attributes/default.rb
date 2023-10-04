@@ -1,4 +1,6 @@
 include_attribute "elastic"
+include_attribute "hopsworks"
+
 default['karamel']['version']         = "0.10-SNAPSHOT"
 default['karamel']['download_url']    = "#{node['download_url']}/karamel-#{node['karamel']['version']}.tgz"
 

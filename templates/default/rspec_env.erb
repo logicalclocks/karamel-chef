@@ -1,6 +1,6 @@
 # Copy this to .env and update values
 WEB_HOST=localhost                                        # Web host local or remote
-WEB_PORT=8181                                             # Web port local or remote
+WEB_PORT=<%= @hw_port %>                                  # Web port local or remote
 DB_HOST=127.0.0.1                                         # Database host local or remote
 DB_PORT=3306                                              # Database port local or remote
 PROJECT_DIR=<%= node['test']['hopsworks']['base_dir'] %>  # where hopsworks project is.

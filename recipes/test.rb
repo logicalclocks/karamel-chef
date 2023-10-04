@@ -96,10 +96,12 @@ case node['platform']
 when elastic_multinode
   elastic_endpoint="#{node[:karamel][:default][:private_ips][2]}:#{node[:elastic][:port]}"
   epipe_host = "#{node[:karamel][:default][:private_ips][1]}"
+  hw_port = "#{node[:hopsworks][:ha][:loadbalancer_port]}"
 
 when elastic_singlenode
 elastic_endpoint="#{node[:karamel][:default][:private_ips][0]}:#{node[:elastic][:port]}"
 epipe_host = "#{node[:karamel][:default][:private_ips][0]}"
+hw_port = "#{node[:hopsworks][:https][:port]}"
 end
 
 # Copy the environment configuration in the test directory
@@ -113,7 +115,8 @@ template "#{node['test']['hopsworks']['test_dir']}/.env" do
     'kibana_endpoint' => kibana_endpoint,
     'elastic_user' => elastic_user,
     'elastic_pass' => elastic_pass,
-    'epipe_host' => epipe_host
+    'epipe_host' => epipe_host,
+    'hw_port' => hw_port
   })
 end
 
