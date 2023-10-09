@@ -98,7 +98,7 @@ when elastic_multinode
   if node['hopsworks'].attribute?('ha') and node['hopsworks']['ha'].attribute?('loadbalancer_port')
     hw_port = node['hopsworks']['https']['loadbalancer_port']
   end
-  elastic_endpoint="#{node[:karamel][:default][:private_ips][2]}:#{node[:elastic][:port]}"
+  elastic_endpoint="#{node[:karamel][:default][:private_ips][1]}:#{node[:elastic][:port]}"
   epipe_host = "#{node[:karamel][:default][:private_ips][1]}"
 
 when elastic_singlenode
