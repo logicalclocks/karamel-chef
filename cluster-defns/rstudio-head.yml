@@ -29,7 +29,7 @@ attrs:
     __NDB_NVME__  
     NoOfReplicas: 1
     LockPagesInMainMemory: 0
-    TotalMemoryConfig: 4G
+    TotalMemoryConfig: 5G
     NumCPUs: 4
   alertmanager:
     email:

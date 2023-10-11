@@ -32,7 +32,7 @@ attrs:
         enable_transport: "false"
   ndb:
     LockPagesInMainMemory: 0
-    TotalMemoryConfig: 4G
+    TotalMemoryConfig: 5G
     NumCPUs: 4
 
 groups:
