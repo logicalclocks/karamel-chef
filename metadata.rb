@@ -28,6 +28,7 @@ depends 'hostsfile', '~> 2.4.5'
 depends 'nodejs', '~> 6.0.0'
 depends 'sysctl', '~> 1.0.3'
 depends 'cmake', '~> 0.3.0'
+depends 'mingw', '~> 2.1.9'
 
 recipe  "karamel::install", "Installs Karamel"
 recipe  "karamel::default", "Configures and starts karamel."
