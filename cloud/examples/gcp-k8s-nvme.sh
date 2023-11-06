@@ -56,3 +56,15 @@ echo ""
 echo "Change rondb diskdata to /srv/hops/ndb-diskdata. That directory will be created for you in ndb::ndbd"
 echo "hdparm -t /dev/md0"
 
+echo "Fix core-dns problem:"
+echo "su kubernetes"
+echo "vi /home/kubernetes/coredns.yml"
+echo "Then change resolv.conf to the local IP:
+    consul:53 {
+      errors
+      cache 30
+      forward . /etc/resolv.conf
+    }"
+echo "kubectl delete -f coredns.yml"
+echo "kubectl apply -f coredns.yml"
+

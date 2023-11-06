@@ -2681,3 +2681,15 @@ echo "Run this on the head node after Hopsworks installation (hotfix):"
 echo "sudo sed -i \"s/kafka\.service\.consul/$IP\/\" /srv/hops/kafka/config/server.properties"
 echo "sudo systemctl restart kafka"
 echo "sudo systemctl restart onlinefs"
+echo ""
+echo "Fix core-dns problem:"
+echo "su kubernetes"
+echo "vi /home/kubernetes/coredns.yml"
+echo "Then change resolv.conf to the local IP:
+    consul:53 {
+      errors
+      cache 30
+      forward . /etc/resolv.conf
+    }"
+echo "kubectl delete -f coredns.yml"
+echo "kubectl apply -f coredns.yml"
