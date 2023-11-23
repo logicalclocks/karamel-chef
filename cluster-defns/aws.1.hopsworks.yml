@@ -7,7 +7,7 @@ ec2:
 cookbooks:
   hopsworks:
     github: logicalclocks/hopsworks-chef
-    branch: master
+    branch: 3.5
 
 attrs:
   install:
