@@ -27,7 +27,7 @@
 #                                                                                                 #
 ###################################################################################################
 
-HOPSWORKS_REPO=jim_dowling/hopsworks-chef
+HOPSWORKS_REPO=jimdowling/hopsworks-chef
 HOPSWORKS_BRANCH=k8s_upgrade
 CLUSTER_DEFINITION_BRANCH=https://raw.githubusercontent.com/logicalclocks/karamel-chef/$HOPSWORKS_BRANCH
 KARAMEL_VERSION=0.10-SNAPSHOT
