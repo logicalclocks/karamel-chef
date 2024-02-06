@@ -8,7 +8,7 @@ gce:
 cookbooks:
   hops:
     github: "logicalclocks/hops-hadoop-chef"
-    branch: "master"
+    branch: "3.7"
 
 attrs:
   install:
