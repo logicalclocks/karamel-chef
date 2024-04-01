@@ -172,7 +172,7 @@ when 'ubuntu'
       start_time=`date`
       echo "start running dependencies test: $start_time"
       bundle install
-      /srv/hops/anaconda/anaconda/bin/python lambo_rspec.py -proc 4 -out #{node['test']['hopsworks']['report_dir']} -os #{node['platform']}
+      /srv/hops/kagent/venv/bin/python3 lambo_rspec.py -proc 4 -out #{node['test']['hopsworks']['report_dir']} -os #{node['platform']}
       end=`date +%s`
       runtime=$((end-start))
       echo "Running time for dependencies test: $runtime"
@@ -237,7 +237,7 @@ when 'centos'
 
     code <<-EOH
       bundle install
-      /srv/hops/anaconda/anaconda/bin/python lambo_rspec.py -proc 4 -out #{node['test']['hopsworks']['report_dir']} -os #{node['platform']}
+      /srv/hops/kagent/venv/bin/python3 lambo_rspec.py -proc 4 -out #{node['test']['hopsworks']['report_dir']} -os #{node['platform']}
     EOH
   end
 end
