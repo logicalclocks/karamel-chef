@@ -152,8 +152,17 @@ function parse_ports() {
     done
 }
 
-function deploy_ear() {
+function machine_name() {
+    machine_ips=$(hostname -I)
+    for i in dev0 dev1 dev2 dev3 dev4 dev5 dev6; do
+        if echo $machine_ips | grep -q $(dig +short $i.hops.works | grep -v '\.$'); then
+            echo $i
+            break
+        fi
+    done
+}
 
+function deploy_ear() {
     if [ -f ${HOME}/.ssh/id_rsa.pub ] ; then
 	ssh_key=$(cat ${HOME}/.ssh/id_rsa.pub)
 
@@ -169,10 +178,11 @@ function deploy_ear() {
 	echo "----------------------------------------------------------"
 	cat /dev/zero | ssh-keygen -m PEM -q -N > /dev/null
     fi
+    name=$(machine_name)
     echo ""
     echo ""
     echo "You can redeploy your ear on Vagrant after you follow these instructions: "
-    echo "On dev4.hops.works:"
+    echo "On $name.hops.works:"
     echo ""
     echo "mkdir Projects"
     echo "cd Projects"
@@ -184,13 +194,14 @@ function deploy_ear() {
     echo ""
     echo "cd ~/karamel-chef"
     echo "vagrant ssh"
-    echo "#now on vagrant, copies the hopsworks-ear.ear file from dev4, and deploys it to glassfish"
+    echo "#now on vagrant, copies the hopsworks-ear.ear file from $name, and deploys it to glassfish"
     echo "./deploy-ear.sh"
     echo ""
 }
 
 
 function ssh_config() {
+    name=$(machine_name)
     echo "=========================================="
     echo ""
     echo "Copy and paste the following into ~/.ssh/config"
@@ -200,13 +211,13 @@ function ssh_config() {
     echo "=========================================="
     echo ""
     echo ""    
-    echo "Host dev4"
-    echo "  Hostname dev4.hops.works"
+    echo "Host $name"
+    echo "  Hostname $name.hops.works"
     echo "  User $USER"
     echo "Host vagrant"
-    echo "  Hostname dev4.hops.works"
+    echo "  Hostname $name.hops.works"
     echo "  User $USER"
-    echo "  ProxyJump dev4"
+    echo "  ProxyJump $name"
     DEBUG_PORT=0
     HTTPS_PORT=0
     GLASSFISH_PORT=0
@@ -223,7 +234,6 @@ function ssh_config() {
     # Restore IFS
     IFS=$SAVEIFS
     for i in $ports ; do
-	
 	odd=$(($count % 2))
 	if [ $odd -eq 1 ] ; then
 	    if [ $DEBUG_PORT -eq 9009 ] ; then
@@ -265,16 +275,15 @@ function ssh_config() {
     echo "  LocalForward 8181 localhost:$HTTPS_PORT"
     echo "  LocalForward 4848 localhost:$GLASSFISH_PORT"
     echo "  LocalForward 9090 localhost:$KARAMEL_PORT"
-    echo ""    
-    echo "Host dev4_vagrant"
-    echo "  HostName dev4.hops.works"
-    echo "  ProxyJump dev4"
+    echo ""
+    echo "Host ${name}_vagrant"
+    echo "  HostName $name.hops.works"
+    echo "  ProxyJump $name"
     echo "  User vagrant"
     echo "  Port $SSH_PORT"
-    echo "  IdentityFile ~/.vagrant.d/insecure_private_key" 
-    echo ""    
-    echo ""    
-    
+    echo "  IdentityFile ~/.vagrant.d/insecure_private_key"
+    echo ""
+    echo ""
 }
 
 function change_subnet() {
